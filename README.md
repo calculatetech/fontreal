@@ -2,6 +2,8 @@
 
 The [roadmap](docs/roadmap.md) covers KDE, GNOME, Wine, and conditional Windows 11 support.
 
+The [deployment decision](docs/research/distribution.md) proposes distro Qt packages, separate session activation, tested rollback, and an APT distribution channel. Desktop installation is planned. The current preview remains isolated.
+
 The [real Konsole comparison](docs/experiments/kde-preview.md) builds and launches an isolated Qt prototype with stock, linear, and encoded choices, plus optional mild contrast and the user's Inconsolata Nerd Font terminal selection.
 
 The separate [diagonal edge study](docs/experiments/diagonal-edges.md) compares the remaining W/V fuzziness with two tighter gray transitions and automatic-hinted binary output. Open it with `--edges`. The ordinary seven-row experiment stays available without that flag.

@@ -19,8 +19,10 @@ No task is active.
 
 ## Planned next
 
+- **FR-004: Cover KDE rendering paths.** Test KWin decoration text and Plasma Qt Quick separately from native widgets. Trace actual paths at integral and fractional scales. Confine or validate the shared transfer profile's effect on other fonts. Establish the full-session activation boundary before desktop deployment.
+- **FR-011: Package a KDE desktop pilot.** Build patched Ubuntu 26.04 amd64 Qt packages from distro source and build rules. Add separate, initially disabled session activation. Test complete-session coverage and disabling, official-package rollback, and an official Qt update before host installation. Preserve font choices and normal security updates. See the [deployment decision](research/distribution.md).
 - **FR-003: Calibrate native application text.** Focus on Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales, and light/dark colors. Retain other fonts as comparison controls. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
-- **FR-004: Cover KDE rendering paths.** Test KWin decoration text and Plasma Qt Quick separately from native widgets. Trace actual paths at integral and fractional scales. Define installation and rollback only after isolated tests succeed.
+- **FR-012: Make the KDE packages distributable.** Supply matching source and binary packages, build provenance, required licenses and notices, signed APT metadata, supported versions, and recovery instructions. Establish the Qt security-update rebuild process. Resolve the project license before public release. Keep the GitHub repository private unless the user changes that choice.
 
 ## Planned later
 
