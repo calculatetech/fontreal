@@ -2,6 +2,7 @@
 #include <QCryptographicHash>
 #include <QFile>
 #include <QFontDatabase>
+#include <QFontMetricsF>
 #include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -12,8 +13,10 @@
 #include <QQuickView>
 #include <QRawFont>
 #include <QScreen>
+#include <QSet>
 #include <QSGRendererInterface>
 #include <QTimer>
+#include <QStaticText>
 #include <QWidget>
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -135,6 +138,32 @@ public:
         }
     }
 };
+
+class ProfileWidget:public QWidget {
+public:
+    QFont fonts[3];
+    QStaticText prepared[3];
+    QVector<int> order;
+    bool staticText=false;
+    void paintEvent(QPaintEvent *) override {
+        QPainter painter(this);
+        for(int row=0;row<3;++row) {
+            const QColor background=row==0 ? QColor(Qt::white) : row==1 ? QColor(Qt::black) : QColor(219,197,181);
+            const QColor foreground=row==0 ? QColor(Qt::black) : row==1 ? QColor(Qt::white) : QColor(73,121,167);
+            painter.fillRect(QRect(0,row*70,width(),70),background);
+            painter.setPen(foreground);
+            for(int column=0;column<order.size();++column) {
+                const int role=order[column];
+                painter.setFont(fonts[role]);
+                const QPointF baseline(column*192+8,row*70+40);
+                if(staticText)
+                    painter.drawStaticText(baseline-QPointF(0,QFontMetricsF(fonts[role]).ascent()),prepared[role]);
+                else
+                    painter.drawText(baseline,prepared[role].text());
+            }
+        }
+    }
+};
 }
 
 int main(int argc,char **argv) {
@@ -206,6 +235,57 @@ int main(int argc,char **argv) {
             QImage screen(args[2]),item(args[3]); require(!screen.isNull() && !item.isNull(),"Missing composite captures");
             const QRect region=QRect(0,0,item.width()+16,item.height()+80).intersected(screen.rect());
             writeJson(args[4],locate(screen,region,item)); return 0;
+        }
+        if(mode=="profile") {
+            require(args.size()==8,"profile truetype cff emoji output-prefix ordinary|static tt-first|cff-first");
+            require(args[6]=="ordinary" || args[6]=="static","Invalid profile entry");
+            require(args[7]=="tt-first" || args[7]=="cff-first","Invalid profile order");
+            ProfileWidget widget;
+            for(int i=0;i<3;++i) {
+                widget.fonts[i]=loadFont(args[2+i]);
+                if(i==1) widget.fonts[i].setStyleStrategy(QFont::NoSubpixelAntialias);
+                widget.prepared[i]=QStaticText(i==2 ? QString::fromUtf8("😀") : QStringLiteral("m n o g W V"));
+                widget.prepared[i].setTextFormat(Qt::PlainText);
+                widget.prepared[i].prepare(QTransform(),widget.fonts[i]);
+            }
+            widget.staticText=args[6]=="static";
+            widget.order=args[7]=="tt-first" ? QVector<int>{0,0,1,2,0} : QVector<int>{1,2,0,0,1};
+            widget.resize(960,210); widget.show();
+            QTimer::singleShot(350,&app,[&] {
+              try {
+                const QImage image=widget.grab().toImage();
+                widget.repaint();
+                require(image==widget.grab().toImage(),"Mixed cached repaint changed output");
+                require(image.save(args[5]+".png"),"Mixed capture failed");
+                QJsonArray regions;
+                Face face(args[2],15);
+                bool colorGlyph=false;
+                for(int row=0;row<3;++row) for(int column=0;column<widget.order.size();++column) {
+                    const int role=widget.order[column];
+                    const QRect region(column*192,row*70,192,70);
+                    QJsonObject entry{{"row",row},{"column",column},{"role",role},{"hash",imageHash(image.copy(region))}};
+                    if(role==0) {
+                        QJsonObject glyphs;
+                        const QColor foreground=row==0 ? QColor(Qt::black) : row==1 ? QColor(Qt::white) : QColor(73,121,167);
+                        const QColor background=row==0 ? QColor(Qt::white) : row==1 ? QColor(Qt::black) : QColor(219,197,181);
+                        for(const auto c:QStringLiteral("mnogWV")) glyphs[QString(c)]=classify(image,region,face,c,foreground,background);
+                        entry["glyphs"]=glyphs;
+                    } else if(role==2 && row==0) {
+                        QSet<QRgb> colors;
+                        for(int y=region.top();y<=region.bottom();++y) for(int x=region.left();x<=region.right();++x) {
+                            const auto pixel=image.pixel(x,y);
+                            if(qRed(pixel)!=qGreen(pixel) || qGreen(pixel)!=qBlue(pixel)) colors.insert(pixel);
+                        }
+                        colorGlyph=colors.size()>10;
+                    }
+                    regions.append(entry);
+                }
+                require(colorGlyph,"Mixed fixture did not draw a multicolor glyph");
+                auto result=identity(); result["regions"]=regions; result["colorGlyph"]=colorGlyph;
+                result["entry"]=args[6]; result["order"]=args[7]; writeJson(args[5]+".json",result); app.quit();
+              } catch(const std::exception &error) { std::fprintf(stderr,"%s\n",error.what()); app.exit(2); }
+            });
+            return app.exec();
         }
         require(args.size()>=4,"Supply font file and output path");
         const auto font=loadFont(args[2]);

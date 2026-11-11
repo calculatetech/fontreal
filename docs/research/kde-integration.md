@@ -81,7 +81,9 @@ An opt-in, isolated Qt patch now implements these mechanisms. The [real Konsole 
 
 The integration checks render actual QWidget text and compare it with independent FreeType masks and blend formulas. Separate Konsole launches provide the real application comparison. Human judgment still determines the preferred appearance.
 
-The separate [KDE path checks](../experiments/kde-paths.md) now exercise nested KWin and the installed Plasma applet host. At 100% scale, enabled title glyphs match mild/linear. Native Qt Quick OpenGL text receives the mild masks but still uses encoded edge composition. A software-renderer control matches the linear reference at that scale. Grayscale CFF text also exposes the shared A8 profile's wider effect. These measured gaps must be resolved before broad activation.
+The separate [KDE path checks](../experiments/kde-paths.md) now exercise nested KWin and the installed Plasma applet host. Enabled title glyphs match mild/linear at 100% and 125% scale. The user accepts the viewed KWin result. Native Qt Quick OpenGL text receives the mild masks but still uses encoded edge composition. A software-renderer control matches the linear reference at 100%. Those GPU and fractional-renderer gaps remain before broad activation.
+
+The shared A8 profile originally changed grayscale CFF output. The [profile-scope correction](../plans/FR-014-a8-profile-scope.md) selects exact sRGB only during an eligible TrueType raster draw. CFF and color-font output retain their stock behavior. Both ordinary and static mixed-font checks gate that separation.
 
 ## Rejected options
 

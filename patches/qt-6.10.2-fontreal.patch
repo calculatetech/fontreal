@@ -140,15 +140,57 @@
  #include <private/qscreen_p.h>
  
  #include <QtGui/qgenericpluginfactory.h>
-@@ -4516,6 +4517,11 @@
+@@ -4514,8 +4515,14 @@
+ }
+ #endif
  
++thread_local bool qt_fontrealA8Text = false;
++
  const QColorTrcLut *QGuiApplicationPrivate::colorProfileForA8Text()
  {
-+    static const bool fontreal = qgetenv("FONTREAL_RENDERING") == "1";
-+    if (fontreal) {
++    if (qt_fontrealA8Text) {
 +        static const auto srgb = QColorTrcLut::fromTrc(QColorTrc(QColorTransferFunction::fromSRgb()));
 +        return srgb.get();
 +    }
  #ifdef Q_OS_WIN
      if (!m_a8ColorProfile)
          m_a8ColorProfile = QColorTrcLut::fromGamma(2.31f); // This is a hard-coded thing for Windows text rendering
+--- a/src/gui/kernel/qguiapplication_p.h
++++ b/src/gui/kernel/qguiapplication_p.h
+@@ -42,6 +42,8 @@
+
+ Q_DECLARE_LOGGING_CATEGORY(lcPopup)
+ Q_DECLARE_LOGGING_CATEGORY(lcVirtualKeyboard)
++
++extern thread_local bool qt_fontrealA8Text;
+
+ class QColorTrcLut;
+ class QPlatformIntegration;
+--- a/src/gui/painting/qpaintengine_raster.cpp
++++ b/src/gui/painting/qpaintengine_raster.cpp
+@@ -20,6 +20,11 @@
+ //   #include <private/qpainter_p.h>
+ #include <private/qtextengine_p.h>
+ #include <private/qfontengine_p.h>
++#include <private/qguiapplication_p.h>
++#include <QtCore/qscopedvaluerollback.h>
++#if QT_CONFIG(freetype)
++#include <private/qfontengine_ft_p.h>
++#endif
+ #include <private/qpixmap_raster_p.h>
+ //   #include <private/qrasterizer_p.h>
+ #include <private/qimage_p.h>
+@@ -2758,6 +2763,13 @@
+                                           const QFixedPoint *positions, QFontEngine *fontEngine)
+ {
+     Q_D(QRasterPaintEngine);
++#if QT_CONFIG(freetype)
++    const bool fontreal = fontEngine->type() == QFontEngine::Freetype
++        && static_cast<QFontEngineFT *>(fontEngine)->fontrealEnabled();
++#else
++    const bool fontreal = false;
++#endif
++    const QScopedValueRollback<bool> profileScope(qt_fontrealA8Text, fontreal);
+     QRasterPaintEngineState *s = state();
+
+     bool verticalSubPixelPositions = fontEngine->supportsVerticalSubPixelPositions()

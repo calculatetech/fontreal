@@ -127,7 +127,7 @@ def spillover_checks(env):
                                ("Nimbus Sans:style=Regular", "lmnogWVwv", True), ("Noto Color Emoji", "😀", False)):
         font = call(["fc-match", "-f", "%{file}", family], env).stdout
         group = {}
-        for mode in ("stock", "inactive", "linear"):
+        for mode in ("stock", "inactive", "linear", "encoded"):
             output = WORK/f"spillover-{family.split(':')[0].replace(' ', '-')}{'-gray' if gray else ''}-{mode}"
             case_env = dict(env, QT_QPA_PLATFORM="offscreen")
             command = selected(mode, [PROBE, "widget", font, output, text, "gray" if gray else "default"])
@@ -138,6 +138,10 @@ def spillover_checks(env):
             output.with_suffix(".log").write_text(result.stderr)
             group[mode] = json.loads(output.with_suffix(".json").read_text())
         assert group["stock"]["imageHash"] == group["inactive"]["imageHash"], "Inactive Qt changed control"
+        if not family.startswith("Noto Sans:"):
+            for mode in ("linear", "encoded"):
+                assert group[mode]["masks"] == group["inactive"]["masks"], "Noneligible masks changed"
+                assert group[mode]["imageHash"] == group["inactive"]["imageHash"], "Noneligible pixels changed"
         if family.startswith("Noto Sans:"):
             source = WORK/f"spillover-{family.split(':')[0].replace(' ', '-')}-linear.png"
             output = WORK/"widget-oracle.json"
@@ -149,6 +153,33 @@ def spillover_checks(env):
                             masksUnchanged=group["inactive"]["masks"] == group["linear"]["masks"],
                             pixelsUnchanged=group["inactive"]["imageHash"] == group["linear"]["imageHash"]))
         print(f"Spillover {family} gray={gray}: pixels unchanged={records[-1]['pixelsUnchanged']}", flush=True)
+    fonts = [call(["fc-match", "-f", "%{file}", family], env).stdout for family in
+             ("Noto Sans:style=Regular", "Nimbus Sans:style=Regular", "Noto Color Emoji")]
+    for entry in ("ordinary", "static"):
+        for order in ("tt-first", "cff-first"):
+            group = {}
+            for mode in ("stock", "inactive", "linear", "encoded"):
+                output = WORK/f"profile-{entry}-{order}-{mode}"
+                case_env = dict(env, QT_QPA_PLATFORM="offscreen")
+                command = selected(mode, [PROBE, "profile", *fonts, output, entry, order])
+                if mode == "inactive":
+                    command = [PROBE, "profile", *fonts, output, entry, order]
+                    case_env["LD_LIBRARY_PATH"] = str(ROOT/"build/qt-native/qt-build/lib")
+                call(command, case_env)
+                group[mode] = json.loads(output.with_suffix(".json").read_text())
+                assert group[mode]["colorGlyph"]
+                assert ("qt-native/qt-build/lib" in group[mode]["qtGui"]) == (mode != "stock")
+            assert group["stock"]["regions"] == group["inactive"]["regions"], "Inactive mixed output changed"
+            for mode in ("linear", "encoded"):
+                for ordinary, enabled in zip(group["stock"]["regions"], group[mode]["regions"], strict=True):
+                    assert (ordinary["row"], ordinary["column"], ordinary["role"]) == (enabled["row"], enabled["column"], enabled["role"])
+                    if enabled["role"]:
+                        assert ordinary["hash"] == enabled["hash"], "Mixed CFF/color output changed"
+                    else:
+                        assert all(g[f"mild/{mode}"]["matches"] for g in enabled["glyphs"].values()), "Mixed eligible blend changed"
+                        assert any(not g[f"mild/{'encoded' if mode=='linear' else 'linear'}"]["matches"] for g in enabled["glyphs"].values()), "Mixed fixture cannot distinguish blend"
+            records.append(dict(entry=entry, order=order, records=group))
+            print(f"Mixed profile scope: {entry}, {order}", flush=True)
     return records
 
 
@@ -252,6 +283,11 @@ def nested_checks(env, font):
                                       title=json.loads((output/"title.json").read_text()), plasma=json.loads((output/"plasma.json").read_text()),
                                       metadata=metadata, composite=composite, plasmaFinal=json.loads((output/"plasma-final.json").read_text()))
                         record["outputScale"] = display_state["outputs"][0]["scale"]
+                        if mode != "stock":
+                            expected = "none/linear" if mode == "linear-none" else f"mild/{mode}"
+                            opposite = "mild/encoded" if mode == "linear" else "mild/linear"
+                            assert all(g[expected]["matches"] for g in record["title"].values()), "Accepted KWin title changed"
+                            assert any(not g[opposite]["matches"] for g in record["title"].values()), "Title does not discriminate treatment"
                         records.append(record)
                     finally:
                         stop(client)

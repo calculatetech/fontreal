@@ -13,6 +13,8 @@ Status legend:
 
 The preferred viewed samples use Noto Sans and Inconsolata Nerd Font at 15px, automatic monochrome hints, mild contrast, integral origins, and linear blending on white. Font, effective size, blend, and polarity form one comparison condition. Human judgment at native display resolution remains the acceptance criterion.
 
+The user accepts the viewed KWin title result. Qt Quick looks good overall, while the OpenGL sample remains chunkier. Preserve the accepted result while correcting the measured gaps.
+
 ## Active
 
 No task is active.
@@ -20,7 +22,6 @@ No task is active.
 ## Planned next
 
 - **FR-013: Match Qt Quick composition and placement.** The isolated OpenGL and actual Plasma applet tests receive mild glyph masks but ignore the linear blend selector. Reproduce the accepted blend in that path, retain the encoded control, and resolve fractional output mismatches found by the KDE checks. Research the smallest supported Qt mechanism before implementation. Preserve real GPU operation and native-size human comparison.
-- **FR-014: Confine the A8 text transfer profile.** Explicit grayscale Nimbus Sans CFF keeps its masks but changes final pixels under the TrueType opt-in. Confine the selected transfer profile to eligible text without changing ordinary CFF or color rendering. Preserve existing widget/title results and toolkit compatibility.
 - **FR-011: Package a KDE desktop pilot.** Build patched Ubuntu 26.04 amd64 Qt packages from distro source and build rules. Add separate, initially disabled session activation. Test complete-session coverage and disabling, official-package rollback, and an official Qt update before host installation. Preserve font choices and normal security updates. See the [deployment decision](research/distribution.md).
 - **FR-003: Calibrate native application text.** Focus on Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales, and light/dark colors. Retain other fonts as comparison controls. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
 - **FR-012: Make the KDE packages distributable.** Supply matching source and binary packages, build provenance, required licenses and notices, signed APT metadata, supported versions, and recovery instructions. Establish the Qt security-update rebuild process. Resolve the project license before public release. Keep the GitHub repository private unless the user changes that choice.
@@ -41,6 +42,7 @@ No task is declined. Non-native LCD resolution remains outside the project scope
 
 ## Completed
 
+- **FR-014: Confine the A8 text transfer profile.** The selected profile now follows the current eligible TrueType raster draw. Ordinary and static mixed-font checks preserve stock CFF/color pixels, including grayscale CFF after TrueType. Existing independent widget, Konsole, and 100%/125% KWin title checks pass. See the [profile-scope specification](plans/FR-014-a8-profile-scope.md).
 - **FR-004: Measure KDE rendering paths.** Isolated KWin title glyphs match mild/linear at 100% and 125%. Real Plasma applet and Qt Quick checks expose GPU blending and fractional renderer gaps. Grayscale CFF controls reproduce shared-profile spillover. Corrections remain FR-013/FR-014, and full-session activation remains FR-011. See the [checks and comparison guide](experiments/kde-paths.md).
 - **FR-010: Test native mild contrast with the preferred fonts.** Carry the selected coverage treatment into the isolated Qt preview. Compare Noto Sans menus and Inconsolata Nerd Font terminal text, with explicit blending and unadjusted controls. Preserve normal application configuration.
 - **FR-009: Compare crisper diagonal edges.** Keep the preferred grayscale reference and compare two tighter gray transitions with automatic-hinted binary output in a separate native study. Preserve the ordinary experiment and leave desktop treatment selection to later visual calibration.

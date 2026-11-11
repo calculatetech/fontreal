@@ -46,7 +46,9 @@ At 100% scale, the Qt Quick software control matches mild/linear for the tested 
 
 The software control does not reproduce every reference glyph at 125%. In the explicit native row, four of nine glyphs meet the strict mild/linear threshold. The native OpenGL row retains exact selected mask shapes under the deliberate half-device-pixel shift at 100%. These are bounded placement results, not certification of arbitrary transforms or decoration origins.
 
-Nimbus Sans CFF and Noto Color Emoji retain equal masks and output under the ordinary fixture. With explicit grayscale CFF text, the masks remain equal but final pixels change. This reproduces the shared A8 transfer-profile spillover outside eligible TrueType text. Broad activation needs a confined profile or an explicit supported result for that path.
+The original prototype changed explicit grayscale Nimbus Sans CFF pixels despite retaining its masks. The corrected A8 profile now applies only during an eligible TrueType draw. Ordinary and grayscale CFF, plus Noto Color Emoji, must retain stock masks and output under both blend selectors.
+
+The preservation checks also paint TrueType, CFF, and color glyphs in one process, with repeated prefixes and reversed order. They exercise ordinary text and QStaticText, cached repaint, and all three palettes. CFF/color regions must equal stock exactly. Eligible regions must match their selected independent blend prediction. A positive multicolor check prevents a blank or missing emoji from passing as a color control.
 
 These results do not certify all fonts, sizes, scripts, styles, palettes, decorations, GPU drivers, or Plasma components. Full-session D-Bus/systemd inheritance, package installation, official updates, and rollback remain package-pilot work. The [roadmap](../roadmap.md) owns the remaining rendering and deployment work.
 
