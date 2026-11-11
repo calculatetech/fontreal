@@ -79,7 +79,9 @@ Use the controlled experiment as the pixel and visual reference for an opt-in, i
 
 An opt-in, isolated Qt patch now implements these mechanisms. The [real Konsole comparison](../experiments/kde-preview.md) describes the build, launch choices, and verification. Blend selection remains manual. The exact size policy remains a calibration question. The user's observations place the transition near 16 effective pixels for the viewed fonts, with about one pixel of variation.
 
-The integration checks render actual QWidget text and compare it with independent FreeType masks and blend formulas. Separate Konsole launches provide the real application comparison. Human judgment still determines the preferred appearance. KWin and Plasma require their own later comparisons because they own different processes and rendering paths.
+The integration checks render actual QWidget text and compare it with independent FreeType masks and blend formulas. Separate Konsole launches provide the real application comparison. Human judgment still determines the preferred appearance.
+
+The separate [KDE path checks](../experiments/kde-paths.md) now exercise nested KWin and the installed Plasma applet host. At 100% scale, enabled title glyphs match mild/linear. Native Qt Quick OpenGL text receives the mild masks but still uses encoded edge composition. A software-renderer control matches the linear reference at that scale. Grayscale CFF text also exposes the shared A8 profile's wider effect. These measured gaps must be resolved before broad activation.
 
 ## Rejected options
 
@@ -95,4 +97,4 @@ Revisit the integration choice if a distro or upstream Qt update exposes the mis
 
 ## Sources
 
-The linked Qt 6.10.2 and Breeze 6.6.6 sources identify the relevant owners and selection rules. The installed-library trace independently confirms the hinting-target and scaling behavior on this machine. The isolated prototype adds direct widget and application checks. The Qt Quick conclusions remain source analysis pending a separate integration.
+The linked Qt 6.10.2 and Breeze 6.6.6 sources identify the relevant owners and selection rules. The installed-library trace independently confirms the hinting-target and scaling behavior on this machine. The isolated prototype adds direct widget and application checks. The separate KDE path guide distinguishes measured applet-host output from untested full-session coverage.

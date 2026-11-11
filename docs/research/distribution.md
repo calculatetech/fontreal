@@ -10,7 +10,7 @@ The first target is the current Ubuntu 26.04 amd64 desktop. Installed packages a
 
 The accepted treatment is automatic monochrome hints with grayscale rasterization, snapped origins, mild contrast, and linear blending. Noto Sans and Inconsolata Nerd Font at 15px are useful starting conditions. Blend preference depends on effective size and font. Preserve explicit controls and the user's font choices.
 
-Native Qt widgets and Konsole have application-level evidence. KWin decorations, Qt Quick, GTK, Wine, browsers, and bundled runtimes do not. The prototype's shared A8 transfer profile can affect fonts outside the tested TrueType path. Confine that effect or establish its supported behavior before broad activation. See the [Qt specification](../plans/FR-002-qt-native.md) and [mild contrast specification](../plans/FR-010-native-mild.md).
+Native Qt widgets and Konsole have application-level evidence. Separate [KDE path checks](../experiments/kde-paths.md) establish matching KWin title glyphs at 100% scale. The actual Plasma applet host exposes a Qt Quick GPU blending gap. Explicit grayscale CFF text also reproduces spillover from the shared A8 transfer profile. Resolve these gaps before broad activation. GTK, Wine, browsers, bundled runtimes, and full-session activation remain unproven. See the [Qt specification](../plans/FR-002-qt-native.md) and [mild contrast specification](../plans/FR-010-native-mild.md).
 
 ## Options
 
