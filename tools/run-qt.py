@@ -11,14 +11,18 @@ LIB = ROOT / "build/qt-native/qt-build/lib"
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--contrast", choices=("none", "mild"), default="none")
     parser.add_argument("mode", choices=("stock", "linear", "encoded"))
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
+    if args.mode == "stock" and args.contrast != "none":
+        parser.error("Stock mode requires --contrast none.")
     if not args.command:
         parser.error("Supply the Qt application and its arguments.")
     env = os.environ.copy()
     env.pop("FONTREAL_RENDERING", None)
     env.pop("FONTREAL_BLEND", None)
+    env.pop("FONTREAL_CONTRAST", None)
     paths = [p for p in env.get("LD_LIBRARY_PATH", "").split(":")
              if p and Path(p).resolve() != LIB]
     if args.mode != "stock":
@@ -34,6 +38,7 @@ def main():
         env["QT_PLUGIN_PATH"] = plugins
         env["FONTREAL_RENDERING"] = "1"
         env["FONTREAL_BLEND"] = args.mode
+        env["FONTREAL_CONTRAST"] = args.contrast
     if paths:
         env["LD_LIBRARY_PATH"] = ":".join(paths)
     else:

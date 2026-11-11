@@ -11,7 +11,7 @@ Status legend:
 - ❌ **Declined** — considered and intentionally not supported
 - ✅ **Completed** — implemented and validated
 
-The visual reference is automatic monochrome hinting with grayscale edges and integral glyph origins. Blend preference changes with effective size and font. Human judgment at native display resolution remains the acceptance criterion.
+The preferred viewed samples use Noto Sans and Inconsolata Nerd Font at 15px, automatic monochrome hints, mild contrast, integral origins, and linear blending on white. Font, effective size, blend, and polarity form one comparison condition. Human judgment at native display resolution remains the acceptance criterion.
 
 ## Active
 
@@ -19,7 +19,7 @@ No task is active.
 
 ## Planned next
 
-- **FR-003: Calibrate native application text.** Compare Noto Sans and DejaVu Sans across sizes, display scales, and light/dark colors. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
+- **FR-003: Calibrate native application text.** Focus on Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales, and light/dark colors. Retain other fonts as comparison controls. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
 - **FR-004: Cover KDE rendering paths.** Test KWin decoration text and Plasma Qt Quick separately from native widgets. Trace actual paths at integral and fractional scales. Define installation and rollback only after isolated tests succeed.
 
 ## Planned later
@@ -38,6 +38,7 @@ No task is declined. Non-native LCD resolution remains outside the project scope
 
 ## Completed
 
+- **FR-010: Test native mild contrast with the preferred fonts.** Carry the selected coverage treatment into the isolated Qt preview. Compare Noto Sans menus and Inconsolata Nerd Font terminal text, with explicit blending and unadjusted controls. Preserve normal application configuration.
 - **FR-009: Compare crisper diagonal edges.** Keep the preferred grayscale reference and compare two tighter gray transitions with automatic-hinted binary output in a separate native study. Preserve the ordinary experiment and leave desktop treatment selection to later visual calibration.
 - **FR-008: Correct the Konsole menu font control.** Apply the selected family and pixel size to KDE's separate menu font role. Check the private configuration and rendered menus. Keep the remaining visual calibration in FR-003.
 - **FR-001: Controlled FreeType comparison.** Native viewer and repeatable exports compare seven treatments. Independent checks cover glyph masks, blending, placement, and native-pixel presentation. The user selected automatic mono hints with gray edges and identified a size-dependent blend preference. See the [experiment](experiments/freetype-comparison.md) and [KDE investigation](research/kde-integration.md).

@@ -2,7 +2,7 @@
 
 The [roadmap](docs/roadmap.md) covers KDE, GNOME, Wine, and conditional Windows 11 support.
 
-The [real Konsole comparison](docs/experiments/kde-preview.md) builds and launches an isolated Qt prototype with stock, linear, and encoded choices.
+The [real Konsole comparison](docs/experiments/kde-preview.md) builds and launches an isolated Qt prototype with stock, linear, and encoded choices, plus optional mild contrast and the user's Inconsolata Nerd Font terminal selection.
 
 The separate [diagonal edge study](docs/experiments/diagonal-edges.md) compares the remaining W/V fuzziness with two tighter gray transitions and automatic-hinted binary output. Open it with `--edges`. The ordinary seven-row experiment stays available without that flag.
 

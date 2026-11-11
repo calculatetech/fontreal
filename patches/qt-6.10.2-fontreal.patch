@@ -76,7 +76,26 @@
      switch (format) {
      case Format_Mono:
          renderMode = FT_RENDER_MODE_MONO;
-@@ -2804,6 +2829,18 @@
+@@ -2060,6 +2085,18 @@
+     } else {
+         qWarning("QFontEngine: Glyph rendered in unknown pixel_mode=%d", slot->bitmap.pixel_mode);
+         return nullptr;
++    }
++
++    if (fontrealEnabled() && format == Format_A8) {
++        static const bool mild = qgetenv("FONTREAL_CONTRAST") == "mild";
++        if (mild)
++            for (int y = 0; y < info.height; ++y) {
++                uchar *row = glyph_buffer.get() + y * pitch;
++                for (int x = 0; x < info.width; ++x) {
++                    const int a = qBound(32, int(row[x]), 223) - 32;
++                    row[x] = uchar((a * 255 + 95) / 191);
++                }
++            }
+     }
+ 
+     if (!g) {
+@@ -2804,6 +2841,18 @@
          lockFace();
          FT_Matrix m = this->matrix;
          FT_Matrix ftMatrix = glyphSet != nullptr ? glyphSet->transformationMatrix : QTransformToFTMatrix(t);
