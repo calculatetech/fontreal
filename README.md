@@ -2,6 +2,8 @@
 
 The [roadmap](docs/roadmap.md) covers KDE, GNOME, Wine, and conditional Windows 11 support.
 
+The [real Konsole comparison](docs/experiments/kde-preview.md) builds and launches an isolated Qt prototype with stock, linear, and encoded choices.
+
 A controlled Linux font experiment. The target is solid, pixel-aligned strokes with softened curves and diagonals. Shape fidelity comes second. Human comparison decides whether the result looks right. Coverage measurements explain the pixels.
 
 ## Build and open

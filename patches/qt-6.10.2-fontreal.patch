@@ -1,0 +1,135 @@
+# Fontreal opt-in native text experiment for Qt 6.10.2.
+# Upstream files retain their Qt LGPL/GPL/commercial license headers.
+# Apply to the verified official qtbase-everywhere-src-6.10.2 archive.
+--- a/src/gui/text/freetype/qfontengine_ft_p.h
++++ b/src/gui/text/freetype/qfontengine_ft_p.h
+@@ -167,10 +167,11 @@
+     QFontEngine::FaceId faceId() const override;
+     QFontEngine::Properties properties() const override;
+     QFixed emSquareSize() const override;
++    bool fontrealEnabled() const;
+     bool supportsHorizontalSubPixelPositions() const override
+     {
+-        return default_hint_style == HintLight ||
+-               default_hint_style == HintNone;
++        return !fontrealEnabled() && (default_hint_style == HintLight ||
++                                     default_hint_style == HintNone);
+     }
+ 
+     bool supportsVerticalSubPixelPositions() const override
+--- a/src/gui/text/freetype/qfontengine_ft.cpp
++++ b/src/gui/text/freetype/qfontengine_ft.cpp
+@@ -979,6 +979,10 @@
+         ysize = 0;
+         return false;
+     }
++    if (fontrealEnabled()) {
++        antialias = true;
++        format = Format_A8;
++    }
+     defaultFormat = format;
+     this->antialias = antialias;
+ 
+@@ -1127,8 +1131,22 @@
+     default_hint_style = style;
+ }
+ 
++bool QFontEngineFT::fontrealEnabled() const
++{
++    static const bool enabled = qgetenv("FONTREAL_RENDERING") == "1";
++    if (!enabled || !freetype || !FT_IS_SCALABLE(freetype->face)
++        || FT_HAS_COLOR(freetype->face))
++        return false;
++    const char *format = FT_Get_Font_Format(freetype->face);
++    return format && qstrcmp(format, "TrueType") == 0;
++}
++
+ bool QFontEngineFT::expectsGammaCorrectedBlending() const
+ {
++    if (fontrealEnabled()) {
++        static const bool linear = qgetenv("FONTREAL_BLEND") != "encoded";
++        return linear;
++    }
+     return stemDarkeningDriver;
+ }
+ 
+@@ -1164,6 +1182,13 @@
+     if (forceAutoHint)
+         load_flags |= FT_LOAD_FORCE_AUTOHINT;
+ 
++    if (fontrealEnabled() && !(flags & DesignMetrics)
++        && !(set && set->outline_drawing) && format != Format_ARGB) {
++        load_flags &= ~(FT_LOAD_NO_HINTING | (15 << 16) | FT_LOAD_MONOCHROME);
++        load_flags |= FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO | FT_LOAD_NO_BITMAP;
++        hsubpixel = false;
++        vfactor = 1;
++    }
+     return load_flags;
+ }
+ 
+@@ -1933,7 +1958,7 @@
+ 
+     int glyph_buffer_size = 0;
+     std::unique_ptr<uchar[]> glyph_buffer;
+-    FT_Render_Mode renderMode = (default_hint_style == HintLight) ? FT_RENDER_MODE_LIGHT : FT_RENDER_MODE_NORMAL;
++    FT_Render_Mode renderMode = (!fontrealEnabled() && default_hint_style == HintLight) ? FT_RENDER_MODE_LIGHT : FT_RENDER_MODE_NORMAL;
+     switch (format) {
+     case Format_Mono:
+         renderMode = FT_RENDER_MODE_MONO;
+@@ -2804,6 +2829,18 @@
+         lockFace();
+         FT_Matrix m = this->matrix;
+         FT_Matrix ftMatrix = glyphSet != nullptr ? glyphSet->transformationMatrix : QTransformToFTMatrix(t);
++        if (fontrealEnabled() && t.type() == QTransform::TxScale
++            && t.m11() > 0 && qFuzzyCompare(t.m11(), t.m22())) {
++            const FT_F26Dot6 deviceX = FT_MulFix(xsize, ftMatrix.xx);
++            const FT_F26Dot6 deviceY = FT_MulFix(ysize, ftMatrix.yy);
++            if (FT_Set_Char_Size(freetype->face, deviceX, deviceY, 0, 0)) {
++                unlockFace();
++                return nullptr;
++            }
++            freetype->xsize = deviceX;
++            freetype->ysize = deviceY;
++            ftMatrix = {0x10000, 0, 0, 0x10000};
++        }
+         FT_Matrix_Multiply(&ftMatrix, &m);
+         freetype->matrix = m;
+         glyph = loadGlyph(glyphSet, g, subPixelPosition, color, format, false, disableOutlineDrawing);
+--- a/src/gui/text/unix/qfontconfigdatabase.cpp
++++ b/src/gui/text/unix/qfontconfigdatabase.cpp
+@@ -1177,6 +1177,13 @@
+ 
+     FcPatternDestroy(pattern);
+ 
++    if (engine->fontrealEnabled()) {
++        engine->setDefaultHintStyle(QFontEngine::HintFull);
++        engine->forceAutoHint = true;
++        engine->subpixelType = QFontEngine::Subpixel_None;
++        antialias = true;
++        format = QFontEngine::Format_A8;
++    }
+     engine->antialias = antialias;
+     engine->defaultFormat = format;
+     engine->glyphFormat = format;
+--- a/src/gui/kernel/qguiapplication.cpp
++++ b/src/gui/kernel/qguiapplication.cpp
+@@ -41,6 +41,7 @@
+ #include <qscreen.h>
+ #include "qsessionmanager.h"
+ #include <private/qcolortrclut_p.h>
++#include <private/qcolortrc_p.h>
+ #include <private/qscreen_p.h>
+ 
+ #include <QtGui/qgenericpluginfactory.h>
+@@ -4516,6 +4517,11 @@
+ 
+ const QColorTrcLut *QGuiApplicationPrivate::colorProfileForA8Text()
+ {
++    static const bool fontreal = qgetenv("FONTREAL_RENDERING") == "1";
++    if (fontreal) {
++        static const auto srgb = QColorTrcLut::fromTrc(QColorTrc(QColorTransferFunction::fromSRgb()));
++        return srgb.get();
++    }
+ #ifdef Q_OS_WIN
+     if (!m_a8ColorProfile)
+         m_a8ColorProfile = QColorTrcLut::fromGamma(2.31f); // This is a hard-coded thing for Windows text rendering

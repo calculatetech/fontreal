@@ -77,9 +77,9 @@ Use the controlled experiment as the pixel and visual reference for an opt-in, i
 3. Use integral glyph placement in the native text path.
 4. Reproduce the experiment's transfer function for small text, with a separately tested size policy for larger text.
 
-These are prototype requirements, not an implemented Qt patch. The exact size policy remains a calibration question. The user's observations place the transition near 16 effective pixels for the viewed fonts, with about one pixel of variation.
+An opt-in, isolated Qt patch now implements these mechanisms. The [real Konsole comparison](../experiments/kde-preview.md) describes the build, launch choices, and verification. Blend selection remains manual. The exact size policy remains a calibration question. The user's observations place the transition near 16 effective pixels for the viewed fonts, with about one pixel of variation.
 
-The first integration proof must render actual Qt text, then compare its raw mask, composition, and native presentation with the reference. Only after that comparison can a launch of one isolated KDE application establish whether menus and other native text retain the preferred appearance. KWin and Plasma require their own later comparisons because they own different processes and rendering paths.
+The integration checks render actual QWidget text and compare it with independent FreeType masks and blend formulas. Separate Konsole launches provide the real application comparison. Human judgment still determines the preferred appearance. KWin and Plasma require their own later comparisons because they own different processes and rendering paths.
 
 ## Rejected options
 
@@ -87,7 +87,7 @@ Do not present a Fontconfig-only change as an exact reproduction of the selected
 
 Do not disable all antialiasing to obtain the mono target. That removes the curve softening the user selected.
 
-Do not install a replacement Qt library or restart the compositor as an untested experiment. The current task establishes the integration points, without changing the desktop.
+Do not install a replacement Qt library or restart the compositor as an untested experiment. The prototype uses private libraries and private application settings without changing the desktop.
 
 ## Revisit when
 
@@ -95,4 +95,4 @@ Revisit the integration choice if a distro or upstream Qt update exposes the mis
 
 ## Sources
 
-The linked Qt 6.10.2 and Breeze 6.6.6 sources identify the relevant owners and selection rules. The installed-library trace independently confirms the hinting-target and scaling behavior on this machine. The transfer-function and Quick-path conclusions remain source analysis pending an isolated integration prototype.
+The linked Qt 6.10.2 and Breeze 6.6.6 sources identify the relevant owners and selection rules. The installed-library trace independently confirms the hinting-target and scaling behavior on this machine. The isolated prototype adds direct widget and application checks. The Qt Quick conclusions remain source analysis pending a separate integration.

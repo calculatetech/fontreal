@@ -19,7 +19,6 @@ No task is active.
 
 ## Planned next
 
-- **FR-002: First KDE application test.** Build an isolated Qt prototype and launch an existing KDE application. Match the selected hinting, grayscale output, placement, and blend. Provide stock and modified launches without replacing installed libraries or changing the desktop. Record which text paths the test reaches.
 - **FR-003: Calibrate native application text.** Compare Noto Sans and DejaVu Sans across sizes, display scales, and light/dark colors. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
 - **FR-004: Cover KDE rendering paths.** Test KWin decoration text and Plasma Qt Quick separately from native widgets. Trace actual paths at integral and fractional scales. Define installation and rollback only after isolated tests succeed.
 
@@ -40,3 +39,4 @@ No task is declined. Non-native LCD resolution remains outside the project scope
 ## Completed
 
 - **FR-001: Controlled FreeType comparison.** Native viewer and repeatable exports compare seven treatments. Independent checks cover glyph masks, blending, placement, and native-pixel presentation. The user selected automatic mono hints with gray edges and identified a size-dependent blend preference. See the [experiment](experiments/freetype-comparison.md) and [KDE investigation](research/kde-integration.md).
+- **FR-002: First KDE application test.** The isolated Qt build and stock/linear/encoded Konsole launches reproduce the selected treatment. Native widget and real-application checks pass. Visual calibration remains FR-003. See the [test guide](experiments/kde-preview.md) and [specification](plans/FR-002-qt-native.md).
