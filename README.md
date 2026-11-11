@@ -4,7 +4,7 @@ The [roadmap](docs/roadmap.md) covers KDE, GNOME, Wine, and conditional Windows 
 
 The [deployment decision](docs/research/distribution.md) proposes distro Qt packages, separate session activation, tested rollback, and an APT distribution channel. Desktop installation is planned. The current preview remains isolated.
 
-The [KDE path checks](docs/experiments/kde-paths.md) compare real nested KWin titles, a Plasma applet host, and Qt Quick against independent pixel predictions.
+The [KDE path checks](docs/experiments/kde-paths.md) compare real nested KWin titles, a Plasma applet host, and Qt Quick against independent pixel predictions. The private GPU prototype adds the selected text blend and shared-origin snapping. It preserves ordinary colors and noneligible fonts in the tested scenes.
 
 The [real Konsole comparison](docs/experiments/kde-preview.md) builds and launches an isolated Qt prototype with stock, linear, and encoded choices, plus optional mild contrast and the user's Inconsolata Nerd Font terminal selection.
 

@@ -1,0 +1,367 @@
+--- a/src/quick/items/qquickwindow.cpp
++++ b/src/quick/items/qquickwindow.cpp
+@@ -810,7 +810,10 @@
+     }
+
+     q->setSurfaceType(windowManager ? windowManager->windowSurfaceType() : QSurface::OpenGLSurface);
+-    q->setFormat(sg->defaultSurfaceFormat());
++    auto surfaceFormat = sg->defaultSurfaceFormat();
++    if (qsg_fontrealEnabled() && q->surfaceType() == QSurface::OpenGLSurface)
++        surfaceFormat.setColorSpace(QColorSpace::SRgb);
++    q->setFormat(surfaceFormat);
+     // When using Vulkan, associating a scenegraph-managed QVulkanInstance with
+     // the window (but only when not using renderControl) is deferred to
+     // QSGRhiSupport::createRhi(). This allows applications to set up their own
+--- a/src/quick/items/qsginternaltextnode.cpp
++++ b/src/quick/items/qsginternaltextnode.cpp
+@@ -23,6 +23,7 @@
+
+ #include <private/qtextdocumentlayout_p.h>
+ #include <qhash.h>
++#include <rhi/qrhi.h>
+
+ QT_BEGIN_NAMESPACE
+
+@@ -63,6 +64,14 @@
+             if (fe->hasUnreliableGlyphOutline() || !fe->isSmoothlyScalable)
+                 preferredRenderType = QSGTextNode::NativeRendering;
+     }
++
++    const bool fontreal = m_renderContext->rhi() && m_renderContext->rhi()->backend() == QRhi::OpenGLES2
++            && qsg_fontrealFont(QRawFontPrivate::get(font)->fontEngine);
++    if (fontreal)
++        preferredRenderType = NativeRendering;
++    if (qEnvironmentVariableIsSet("FONTREAL_TRACE_QUICK"))
++        qInfo("FONTREAL_SELECT font=%s requested=%d effective=%d eligible=%d glyphs=%d",
++              qPrintable(font.familyName()), int(m_renderType), int(preferredRenderType), int(fontreal), int(glyphs.glyphIndexes().size()));
+
+     if (preferredRenderType == NativeRendering)
+         m_containsUnscalableGlyphs = true;
+--- a/src/quick/scenegraph/coreapi/qsgbatchrenderer.cpp
++++ b/src/quick/scenegraph/coreapi/qsgbatchrenderer.cpp
+@@ -2753,6 +2753,8 @@
+     if (m_gstate.stencilTest)
+         flags |= QRhiGraphicsPipeline::UsesStencilRef;
+
++    if (m_gstate.fontrealSrgbWrite)
++        flags |= QRhiGraphicsPipeline::FontrealSrgbWrite;
+     ps->setFlags(flags);
+     ps->setTopology(qsg_topology(m_gstate.drawMode, m_rhi));
+     ps->setCullMode(m_gstate.cullMode);
+@@ -2897,6 +2899,7 @@
+                                             GraphicsState *src)
+ {
+     dst->blendEnable = src->blending;
++    dst->fontrealSrgbWrite = src->fontrealSrgbWrite;
+
+     // the enum values should match, sanity check it
+     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::OneMinusSrc1Alpha) == int(QRhiGraphicsPipeline::OneMinusSrc1Alpha));
+@@ -2931,6 +2934,7 @@
+                                             QSGMaterialShader::GraphicsPipelineState *src)
+ {
+     dst->blending = src->blendEnable;
++    dst->fontrealSrgbWrite = src->fontrealSrgbWrite;
+     dst->srcColor = QRhiGraphicsPipeline::BlendFactor(src->srcColor);
+     dst->dstColor = QRhiGraphicsPipeline::BlendFactor(src->dstColor);
+     if (src->separateBlendFactors) {
+@@ -4215,6 +4219,7 @@
+             && a.depthWrite == b.depthWrite
+             && a.depthFunc == b.depthFunc
+             && a.blending == b.blending
++            && a.fontrealSrgbWrite == b.fontrealSrgbWrite
+             && a.srcColor == b.srcColor
+             && a.dstColor == b.dstColor
+             && a.srcAlpha == b.srcAlpha
+@@ -4245,6 +4250,7 @@
+             + s.depthWrite * 100
+             + s.depthFunc
+             + s.blending * 10
++            + s.fontrealSrgbWrite * 10000
+             + s.srcColor
+             + s.cullMode
+             + s.usesScissor
+--- a/src/quick/scenegraph/coreapi/qsgbatchrenderer_p.h
++++ b/src/quick/scenegraph/coreapi/qsgbatchrenderer_p.h
+@@ -596,6 +596,7 @@
+     bool depthWrite = false;
+     QRhiGraphicsPipeline::CompareOp depthFunc = QRhiGraphicsPipeline::Less;
+     bool blending = false;
++    bool fontrealSrgbWrite = false;
+     QRhiGraphicsPipeline::BlendFactor srcColor = QRhiGraphicsPipeline::One;
+     QRhiGraphicsPipeline::BlendFactor dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+     QRhiGraphicsPipeline::BlendFactor srcAlpha = QRhiGraphicsPipeline::One;
+--- a/src/quick/scenegraph/coreapi/qsgmaterialshader.h
++++ b/src/quick/scenegraph/coreapi/qsgmaterialshader.h
+@@ -56,6 +56,7 @@
+
+     private:
+         friend class QSGRenderer;
++        friend bool qsg_fontrealLinearTarget(RenderState &state);
+         DirtyStates m_dirty;
+         const void *m_data;
+     };
+@@ -122,6 +123,7 @@
+         BlendFactor dstAlpha;
+         BlendOp opColor;
+         BlendOp opAlpha;
++        bool fontrealSrgbWrite;
+
+         // This struct is extensible while keeping BC since apps only ever get
+         // a ptr to the struct, it is not created by them.
+--- a/src/quick/scenegraph/qsgcontext.cpp
++++ b/src/quick/scenegraph/qsgcontext.cpp
+@@ -20,6 +20,10 @@
+
+ #include <private/qobject_p.h>
+ #include <qmutex.h>
++#include <QtGui/private/qfontengine_ft_p.h>
++#include <QtGui/private/qrhigles2_p.h>
++#include <QtGui/qopenglcontext.h>
++#include <QtGui/qopenglextrafunctions.h>
+
+ /*
+     Comments about this class from Gunnar:
+@@ -39,6 +43,59 @@
+ */
+
+ QT_BEGIN_NAMESPACE
++
++bool qsg_fontrealEnabled()
++{
++    static const bool enabled = qgetenv("FONTREAL_RENDERING") == "1";
++    return enabled;
++}
++
++bool qsg_fontrealFont(QFontEngine *engine)
++{
++    return engine && engine->type() == QFontEngine::Freetype
++            && static_cast<QFontEngineFT *>(engine)->fontrealEnabled();
++}
++
++bool qsg_fontrealWriteView(QRhi *rhi)
++{
++    auto *ctx = QOpenGLContext::currentContext();
++    return qsg_fontrealEnabled() && rhi && rhi->backend() == QRhi::OpenGLES2
++            && ctx && !ctx->isOpenGLES() && ctx->hasExtension("GL_EXT_framebuffer_sRGB")
++            && ctx->hasExtension("GL_ARB_texture_storage") && ctx->hasExtension("GL_ARB_texture_view");
++}
++
++bool qsg_fontrealLinearTarget(QSGMaterialShader::RenderState &state)
++{
++    static const bool linear = qgetenv("FONTREAL_BLEND") != "encoded";
++    if (!qsg_fontrealEnabled() || !linear || !state.rhi() || state.rhi()->backend() != QRhi::OpenGLES2)
++        return false;
++    auto *ctx = QOpenGLContext::currentContext();
++    if (!ctx || ctx->isOpenGLES() || !ctx->hasExtension("GL_EXT_framebuffer_sRGB"))
++        return false;
++    auto *rt = static_cast<const QSGRenderer *>(state.m_data)->renderTarget().rt;
++    if (!rt || rt->sampleCount() != 1)
++        return false;
++    if (rt->resourceType() == QRhiResource::TextureRenderTarget) {
++        const auto &desc = static_cast<QRhiTextureRenderTarget *>(rt)->description();
++        if (desc.colorAttachmentCount() != 1)
++            return false;
++        const auto *tex = static_cast<const QGles2Texture *>(desc.cbeginColorAttachments()->texture());
++        return tex && tex->flags().testFlag(QRhiTexture::FontrealSrgbWrite) && tex->fontrealWriteView;
++    }
++    if (rt->resourceType() != QRhiResource::SwapChainRenderTarget)
++        return false;
++    auto *f = ctx->extraFunctions();
++    GLint draw = 0, read = 0, encoding = 0;
++    f->glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw);
++    f->glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read);
++    const GLuint fbo = ctx->defaultFramebufferObject();
++    f->glBindFramebuffer(GL_FRAMEBUFFER, fbo);
++    f->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, fbo ? GL_COLOR_ATTACHMENT0 : GL_BACK_LEFT,
++                                             GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &encoding);
++    f->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, GLuint(draw));
++    f->glBindFramebuffer(GL_READ_FRAMEBUFFER, GLuint(read));
++    return encoding == GL_SRGB;
++}
+
+ // Used for very high-level info about the renderering and gl context
+ // Includes GL_VERSION, type of render loop, atlas size, etc.
+--- a/src/quick/scenegraph/qsgcontext_p.h
++++ b/src/quick/scenegraph/qsgcontext_p.h
+@@ -29,10 +29,16 @@
+ #include <QtQuick/qsgnode.h>
+ #include <QtQuick/qsgrendererinterface.h>
+ #include <QtQuick/qsgtextnode.h>
++#include <QtQuick/qsgmaterialshader.h>
+
+ #include <QtCore/qpointer.h>
+
+ QT_BEGIN_NAMESPACE
++
++bool qsg_fontrealEnabled();
++bool qsg_fontrealFont(QFontEngine *engine);
++bool qsg_fontrealWriteView(QRhi *rhi);
++bool qsg_fontrealLinearTarget(QSGMaterialShader::RenderState &state);
+
+ Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
+
+--- a/src/quick/scenegraph/qsgdefaultglyphnode_p.cpp
++++ b/src/quick/scenegraph/qsgdefaultglyphnode_p.cpp
+@@ -73,8 +73,16 @@
+     const int projectionMatrixCount = qMin(state.projectionMatrixCount(), newMaterial->viewCount());
+
+     quint32 offset = 0; // ModelViewMatrix
+-    if (state.isMatrixDirty()) {
+-        const QMatrix4x4 mv = state.modelViewMatrix();
++    if (state.isMatrixDirty() || qsg_fontrealEnabled()) {
++        QMatrix4x4 mv = state.modelViewMatrix();
++        if (mat->fontrealEligible() && state.rhi()->backend() == QRhi::OpenGLES2
++                && mv(0, 0) == 1 && mv(1, 1) == 1 && mv(0, 1) == 0 && mv(1, 0) == 0
++                && mv(3, 0) == 0 && mv(3, 1) == 0) {
++            const float dpr = state.devicePixelRatio();
++            // Snap the shared origin once, so half-pixel ties cannot stretch a glyph.
++            mv(0, 3) = std::floor(mv(0, 3) * dpr + 0.5f) / dpr;
++            mv(1, 3) = std::floor(mv(1, 3) * dpr + 0.5f) / dpr;
++        }
+         memcpy(buf->data() + offset, mv.constData(), 64);
+         changed = true;
+     }
+@@ -132,6 +140,7 @@
+     QSG8BitTextMaskRhiShader(QFontEngine::GlyphFormat glyphFormat, int viewCount, bool alphaTexture)
+         : QSGTextMaskRhiShader(glyphFormat, viewCount)
+     {
++        setFlag(UpdatesGraphicsPipelineState, qsg_fontrealEnabled());
+         if (alphaTexture)
+             setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/8bittextmask_a.frag.qsb"), viewCount);
+         else
+@@ -139,6 +148,12 @@
+     }
+
+     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
++    bool updateGraphicsPipelineState(RenderState &state, GraphicsPipelineState *ps,
++                                     QSGMaterial *newMaterial, QSGMaterial *) override {
++        ps->fontrealSrgbWrite = static_cast<QSGTextMaskMaterial *>(newMaterial)->fontrealEligible()
++                && qsg_fontrealLinearTarget(state);
++        return true;
++    }
+ };
+
+ bool QSG8BitTextMaskRhiShader::updateUniformData(RenderState &state,
+@@ -151,8 +166,18 @@
+
+     QByteArray *buf = state.uniformData();
+
+-    if (oldMat == nullptr || mat->color() != oldMat->color() || state.isOpacityDirty()) {
+-        const QVector4D color = qsg_premultiply(mat->color(), state.opacity());
++    if (qsg_fontrealEnabled() || oldMat == nullptr || mat->color() != oldMat->color() || state.isOpacityDirty()) {
++        QVector4D unmultiplied = mat->color();
++        const bool linear = mat->fontrealEligible() && qsg_fontrealLinearTarget(state);
++        if (linear) {
++            for (int i = 0; i < 3; ++i) {
++                const float c = unmultiplied[i];
++                unmultiplied[i] = c <= 0.04045f ? c / 12.92f : std::pow((c + 0.055f) / 1.055f, 2.4f);
++            }
++        }
++        if (qEnvironmentVariableIsSet("FONTREAL_TRACE_QUICK"))
++            qInfo("FONTREAL_TARGET eligible=%d linear=%d", int(mat->fontrealEligible()), int(linear));
++        const QVector4D color = qsg_premultiply(unmultiplied, state.opacity());
+         memcpy(buf->data() + m_currentUbufOffset, &color, 16);
+         changed = true;
+     }
+@@ -276,8 +301,15 @@
+
+     QByteArray *buf = state.uniformData();
+
+-    if (oldMat == nullptr || mat->styleColor() != oldMat->styleColor() || state.isOpacityDirty()) {
+-        const QVector4D styleColor = qsg_premultiply(mat->styleColor(), state.opacity());
++    if (qsg_fontrealEnabled() || oldMat == nullptr || mat->styleColor() != oldMat->styleColor() || state.isOpacityDirty()) {
++        QVector4D unmultiplied = mat->styleColor();
++        if (mat->fontrealEligible() && qsg_fontrealLinearTarget(state)) {
++            for (int i = 0; i < 3; ++i) {
++                const float c = unmultiplied[i];
++                unmultiplied[i] = c <= 0.04045f ? c / 12.92f : std::pow((c + 0.055f) / 1.055f, 2.4f);
++            }
++        }
++        const QVector4D styleColor = qsg_premultiply(unmultiplied, state.opacity());
+         memcpy(buf->data() + m_currentUbufOffset, &styleColor, 16);
+         changed = true;
+     }
+@@ -347,6 +379,8 @@
+
+     Q_ASSERT(m_rc);
+     m_rhi = m_rc->rhi();
++    if (fontrealEligible() && m_rhi->backend() == QRhi::OpenGLES2)
++        setFlag(RequiresFullMatrix, true);
+
+     updateCache(glyphFormat);
+ }
+--- a/src/quick/scenegraph/qsgdefaultglyphnode_p_p.h
++++ b/src/quick/scenegraph/qsgdefaultglyphnode_p_p.h
+@@ -52,6 +52,7 @@
+     QSGTexture *texture() const { return m_texture; }
+
+     bool ensureUpToDate();
++    bool fontrealEligible() const { return qsg_fontrealFont(QRawFontPrivate::get(m_font)->fontEngine); }
+
+     QTextureGlyphCache *glyphCache() const;
+     QSGRhiTextureGlyphCache *rhiGlyphCache() const;
+--- a/src/quick/scenegraph/qsgrhilayer.cpp
++++ b/src/quick/scenegraph/qsgrhilayer.cpp
+@@ -266,6 +266,9 @@
+         }
+
+         QRhiTexture::Flags textureFlags = QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource;
++        if (!m_multisampling && (m_format == QRhiTexture::RGBA8 || m_format == QRhiTexture::BGRA8)
++                && qsg_fontrealWriteView(m_rhi))
++            textureFlags |= QRhiTexture::FontrealSrgbWrite;
+         if (m_mipmap)
+             textureFlags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
+
+@@ -295,6 +298,8 @@
+                 return;
+             }
+             m_texture = m_rhi->newTexture(m_format, m_pixelSize, 1, textureFlags);
++            if (textureFlags.testFlag(QRhiTexture::FontrealSrgbWrite))
++                m_texture->setWriteViewFormat({m_format, true});
+             if (!m_texture->create()) {
+                 qWarning("Failed to build texture for layer of size %dx%d", m_pixelSize.width(), m_pixelSize.height());
+                 releaseResources();
+@@ -311,6 +316,8 @@
+             QRhiColorAttachment color0(m_msaaColorBuffer);
+             if (m_recursive) {
+                 m_secondaryTexture = m_rhi->newTexture(m_format, m_pixelSize, 1, textureFlags);
++                if (textureFlags.testFlag(QRhiTexture::FontrealSrgbWrite))
++                    m_secondaryTexture->setWriteViewFormat({m_format, true});
+                 if (!m_secondaryTexture->create()) {
+                     qWarning("Failed to build secondary texture for layer of size %dx%d", m_pixelSize.width(), m_pixelSize.height());
+                     releaseResources();
+@@ -340,6 +347,8 @@
+             }
+         } else {
+             m_texture = m_rhi->newTexture(m_format, m_pixelSize, 1, textureFlags);
++            if (textureFlags.testFlag(QRhiTexture::FontrealSrgbWrite))
++                m_texture->setWriteViewFormat({m_format, true});
+             if (!m_texture->create()) {
+                 qWarning("Failed to build texture for layer of size %dx%d", m_pixelSize.width(), m_pixelSize.height());
+                 releaseResources();
+@@ -357,6 +366,8 @@
+                 // Here rt is associated with m_secondaryTexture instead of m_texture.
+                 // We will issue a copy to m_texture afterwards.
+                 m_secondaryTexture = m_rhi->newTexture(m_format, m_pixelSize, 1, textureFlags);
++                if (textureFlags.testFlag(QRhiTexture::FontrealSrgbWrite))
++                    m_secondaryTexture->setWriteViewFormat({m_format, true});
+                 if (!m_secondaryTexture->create()) {
+                     qWarning("Failed to build texture for layer of size %dx%d", m_pixelSize.width(), m_pixelSize.height());
+                     releaseResources();
+--- a/src/quick/scenegraph/qsgrhisupport.cpp
++++ b/src/quick/scenegraph/qsgrhisupport.cpp
+@@ -1361,8 +1361,12 @@
+     QRhi *rhi = rhiResult.own ? rhiOwner.get() : rhiOwner.release();
+
+     const QSize pixelSize = window->size() * window->devicePixelRatio();
+-    QScopedPointer<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, 1,
+-                                                        QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
++    auto flags = QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource;
++    if (qsg_fontrealWriteView(rhi))
++        flags |= QRhiTexture::FontrealSrgbWrite;
++    QScopedPointer<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, 1, flags));
++    if (flags.testFlag(QRhiTexture::FontrealSrgbWrite))
++        texture->setWriteViewFormat({QRhiTexture::RGBA8, true});
+     if (!texture->create()) {
+         qWarning("Failed to build texture for offscreen readback");
+         return QImage();

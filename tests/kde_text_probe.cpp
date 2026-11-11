@@ -11,6 +11,11 @@
 #include <QQuickItem>
 #include <QQuickStyle>
 #include <QQuickView>
+#include <QQuickRenderControl>
+#include <QQuickRenderTarget>
+#include <QQmlComponent>
+#include <QQmlEngine>
+#include <rhi/qrhi.h>
 #include <QRawFont>
 #include <QScreen>
 #include <QSet>
@@ -25,6 +30,7 @@
 #include <cmath>
 #include <cstdio>
 #include <stdexcept>
+#include <memory>
 
 namespace {
 void require(bool ok, const char *message) { if (!ok) throw std::runtime_error(message); }
@@ -47,10 +53,12 @@ void writeJson(const QString &path, const QJsonObject &value) {
 }
 QJsonObject identity() {
     QFile maps("/proc/self/maps"); require(maps.open(QIODevice::ReadOnly),"Cannot read maps");
-    QString gui;
-    for (const auto &line: maps.readAll().split('\n'))
-        if (line.contains("/libQt6Gui.so.")) { gui=QString::fromUtf8(line.mid(line.indexOf('/'))); break; }
-    return {{"pid",QCoreApplication::applicationPid()},{"qtGui",gui},{"qtVersion",qVersion()}};
+    QString gui,quick;
+    for (const auto &line: maps.readAll().split('\n')) {
+        if (line.contains("/libQt6Gui.so.")) gui=QString::fromUtf8(line.mid(line.indexOf('/')));
+        if (line.contains("/libQt6Quick.so.")) quick=QString::fromUtf8(line.mid(line.indexOf('/')));
+    }
+    return {{"pid",QCoreApplication::applicationPid()},{"qtGui",gui},{"qtQuick",quick},{"qtVersion",qVersion()}};
 }
 QFont loadFont(const QString &path) {
     require(QFontDatabase::addApplicationFont(path)>=0,"Cannot register font");
@@ -80,16 +88,17 @@ struct Face {
 };
 double decode(double x) { return x<=0.04045 ? x/12.92 : std::pow((x+0.055)/1.055,2.4); }
 double encode(double x) { return x<=0.0031308 ? x*12.92 : 1.055*std::pow(x,1/2.4)-0.055; }
-int channel(int fg,int bg,int a,bool linear) {
+int channel(int fg,int bg,double a,bool linear) {
     double f=fg/255.,b=bg/255.,alpha=a/255.;
     return std::clamp(int(std::lround(255*(linear ? encode(alpha*decode(f)+(1-alpha)*decode(b)) : alpha*f+(1-alpha)*b))),0,255);
 }
-QImage pattern(const QImage &mask,QColor fg,QColor bg,bool mild,bool linear) {
+QImage pattern(const QImage &mask,QColor fg,QColor bg,bool mild,bool linear,double opacity=1) {
     QImage image(mask.size()+QSize(2,2),QImage::Format_RGB32); image.fill(bg);
     for(int y=0;y<mask.height();++y) for(int x=0;x<mask.width();++x) {
         int a=mask.constScanLine(y)[x];
         if(mild) a=int(std::lround(255*std::clamp((a-32)/191.,0.,1.)));
-        image.setPixel(x+1,y+1,qRgb(channel(fg.red(),bg.red(),a,linear),channel(fg.green(),bg.green(),a,linear),channel(fg.blue(),bg.blue(),a,linear)));
+        const double effective=a*fg.alphaF()*opacity;
+        image.setPixel(x+1,y+1,qRgb(channel(fg.red(),bg.red(),effective,linear),channel(fg.green(),bg.green(),effective,linear),channel(fg.blue(),bg.blue(),effective,linear)));
     }
     return image;
 }
@@ -107,11 +116,39 @@ QJsonObject locate(const QImage &source,const QRect &region,const QImage &wanted
         }
     return {{"error",best},{"x",position.x()},{"y",position.y()},{"matches",best<=1}};
 }
-QJsonObject classify(const QImage &image,const QRect &region,Face &face,QChar c,QColor fg,QColor bg) {
+QJsonObject classify(const QImage &image,const QRect &region,Face &face,QChar c,QColor fg,QColor bg,double opacity=1) {
     QJsonObject result;
     const auto mask=face.mask(c);
     for(bool mild:{false,true}) for(bool linear:{false,true})
-        result[QString(mild ? "mild/" : "none/")+(linear ? "linear" : "encoded")]=locate(image,region,pattern(mask,fg,bg,mild,linear));
+        result[QString(mild ? "mild/" : "none/")+(linear ? "linear" : "encoded")]=locate(image,region,pattern(mask,fg,bg,mild,linear,opacity));
+    return result;
+}
+QJsonObject classifySunken(const QImage &image,Face &face,QChar c) {
+    const auto mask=face.mask(c);
+    const QColor foreground(73,121,167,128),style(161,75,63,181),background(219,197,181);
+    const auto coverage=[&](int x,int y) {
+        if(x<0 || y<0 || x>=mask.width() || y>=mask.height()) return 0.;
+        return std::lround(255*std::clamp((mask.constScanLine(y)[x]-32)/191.,0.,1.))/255.;
+    };
+    QJsonObject result;
+    for(bool linear:{false,true}) {
+        QImage wanted(mask.size()+QSize(4,4),QImage::Format_RGB32); wanted.fill(background);
+        for(int y=0;y<wanted.height();++y) for(int x=0;x<wanted.width();++x) {
+            const double glyph=coverage(x-2,y-2);
+            const double shifted=std::max(0.,coverage(x-2,y-1)-glyph);
+            const double a=glyph*foreground.alphaF()*.75,b=shifted*style.alphaF()*.75;
+            int channels[3];
+            for(int channelIndex=0;channelIndex<3;++channelIndex) {
+                const double f=(channelIndex==0 ? foreground.redF() : channelIndex==1 ? foreground.greenF() : foreground.blueF());
+                const double s=(channelIndex==0 ? style.redF() : channelIndex==1 ? style.greenF() : style.blueF());
+                const double bg=(channelIndex==0 ? background.redF() : channelIndex==1 ? background.greenF() : background.blueF());
+                const double mixed=linear ? encode(a*decode(f)+b*decode(s)+(1-a-b)*decode(bg)) : a*f+b*s+(1-a-b)*bg;
+                channels[channelIndex]=std::clamp(int(std::lround(255*mixed)),0,255);
+            }
+            wanted.setPixel(x,y,qRgb(channels[0],channels[1],channels[2]));
+        }
+        result[linear ? "mild/linear" : "mild/encoded"]=locate(image,image.rect(),wanted);
+    }
     return result;
 }
 QQuickItem *textItem(QQuickItem *item) {
@@ -122,6 +159,89 @@ QQuickItem *textItem(QQuickItem *item) {
 void collectCells(QQuickItem *item,QList<QQuickItem *> &cells) {
     if(item->objectName().startsWith("cell/")) cells.append(item);
     for(auto *child:item->childItems()) collectCells(child,cells);
+}
+void collectRegions(QQuickItem *item,QList<QQuickItem *> &regions) {
+    if(item->objectName().startsWith("region/")) regions.append(item);
+    for(auto *child:item->childItems()) collectRegions(child,regions);
+}
+QImage readTarget(QQuickRenderControl &control,QRhiTexture *texture) {
+    QRhiReadbackResult readback; QImage image;
+    readback.completed=[&] {
+        const QImage raw(reinterpret_cast<const uchar *>(readback.data.constData()),
+                         readback.pixelSize.width(),readback.pixelSize.height(),QImage::Format_RGBA8888_Premultiplied);
+        image=control.rhi()->isYUpInFramebuffer() ? raw.flipped() : raw.copy();
+    };
+    auto *batch=control.rhi()->nextResourceUpdateBatch();
+    batch->readBackTexture(texture,&readback);
+    control.commandBuffer()->resourceUpdate(batch);
+    control.endFrame();
+    require(!image.isNull(),"Target readback did not finish");
+    return image.convertToFormat(QImage::Format_RGB32);
+}
+void nonindexedCheck(QQuickRenderControl &control,QRhiTextureRenderTarget *target,QRhiTexture *texture,bool compatible) {
+    auto *rhi=control.rhi();
+    const auto shader=[](const char *name) {
+        QFile file(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/flatcolor.")+QLatin1String(name)+QStringLiteral(".qsb"));
+        require(file.open(QIODevice::ReadOnly),"Cannot load existing Qt color shader");
+        auto result=QShader::fromSerialized(file.readAll()); require(result.isValid(),"Invalid color shader"); return result;
+    };
+    const float vertices[]={-1,-1,3,-1,-1,3};
+    std::unique_ptr<QRhiBuffer> vertex(rhi->newBuffer(QRhiBuffer::Immutable,QRhiBuffer::VertexBuffer,sizeof(vertices)));
+    const int stride=rhi->ubufAligned(80);
+    std::unique_ptr<QRhiBuffer> uniform(rhi->newBuffer(QRhiBuffer::Dynamic,QRhiBuffer::UniformBuffer,stride+80));
+    require(vertex->create() && uniform->create(),"Cannot create RHI draw buffers");
+    std::unique_ptr<QRhiShaderResourceBindings> bindings[2];
+    std::unique_ptr<QRhiGraphicsPipeline> pipeline[2];
+    const QColor foreground(73,121,167),background(219,197,181);
+    QByteArray uniforms(stride+80,0); QMatrix4x4 matrix;
+    for(int i=0;i<2;++i) {
+        memcpy(uniforms.data()+i*stride,matrix.constData(),64);
+        QVector4D color;
+        for(int channelIndex=0;channelIndex<3;++channelIndex) {
+            const double c=(channelIndex==0 ? foreground.redF() : channelIndex==1 ? foreground.greenF() : foreground.blueF());
+            color[channelIndex]=float((compatible && i==0 ? decode(c) : c)*.4);
+        }
+        color[3]=.4; memcpy(uniforms.data()+i*stride+64,&color,16);
+        bindings[i].reset(rhi->newShaderResourceBindings());
+        bindings[i]->setBindings({QRhiShaderResourceBinding::uniformBuffer(0,QRhiShaderResourceBinding::VertexStage|QRhiShaderResourceBinding::FragmentStage,uniform.get(),i*stride,80)});
+        require(bindings[i]->create(),"Cannot create draw bindings");
+        pipeline[i].reset(rhi->newGraphicsPipeline());
+        QRhiGraphicsPipeline::Flags flags=QRhiGraphicsPipeline::UsesScissor;
+        if(compatible && i==0) flags|=static_cast<QRhiGraphicsPipeline::Flag>(1<<5);
+        pipeline[i]->setFlags(flags);
+        pipeline[i]->setShaderStages({{QRhiShaderStage::Vertex,shader("vert")},{QRhiShaderStage::Fragment,shader("frag")}});
+        QRhiVertexInputLayout layout; layout.setBindings({{2*sizeof(float)}});
+        layout.setAttributes({{0,0,QRhiVertexInputAttribute::Float2,0}});
+        pipeline[i]->setVertexInputLayout(layout);
+        QRhiGraphicsPipeline::TargetBlend blend; blend.enable=true;
+        pipeline[i]->setTargetBlends({blend});
+        pipeline[i]->setShaderResourceBindings(bindings[i].get());
+        pipeline[i]->setRenderPassDescriptor(target->renderPassDescriptor());
+        require(pipeline[i]->create(),"Cannot create draw pipeline");
+    }
+    control.beginFrame(); auto *cmd=control.commandBuffer();
+    auto *updates=rhi->nextResourceUpdateBatch();
+    updates->uploadStaticBuffer(vertex.get(),vertices);
+    updates->updateDynamicBuffer(uniform.get(),0,uniforms.size(),uniforms.constData());
+    cmd->beginPass(target,background,{1,0},updates);
+    cmd->setViewport({0,0,float(texture->pixelSize().width()),float(texture->pixelSize().height())});
+    for(int i=0;i<2;++i) {
+        cmd->setGraphicsPipeline(pipeline[i].get());
+        cmd->setScissor({i*80,0,80,40});
+        cmd->setShaderResources(bindings[i].get());
+        const QRhiCommandBuffer::VertexInput input(vertex.get(),0);
+        cmd->setVertexInput(0,1,&input);
+        cmd->draw(3);
+    }
+    cmd->endPass();
+    const auto image=readTarget(control,texture);
+    for(int i=0;i<2;++i) {
+        const auto pixel=image.pixel(i*80+20,image.height()-20);
+        require(qAbs(qRed(pixel)-channel(foreground.red(),background.red(),102,compatible && i==0))<=1
+            && qAbs(qGreen(pixel)-channel(foreground.green(),background.green(),102,compatible && i==0))<=1
+            && qAbs(qBlue(pixel)-channel(foreground.blue(),background.blue(),102,compatible && i==0))<=1,
+            "Nonindexed selected draw or following ordinary draw changed");
+    }
 }
 class Widget:public QWidget {
 public:
@@ -199,10 +319,10 @@ int main(int argc,char **argv) {
             strip("spillover-Noto-Sans-linear.png",QRect(0,0,760,64));
             caption("KWin title: stock"); strip("nested-stock-1-default/screen.png",QRect(0,0,1100,32));
             caption("KWin title: mild contrast, linear blend"); strip("nested-linear-1-default/screen.png",QRect(0,0,1100,32));
-            caption("Actual Plasma applet, OpenGL: requested linear; measured encoded edges");
+            caption("Actual Plasma applet, OpenGL: mild contrast / linear blend");
             for(int row:{0,4,5}) strip("nested-linear-1-default/plasma.png",QRect(0,16+row*56,760,52));
-            caption("Qt Quick software control: mild contrast, linear blend (diagnostic only)");
-            for(int row:{0,4,5}) strip("quick-software-linear-1-0-default/frame-0.png",QRect(0,16+row*56,760,52));
+            caption("Actual Plasma applet, OpenGL: mild contrast / encoded blend");
+            for(int row:{0,4,5}) strip("nested-encoded-1-default/plasma.png",QRect(0,16+row*56,760,52));
             require(y<=board.height(),"Board is too short"); painter.end(); require(board.save(args[2]+"/comparison.png"),"Cannot save board"); return 0;
         }
         if(mode=="match") {
@@ -287,6 +407,154 @@ int main(int argc,char **argv) {
             });
             return app.exec();
         }
+        if(mode=="target") {
+            require(args.size()==4 || (args.size()==5 && args[4]=="sunken"),"target truetype output-directory [sunken]");
+            const bool styled=args.size()==5;
+            const auto font=loadFont(args[2]);
+            QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+            QQuickRenderControl control; QQuickWindow window(&control);
+            QQmlEngine engine; QQmlComponent component(&engine);
+            component.setData("import QtQuick; Rectangle { width: 760; height: 80; color: '#dbc5b5'; property font testFont; property bool sunken: false; Text { x: 16; y: 12; text: 'l m n o g W V w v'; font: parent.testFont; color: '#804979a7'; opacity: 0.75; renderType: Text.NativeRendering; style: parent.sunken ? Text.Sunken : Text.Normal; styleColor: '#b5a14b3f' } }",QUrl());
+            std::unique_ptr<QObject> object(component.create());
+            auto *item=qobject_cast<QQuickItem *>(object.get()); require(item,"Target QML failed");
+            item->setProperty("testFont",font); item->setParentItem(window.contentItem());
+            item->setProperty("sunken",styled);
+            window.setGeometry(0,0,760,80); window.contentItem()->setSize({760,80});
+            require(control.initialize(),"Render control initialization failed");
+            auto *rhi=control.rhi(); require(rhi && rhi->backend()==QRhi::OpenGLES2,"Target is not OpenGL");
+            std::unique_ptr<QRhiTexture> textures[2];
+            std::unique_ptr<QRhiRenderBuffer> depth[2];
+            std::unique_ptr<QRhiTextureRenderTarget> targets[2];
+            std::unique_ptr<QRhiRenderPassDescriptor> passes[2];
+            for(int i=0;i<2;++i) {
+                auto flags=QRhiTexture::RenderTarget|QRhiTexture::UsedAsTransferSource;
+                if(i==0) flags|=static_cast<QRhiTexture::Flag>(1<<15);
+                textures[i].reset(rhi->newTexture(QRhiTexture::RGBA8,{760,80},1,flags));
+                if(i==0) textures[i]->setWriteViewFormat({QRhiTexture::RGBA8,true});
+                require(textures[i]->create(),"Target texture creation failed");
+                depth[i].reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,{760,80},1));
+                require(depth[i]->create(),"Target depth creation failed");
+                QRhiTextureRenderTargetDescription description(textures[i].get());
+                description.setDepthStencilBuffer(depth[i].get());
+                targets[i].reset(rhi->newTextureRenderTarget(description));
+                passes[i].reset(targets[i]->newCompatibleRenderPassDescriptor());
+                targets[i]->setRenderPassDescriptor(passes[i].get());
+                require(targets[i]->create(),"Target framebuffer creation failed");
+            }
+            QJsonArray frames;
+            for(int frame=0;frame<3;++frame) {
+                const int index=frame==1 ? 1 : 0;
+                window.setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(targets[index].get()));
+                QCoreApplication::processEvents(); control.polishItems(); control.beginFrame(); control.sync(); control.render();
+                const auto image=readTarget(control,textures[index].get());
+                require(image.save(args[3]+QString("/frame-%1.png").arg(frame)),"Cannot save target readback");
+                Face face(args[2],15); QJsonObject glyphs;
+                for(const auto c:QStringLiteral("lmnogWVwv")) glyphs[QString(c)]=styled ? classifySunken(image,face,c) : classify(image,image.rect(),face,c,QColor(73,121,167,128),QColor(219,197,181),.75);
+                frames.append(QJsonObject{{"frame",frame},{"compatible",index==0},{"hash",imageHash(image)},{"glyphs",glyphs}});
+            }
+            for(int i=0;i<2;++i) nonindexedCheck(control,targets[i].get(),textures[i].get(),i==0);
+            auto result=identity(); result["frames"]=frames; result["nonindexed"]=true; result["sunken"]=styled;
+            writeJson(args[3]+"/result.json",result); return 0;
+        }
+        if(mode=="gpu") {
+            require(args.size()==7,"gpu truetype cff emoji output-directory tt-first|cff-first");
+            const auto tt=loadFont(args[2]);
+            auto cff=loadFont(args[3]); cff.setStyleStrategy(QFont::NoSubpixelAntialias);
+            const auto emoji=loadFont(args[4]);
+            QQuickView view; view.setResizeMode(QQuickView::SizeRootObjectToView);
+            view.setSource(QUrl::fromLocalFile(QStringLiteral(FONTREAL_SOURCE_DIR "/tests/KdeGpuMixed.qml")));
+            require(view.status()==QQuickView::Ready,"Mixed QML fixture failed");
+            auto *root=view.rootObject();
+            root->setProperty("trueTypeFont",tt); root->setProperty("cffFont",cff); root->setProperty("emojiFont",emoji);
+            root->setProperty("reverse",args[6]=="cff-first");
+            QImage windowBuffer; QRhiReadbackResult windowReadback;
+            bool grabbing=false,reading=false;
+            QObject::connect(&view,&QQuickWindow::afterRendering,&view,[&] {
+                if(grabbing || reading) return;
+                auto *rhi=view.rhi();
+                auto *swapchain=static_cast<QRhiSwapChain *>(view.rendererInterface()->getResource(&view,QSGRendererInterface::RhiSwapchainResource));
+                if(!rhi || !swapchain) return;
+                reading=true;
+                windowReadback.completed=[&,rhi] {
+                    const QImage raw(reinterpret_cast<const uchar *>(windowReadback.data.constData()),windowReadback.pixelSize.width(),windowReadback.pixelSize.height(),QImage::Format_RGBA8888_Premultiplied);
+                    windowBuffer=(rhi->isYUpInFramebuffer() ? raw.flipped() : raw.copy()).convertToFormat(QImage::Format_RGB32);
+                    reading=false;
+                };
+                auto *updates=rhi->nextResourceUpdateBatch();
+                updates->readBackTexture(QRhiReadbackDescription(),&windowReadback);
+                swapchain->currentFrameCommandBuffer()->resourceUpdate(updates);
+            },Qt::DirectConnection);
+            view.resize(960,360); view.show();
+            int frame=0; QJsonArray frames;
+            QTimer timer; timer.setInterval(350);
+            QObject::connect(&timer,&QTimer::timeout,&app,[&] {
+              try {
+                if(windowBuffer.isNull()) { view.update(); return; }
+                grabbing=true;
+                const auto image=view.grabWindow().convertToFormat(QImage::Format_RGB32);
+                grabbing=false;
+                require(!image.isNull(),"Mixed GPU capture failed");
+                const bool hardware=qgetenv("LIBGL_ALWAYS_SOFTWARE")!="1";
+                const auto presented=hardware ? windowBuffer : view.screen()->grabWindow(view.winId()).toImage().convertToFormat(QImage::Format_RGB32);
+                require(presented.size()==image.size(),"Presented GPU size changed");
+                require(image.save(args[5]+QString("/frame-%1.png").arg(frame)),"Cannot save mixed GPU image");
+                require(presented.save(args[5]+QString("/window-%1.png").arg(frame)),"Cannot save presented GPU image");
+                QJsonArray regions; QList<QQuickItem *> items; collectRegions(root,items);
+                require(items.size()==14,"Missing mixed GPU regions");
+                for(auto *item:items) {
+                    const auto origin=item->mapToScene(QPointF());
+                    const QRect rect(qRound(origin.x()),qRound(origin.y()),128,100);
+                    const int role=item->property("role").toInt();
+                    const auto part=image.copy(rect);
+                    const auto windowPart=presented.copy(rect);
+                    QJsonObject region{{"id",item->objectName()},{"role",role},
+                        {"windowOrdinary",imageHash(windowPart.copy(0,42,128,58))},{"windowText",imageHash(windowPart.copy(0,0,128,42))},
+                        {"ordinary",imageHash(part.copy(0,42,128,58))},{"text",imageHash(part.copy(0,0,128,42))}};
+                    if(role>=3) {
+                        const QString stem=item->objectName().replace('/','-')+QString("-%1").arg(frame);
+                        require(part.copy(0,0,128,42).save(args[5]+"/"+stem+".png"),"Cannot save CFF Qt control");
+                        require(windowPart.copy(0,0,128,42).save(args[5]+"/"+stem+"-window.png"),"Cannot save CFF Qt window control");
+                        region["textImage"]=stem+".png"; region["windowTextImage"]=stem+"-window.png";
+                    }
+                    if(role==0) {
+                        Face face(args[2],15); QJsonObject glyphs,windowGlyphs;
+                        for(const auto c:QStringLiteral("mnogWV")) {
+                            glyphs[QString(c)]=classify(image,QRect(rect.topLeft(),QSize(128,42)),face,c,
+                                root->property("ink").value<QColor>(),root->property("color").value<QColor>(),.75);
+                            windowGlyphs[QString(c)]=classify(presented,QRect(rect.topLeft(),QSize(128,42)),face,c,
+                                root->property("ink").value<QColor>(),root->property("color").value<QColor>(),.75);
+                        }
+                        region["glyphs"]=glyphs;
+                        region["windowGlyphs"]=windowGlyphs;
+                    }
+                    if(role==2) {
+                        QSet<QRgb> colors,windowColors;
+                        for(int y=0;y<42;++y) for(int x=0;x<128;++x) {
+                            const auto p=part.pixel(x,y);
+                            if(qRed(p)!=qGreen(p) && qGreen(p)!=qBlue(p) && p!=part.pixel(0,0)) colors.insert(p);
+                            const auto w=windowPart.pixel(x,y);
+                            if(qRed(w)!=qGreen(w) && qGreen(w)!=qBlue(w) && w!=windowPart.pixel(0,0)) windowColors.insert(w);
+                        }
+                        if(colors.size()<=10 || windowColors.size()<=10)
+                            std::fprintf(stderr,"Emoji colors: capture=%lld presented=%lld frame=%d region=%s\n",static_cast<long long>(colors.size()),static_cast<long long>(windowColors.size()),frame,qPrintable(item->objectName()));
+                        require(colors.size()>10 && windowColors.size()>10,"Mixed GPU emoji is missing its colors");
+                        region["colorCount"]=colors.size();
+                    }
+                    regions.append(region);
+                }
+                frames.append(QJsonObject{{"frame",frame},{"hash",imageHash(image)},{"regions",regions}});
+                if(++frame==3) {
+                    auto result=identity(); result["frames"]=frames;
+                    result["windowReadback"]=qgetenv("LIBGL_ALWAYS_SOFTWARE")!="1" ? "RHI window buffer before presentation" : "X11 presented window capture";
+                    result["graphicsApi"]=int(view.rendererInterface()->graphicsApi());
+                    writeJson(args[5]+"/result.json",result); app.quit(); return;
+                } else if(frame==2) root->setProperty("ink",QColor(151,83,117,181));
+                windowBuffer=QImage();
+                view.update();
+              } catch(const std::exception &error) { std::fprintf(stderr,"%s\n",error.what()); app.exit(2); }
+            });
+            timer.start(); return app.exec();
+        }
         require(args.size()>=4,"Supply font file and output path");
         const auto font=loadFont(args[2]);
         if(mode=="widget" || mode=="client") {
@@ -307,12 +575,13 @@ int main(int argc,char **argv) {
             });
             return app.exec();
         }
-        require(mode=="quick" && args.size()==5,"quick font output-directory phase");
+        require((mode=="quick" || mode=="quick-hidden") && args.size()==5,"quick|quick-hidden font output-directory phase");
         QQuickView view; view.setResizeMode(QQuickView::SizeRootObjectToView);
         view.setSource(QUrl::fromLocalFile(QStringLiteral(FONTREAL_SOURCE_DIR "/tests/KdeTextGrid.qml")));
         require(view.status()==QQuickView::Ready,"QML fixture failed");
         view.rootObject()->setProperty("testFont",font); view.rootObject()->setProperty("phase",args[4].toDouble());
-        view.resize(760,370); view.show();
+        view.resize(760,370);
+        if(mode=="quick") view.show();
         QJsonArray frames;
         int frame=0;
         QTimer timer; timer.setInterval(350);
@@ -320,6 +589,7 @@ int main(int argc,char **argv) {
           try {
             const auto image=view.grabWindow().convertToFormat(QImage::Format_RGB32);
             require(!image.isNull(),"Quick capture failed");
+            require(mode!="quick-hidden" || !view.isExposed(),"Hidden capture exposed its window");
             const auto fg=view.rootObject()->property("ink").value<QColor>(),bg=view.rootObject()->property("paper").value<QColor>();
             Face face(args[2],15*view.devicePixelRatio()); QJsonArray cells;
             QList<QQuickItem *> allCells; collectCells(view.rootObject(),allCells);
@@ -330,19 +600,24 @@ int main(int argc,char **argv) {
                 const auto actualFont=text->property("font").value<QFont>();
                 require(QRawFont::fromFont(actualFont).fontTable("head")==QRawFont::fromFont(font).fontTable("head"),"Quick selected another font");
                 const auto glyphOrigin=text->mapToScene(QPointF())*view.devicePixelRatio();
+                const auto hypotheses=classify(image,region,face,cell->property("character").toString()[0],fg,bg,view.rootObject()->property("glyphOpacity").toDouble());
                 cells.append(QJsonObject{{"cell",cell->objectName()},{"path",cell->property("path").toInt()},
                     {"glyph",cell->property("character").toString()},{"renderType",text->property("renderType").toInt()},
                     {"font",actualFont.toString()},{"originX",glyphOrigin.x()},{"originY",glyphOrigin.y()},
-                    {"hypotheses",classify(image,region,face,cell->property("character").toString()[0],fg,bg)}});
+                    {"expectedX",int(std::floor(glyphOrigin.x()+.5))+face.face->glyph->bitmap_left-1},
+                    {"hypotheses",hypotheses}});
             }
             require(cells.size()==54,"Fixture did not produce every cell");
             require(image.save(args[3]+QString("/frame-%1.png").arg(frame)),"Cannot save Quick frame");
-            frames.append(QJsonObject{{"frame",frame},{"hash",imageHash(image)},{"cells",cells}});
-            if(++frame==4) { auto result=identity(); result["frames"]=frames; result["scale"]=view.devicePixelRatio();
-                result["graphicsApi"]=int(view.rendererInterface()->graphicsApi()); result["phase"]=args[4].toDouble();
+            const int controlledLeft=qRound(122*view.devicePixelRatio());
+            frames.append(QJsonObject{{"frame",frame},{"hash",imageHash(image)},
+                {"cellHash",imageHash(image.copy(controlledLeft,0,image.width()-controlledLeft,image.height()))},{"cells",cells}});
+            if(++frame==5) { auto result=identity(); result["frames"]=frames; result["scale"]=view.devicePixelRatio();
+                result["graphicsApi"]=int(view.rendererInterface()->graphicsApi()); result["phase"]=args[4].toDouble(); result["unexposed"]=mode=="quick-hidden";
                 writeJson(args[3]+"/result.json",result); app.quit();
             } else if(frame==2) { view.rootObject()->setProperty("ink",QColor(Qt::white)); view.rootObject()->setProperty("paper",QColor(Qt::black)); }
             else if(frame==3) { view.rootObject()->setProperty("ink",QColor(73,121,167)); view.rootObject()->setProperty("paper",QColor(219,197,181)); }
+            else if(frame==4) { view.rootObject()->setProperty("ink",QColor(73,121,167,128)); view.rootObject()->setProperty("glyphOpacity",.75); }
             view.update();
           } catch(const std::exception &error) { std::fprintf(stderr,"%s\n",error.what()); app.exit(2); }
         });

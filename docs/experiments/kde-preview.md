@@ -6,7 +6,7 @@ The private build targets this Ubuntu 26.04 x86-64 installation with Qt 6.10.2. 
 
 ## Build
 
-The existing CMake, Ninja, C++ compiler, Qt development files, FreeType development files, and Python 3 supply the build tools. The private build also uses Ubuntu's `apt-get download` and `dpkg-deb` commands. It extracts missing platform development headers locally. It does not install packages.
+The existing CMake, Ninja, C++ compiler, Qt development files, FreeType development files, and Python 3 supply the build tools. The private build also uses Ubuntu's `apt-get download` and `dpkg-deb` commands. It extracts missing platform headers and the versioned Qt shader tools locally. It does not install packages.
 
 The application check uses the installed Konsole, `qdbus6`, `kwriteconfig6`, Spectacle, and the current desktop session. Noto Sans, DejaVu Sans, and Inconsolata Nerd Font Regular must be installed. The private Qt build command uses CMake 3.24 or later for `--fresh`.
 
@@ -20,7 +20,7 @@ python3 tests/qt_native_test.py
 ctest --test-dir build --output-on-failure
 ```
 
-The build command downloads the official Qt 6.10.2 archive and verifies its pinned SHA-256. Generated sources, dependency headers, libraries, captures, and test evidence stay under ignored `build/qt-native/`. The patch stays in `patches/qt-6.10.2-fontreal.patch`.
+The build command downloads the official Qt Base and Qt Declarative 6.10.2 archives and checks their pinned SHA-256 values. It builds both QtGui and QtQuick, including their required runtime dependencies. Generated sources, dependencies, libraries, captures, and test evidence stay under ignored `build/qt-native/`. The two patches stay under `patches/`. The launcher requires both private modules. Stock mode removes both private runtime directories from its library search path.
 
 The test command briefly opens stock, linear, and encoded Konsole windows. It verifies each test process before window actions, toggles its menu bar to exercise repaint, captures it, and closes it normally. It checks widget pixels independently and verifies configuration preservation. The interactive launches below remain open for human judgment.
 
@@ -91,4 +91,4 @@ In the controlled black-on-white capture, both menus and terminal use Noto Sans 
 
 That matched unadjusted result motivated the [diagonal edge study](diagonal-edges.md). The native mild option now carries its selected mask treatment into Qt. In the actual dark Konsole palette, the user prefers mild contrast with linear blending at 15px, using Noto Sans menus and Inconsolata Nerd Font terminal text. The user finds Konsole's appearance bolder and less clear than the experiment, but still selects mild/linear as the clear winner and a comfortable compromise. This records perceived weight, not a diagnosis of synthetic bolding. Other sizes and fonts remain calibration work.
 
-The first proof covers opaque native raster text in the selected TrueType fonts. Qt Quick, KWin, transparent intermediate surfaces, arbitrary transforms, color fonts, and other outline formats need separate validation. The opt-in A8 transfer profile also affects other fonts that already request gamma correction. Their appearance is not certified here. See the [roadmap](../roadmap.md) for the remaining platform work.
+This proof covers opaque native raster text in the selected TrueType fonts. The A8 transfer profile applies only during eligible draws. Separate [KDE checks](kde-paths.md) cover KWin, Qt Quick OpenGL, and CFF/color preservation. Transparent intermediate surfaces and arbitrary transforms remain outside these guarantees. See the [roadmap](../roadmap.md) for the remaining platform work.

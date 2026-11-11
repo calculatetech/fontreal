@@ -10,7 +10,7 @@ The first target is the current Ubuntu 26.04 amd64 desktop. Installed packages a
 
 The accepted treatment is automatic monochrome hints with grayscale rasterization, snapped origins, mild contrast, and linear blending. Noto Sans and Inconsolata Nerd Font at 15px are useful starting conditions. Blend preference depends on effective size and font. Preserve explicit controls and the user's font choices.
 
-Native Qt widgets and Konsole have application-level evidence. Separate [KDE path checks](../experiments/kde-paths.md) establish matching KWin title glyphs at 100% and 125% scale. The actual Plasma applet host exposes a Qt Quick GPU blending gap that remains before broad activation. The A8 profile correction confines the transfer table to eligible TrueType draws, with stock-equality checks for grayscale CFF and color glyphs. GTK, Wine, browsers, bundled runtimes, and full-session activation remain unproven. See the [Qt specification](../plans/FR-002-qt-native.md), [mild contrast specification](../plans/FR-010-native-mild.md), and [profile-scope specification](../plans/FR-014-a8-profile-scope.md).
+Native Qt widgets and Konsole have application-level evidence. Separate [KDE checks](../experiments/kde-paths.md) establish matching KWin titles and selected OpenGL Plasma applet glyphs at 100% and 125%. The private Qt Quick correction adds text-only linear composition and stable fractional origins. The A8 profile correction confines the raster transfer table to eligible TrueType draws. Mixed-font GPU and raster checks preserve stock CFF/color pixels. These isolated results do not establish a complete session. GTK, Wine, browsers, bundled runtimes, and full-session activation remain unproven. See the [GPU specification](../plans/FR-013-quick-linear.md) and [profile-scope specification](../plans/FR-014-a8-profile-scope.md).
 
 ## Options
 
@@ -46,7 +46,7 @@ export FONTREAL_BLEND=linear
 export FONTREAL_CONTRAST=mild
 ```
 
-These are the implemented backend controls, not a complete installation procedure. Apply them before session startup, then log in again. Keep the Qt Quick override conditional on separate evidence. Preserve installed font choices. An optional font preset can recommend the tested families without replacing user configuration or bundling fonts.
+These are the implemented backend controls, not a complete installation procedure. Apply them before session startup, then log in again. The private Qt Quick implementation selects native rendering per eligible OpenGL glyph run. The tested Plasma path does not need an additional default-renderer environment override. Preserve installed font choices. An optional font preset can recommend the tested families without replacing user configuration or bundling fonts.
 
 Test the package set in a disposable Plasma session or VM before the host desktop. Compare KWin titles, Plasma controls, widgets, and Konsole at integral and fractional scales. Include regular, bold, italic, fallback, symbol, CFF, and color fonts. Check light and dark colors, disabled text, and monitor scale changes. Compare actual rendered output and human readability, not only process environment variables.
 

@@ -11,6 +11,7 @@ Rectangle {
     property color ink: "black"
     property color paper: "white"
     property real phase: 0
+    property real glyphOpacity: 1
     color: paper
     property var names: ["Native Text", "Qt Text", "Default Text", "Breeze Label", "Plasma Label", "Breeze Button"]
     property var letters: ["l", "m", "n", "o", "g", "W", "V", "w", "v"]
@@ -35,7 +36,7 @@ Rectangle {
             width: grid.width
             height: 56
             y: 16 + index * 56
-            Text { x: 4; y: 17; text: grid.names[line.index]; color: grid.ink; font.pixelSize: 12 }
+            Text { x: 4; y: 17; text: grid.names[line.index]; color: grid.ink; font.family: grid.testFont.family; font.styleName: grid.testFont.styleName; font.pixelSize: 12 }
             Repeater {
                 model: grid.letters
                 delegate: Rectangle {
@@ -50,6 +51,7 @@ Rectangle {
                     height: 52
                     color: grid.paper
                     Loader {
+                        opacity: grid.glyphOpacity
                         x: 18 + grid.phase / Screen.devicePixelRatio
                         y: 12
                         width: 40

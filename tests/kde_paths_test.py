@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PROBE = ROOT / "build/qt-kde-probe"
 RUN = ROOT / "tools/run-qt.py"
 WORK = ROOT / "build/kde-paths"
+PRIVATE_LIBS = [ROOT/"build/qt-native/declarative-build/lib", ROOT/"build/qt-native/qt-build/lib"]
 
 
 def call(command, env, timeout=45, **kwargs):
@@ -58,14 +59,19 @@ def private_environment(directory):
         path.mkdir(mode=0o700)
         env[f"XDG_{role}_HOME" if role != "RUNTIME" else "XDG_RUNTIME_DIR"] = str(path)
     env.update(QT_QPA_PLATFORM="xcb", QT_QPA_PLATFORMTHEME="kde", LIBGL_ALWAYS_SOFTWARE="1",
-               QSG_INFO="1", QSG_RENDER_LOOP="basic", QSG_RHI_BACKEND="opengl", QT_NO_XDG_DESKTOP_PORTAL="1")
+               QSG_INFO="1", QSG_RENDER_LOOP="basic", QSG_RHI_BACKEND="opengl", QT_NO_XDG_DESKTOP_PORTAL="1", FONTREAL_TRACE_QUICK="1")
     env["QML_IMPORT_PATH"] = call(["qtpaths6", "--query", "QT_INSTALL_QML"], env).stdout.strip()
     env["QT_PLUGIN_PATH"] = call(["qtpaths6", "--query", "QT_INSTALL_PLUGINS"], env).stdout.strip()
     return env
 
 
 @contextlib.contextmanager
-def display(env, directory):
+def display(env, directory, hardware=False):
+    if hardware:
+        env = dict(env, DISPLAY=os.environ["DISPLAY"])
+        env.pop("LIBGL_ALWAYS_SOFTWARE",None)
+        yield env
+        return
     read, write = os.pipe()
     with (directory/"xvfb.log").open("w") as log:
         server = subprocess.Popen(["Xvfb", "-displayfd", str(write), "-screen", "0", "1100x740x24", "-nolisten", "tcp"],
@@ -85,12 +91,19 @@ def quick_checks(env, font):
     records = []
     for backend, mode, scale, phase, override in (
         ("opengl", "stock", 1, 0, False),
+        ("opengl", "stock-inherited", 1, 0, False),
+        ("opengl", "inactive", 1, 0, False),
         ("opengl", "linear", 1, 0, False),
         ("opengl", "encoded", 1, 0, False),
         ("opengl", "linear-none", 1, 0, False),
         ("opengl", "linear", 1, .5, False),
         ("opengl", "linear", 1.25, 0, False),
+        ("opengl", "encoded", 1.25, 0, False),
+        ("opengl", "linear-none", 1.25, 0, False),
+        ("opengl", "linear", 1.25, .5, False),
         ("opengl", "linear", 1.25, 0, True),
+        ("opengl-hidden", "linear", 1, 0, False),
+        ("opengl-hidden", "encoded", 1, 0, False),
         ("software", "linear", 1, 0, False),
         ("software", "encoded", 1, 0, False),
         ("software", "linear", 1.25, 0, True),
@@ -98,26 +111,69 @@ def quick_checks(env, font):
         label = f"quick-{backend}-{mode}-{scale}-{phase}-{'native' if override else 'default'}"
         output = WORK/label
         output.mkdir(exist_ok=True)
-        for filename in ("result.json", *(f"frame-{i}.png" for i in range(4))):
+        for filename in ("result.json", *(f"frame-{i}.png" for i in range(5))):
             (output/filename).unlink(missing_ok=True)
-        case_env = dict(env, QT_SCALE_FACTOR=str(scale))
+        case_env = dict(env, QT_SCALE_FACTOR=str(scale), FONTREAL_TRACE_QUICK="1")
         if backend == "software":
             case_env["QT_QUICK_BACKEND"] = "software"
         else:
             case_env.pop("QT_QUICK_BACKEND", None)
         if override:
             case_env["QT_QUICK_DEFAULT_TEXT_RENDER_TYPE"] = "nativerendering"
-        result = call(selected(mode, [PROBE, "quick", font, output, str(phase)]), case_env)
+        entry = "quick-hidden" if backend == "opengl-hidden" else "quick"
+        command = selected(mode, [PROBE, entry, font, output, str(phase)])
+        if mode in ("inactive", "stock-inherited"):
+            case_env["LD_LIBRARY_PATH"] = ":".join(map(str,PRIVATE_LIBS))
+            if mode == "inactive":
+                command = [PROBE, "quick", font, output, str(phase)]
+            else:
+                case_env.update(FONTREAL_RENDERING="1", FONTREAL_BLEND="linear", FONTREAL_CONTRAST="mild")
+                command = selected("stock", [PROBE, "quick", font, output, str(phase)])
+        result = call(command, case_env)
         (output/"runtime.log").write_text(result.stderr)
         record = json.loads((output/"result.json").read_text())
-        assert len(record["frames"]) == 4
+        if backend.startswith("opengl"):
+            driver = re.search(r"OpenGL VENDOR: (.*)",result.stderr)
+            assert driver, "Missing actual OpenGL driver identity"
+            record["openGLDriver"] = driver[1]
+        assert len(record["frames"]) == 5
         assert record["frames"][0]["hash"] == record["frames"][1]["hash"], "Cached repaint changed output"
         assert record["frames"][1]["hash"] != record["frames"][2]["hash"] != record["frames"][3]["hash"]
         assert record["scale"] == scale
-        assert ("qt-native/qt-build/lib" in record["qtGui"]) == (mode != "stock")
+        assert record["unexposed"] == (backend=="opengl-hidden")
+        private = mode not in ("stock", "stock-inherited")
+        assert ("qt-native/qt-build/lib" in record["qtGui"]) == private
+        assert ("qt-native/declarative-build/lib" in record["qtQuick"]) == private
+        for frame in record["frames"]:
+            assert {g["cell"] for g in frame["cells"]} == {f"cell/{r}/{c}" for r in range(6) for c in range(9)}
+            if backend.startswith("opengl") and mode in ("linear", "encoded", "linear-none"):
+                expected = "none/linear" if mode == "linear-none" else f"mild/{mode}"
+                assert all(g["hypotheses"][expected]["matches"] for g in frame["cells"]), (label,frame["frame"],[(g["cell"],g["hypotheses"][expected]) for g in frame["cells"] if not g["hypotheses"][expected]["matches"]])
+                assert any(not g["hypotheses"][expected.replace("linear","encoded") if "linear" in expected else "mild/linear"]["matches"] for g in frame["cells"])
+                assert all(g["hypotheses"][expected]["x"] == g["expectedX"] for g in frame["cells"] if g["path"]==0), (label,"Placement changed")
+        if backend.startswith("opengl") and mode in ("linear", "encoded", "linear-none"):
+            assert re.search(r"FONTREAL_SELECT font=Noto Sans requested=0 effective=1 eligible=1 glyphs=1",result.stderr), "Default selection owner did not select native glyphs"
+            assert "FONTREAL_TARGET eligible=1 linear=" + ("0" if mode=="encoded" else "1") in result.stderr
         record.update(label=label, backend=backend, selection=mode, nativeOverride=override)
         records.append(record)
         print(f"Captured {label}: API={record['graphicsApi']}", flush=True)
+    baseline = next(r for r in records if r["selection"]=="stock")
+    for mode in ("stock-inherited", "inactive"):
+        other = next(r for r in records if r["selection"]==mode)
+        assert [f["cellHash"] for f in other["frames"]] == [f["cellHash"] for f in baseline["frames"]], "Stock/inactive controlled pixels changed"
+        if env.get("LIBGL_ALWAYS_SOFTWARE") == "1":
+            assert [f["hash"] for f in other["frames"]] == [f["hash"] for f in baseline["frames"]]
+        else:
+            # Separate Intel stock launches vary by one value in annotation LCD edges.
+            for frame in range(5):
+                output=WORK/f"stock-{mode}-frame-{frame}.json"
+                call([PROBE,"composite",WORK/baseline["label"]/f"frame-{frame}.png",WORK/other["label"]/f"frame-{frame}.png",output],env)
+                assert json.loads(output.read_text())["matches"], "Stock/inactive annotations changed beyond GPU rounding"
+    for scale in (1,1.25):
+        pair = [next(r for r in records if r["backend"]=="opengl" and r["selection"]=="linear" and r["scale"]==scale and r["phase"]==phase and not r["nativeOverride"]) for phase in (0,.5)]
+        for left,right in zip(pair[0]["frames"][0]["cells"],pair[1]["frames"][0]["cells"],strict=True):
+            if left["path"]==0:
+                assert left["hypotheses"]["mild/linear"]["y"] == right["hypotheses"]["mild/linear"]["y"]
     return records
 
 
@@ -183,6 +239,79 @@ def spillover_checks(env):
     return records
 
 
+def gpu_checks(env, font):
+    fonts = [font, *(call(["fc-match", "-f", "%{file}", family], env).stdout for family in
+                    ("Nimbus Sans:style=Regular", "Noto Color Emoji"))]
+    records = []
+    def same_region(a,b,order,mode):
+        assert (a["id"],a["role"]) == (b["id"],b["role"])
+        assert a["ordinary"] == b["ordinary"] and a["windowOrdinary"] == b["windowOrdinary"], "Ordinary geometry changed"
+        for key in ("text","windowText"):
+            if env.get("LIBGL_ALWAYS_SOFTWARE") != "1" and a["role"]>=3:
+                output=WORK/f"gpu-{order}-{mode}"/(b[key+"Image"]+".json")
+                call([PROBE,"composite",WORK/f"gpu-{order}-stock"/a[key+"Image"],WORK/f"gpu-{order}-{mode}"/b[key+"Image"],output],env)
+                assert json.loads(output.read_text())["matches"], "CFF Qt pixels changed beyond GPU rounding"
+            else:
+                assert a[key] == b[key], (order,mode,a["id"],"Preserved font pixels changed")
+    for order in ("tt-first", "cff-first"):
+        group = {}
+        for mode in ("stock", "inactive", "linear", "encoded"):
+            output = WORK/f"gpu-{order}-{mode}"
+            output.mkdir(exist_ok=True)
+            case_env = dict(env, FONTREAL_TRACE_QUICK="1")
+            command = selected(mode,[PROBE,"gpu",*fonts,output,order])
+            if mode == "inactive":
+                command = [PROBE,"gpu",*fonts,output,order]
+                case_env["LD_LIBRARY_PATH"] = ":".join(map(str,PRIVATE_LIBS))
+            result = call(command,case_env)
+            (output/"runtime.log").write_text(result.stderr)
+            group[mode] = json.loads((output/"result.json").read_text())
+            assert [f["frame"] for f in group[mode]["frames"]] == [0,1,2]
+            assert group[mode]["graphicsApi"] == 3
+            assert ("declarative-build/lib" in group[mode]["qtQuick"]) == (mode!="stock")
+            assert group[mode]["frames"][0]["hash"] == group[mode]["frames"][1]["hash"]
+            assert group[mode]["frames"][1]["hash"] != group[mode]["frames"][2]["hash"]
+            if mode != "stock":
+                assert re.search(r"FONTREAL_SELECT font=Nimbus Sans requested=0 effective=0 eligible=0",result.stderr), "CFF Qt/default selector changed"
+        if env.get("LIBGL_ALWAYS_SOFTWARE") == "1":
+            assert [f["hash"] for f in group["stock"]["frames"]] == [f["hash"] for f in group["inactive"]["frames"]]
+        for a,b in zip(group["stock"]["frames"],group["inactive"]["frames"],strict=True):
+            for ordinary,inactive in zip(a["regions"],b["regions"],strict=True): same_region(ordinary,inactive,order,"inactive")
+        for mode in ("linear", "encoded"):
+            for baseline,frame in zip(group["stock"]["frames"],group[mode]["frames"],strict=True):
+                assert {r["id"] for r in frame["regions"]} == {f"region/{row}/{col}" for row in range(2) for col in range(7)}
+                for ordinary,enabled in zip(baseline["regions"],frame["regions"],strict=True):
+                    assert (ordinary["id"],ordinary["role"]) == (enabled["id"],enabled["role"])
+                    assert ordinary["ordinary"] == enabled["ordinary"], (order,mode,enabled["id"],"Ordinary geometry changed")
+                    assert ordinary["windowOrdinary"] == enabled["windowOrdinary"], (order,mode,enabled["id"],"Presented ordinary geometry changed")
+                    if enabled["role"]:
+                        same_region(ordinary,enabled,order,mode)
+                    else:
+                        for key in ("glyphs","windowGlyphs"):
+                            assert all(g[f"mild/{mode}"]["matches"] for g in enabled[key].values()), (order,mode,enabled)
+                            assert any(not g[f"mild/{'encoded' if mode=='linear' else 'linear'}"]["matches"] for g in enabled[key].values())
+        records.append(dict(order=order,records=group))
+        print(f"Mixed GPU colors, fonts, cached repaint and sampled layer: {order}",flush=True)
+    for style in ("", "sunken"):
+        output = WORK/("gpu-target-linear"+("-"+style if style else ""))
+        output.mkdir(exist_ok=True)
+        result = call(selected("linear",[PROBE,"target",font,output,*([style] if style else [])]),dict(env,FONTREAL_TRACE_QUICK="1"))
+        (output/"runtime.log").write_text(result.stderr)
+        target = json.loads((output/"result.json").read_text())
+        assert [f["frame"] for f in target["frames"]] == [0,1,2]
+        assert target["nonindexed"] and target["sunken"] == bool(style)
+        assert target["frames"][0]["hash"] == target["frames"][2]["hash"] != target["frames"][1]["hash"]
+        for frame in target["frames"]:
+            expected = "mild/linear" if frame["compatible"] else "mild/encoded"
+            assert set(frame["glyphs"]) == set("lmnogWVwv")
+            assert all(g[expected]["matches"] for g in frame["glyphs"].values()), frame
+            assert any(not g["mild/encoded" if frame["compatible"] else "mild/linear"]["matches"] for g in frame["glyphs"].values())
+        assert "FONTREAL_TARGET eligible=1 linear=0" in result.stderr and "FONTREAL_TARGET eligible=1 linear=1" in result.stderr
+        records.append(dict(target=target))
+        print(f"GPU {style or 'normal'} compatible/external/compatible target and draw restoration passed",flush=True)
+    return records
+
+
 def configure_plasma(env, font):
     config = Path(env["XDG_CONFIG_HOME"])
     descriptor = "Noto Sans,-1,15,5,50,0,0,0,0,0"
@@ -223,7 +352,7 @@ PlasmoidItem {
 def nested_checks(env, font):
     records = []
     for mode, scale, override in (("stock", 1, False), ("linear", 1, False), ("encoded", 1, False),
-                                   ("linear-none", 1, False), ("linear", 1.25, False), ("linear", 1.25, True)):
+                                   ("linear-none", 1, False), ("linear", 1.25, False), ("encoded", 1.25, False), ("linear", 1.25, True)):
         label = f"nested-{mode}-{scale}-{'native' if override else 'default'}"
         output = WORK/label
         output.mkdir(exist_ok=True)
@@ -268,7 +397,9 @@ def nested_checks(env, font):
                         assert client.poll() is None, (output/"plasma.log").read_text()
                         client_maps = Path(f"/proc/{client.pid}/maps").read_text()
                         client_gui = next(line[line.index('/'):] for line in client_maps.splitlines() if "/libQt6Gui.so." in line)
+                        client_quick = next(line[line.index('/'):] for line in client_maps.splitlines() if "/libQt6Quick.so." in line)
                         assert ("qt-native/qt-build/lib" in client_gui) == (mode != "stock")
+                        assert ("qt-native/declarative-build/lib" in client_quick) == (mode != "stock")
                         call([PROBE, "root", output/"screen.png"], dict(env, QT_QPA_PLATFORM="xcb"))
                         call([PROBE, "match", output/"screen.png", font, str(scale), "0", "0", "1100", "40", "lmnogWVwv", "#000000", "#ffffff", output/"title.json"], dict(env, QT_QPA_PLATFORM="offscreen"))
                         call([PROBE, "grid", output/"plasma.png", font, str(scale), output/"plasma.json"], dict(env, QT_QPA_PLATFORM="offscreen"))
@@ -278,8 +409,9 @@ def nested_checks(env, font):
                         metadata = json.loads(re.findall(r"FONTREAL_PLASMA (\{.*\})", (output/"plasma.log").read_text())[-1])
                         # Wayland's integer screen scale can differ from the window's fractional buffer scale.
                         assert len(metadata["items"]) == 54
+                        assert {item["cell"] for item in metadata["items"]} == {f"cell/{r}/{c}" for r in range(6) for c in range(9)}
                         assert all(item["family"] == "Noto Sans" and item["pixels"] == 15 for item in metadata["items"])
-                        record = dict(label=label, selection=mode, scale=scale, nativeOverride=override, kwinGui=gui, plasmaGui=client_gui,
+                        record = dict(label=label, selection=mode, scale=scale, nativeOverride=override, kwinGui=gui, plasmaGui=client_gui, plasmaQuick=client_quick,
                                       title=json.loads((output/"title.json").read_text()), plasma=json.loads((output/"plasma.json").read_text()),
                                       metadata=metadata, composite=composite, plasmaFinal=json.loads((output/"plasma-final.json").read_text()))
                         record["outputScale"] = display_state["outputs"][0]["scale"]
@@ -288,6 +420,11 @@ def nested_checks(env, font):
                             opposite = "mild/encoded" if mode == "linear" else "mild/linear"
                             assert all(g[expected]["matches"] for g in record["title"].values()), "Accepted KWin title changed"
                             assert any(not g[opposite]["matches"] for g in record["title"].values()), "Title does not discriminate treatment"
+                            for captured in (record["plasma"],record["plasmaFinal"]):
+                                assert {(g["path"],g["glyph"]) for g in captured["cells"]} == {(r,c) for r in range(6) for c in "lmnogWVwv"}
+                                assert all(g["hypotheses"][expected]["matches"] for g in captured["cells"]), (label,"Actual Plasma selected blend differs",[(g["path"],g["glyph"],g["hypotheses"][expected]) for g in captured["cells"] if not g["hypotheses"][expected]["matches"]])
+                                assert any(not g["hypotheses"][opposite]["matches"] for g in captured["cells"])
+                            assert re.search(r"FONTREAL_SELECT font=Noto Sans requested=0 effective=1 eligible=1 glyphs=1",(output/"plasma.log").read_text())
                         records.append(record)
                     finally:
                         stop(client)
@@ -300,10 +437,16 @@ def nested_checks(env, font):
 
 
 def main():
+    global WORK
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--hardware",action="store_true",help="Run Quick checks on the current X display and physical OpenGL driver")
     parser.add_argument("--inside-bus", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--only", choices=("quick", "nested", "spillover", "all"), default="all")
     args = parser.parse_args()
+    if args.hardware:
+        if args.only != "quick":
+            parser.error("--hardware requires --only quick")
+        WORK = ROOT/"build/kde-hardware"
     assert PROBE.exists(), "Build qt-kde-probe first"
     WORK.mkdir(exist_ok=True)
     if not args.inside_bus:
@@ -311,14 +454,14 @@ def main():
         host_kwin = call(["pgrep", "-x", "kwin_wayland"], os.environ).stdout.split()
         with tempfile.TemporaryDirectory(prefix="session-", dir=WORK) as state:
             state_path = Path(state)
-            with display(private_environment(state_path), state_path) as env:
+            with display(private_environment(state_path), state_path,args.hardware) as env:
                 # This bus has no service directories, so it cannot activate desktop helpers.
                 bus_config = state_path/"bus.conf"
                 bus_config.write_text(f'''<busconfig><type>session</type><listen>unix:tmpdir={env['XDG_RUNTIME_DIR']}</listen>
 <auth>EXTERNAL</auth><policy context="default"><allow user="{os.getuid()}"/><allow own="*"/><allow send_destination="*"/><allow receive_sender="*"/></policy></busconfig>''')
                 with (WORK/"session-run.log").open("w") as log:
-                    result = subprocess.run(["dbus-run-session", "--config-file", str(bus_config), "--", sys.executable, str(Path(__file__).resolve()), "--inside-bus", "--only", args.only],
-                                            env=env, stdout=log, stderr=subprocess.STDOUT, timeout=180)
+                    result = subprocess.run(["dbus-run-session", "--config-file", str(bus_config), "--", sys.executable, str(Path(__file__).resolve()), "--inside-bus", "--only", args.only, *(["--hardware"] if args.hardware else [])],
+                                            env=env, stdout=log, stderr=subprocess.STDOUT, timeout=240)
                 print((WORK/"session-run.log").read_text(), end="", flush=True)
                 result.check_returncode()
         assert not state_path.exists()
@@ -331,13 +474,16 @@ def main():
     report = {}
     if args.only in ("quick", "all"):
         report["quick"] = quick_checks(env, font)
+        report["gpu"] = gpu_checks(env, font)
+        if args.hardware:
+            assert all(not re.search(r"llvmpipe|softpipe|software",r["openGLDriver"],re.I) for r in report["quick"] if r["backend"].startswith("opengl")), "Hardware run used a software OpenGL driver"
     if args.only in ("spillover", "all"):
         report["spillover"] = spillover_checks(env)
     if args.only in ("nested", "all"):
         report["nested"] = nested_checks(env, font)
     report["referenceFont"] = dict(path=font, sha256=hashlib.sha256(Path(font).read_bytes()).hexdigest())
     (WORK/f"report-{args.only}.json").write_text(json.dumps(report, indent=2))
-    print(f"Diagnostic collection complete. Rendering mismatches remain in {WORK}/report-{args.only}.json", flush=True)
+    print(f"Rendering checks complete: {WORK}/report-{args.only}.json", flush=True)
 
 
 if __name__ == "__main__":
