@@ -23,6 +23,7 @@
 #include FT_LCD_FILTER_H
 #include FT_MODULE_H
 #include <cmath>
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
 
@@ -69,8 +70,8 @@ void invoke(const QString &binary, const QString &font, const QString &directory
     if (!success) check(error.contains("fontreal:"), "Expected an explicit validation error");
 }
 
-struct ReferenceMode { const char *id; unsigned interpreter; FT_Int32 flags; FT_Render_Mode render; };
-const ReferenceMode referenceModes[] = {
+struct ReferenceMode { const char *id; unsigned interpreter; FT_Int32 flags; FT_Render_Mode render; int low = 0, high = 255; };
+const QVector<ReferenceMode> referenceModes = {
     {"legacy-mono",35,FT_LOAD_TARGET_MONO,FT_RENDER_MODE_MONO},
     {"legacy-gray",35,FT_LOAD_TARGET_MONO,FT_RENDER_MODE_NORMAL},
     {"auto-gray",40,FT_LOAD_FORCE_AUTOHINT|FT_LOAD_TARGET_MONO,FT_RENDER_MODE_NORMAL},
@@ -80,21 +81,40 @@ const ReferenceMode referenceModes[] = {
     {"lcd",40,FT_LOAD_TARGET_LCD,FT_RENDER_MODE_LCD}
 };
 
+const QVector<ReferenceMode> edgeReferenceModes = {
+    {"auto-gray",40,FT_LOAD_FORCE_AUTOHINT|FT_LOAD_TARGET_MONO,FT_RENDER_MODE_NORMAL},
+    {"edge-mild",40,FT_LOAD_FORCE_AUTOHINT|FT_LOAD_TARGET_MONO,FT_RENDER_MODE_NORMAL,32,223},
+    {"edge-strong",40,FT_LOAD_FORCE_AUTOHINT|FT_LOAD_TARGET_MONO,FT_RENDER_MODE_NORMAL,64,191},
+    {"auto-mono",40,FT_LOAD_FORCE_AUTOHINT|FT_LOAD_TARGET_MONO,FT_RENDER_MODE_MONO}
+};
+
+int referenceCoverage(int a, const ReferenceMode &mode)
+{
+    return int(std::lround(255*std::clamp((a-mode.low)/double(mode.high-mode.low),0.0,1.0)));
+}
+
 void checkModeReferences(const QString &font, const QString &directory, int phase, bool snapped,
                          int characterSize = 13*64, const QString &inspect = "l")
 {
     const auto metadata = json(directory);
     const auto records = metadata["modes"].toArray();
     check(metadata["inspection_character"] == inspect && metadata["effective_size_26_6"].toInt() == characterSize, "Wrong inspection or effective size");
-    check(records.size() == 7, "A mode record disappeared");
+    const auto &selected = metadata["study"] == "diagonal-edges" ? edgeReferenceModes : referenceModes;
+    check(records.size() == selected.size(), "A mode record disappeared");
     const auto commonOrigins = records[0].toObject()["origins_26_6"].toArray();
     const auto commonIds = records[0].toObject()["glyph_ids"].toArray();
     check(commonIds.size() == metadata["text"].toString().size(), "Lost a specimen glyph");
     int available = 0;
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < selected.size(); ++i) {
         const auto record = records[i].toObject();
-        const auto &mode = referenceModes[i];
+        const auto &mode = selected[i];
         check(record["id"] == mode.id && record["origins_26_6"].toArray() == commonOrigins && record["glyph_ids"].toArray() == commonIds, "Mode identity or shared layout changed");
+        if (mode.low || mode.high != 255) {
+            const auto transfer = record["coverage_transfer"].toObject();
+            check(transfer["source"] == "auto-gray" && transfer["kind"] == "clipped-linear"
+                && transfer["low"].toInt() == mode.low && transfer["high"].toInt() == mode.high,
+                "Adjusted mask provenance is wrong");
+        } else check(!record.contains("coverage_transfer"), "Raw mask mislabeled as adjusted");
         FT_Library library = nullptr;
         check(!FT_Init_FreeType(&library), "Reference FreeType initialization failed");
         FT_Face face = nullptr;
@@ -130,7 +150,8 @@ void checkModeReferences(const QString &font, const QString &directory, int phas
                     if (lcd) expected = qRgb(row[x*3],row[x*3+1],row[x*3+2]);
                     else {
                         const int a = mode.render == FT_RENDER_MODE_MONO ? ((row[x/8] & (128 >> (x%8))) ? 255 : 0) : row[x];
-                        expected = qRgb(a,a,a);
+                        const int adjusted = referenceCoverage(a,mode);
+                        expected = qRgb(adjusted,adjusted,adjusted);
                     }
                     check(actualImage.pixel(x,y) == expected, "Treatment coverage differs from independent FreeType: " + QString(mode.id));
                 }
@@ -145,7 +166,7 @@ void checkModeReferences(const QString &font, const QString &directory, int phas
     check(available >= 3, "Too few available modes for this experiment");
     for (const auto &origin : commonOrigins)
         if (snapped) check(origin.toInt()%64 == 0, "Snapped glyph has a fractional origin");
-    QTextStream(stdout) << "S1: all seven declared modes checked against independent FreeType; " << available << " available\n";
+    QTextStream(stdout) << "S1: all " << selected.size() << " declared modes checked against independent FreeType; " << available << " available\n";
 }
 
 int expectedBlend(int alpha, bool dark, bool linear)
@@ -171,6 +192,150 @@ void checkDetail(const QString &directory, bool dark, bool linear)
                 check(detail.pixel(i*cell+8+x*8+dx,32+y*8+dy) == expected, "Detail interpolates or substitutes selected glyph pixels");
         }
     }
+}
+
+void checkStudySpecimen(const QString &font, const QString &directory, int phase, bool snapped, int characterSize,
+                        bool dark, bool linear)
+{
+    const auto metadata = json(directory);
+    check(metadata["study"] == "diagonal-edges", "Study selection was lost");
+    check(metadata["font_sha256"] == QString::fromLatin1(QCryptographicHash::hash(bytes(font),QCryptographicHash::Sha256).toHex()), "Study font provenance is wrong");
+    FT_Library library = nullptr;
+    FT_Face face = nullptr;
+    check(!FT_Init_FreeType(&library) && !FT_New_Face(library,QFile::encodeName(font).constData(),0,&face)
+        && !FT_Select_Charmap(face,FT_ENCODING_UNICODE) && !FT_Set_Char_Size(face,0,characterSize,72,72), "Study reference setup failed");
+    QVector<FT_UInt> ids;
+    QVector<FT_Pos> origins;
+    QJsonArray expectedOrigins;
+    FT_Pos pen = 0;
+    FT_UInt previous = 0;
+    for (const QChar c : metadata["text"].toString()) {
+        const FT_UInt id = FT_Get_Char_Index(face,c.unicode());
+        FT_Vector kerning{};
+        if (previous && FT_HAS_KERNING(face)) check(!FT_Get_Kerning(face,previous,id,FT_KERNING_UNFITTED,&kerning), "Reference kerning failed");
+        pen += kerning.x;
+        const FT_Pos origin = snapped ? std::lround((pen+phase)/64.0)*64 : pen+phase;
+        ids.append(id); origins.append(origin); expectedOrigins.append(double(origin));
+        check(!FT_Load_Glyph(face,id,FT_LOAD_NO_HINTING|FT_LOAD_NO_BITMAP), "Reference advance failed");
+        pen += face->glyph->advance.x;
+        previous = id;
+    }
+    struct Raster { QImage mask; int left, top; };
+    QVector<QVector<Raster>> runs;
+    int left = 0, right = int(std::ceil((pen+phase)/64.0));
+    int top = -int(std::ceil(characterSize/64.0)), bottom = 0;
+    const auto records = metadata["modes"].toArray();
+    for (int m = 0; m < edgeReferenceModes.size(); ++m) {
+        const auto &mode = edgeReferenceModes[m];
+        check(records[m].toObject()["origins_26_6"].toArray() == expectedOrigins, "Study shared origins differ from independent layout");
+        check(!FT_Property_Set(library,"truetype","interpreter-version",&mode.interpreter), "Reference interpreter failed");
+        QVector<Raster> run;
+        for (int i = 0; i < ids.size(); ++i) {
+            const int whole = int(std::floor(origins[i]/64.0));
+            FT_Vector delta{origins[i]-whole*64,0};
+            FT_Set_Transform(face,nullptr,&delta);
+            check(!FT_Load_Glyph(face,ids[i],mode.flags|FT_LOAD_NO_BITMAP) && !FT_Render_Glyph(face->glyph,mode.render), "Reference specimen raster failed");
+            const auto bitmap = face->glyph->bitmap;
+            QImage mask(int(bitmap.width),int(bitmap.rows),QImage::Format_RGB32);
+            for (int y = 0; y < mask.height(); ++y) {
+                const auto *row = bitmap.buffer+(bitmap.pitch >= 0 ? y : int(bitmap.rows)-1-y)*std::abs(bitmap.pitch);
+                for (int x = 0; x < mask.width(); ++x) {
+                    const int a = mode.render == FT_RENDER_MODE_MONO ? ((row[x/8] & (128 >> (x%8))) ? 255 : 0) : row[x];
+                    const int adjusted = referenceCoverage(a,mode);
+                    mask.setPixel(x,y,qRgb(adjusted,adjusted,adjusted));
+                }
+            }
+            const int x = whole+face->glyph->bitmap_left, y = -face->glyph->bitmap_top;
+            left = std::min(left,x); right = std::max(right,x+mask.width());
+            top = std::min(top,y); bottom = std::max(bottom,y+mask.height());
+            run.append({mask,x,y});
+        }
+        runs.append(run);
+    }
+    check(metadata["left_padding"].toInt() == 8-left && metadata["baseline"].toInt() == 8-top, "Study canvas placement changed");
+    for (int m = 0; m < runs.size(); ++m) {
+        QImage expected(right-left+16,bottom-top+16,QImage::Format_RGB32);
+        expected.fill(Qt::black);
+        for (const auto &glyph : runs[m])
+            for (int y = 0; y < glyph.mask.height(); ++y)
+                for (int x = 0; x < glyph.mask.width(); ++x) {
+                    const QPoint p(glyph.left-left+8+x,glyph.top-top+8+y);
+                    const double a = qRed(glyph.mask.pixel(x,y))/255.0;
+                    const double b = qRed(expected.pixel(p))/255.0;
+                    const int combined = int(std::lround(255*(a+(1-a)*b)));
+                    expected.setPixel(p,qRgb(combined,combined,combined));
+                }
+        const QString prefix = directory+"/"+edgeReferenceModes[m].id;
+        check(image(prefix+"-coverage.png") == expected, "Full study specimen differs from independent layout/raster/composition");
+        const QImage rendered = image(prefix+".png");
+        check(rendered.size() == expected.size(), "Study rendered bounds changed");
+        for (int y = 0; y < expected.height(); ++y) for (int x = 0; x < expected.width(); ++x) {
+            const int value = expectedBlend(qRed(expected.pixel(x,y)),dark,linear);
+            check(rendered.pixel(x,y) == qRgb(value,value,value), "Study full-text blend differs from independent math");
+        }
+    }
+    FT_Done_Face(face); FT_Done_FreeType(library);
+}
+
+void diagonalCore(const QString &binary, const QString &root, const QString &working)
+{
+    const QString text = "W V w v WWWV wwv mno g Illl1| lllm";
+    const QStringList fonts{findFont("Noto Sans:style=Regular"),findFont("DejaVu Sans:style=Book")};
+    check(fonts[0] != fonts[1], "Diagonal study needs two different installed fonts");
+    QString first;
+    int n = 0;
+    for (const auto &font : fonts) {
+        QString baseline;
+        for (const QString probe : {"W","V","w","v","m","n","o","g","l"}) {
+            const QString out = root+QString("/edges-%1-%2").arg(n).arg(probe);
+            invoke(binary,font,out,working,{"--edges","--size","15","--linear","--inspect",probe,"--text",text});
+            check(json(out)["text"] == text, "Study lost specimen text");
+            checkModeReferences(font,out,32,true,15*64,probe);
+            checkDetail(out,false,true);
+            if (baseline.isEmpty()) {
+                baseline = out;
+                checkStudySpecimen(font,out,32,true,15*64,false,true);
+            }
+            for (const auto &mode : edgeReferenceModes) {
+                for (const QString suffix : {"-coverage.png","-ell-coverage.png"})
+                    check(image(out+"/"+mode.id+suffix) == image(baseline+"/"+mode.id+suffix), "Study inspection changed specimen or l control");
+                if ((probe == "W" || probe == "V") && mode.low) {
+                    const QImage mask = image(out+"/"+mode.id+"-probe-coverage.png");
+                    check(mask != image(out+"/auto-gray-probe-coverage.png"), "Diagonal contrast fixture does not distinguish the candidate");
+                    bool partial = false;
+                    for (int y = 0; y < mask.height(); ++y) for (int x = 0; x < mask.width(); ++x) {
+                        const int a = qRed(mask.pixel(x,y)); partial |= a > 0 && a < 255;
+                    }
+                    check(partial, "Gray contrast candidate became binary");
+                }
+            }
+        }
+        if (!n) first = baseline;
+        ++n;
+    }
+    for (int dark = 0; dark < 2; ++dark) for (int linear = 0; linear < 2; ++linear) {
+        QStringList args{"--edges","--size","15","--inspect","W","--text",text};
+        if (dark) args << "--dark";
+        if (linear) args << "--linear";
+        const QString out = root+QString("/edge-colors-%1%2").arg(dark).arg(linear);
+        invoke(binary,fonts[0],out,working,args);
+        checkModeReferences(fonts[0],out,32,true,15*64,"W");
+        checkStudySpecimen(fonts[0],out,32,true,15*64,dark,linear);
+        checkDetail(out,dark,linear);
+        for (const auto &mode : edgeReferenceModes)
+            check(image(out+"/"+mode.id+"-coverage.png") == image(first+"/"+mode.id+"-coverage.png"), "Study blend or palette changed masks");
+    }
+    const QString equivalent = root+"/edge-equivalent";
+    invoke(binary,fonts[0],equivalent,working,{"--edges","--size","10","--scale","1.5","--linear","--inspect","W","--text",text});
+    checkStudySpecimen(fonts[0],equivalent,32,true,15*64,false,true);
+    for (const auto &mode : edgeReferenceModes)
+        check(image(equivalent+"/"+mode.id+"-coverage.png") == image(first+"/"+mode.id+"-coverage.png"), "Equivalent study sizes changed masks");
+    const QString repeated = root+"/edge-repeat";
+    invoke(binary,fonts[0],repeated,working,{"--edges","--size","15","--linear","--inspect","W","--text",text});
+    check(bytes(repeated+"/metrics.json") == bytes(first+"/metrics.json"), "Repeated study metadata changed");
+    for (const auto &name : QDir(first).entryList({"*.png"},QDir::Files))
+        check(image(repeated+"/"+name) == image(first+"/"+name), "Repeated study pixels changed");
+    QTextStream(stdout) << "FR009 S1-S3: both fonts, nine probes, four rows, independent complete specimens, all blends/polarities, equivalent size, and repeatability passed\n";
 }
 
 void core(const QString &binary, const QString &font, const QString &root, const QString &working)
@@ -277,9 +442,10 @@ void core(const QString &binary, const QString &font, const QString &root, const
         }
     }
     QTextStream(stdout) << "S2: 15px at 1x and 10px at 1.5x have identical treatment, l, and m coverage\n";
+    diagonalCore(binary,root,working);
 }
 
-void view(const QString &binary, const QString &font, const QString &root, const QString &working)
+void view(const QString &binary, const QString &font, const QString &root, const QString &working, bool edges = false)
 {
     const QByteArray original = bytes(font);
     check(QDir::setCurrent(working), "Cannot select GUI test working directory");
@@ -291,59 +457,15 @@ void view(const QString &binary, const QString &font, const QString &root, const
     }
     Config config;
     config.font = font;
+    config.edges = edges;
+    if (edges) config.text = "WWWV wwv mno g lllm";
     config.phase = 0.4922;
     std::unique_ptr<QWidget> window(createWindow(config));
     window->show();
     QApplication::processEvents();
-    const QString initial = root+"/gui-initial";
-    invoke(binary,font,initial,working,{"--phase","0.4922"});
-    check(dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>("Comparison"))->image() == image(initial+"/comparison.png")
-        && dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>("Geometry target"))->image() == image(initial+"/target.png"),
-        "GUI numeric controls changed an accepted CLI phase across a snapping boundary");
-    window->findChild<QDoubleSpinBox *>("size")->setValue(14);
-    window->findChild<QDoubleSpinBox *>("scale")->setValue(1.25);
-    window->findChild<QDoubleSpinBox *>("phase")->setValue(0.25);
-    window->findChild<QCheckBox *>("snap")->setChecked(false);
-    window->findChild<QCheckBox *>("dark")->setChecked(true);
-    window->findChild<QCheckBox *>("linear")->setChecked(true);
-    const QString selectedFont = findFont("monospace");
-    const QByteArray selectedOriginal = bytes(selectedFont);
-    auto *fontControl = window->findChild<QLineEdit *>("font");
-    fontControl->setText(selectedFont);
-    QMetaObject::invokeMethod(fontControl,"editingFinished",Qt::DirectConnection);
-    auto *inspection = window->findChild<QLineEdit *>("inspect");
-    inspection->setText("m");
-    QMetaObject::invokeMethod(inspection,"editingFinished",Qt::DirectConnection);
-    QApplication::processEvents();
-    const QString exported = root+"/view-reference";
-    invoke(binary,selectedFont,exported,working,{"--size","14","--scale","1.25","--phase","0.25","--fractional","--dark","--linear","--inspect","m"});
     auto *tabs = window->findChild<QTabWidget *>();
     const QStringList names{"Comparison","Pixel detail","Geometry target"};
     const QStringList files{"comparison.png","detail.png","target.png"};
-    for (int i = 0; i < names.size(); ++i) {
-        tabs->setCurrentIndex(i);
-        QApplication::processEvents();
-        auto *canvas = dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>(names[i]));
-        const QImage expected = image(exported+"/"+files[i]);
-        check(canvas && canvas->image() == expected, "Actual viewer controls feed wrong image");
-        const QImage captured = canvas->grab().toImage().convertToFormat(QImage::Format_RGB32);
-        check(captured.width() >= expected.width() && captured.height() >= expected.height(), "Canvas clips source pixels");
-        check(captured.copy(QRect(QPoint(0,0),expected.size())) == expected, "Actual viewer resamples source pixels");
-    }
-    checkDetail(exported,true,true);
-    fontControl->setText(root+"/missing.ttf");
-    QMetaObject::invokeMethod(fontControl,"editingFinished",Qt::DirectConnection);
-    check(dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>("Comparison"))->image().isNull()
-        && window->findChild<QLabel *>("status")->text().contains("Cannot read font")
-        && !window->findChild<QPushButton *>("export")->isEnabled(), "Invalid font leaves stale output or no error");
-    fontControl->setText(selectedFont);
-    QMetaObject::invokeMethod(fontControl,"editingFinished",Qt::DirectConnection);
-    auto *text = window->findChild<QLineEdit *>("text");
-    text->setText(QString::fromUtf8("é"));
-    QMetaObject::invokeMethod(text,"editingFinished",Qt::DirectConnection);
-    check(dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>("Comparison"))->image().isNull() && !window->findChild<QPushButton *>("export")->isEnabled(), "Invalid controls retain stale results");
-    text->setText(config.text);
-    QMetaObject::invokeMethod(text,"editingFinished",Qt::DirectConnection);
     const auto guiExport = [&](const QString &directory, bool occupied = false) {
         check(QDir().mkpath(directory), "Cannot prepare GUI export folder");
         bool selected = false, rejected = false;
@@ -362,18 +484,125 @@ void view(const QString &binary, const QString &font, const QString &root, const
         window->findChild<QPushButton *>("export")->click();
         check(selected && (!occupied || rejected), "GUI export did not reach expected terminal result");
     };
+    int observation = 0;
+    const auto observeStudy = [&](bool exportCurrent = false) {
+        if (!edges) return;
+        const auto number = [&](const char *name) { return window->findChild<QDoubleSpinBox *>(name)->value(); };
+        const auto line = [&](const char *name) { return window->findChild<QLineEdit *>(name)->text(); };
+        const bool dark = window->findChild<QCheckBox *>("dark")->isChecked();
+        const bool linear = window->findChild<QCheckBox *>("linear")->isChecked();
+        const bool snap = window->findChild<QCheckBox *>("snap")->isChecked();
+        QStringList args{"--edges","--size",QString::number(number("size"),'g',17),
+            "--scale",QString::number(number("scale"),'g',17),"--phase",QString::number(number("phase"),'g',17),
+            "--inspect",line("inspect"),"--text",line("text")};
+        if (dark) args << "--dark";
+        if (linear) args << "--linear";
+        if (!snap) args << "--fractional";
+        const QString out = root+QString("/observation-%1").arg(observation++);
+        invoke(binary,line("font"),out,working,args);
+        const int phase = int(std::lround(number("phase")*64));
+        const int size = int(std::lround(number("size")*number("scale")*64));
+        checkModeReferences(line("font"),out,phase,snap,size,line("inspect"));
+        checkStudySpecimen(line("font"),out,phase,snap,size,dark,linear);
+        checkDetail(out,dark,linear);
+        for (int i = 0; i < names.size(); ++i) {
+            tabs->setCurrentIndex(i);
+            QApplication::processEvents();
+            auto *canvas = dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>(names[i]));
+            const QImage expected = image(out+"/"+files[i]);
+            check(canvas->image() == expected, "Study event did not update current canvas");
+            const QImage captured = canvas->grab().toImage().convertToFormat(QImage::Format_RGB32);
+            check(captured.width() >= expected.width() && captured.height() >= expected.height(), "Study canvas clips source pixels");
+            check(captured.copy(QRect(QPoint(0,0),expected.size())) == expected, "Study canvas resampled source pixels");
+        }
+        check(window->findChild<QPushButton *>("export")->isEnabled(), "Valid study did not enable export");
+        if (exportCurrent) {
+            const QString saved = out+"-gui";
+            guiExport(saved);
+            checkModeReferences(line("font"),saved,phase,snap,size,line("inspect"));
+            checkStudySpecimen(line("font"),saved,phase,snap,size,dark,linear);
+            checkDetail(saved,dark,linear);
+            for (const auto &name : QDir(out).entryList(QDir::Files))
+                check(bytes(saved+"/"+name) == bytes(out+"/"+name), "Current GUI export differs from requested study state");
+        }
+    };
+    observeStudy();
+    const QString initial = root+"/gui-initial";
+    QStringList studyArgs;
+    if (edges) studyArgs << "--edges" << "--text" << config.text;
+    invoke(binary,font,initial,working,studyArgs+QStringList{"--phase","0.4922"});
+    check(dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>("Comparison"))->image() == image(initial+"/comparison.png")
+        && dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>("Geometry target"))->image() == image(initial+"/target.png"),
+        "GUI numeric controls changed an accepted CLI phase across a snapping boundary");
+    window->findChild<QDoubleSpinBox *>("size")->setValue(14);
+    observeStudy();
+    window->findChild<QDoubleSpinBox *>("scale")->setValue(1.25);
+    observeStudy();
+    window->findChild<QDoubleSpinBox *>("phase")->setValue(0.25);
+    observeStudy();
+    window->findChild<QCheckBox *>("snap")->setChecked(false);
+    observeStudy();
+    window->findChild<QCheckBox *>("dark")->setChecked(true);
+    observeStudy(true);
+    window->findChild<QCheckBox *>("linear")->setChecked(true);
+    observeStudy();
+    const QString selectedFont = findFont("monospace");
+    const QByteArray selectedOriginal = bytes(selectedFont);
+    auto *fontControl = window->findChild<QLineEdit *>("font");
+    fontControl->setText(selectedFont);
+    QMetaObject::invokeMethod(fontControl,"editingFinished",Qt::DirectConnection);
+    observeStudy();
+    auto *inspection = window->findChild<QLineEdit *>("inspect");
+    inspection->setText(edges ? "V" : "m");
+    QMetaObject::invokeMethod(inspection,"editingFinished",Qt::DirectConnection);
+    observeStudy();
+    QApplication::processEvents();
+    const QString exported = root+"/view-reference";
+    invoke(binary,selectedFont,exported,working,studyArgs+QStringList{"--size","14","--scale","1.25","--phase","0.25","--fractional","--dark","--linear","--inspect",edges ? "V" : "m"});
+    for (int i = 0; i < names.size(); ++i) {
+        tabs->setCurrentIndex(i);
+        QApplication::processEvents();
+        auto *canvas = dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>(names[i]));
+        const QImage expected = image(exported+"/"+files[i]);
+        check(canvas && canvas->image() == expected, "Actual viewer controls feed wrong image");
+        const QImage captured = canvas->grab().toImage().convertToFormat(QImage::Format_RGB32);
+        check(captured.width() >= expected.width() && captured.height() >= expected.height(), "Canvas clips source pixels");
+        check(captured.copy(QRect(QPoint(0,0),expected.size())) == expected, "Actual viewer resamples source pixels");
+    }
+    checkDetail(exported,true,true);
+    fontControl->setText(root+"/missing.ttf");
+    QMetaObject::invokeMethod(fontControl,"editingFinished",Qt::DirectConnection);
+    check(dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>("Comparison"))->image().isNull()
+        && window->findChild<QLabel *>("status")->text().contains("Cannot read font")
+        && !window->findChild<QPushButton *>("export")->isEnabled(), "Invalid font leaves stale output or no error");
+    for (const auto &name : names)
+        check(dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>(name))->image().isNull(), "Invalid font leaves a stale canvas");
+    fontControl->setText(selectedFont);
+    QMetaObject::invokeMethod(fontControl,"editingFinished",Qt::DirectConnection);
+    observeStudy(true);
+    auto *text = window->findChild<QLineEdit *>("text");
+    text->setText(QString::fromUtf8("é"));
+    QMetaObject::invokeMethod(text,"editingFinished",Qt::DirectConnection);
+    check(dynamic_cast<PixelCanvas *>(window->findChild<QWidget *>("Comparison"))->image().isNull() && !window->findChild<QPushButton *>("export")->isEnabled(), "Invalid controls retain stale results");
+    text->setText(config.text);
+    QMetaObject::invokeMethod(text,"editingFinished",Qt::DirectConnection);
+    observeStudy();
     QImage referenceCoverage;
     QMap<QString,QImage> referenceMasks;
     for (int dark = 0; dark < 2; ++dark) for (int linear = 0; linear < 2; ++linear) {
         window->findChild<QCheckBox *>("dark")->setChecked(dark);
+        observeStudy(true);
         window->findChild<QCheckBox *>("linear")->setChecked(linear);
+        observeStudy();
         const QString out = root+QString("/gui-%1%2").arg(dark).arg(linear);
         guiExport(out);
-        checkModeReferences(selectedFont,out,16,false,14*1.25*64,"m");
+        checkModeReferences(selectedFont,out,16,false,14*1.25*64,edges ? "V" : "m");
         checkDetail(out,dark,linear);
-        const auto mask = image(out+"/native-gray-coverage.png");
-        const auto rendered = image(out+"/native-gray.png");
-        for (const auto &mode : referenceModes) {
+        if (edges) checkStudySpecimen(selectedFont,out,16,false,14*1.25*64,dark,linear);
+        const QString reference = edges ? "auto-gray" : "native-gray";
+        const auto mask = image(out+"/"+reference+"-coverage.png");
+        const auto rendered = image(out+"/"+reference+".png");
+        for (const auto &mode : edges ? edgeReferenceModes : referenceModes) {
             const QString name = QString(mode.id)+"-coverage.png";
             if (!QFile::exists(out+"/"+name)) continue;
             const auto coverage = image(out+"/"+name);
@@ -415,7 +644,12 @@ int main(int argc, char **argv)
         check(QDir().mkdir(working), "Cannot create test working directory");
         const QString font = findFont("sans-serif");
         if (QByteArray(argv[2]) == "core") core(argv[1],font,root.path(),working);
-        else view(argv[1],font,root.path(),working);
+        else {
+            view(argv[1],font,root.path(),working);
+            const QString edgesRoot = root.path()+"/edges-view";
+            check(QDir().mkdir(edgesRoot), "Cannot prepare study view output");
+            view(argv[1],font,edgesRoot,working,true);
+        }
         return 0;
     } catch (const std::exception &error) {
         QTextStream(stderr) << "FAIL: " << error.what() << '\n';

@@ -65,10 +65,12 @@ QWidget *createWindow(const Config &initial)
 {
     renderExperiment(initial);
     auto *window = new QWidget;
-    window->setWindowTitle("Fontreal — controlled FreeType comparison");
+    window->setWindowTitle(initial.edges ? "Fontreal — diagonal edge comparison" : "Fontreal — controlled FreeType comparison");
     window->resize(1100, 760);
     auto *layout = new QVBoxLayout(window);
-    auto *intro = new QLabel("Compare existing rendering modes. Solid aligned stems are the target; the geometry tab illustrates it.");
+    auto *intro = new QLabel(initial.edges
+        ? "Compare current gray edges, two tighter gray transitions, and binary automatic hints. Judge normal size first."
+        : "Compare existing rendering modes. Solid aligned stems are the target; the geometry tab illustrates it.");
     intro->setWordWrap(true);
     layout->addWidget(intro);
     auto *fontRow = new QHBoxLayout;
@@ -145,6 +147,7 @@ QWidget *createWindow(const Config &initial)
     const auto redraw = [=] {
         Config config{font->text(), text->text(), size->value(), scale->value(), phase->value(), snap->isChecked(), dark->isChecked(), linear->isChecked()};
         config.inspect = inspect->text();
+        config.edges = initial.edges;
         try {
             *result = renderExperiment(config);
             canvases[0]->setImage(result->comparison);

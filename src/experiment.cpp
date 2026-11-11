@@ -43,9 +43,10 @@ struct Mode {
     unsigned interpreter;
     FT_Int32 flags;
     FT_Render_Mode render;
+    int low = 0, high = 255;
 };
 
-const Mode modes[] = {
+const QVector<Mode> modes = {
     {"legacy-mono", "TT35 mono hints / binary", 35, FT_LOAD_TARGET_MONO, FT_RENDER_MODE_MONO},
     {"legacy-gray", "TT35 mono hints / gray edges", 35, FT_LOAD_TARGET_MONO, FT_RENDER_MODE_NORMAL},
     {"auto-gray", "Auto mono hints / gray edges", 40, FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO, FT_RENDER_MODE_NORMAL},
@@ -53,6 +54,13 @@ const Mode modes[] = {
     {"light-gray", "TT40 light / grayscale", 40, FT_LOAD_TARGET_LIGHT, FT_RENDER_MODE_NORMAL},
     {"unhinted-gray", "Unhinted / grayscale", 40, FT_LOAD_NO_HINTING, FT_RENDER_MODE_NORMAL},
     {"lcd", "TT40 LCD / default RGB filter", 40, FT_LOAD_TARGET_LCD, FT_RENDER_MODE_LCD},
+};
+
+const QVector<Mode> edgeModes = {
+    {"auto-gray", "Auto mono hints / gray edges", 40, FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO, FT_RENDER_MODE_NORMAL},
+    {"edge-mild", "Gray edges / mild contrast", 40, FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO, FT_RENDER_MODE_NORMAL, 32, 223},
+    {"edge-strong", "Gray edges / strong contrast", 40, FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO, FT_RENDER_MODE_NORMAL, 64, 191},
+    {"auto-mono", "Auto mono hints / binary", 40, FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO, FT_RENDER_MODE_MONO},
 };
 
 struct Glyph {
@@ -91,7 +99,15 @@ Glyph raster(FT_Face face, FT_UInt index, FT_Pos origin, const Mode &mode)
     FT_Set_Transform(face, nullptr, &delta);
     ftCheck(FT_Load_Glyph(face, index, mode.flags | FT_LOAD_NO_BITMAP), "Load glyph");
     ftCheck(FT_Render_Glyph(face->glyph, mode.render), "Render glyph");
-    return {integral + face->glyph->bitmap_left, face->glyph->bitmap_top, bitmapImage(face->glyph->bitmap)};
+    QImage coverage = bitmapImage(face->glyph->bitmap);
+    if (mode.low != 0 || mode.high != 255)
+        for (int y = 0; y < coverage.height(); ++y)
+            for (int x = 0; x < coverage.width(); ++x) {
+                const int a = std::clamp(qRed(coverage.pixel(x,y)), mode.low, mode.high) - mode.low;
+                const int value = (a*255 + (mode.high-mode.low)/2) / (mode.high-mode.low);
+                coverage.setPixel(x,y,qRgb(value,value,value));
+            }
+    return {integral + face->glyph->bitmap_left, face->glyph->bitmap_top, coverage};
 }
 
 int blendChannel(int coverage, const Config &config)
@@ -214,7 +230,7 @@ Experiment renderExperiment(const Config &config)
     QVector<QVector<Glyph>> glyphs;
     int minX = 0, maxX = int(std::ceil(double(pen+phase)/64)), minY = -int(std::ceil(config.size*config.scale)), maxY = 0;
     Experiment result;
-    for (const Mode &mode : modes) {
+    for (const Mode &mode : config.edges ? edgeModes : modes) {
         Sample sample;
         sample.id = mode.id;
         sample.name = mode.name;
@@ -227,6 +243,9 @@ Experiment renderExperiment(const Config &config)
             {"requested_interpreter", int(mode.interpreter)}, {"load_flags", int(mode.flags | FT_LOAD_NO_BITMAP)},
             {"render_mode", int(mode.render)}, {"lcd_filter", mode.render == FT_RENDER_MODE_LCD ? int(FT_LCD_FILTER_DEFAULT) : -1},
             {"glyph_ids", idsJson}, {"origins_26_6", originsJson}};
+        if (mode.low != 0 || mode.high != 255)
+            sample.metadata.insert("coverage_transfer", QJsonObject{{"source", "auto-gray"},
+                {"kind", "clipped-linear"}, {"low", mode.low}, {"high", mode.high}});
         QVector<Glyph> run;
         if (error) {
             sample.unavailable = QString("Unavailable: FreeType error %1").arg(error);
@@ -331,6 +350,7 @@ Experiment renderExperiment(const Config &config)
         {"layout","shared unhinted advances and unfitted kerning; no shaping"}, {"baseline",8-minY}, {"left_padding",8-minX},
         {"modes",records}, {"lcd_geometry","RGB stripe assumption; inspect grayscale modes on other panels"},
         {"target","synthetic geometry only; eight samples per axis; no candidate font algorithm"}};
+    if (config.edges) result.metadata.insert("study", "diagonal-edges");
     return result;
 }
 

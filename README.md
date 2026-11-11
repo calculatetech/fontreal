@@ -4,6 +4,8 @@ The [roadmap](docs/roadmap.md) covers KDE, GNOME, Wine, and conditional Windows 
 
 The [real Konsole comparison](docs/experiments/kde-preview.md) builds and launches an isolated Qt prototype with stock, linear, and encoded choices.
 
+The separate [diagonal edge study](docs/experiments/diagonal-edges.md) compares the remaining W/V fuzziness with two tighter gray transitions and automatic-hinted binary output. Open it with `--edges`. The ordinary seven-row experiment stays available without that flag.
+
 A controlled Linux font experiment. The target is solid, pixel-aligned strokes with softened curves and diagonals. Shape fidelity comes second. Human comparison decides whether the result looks right. Coverage measurements explain the pixels.
 
 ## Build and open
@@ -60,7 +62,7 @@ Use the export button and choose a new or empty directory. The same renderer als
 
 Supply a local font path when the example font is not installed. Use `./build/fontreal --help` for all arguments. Export refuses a nonempty directory to preserve existing results.
 
-`comparison.png`, `detail.png`, and `target.png` are annotated viewing images. Each available treatment also exports its rendered text, raw RGB coverage, isolated `l` coverage, and selected-glyph coverage (`*-probe-coverage.png`). In coverage images, black means no coverage and white means full coverage. The colors of coverage images are data, not the final text colors. Inspection accepts one visible ASCII character that exists in the chosen font.
+`comparison.png`, `detail.png`, and `target.png` are annotated viewing images. Each available treatment in the ordinary experiment also exports its rendered text, raw RGB coverage, isolated `l` coverage, and selected-glyph coverage (`*-probe-coverage.png`). The separate `--edges` study labels its adjusted masks in metadata. In coverage images, black means no coverage and white means full coverage. The colors of coverage images are data, not the final text colors. Inspection accepts one visible ASCII character that exists in the chosen font.
 
 `metrics.json` records the font path and SHA-256, family, FreeType version, size, scale, quantized phase, placement, blend, mode settings, glyph identities and origins, the middle-row RGB coverage profile of the isolated `l`, and the selected glyph's identity and bitmap bounds. Keep these files together. Results are repeatable within the same local font and rendering environment. They are not guaranteed identical across FreeType versions or builds.
 

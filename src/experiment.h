@@ -14,6 +14,7 @@ struct Config {
     bool dark = false;
     bool linear = false;
     QString inspect = "l";
+    bool edges = false;
 };
 
 struct Sample {

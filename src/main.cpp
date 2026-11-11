@@ -26,6 +26,7 @@ int main(int argc, char **argv)
         {"fractional", "Keep fractional glyph origins instead of snapping"},
         {"dark", "White text on black"},
         {"linear", "Blend in linear light, then encode sRGB"},
+        {"edges", "Compare auto-gray, two tighter gray transitions, and auto-mono"},
         {"text", "Printable ASCII sample (1..96 characters)", "sample", Config{}.text},
         {"inspect", "Character to magnify (one visible ASCII character)", "character", "l"},
         {"export", "Write PNG and JSON results to a new or empty directory, then exit", "directory"}
@@ -49,6 +50,7 @@ int main(int argc, char **argv)
         config.snap = !parser.isSet("fractional");
         config.dark = parser.isSet("dark");
         config.linear = parser.isSet("linear");
+        config.edges = parser.isSet("edges");
         if (parser.isSet("export")) {
             exportExperiment(renderExperiment(config), parser.value("export"));
             QTextStream(stdout) << "Wrote comparison to " << parser.value("export") << '\n';

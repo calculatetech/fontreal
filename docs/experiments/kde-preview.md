@@ -69,4 +69,6 @@ The user prefers linear blending in the initial application comparison. Large te
 
 In the controlled black-on-white capture, both menus and terminal use Noto Sans at 15px with linear blending. Sampled `m`, `n`, `o`, `g`, and `V` match the selected experiment pixels exactly. The terminal's `W` also matches exactly. This rules out extra raster blur in those captured glyphs. Konsole still uses fixed terminal cells, so the spacing differs from the experiment. Matching pixels does not establish visual acceptance.
 
+The user confirms that W is fuzzy in both matched windows and that V also suffers. The [diagonal edge study](diagonal-edges.md) tests new mask treatments before changing the Qt integration.
+
 The first proof covers opaque native raster text in the selected TrueType fonts. Qt Quick, KWin, transparent intermediate surfaces, arbitrary transforms, color fonts, and other outline formats need separate validation. The opt-in A8 transfer profile also affects other fonts that already request gamma correction. Their appearance is not certified here. See the [roadmap](../roadmap.md) for the remaining platform work.
