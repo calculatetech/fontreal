@@ -36,7 +36,7 @@ python3 tools/preview-konsole.py encoded
 
 The window title identifies the treatment and the UI font. The default UI font is Noto Sans at 15 pixels with scale 1. Open the menus and compare `l`, arches, round letters, and diagonal edges. The terminal keeps its built-in fixed-pitch font and displays a short specimen. Menu text and terminal text therefore test different fonts.
 
-Each launch copies `kdeglobals` into a new private configuration directory. It sets the test UI font there. Separate XDG configuration, cache, data, and state directories contain test writes. Closing the window removes that private directory. Normal Konsole profiles, installed Qt libraries, Fontconfig, and KWin remain unchanged.
+Each launch copies `kdeglobals` into a new private configuration directory. It sets both `General/font` and `General/menuFont` to the selected family and pixel size. KDE uses a separate font role for menus. Separate XDG configuration, cache, data, and state directories contain test writes. Closing the window removes that private directory. Normal Konsole profiles, installed Qt libraries, Fontconfig, and KWin remain unchanged.
 
 ## Compare the transition
 
@@ -62,5 +62,11 @@ The native probe captures an actual QWidget painted with normal QFont and QPaint
 The check retains fonts and glyph caches through repaint and color changes. It also checks logical metrics after a scaled raster request, then another uncached glyph and the complete `lllm` run. Qt supplies shaping and positions for that run. Independent FreeType masks and blend math supply its expected pixels. Stock launches from a Fontreal-modified environment must still select installed Qt. Private Qt without the opt-in switch must retain the stock probe pixels.
 
 Real Konsole checks record mapped Qt libraries and observe actual FreeType calls through a pass-through test library. The trace does not change those calls. It complements the pixel checks and screenshots. It cannot establish subjective visual preference.
+
+The application check also reads both private font roles. A trace of some 15px glyphs alone does not establish the menu size. Before this correction, previews labeled 15px still used 13px menus on this machine. Earlier menu comparisons therefore do not establish a 15px blend preference.
+
+The user prefers linear blending in the initial application comparison. Large terminal text favors encoded blending in the limited View-menu test. Black text on white reduces the remaining thickness, but does not eliminate it. Uppercase `W` remains particularly fuzzy. The overall result improves on stock, but visual calibration remains open. Hold font, actual size, foreground, and background equal when comparing the experiment and Konsole.
+
+In the controlled black-on-white capture, both menus and terminal use Noto Sans at 15px with linear blending. Sampled `m`, `n`, `o`, `g`, and `V` match the selected experiment pixels exactly. The terminal's `W` also matches exactly. This rules out extra raster blur in those captured glyphs. Konsole still uses fixed terminal cells, so the spacing differs from the experiment. Matching pixels does not establish visual acceptance.
 
 The first proof covers opaque native raster text in the selected TrueType fonts. Qt Quick, KWin, transparent intermediate surfaces, arbitrary transforms, color fonts, and other outline formats need separate validation. The opt-in A8 transfer profile also affects other fonts that already request gamma correction. Their appearance is not certified here. See the [roadmap](../roadmap.md) for the remaining platform work.

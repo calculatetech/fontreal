@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check the real launchers, QWidget pixels, and isolated Konsole lifecycle."""
+import configparser
 import hashlib
 import json
 import os
@@ -115,6 +116,9 @@ def konsole_checks():
                     break
                 time.sleep(0.05)
             assert service and child, "Konsole did not register its separate process"
+            kde = configparser.ConfigParser(strict=False, interpolation=None)
+            kde.read(state / "config/kdeglobals")
+            font_roles = {key: kde.get("General", key, fallback=None) for key in ("font", "menuFont")}
             mappings = Path(f"/proc/{child}/maps").read_text()
             gui = [line[line.index('/'):] for line in mappings.splitlines() if "/libQt6Gui.so." in line][0]
             assert (str(LIB) in gui) == (mode != "stock"), gui
@@ -145,6 +149,8 @@ def konsole_checks():
             assert activate(quit_action).stdout.strip() == "true"
             assert process.wait(timeout=15) == 0, log.read_text()
             assert not state.exists(), state
+        expected_font = f"{family},-1,{pixels},5,50,0,0,0,0,0"
+        assert all(value == expected_font for value in font_roles.values()), font_roles
         text = log.read_text()
         loads = [int(value, 16) for value in re.findall(r"FONTREAL_TRACE load flags=0x([0-9a-f]+)", text)]
         rasters = [int(value) for value in re.findall(r"FONTREAL_TRACE raster mode=(\d+)", text)]
@@ -154,7 +160,7 @@ def konsole_checks():
             assert any((f & (15 << 16)) == (2 << 16) and f & 32 and not f & 2 for f in loads), loads
             assert 0 in rasters, rasters
         assert configuration() == before, "Normal KDE/Konsole configuration changed"
-        records.append({"mode":mode, "family":family, "pixels":pixels, "pid":child, "qtGui":gui, "label":label,
+        records.append({"mode":mode, "family":family, "pixels":pixels, "fontRoles":font_roles, "pid":child, "qtGui":gui, "label":label,
                         "loadFlags":sorted(set(loads)), "renderModes":sorted(set(rasters)),
                         "capture":str(capture), "closedNormally":True, "privateStateRemoved":True})
         print(f"S5: actual {mode} Konsole, runtime/flags, menu repaint, capture, normal close, state cleanup passed", flush=True)

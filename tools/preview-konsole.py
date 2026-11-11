@@ -32,8 +32,9 @@ def main():
         if source.is_file():
             shutil.copyfile(source, kde)
         font = f"{args.family},-1,{args.pixels},5,50,0,0,0,0,0"
-        subprocess.run(["kwriteconfig6", "--file", str(kde), "--group", "General",
-                        "--key", "font", font], check=True)
+        for role in ("font", "menuFont"):
+            subprocess.run(["kwriteconfig6", "--file", str(kde), "--group", "General",
+                            "--key", role, font], check=True)
         env["QT_SCALE_FACTOR"] = str(args.scale)
         label = f"Fontreal {args.mode} | {args.family} {args.pixels}px x {args.scale:g}"
         print(label, flush=True)
