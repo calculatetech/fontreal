@@ -22,7 +22,7 @@ No task is active.
 ## Planned next
 
 - **FR-003: Calibrate native application text.** Focus on Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales, and light/dark colors. Retain other fonts as comparison controls. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
-- **FR-012: Make the KDE packages distributable.** Supply matching source and binary packages, build provenance, required licenses and notices, signed APT metadata, supported versions, and recovery instructions. Establish the Qt security-update rebuild process. Resolve the project license before public release. Keep the GitHub repository private unless the user changes that choice.
+- **FR-012: Make the KDE packages distributable.** Supply matching source and binary packages, build provenance, required licenses and notices, signed APT metadata, supported versions, and recovery instructions. Establish the Qt security-update rebuild process. Fontreal's original code uses MIT, with upstream license exceptions for Qt-derived patches. Keep the GitHub repository private unless the user changes that choice.
 
 ## Planned later
 
