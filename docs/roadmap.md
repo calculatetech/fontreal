@@ -13,20 +13,22 @@ Status legend:
 
 The preferred viewed samples use Noto Sans and Inconsolata Nerd Font at 15px, automatic monochrome hints, mild contrast, integral origins, and linear blending on white. Font, effective size, blend, and polarity form one comparison condition. Human judgment at native display resolution remains the acceptance criterion.
 
-The user accepts the viewed KWin title result. Qt Quick looks good overall, while the OpenGL sample remains chunkier. Preserve the accepted result while correcting the measured gaps.
+The user accepts the current Qt result, including KWin and Qt Quick. Preserve this baseline while adding other rendering engines. Firefox-based browsers are the first requested applications beyond Qt. Teams for Linux and other Flatpak applications also need support.
 
 ## Active
 
-No task is active.
+- **FR-015: Support Firefox-based browsers.** Start with the installed Firefox and Floorp builds in disposable profiles. Compare existing font controls, then reproduce the accepted hinting, grayscale edges, contrast, placement, and blending through Mozilla's own rendering paths. Check browser controls and page text separately. Do not treat a GTK change as browser-text coverage. The first implementation is a [private FreeType mask comparison](plans/FR-015-browser-masks.md); full browser composition remains separate from mask correctness. See the [rendering coverage investigation](research/non-qt-rendering.md).
 
 ## Planned next
 
+- **FR-016: Support Electron applications.** Use Teams for Linux as the first real application. Trace its exact Electron/Chromium build and font backend. Match the reference in a local test page before testing the application. Include its Flatpak package; preserve the user's account, application data, and normal sandbox.
+- **FR-017: Deliver treatment inside Flatpak sandboxes.** Build against the application's actual runtime or bundled engine, with exact version records and a separate opt-in comparison. Check both Qt/GTK runtime libraries and bundled browser engines. Preserve normal application updates and a stock launch. A host library replacement alone is not coverage.
+- **FR-005: GNOME application support.** Identify the actual GTK 3 and GTK 4 text paths, including Pango, Cairo, and GPU composition. Build isolated tests in existing applications. Match the reference before proposing desktop configuration or library changes. [PangoCairo documentation](https://docs.gtk.org/PangoCairo/) identifies one relevant path, without establishing coverage of every GTK renderer.
 - **FR-003: Calibrate native application text.** Focus on Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales, and light/dark colors. Retain other fonts as comparison controls. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
 - **FR-012: Make the KDE packages distributable.** Supply matching source and binary packages, build provenance, required licenses and notices, signed APT metadata, supported versions, and recovery instructions. Establish the Qt security-update rebuild process. Fontreal's original code uses MIT, with upstream license exceptions for Qt-derived patches. Keep the GitHub repository private unless the user changes that choice.
 
 ## Planned later
 
-- **FR-005: GNOME application support.** Identify the actual GTK 3 and GTK 4 text paths, including Pango, Cairo, and GPU composition. Build isolated tests in existing applications. Match the reference before proposing desktop configuration or library changes. [PangoCairo documentation](https://docs.gtk.org/PangoCairo/) identifies one relevant path, without establishing coverage of every GTK renderer.
 - **FR-006: Wine application support.** Trace GDI and DirectWrite separately. Test a private Wine prefix and existing Windows applications without changing the user's prefixes. Compare glyph masks, placement, and composition. Wine's [FreeType integration](https://github.com/wine-mirror/wine/blob/master/dlls/win32u/freetype.c) is a starting point for investigation.
 - **FR-007: Windows 11 feasibility.** Determine which GDI, DirectWrite, and application-owned paths expose enough control. First test a normal application using documented APIs. Evaluate crisp hinting, grayscale edges, pixel placement, and blending separately. Microsoft's [custom DirectWrite rendering parameters](https://learn.microsoft.com/en-us/windows/win32/api/dwrite/nf-dwrite-idwritefactory-createcustomrenderingparams) expose some controls, but do not prove system-wide feasibility. Proceed to a Windows 11 prototype only if the required behavior is achievable and a Windows test environment is available.
 

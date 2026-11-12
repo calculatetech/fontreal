@@ -1,0 +1,96 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fontreal lmnogWVwv</title>
+<style>
+  body { margin: 0; background: #e8ecf1; color: #111827; font: 14px sans-serif; }
+  header { padding: 10px 12px; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 12px; }
+  section { padding: 12px 16px; }
+  h2 { margin: 0 0 14px; font: bold 16px sans-serif; }
+  h3 { margin: 12px 0 4px; font: 13px sans-serif; }
+  p { margin: 0; line-height: 26px; white-space: nowrap; }
+  small { display: inline-block; width: 72px; font: 11px sans-serif; }
+  .sample { font-size: 15px; }
+  #diagnostics { margin: 12px; padding: 12px; background: #fff; }
+  .cell { display: inline-block; position: relative; width: 65px; height: 42px;
+          vertical-align: top; background: #fff; color: #000; }
+  .glyph { position: absolute; top: 6px; left: 8px; font: 15px "Noto Sans"; }
+  #neighbors { margin-top: 10px; font-size: 15px; }
+  #cff, #emoji, #solid { display: inline-block; vertical-align: top; }
+  #cff { width: 100px; }
+  #emoji { width: 30px; }
+  #solid { display: inline-block; width: 18px; height: 18px; background: rgb(53,89,131); }
+  #marker { display: inline-block; width: 8px; height: 8px; background: rgb(17,91,143); }
+</style>
+<header>Browser mask experiment · private FreeType · blending measured separately</header>
+<main id="families"></main>
+<section id="diagnostics">
+  <h2>Placement and background controls <span id="marker"></span></h2>
+  <div id="cells"></div>
+  <div id="neighbors"><span id="cff" style="font-family:'Nimbus Sans'">mnogWV</span>
+    <span id="emoji" style="font-family:'Noto Color Emoji'">😀</span> <span id="solid"></span></div>
+</section>
+<script>
+  const pixels = Number(new URLSearchParams(location.search).get("size") || 15);
+  if (![15,16].includes(pixels)) throw new Error("Unsupported fixture size");
+  const mode = location.hash.slice(1);
+  if (mode) {
+    document.querySelector("header").append(" · " + mode);
+    document.title += " · " + mode;
+  }
+  const families = ["Noto Sans", "DejaVu Sans", "Hack"];
+  const styles = [["regular", "Regular", "normal", "normal"],
+                  ["bold", "Bold", "bold", "normal"],
+                  ["italic", "Italic", "normal", "italic"],
+                  ["bold-italic", "Bold italic", "bold", "italic"]];
+  const samples = [];
+  for (const [palette, foreground, background] of [["light", "#000000", "#ffffff"],
+                                                 ["dark", "#f1f3f4", "#202124"]]) {
+    const section = document.createElement("section");
+    section.style.cssText = `color:${foreground};background:${background}`;
+    const heading = document.createElement("h2"); heading.textContent = palette; section.append(heading);
+    for (const family of families) {
+      const h = document.createElement("h3"); h.textContent = family + ` · ${pixels}px`; section.append(h);
+      for (const [style, label, weight, italic] of styles) {
+        const row = document.createElement("p"), name = document.createElement("small");
+        name.textContent = label; row.append(name);
+        const span = document.createElement("span");
+        span.className = "sample";
+        span.style.cssText = `font-family:"${family}";font-weight:${weight};font-style:${italic}`;
+        span.style.fontSize = pixels + "px";
+        span.textContent = "l m n o g W V w v · minimum moon";
+        row.append(span); section.append(row);
+        samples.push({element:span, family, style, palette, foreground, background});
+      }
+    }
+    document.getElementById("families").append(section);
+  }
+  const cells = [];
+  for (const [name, phase, background] of [["origin", 0, "#ffffff"],
+        ["phase-low", .49, "#ffffff"], ["phase-high", .51, "#ffffff"],
+        ["colored", 0, "#b5cfdf"]]) {
+    const cell = document.createElement("span"), glyph = document.createElement("span");
+    cell.className = "cell"; cell.style.background = background;
+    glyph.className = "glyph"; glyph.style.left = (8 + phase) + "px"; glyph.textContent = "m";
+    glyph.style.fontSize = pixels + "px";
+    cell.append(glyph); document.getElementById("cells").append(cell);
+    cells.push({element:glyph, cell, name, phase, background});
+  }
+  function rect(element) {
+    const r = element.getBoundingClientRect();
+    return {x:r.x, y:r.y, width:r.width, height:r.height};
+  }
+  window.fontreal = {
+    measure() {
+      return {pixels, dpr:devicePixelRatio, innerX:mozInnerScreenX, innerY:mozInnerScreenY,
+        samples:samples.map(({element,...data}) => ({...data, rect:rect(element)})),
+        cells:cells.map(({element,cell,...data}) => ({...data, rect:rect(element), box:rect(cell)})),
+        neighbors:["cff","emoji","solid","marker"].map(id => ({id,rect:rect(document.getElementById(id))}))};
+    },
+    change() {
+      document.getElementById("cff").style.fontSize = "15.25px";
+      document.getElementById("cff").textContent = "omnogWV";
+      document.getElementById("marker").style.background = "rgb(91,17,143)";
+    }
+  };
+</script>

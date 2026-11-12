@@ -76,6 +76,8 @@ The current pilot supports **Debian 13 with Qt 6.8.2** and **Ubuntu 26.04 with Q
 
 GTK/GNOME application integration, Wine, Windows 11, Qt 5, and applications with bundled rendering libraries remain separate work. See the [roadmap](docs/roadmap.md).
 
+A [private Firefox/Floorp experiment](docs/experiments/browser-masks.md) tests the same glyph masks in actual browser windows. It uses disposable profiles and does not install libraries. Browser blending, Electron, and Flatpak support remain separate work.
+
 ## Try it
 
 Start with the comparison viewer to explore font files, sizes, scales, backgrounds, and blending. It needs CMake 3.22+, Ninja, a C++17 compiler, Qt 6.6+ with Widgets development files, and FreeType development files.
@@ -98,4 +100,4 @@ Tell us what you prefer, including cases where stock looks better. Reports about
 
 ## License
 
-Fontreal's original code and documentation use [MIT](LICENSE). The Qt-derived patches retain their upstream LGPL/GPL alternatives, and built Qt libraries retain their own licenses and corresponding-source obligations. See [licensing and third-party notices](THIRD_PARTY_NOTICES.md).
+Fontreal's original code and documentation use [MIT](LICENSE). The Qt-derived patches retain their upstream LGPL/GPL alternatives. The FreeType-derived patch uses the FreeType Project License. Built libraries retain their upstream licenses and distribution obligations. See [licensing and third-party notices](THIRD_PARTY_NOTICES.md).

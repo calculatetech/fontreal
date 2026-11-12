@@ -1,0 +1,110 @@
+--- a/src/base/ftobjs.c
++++ b/src/base/ftobjs.c
+@@ -910,6 +910,28 @@
+ #endif /* GRID_FIT_METRICS */
+ 
+ 
++  static FT_Bool
++  ft_fontreal_raster( FT_Face   face,
++                      FT_Int32  flags )
++  {
++    const char*  enabled = ft_getenv( "FONTREAL_FT_RENDERING" );
++    const char*  format;
++
++
++    if ( !enabled || ft_strcmp( enabled, "1" ) ||
++         !FT_IS_SCALABLE( face ) || FT_HAS_COLOR( face ) ||
++         ( flags & ( FT_LOAD_NO_SCALE            |
++                     FT_LOAD_NO_RECURSE          |
++                     FT_LOAD_NO_HINTING          |
++                     FT_LOAD_ADVANCE_ONLY        |
++                     FT_LOAD_BITMAP_METRICS_ONLY ) ) )
++      return FALSE;
++
++    format = FT_Get_Font_Format( face );
++    return format && !ft_strcmp( format, "TrueType" );
++  }
++
++
+   /* documentation is in freetype.h */
+ 
+   FT_EXPORT_DEF( FT_Error )
+@@ -959,6 +981,14 @@
+ 
+     if ( load_flags & FT_LOAD_BITMAP_METRICS_ONLY )
+       load_flags &= ~FT_LOAD_RENDER;
++
++    if ( ft_fontreal_raster( face, load_flags ) )
++    {
++      load_flags &= ~( ( 15L << 16 ) | FT_LOAD_MONOCHROME |
++                       FT_LOAD_NO_AUTOHINT );
++      load_flags |= FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO |
++                    FT_LOAD_NO_BITMAP;
++    }
+ 
+     /*
+      * Determine whether we need to auto-hint or not.
+@@ -4992,7 +5022,12 @@
+   FT_Render_Glyph( FT_GlyphSlot    slot,
+                    FT_Render_Mode  render_mode )
+   {
+-    FT_Library  library;
++    FT_Library       library;
++    FT_Error         error;
++    FT_Bool          fontreal;
++#ifdef FONTREAL_TEST_TRACE
++    FT_Glyph_Format  previous_format;
++#endif
+ 
+ 
+     if ( !slot || !slot->face )
+@@ -5000,7 +5035,48 @@
+ 
+     library = FT_FACE_LIBRARY( slot->face );
+ 
+-    return FT_Render_Glyph_Internal( library, slot, render_mode );
++    fontreal = slot->format == FT_GLYPH_FORMAT_OUTLINE &&
++               ft_fontreal_raster( slot->face, slot->internal->load_flags ) &&
++               ( slot->internal->load_flags & FT_LOAD_FORCE_AUTOHINT ) &&
++               FT_LOAD_TARGET_MODE( slot->internal->load_flags ) ==
++                 FT_RENDER_MODE_MONO;
++    if ( fontreal )
++      render_mode = FT_RENDER_MODE_NORMAL;
++
++#ifdef FONTREAL_TEST_TRACE
++    previous_format = slot->format;
++#endif
++    error = FT_Render_Glyph_Internal( library, slot, render_mode );
++
++    if ( !error && fontreal && slot->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY )
++    {
++      const char*  contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
++
++
++      if ( contrast && !ft_strcmp( contrast, "mild" ) )
++      {
++        FT_Byte*  row = slot->bitmap.buffer;
++        FT_UInt   x, y;
++
++
++        for ( y = 0; y < slot->bitmap.rows; ++y, row += slot->bitmap.pitch )
++          for ( x = 0; x < slot->bitmap.width; ++x )
++          {
++            FT_Int  a = row[x];
++
++
++            a = ( a < 32 ? 32 : a > 223 ? 223 : a ) - 32;
++            row[x] = (FT_Byte)( ( a * 255 + 95 ) / 191 );
++          }
++      }
++    }
++
++#ifdef FONTREAL_TEST_TRACE
++    /* Observe the browser's real final raster call in test builds. */
++    fontreal_test_trace( slot, render_mode, error, previous_format,
++                         slot->internal->load_flags );
++#endif
++    return error;
+   }
+ 
+ 
