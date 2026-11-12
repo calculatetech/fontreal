@@ -17,7 +17,7 @@ The user accepts the viewed KWin title result. Qt Quick looks good overall, whil
 
 ## Active
 
-- **FR-011: Package a KDE desktop pilot.** Build on demand for the running Debian 13 or Ubuntu 26.04 amd64 system from its exact Qt distro sources and build rules. Port the rendering changes to Debian's Qt 6.8.2. Add separate, initially disabled session activation. Test package application, complete-session coverage and disabling, saved official-package rollback, and an official Qt update before host installation. Preserve font choices and normal security updates. See the [deployment decision](research/distribution.md) and [package specification](plans/FR-011-system-builds.md).
+No task is active.
 
 ## Planned next
 
@@ -40,6 +40,7 @@ No task is declined. Non-native LCD resolution remains outside the project scope
 
 ## Completed
 
+- **FR-011: Package a KDE desktop pilot.** On-demand builds support Debian 13/Qt 6.8.2 and Ubuntu 26.04/Qt 6.10.2 amd64 using exact distro sources and rules. Separate per-user activation starts disabled. Native package and complete-session checks cover enabling, disabling, independent Qt updates, font preservation, guarded installation, and offline official-package rollback. The host-matching bundle passes installation simulation. See the [build and deployment guide](build-system.md) and [package specification](plans/FR-011-system-builds.md).
 - **FR-013: Match Qt Quick composition and placement.** Eligible OpenGL text now uses the selected blend and stable fractional placement. Independent checks pass for real Qt Quick and Plasma output at 100% and 125%, including Intel GPU controls. Ordinary colors, noneligible fonts, and accepted native/KWin output remain correct. See the [GPU specification](plans/FR-013-quick-linear.md).
 - **FR-014: Confine the A8 text transfer profile.** The selected profile now follows the current eligible TrueType raster draw. Ordinary and static mixed-font checks preserve stock CFF/color pixels, including grayscale CFF after TrueType. Existing independent widget, Konsole, and 100%/125% KWin title checks pass. See the [profile-scope specification](plans/FR-014-a8-profile-scope.md).
 - **FR-004: Measure KDE rendering paths.** Isolated KWin title glyphs match mild/linear at 100% and 125%. Initial Plasma applet and Qt Quick checks exposed GPU blending and fractional renderer gaps. Grayscale CFF controls reproduced shared-profile spillover. Corrections are tracked under FR-013/FR-014, and full-session activation remains FR-011. See the [checks and comparison guide](experiments/kde-paths.md).

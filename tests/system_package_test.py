@@ -14,6 +14,8 @@ sys.dont_write_bytecode = True
 spec = importlib.util.spec_from_file_location("system_build", ROOT / "tools/system-build.py")
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)
+sys.path.insert(0, str(ROOT / "tools"))
+import system_install
 sys.path.insert(0, str(ROOT / "tests"))
 import kde_paths_test as kde
 
@@ -184,6 +186,8 @@ def baseline_packages(originals, plan):
 def inside(directory, reports, updates=False):
     assert Path("/.dockerenv").is_file() and os.geteuid() == 0, "This check installs packages only inside its disposable container."
     plan = build.verify_artifacts(directory, json.loads((directory / "bundle.json").read_text()))
+    deployment = json.loads((directory / "deployment.json").read_text())
+    system_install.verify_activation(build, directory, deployment, plan)
     baseline_packages(directory / "original", plan)
     actual_originals = build.installed()
     assert all(p["source_version"] == plan["sources"][p["source"]]["version"] for p in actual_originals)
@@ -207,7 +211,8 @@ def inside(directory, reports, updates=False):
     quick_probe = Path("/tmp/fontreal-probes/qt-kde-probe")
     fonts = [build.output(["fc-match", "-f", "%{file}", family]) for family in ("Noto Sans", "DejaVu Sans", "DejaVu Sans Mono")]
     gpu_fonts = [fonts[0], *[build.output(["fc-match", "-f", "%{file}", family]) for family in ("Nimbus Sans", "Noto Color Emoji")]]
-    results = dict(bundle_sha256=build.sha(directory / "bundle.json"), native={}, raster=[], quick=[], gpu=[])
+    results = dict(schema=1, passed=False, bundle_sha256=build.sha(directory / "bundle.json"),
+                   deployment_sha256=build.sha(directory / "deployment.json"), native={}, raster=[], quick=[], gpu=[])
     with tempfile.TemporaryDirectory(prefix="fontreal-render-") as temporary:
         state = Path(temporary)
         env = kde.private_environment(state)
@@ -220,7 +225,13 @@ def inside(directory, reports, updates=False):
             hidden_baseline = quick(quick_probe, graphics, fonts[0], reports / "official-hidden", "stock", hidden=True)
             mixed_baseline = {order: mixed(quick_probe, graphics, gpu_fonts, reports / ("official-" + order), "stock", order)
                               for order in ("tt-first", "cff-first")}
-            build.run(["apt-get", "install", "-y", "--no-install-recommends", "--no-remove", *candidates])
+            build.run(["apt-get", "install", "-y", "--no-install-recommends", "--no-remove", *candidates,
+                       directory / "activation/fontreal-session.deb"])
+            assert build.output(["dpkg-query", "-W", "-f=${Version}", "fontreal-session"]) == "0~local" + plan["identity"]
+            assert json.loads(Path("/usr/share/fontreal/system.json").read_text()) == plan
+            for path in ("/usr/bin/fontreal-session", "/etc/xdg/plasma-workspace/env/fontreal.sh"):
+                assert build.output(["dpkg-query", "-S", path]).startswith("fontreal-session: ")
+            assert not (Path.home() / ".config/fontreal/enabled").exists()
             installed = {(p["name"], p["arch"]): p for p in build.installed()}
             assert set(installed) == {(p["name"], p["arch"]) for p in actual_originals}
             for identity in installed:
@@ -326,6 +337,7 @@ def inside(directory, reports, updates=False):
                 record = quick(Path(fresh) / "qt-kde-probe", graphics, fonts[0], reports / "baseline-reselection", "stock")
                 assert [f["hash"] for f in record["frames"]] == [f["hash"] for f in baseline["frames"]]
                 results["baseline_reselection"] = record
+    results["passed"] = True
     build.write_json(reports / "package-results.json", results)
     print("PASS: actual corresponding source, native package ownership, installed widget/Quick pixels, inactive preservation, fractional placement and target transitions")
 
@@ -341,6 +353,7 @@ def main():
         return
     directory = args.bundle.resolve()
     plan = build.verify_artifacts(directory, json.loads((directory / "bundle.json").read_text()))
+    system_install.verify_activation(build, directory, json.loads((directory / "deployment.json").read_text()), plan)
     reports = directory / "package-checks"
     reports.mkdir()
     temporary = reports / "tmp"

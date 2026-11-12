@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build matching distro Qt packages for this system without installing them."""
+"""Build, verify, and apply matching distro Qt packages for this system."""
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = {
     ("debian", "13"): ("debian:13-slim", "6.8.2"),
@@ -331,6 +332,12 @@ def main():
     build_parser.add_argument("--jobs", type=int, default=4)
     verify_parser = sub.add_parser("verify", help="Verify a complete local build bundle.")
     verify_parser.add_argument("bundle", type=Path)
+    prepare_parser = sub.add_parser("prepare", help="Prepare a separate disabled Plasma session package.")
+    prepare_parser.add_argument("bundle", type=Path)
+    for command in ("install", "rollback"):
+        transaction_parser = sub.add_parser(command, help="Apply the verified local packages." if command == "install" else "Restore the retained official packages.")
+        transaction_parser.add_argument("bundle", type=Path)
+        transaction_parser.add_argument("--simulate", action="store_true")
     worker_parser = sub.add_parser("_worker", help=argparse.SUPPRESS)
     worker_parser.add_argument("jobs", type=int)
     worker_parser.add_argument("uid", type=int)
@@ -344,8 +351,17 @@ def main():
                 raise ValueError("Build parallelism must be between 1 and 64.")
             build(args.plan, args.output, args.jobs)
         elif args.command == "verify":
-            verify_artifacts(args.bundle, json.loads((args.bundle / "bundle.json").read_text()))
+            plan = verify_artifacts(args.bundle, json.loads((args.bundle / "bundle.json").read_text()))
+            if (args.bundle / "deployment.json").exists():
+                import system_install
+                system_install.verify_activation(sys.modules[__name__], args.bundle, json.loads((args.bundle / "deployment.json").read_text()), plan)
             print("Complete package, original-package, and source inventories match their checksums.")
+        elif args.command in ("prepare", "install", "rollback"):
+            import system_install
+            if args.command == "prepare":
+                system_install.prepare(sys.modules[__name__], args.bundle.resolve())
+            else:
+                system_install.transaction(sys.modules[__name__], args.bundle.resolve(), rollback=args.command == "rollback", simulate=args.simulate)
         else:
             try:
                 worker(args.jobs)

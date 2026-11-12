@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+
+directory=${XDG_CONFIG_HOME:-"$HOME/.config"}/fontreal
+case ${1:-status} in
+    enable)
+        umask 077
+        mkdir -p "$directory"
+        : > "$directory/enabled"
+        printf '%s\n' 'Fontreal enabled for your next Plasma login.'
+        ;;
+    disable)
+        rm -f "$directory/enabled"
+        printf '%s\n' 'Fontreal disabled for your next Plasma login.'
+        ;;
+    status)
+        if [ -f "$directory/enabled" ]; then
+            printf '%s\n' 'Next-login preference: enabled'
+        else
+            printf '%s\n' 'Next-login preference: disabled'
+        fi
+        printf 'Current process: rendering=%s blend=%s contrast=%s\n' \
+            "${FONTREAL_RENDERING:-0}" "${FONTREAL_BLEND:-}" "${FONTREAL_CONTRAST:-}"
+        ;;
+    *)
+        printf '%s\n' 'Usage: fontreal-session enable|disable|status' >&2
+        exit 2
+        ;;
+esac

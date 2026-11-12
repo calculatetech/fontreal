@@ -166,7 +166,7 @@ QImage expected(TextWidget &widget, FT_Face face, const QSize &size, bool linear
     return image;
 }
 
-void checkCapture(const QString &path, const QString &menuFont, const QString &terminalFont, bool linear, bool mild)
+void checkCapture(const QString &path, const QString &menuFont, const QString &terminalFont, bool linear, bool mild, double scale)
 {
     const QImage source = QImage(path).convertToFormat(QImage::Format_RGB32);
     require(!source.isNull(), "Cannot read Konsole capture");
@@ -174,8 +174,8 @@ void checkCapture(const QString &path, const QString &menuFont, const QString &t
     require(!FT_Init_FreeType(&library), "Capture FT init failed");
     int matched = 0;
     for (int role = 0; role < 2; ++role) {
-        const QRect region = (role == 0 ? QRect(0,0,source.width(),32)
-                                       : QRect(0,32,source.width(),350)).intersected(source.rect());
+        const QRect region = (role == 0 ? QRect(0,0,source.width(),qRound(32*scale))
+                                       : QRect(0,qRound(96*scale),source.width(),qRound(286*scale))).intersected(source.rect());
         QHash<QRgb,int> counts;
         for (int y = region.top(); y <= region.bottom(); ++y)
             for (int x = region.left(); x <= region.right(); ++x) ++counts[source.pixel(x,y)];
@@ -194,17 +194,17 @@ void checkCapture(const QString &path, const QString &menuFont, const QString &t
         FT_Face face = nullptr;
         const QString font = role == 0 ? menuFont : terminalFont;
         require(!FT_New_Face(library,QFile::encodeName(font).constData(),0,&face)
-            && !FT_Select_Charmap(face,FT_ENCODING_UNICODE) && !FT_Set_Char_Size(face,0,15*64,72,72), "Capture font setup failed");
+            && !FT_Select_Charmap(face,FT_ENCODING_UNICODE) && !FT_Set_Char_Size(face,0,FT_F26Dot6(std::lround(15*scale*64)),72,72), "Capture font setup failed");
         for (QChar character : role == 0 ? QStringLiteral("mnogV") : QStringLiteral("WVwv")) {
             const QImage raw = reference(face,character).mask;
             const QImage adjusted = reference(face,character,true).mask;
             require(raw != adjusted, "Capture glyph does not discriminate contrast");
             const auto pattern = [&](const QImage &mask) {
-                QImage image(mask.size()+QSize(2,2),QImage::Format_RGB32);
+                QImage image(mask.size(),QImage::Format_RGB32);
                 image.fill(background);
                 for (int y = 0; y < mask.height(); ++y) for (int x = 0; x < mask.width(); ++x) {
                     const int a = qRed(mask.pixel(x,y));
-                    image.setPixel(x+1,y+1,qRgb(channel(qRed(foreground),qRed(background),a,linear),
+                    image.setPixel(x,y,qRgb(channel(qRed(foreground),qRed(background),a,linear),
                         channel(qGreen(foreground),qGreen(background),a,linear),channel(qBlue(foreground),qBlue(background),a,linear)));
                 }
                 return image;
@@ -237,9 +237,11 @@ int main(int argc, char **argv)
 {
     try {
         QApplication app(argc, argv);
-        if (argc == 7 && QByteArray(argv[1]) == "--capture") {
+        if ((argc == 7 || argc == 8) && QByteArray(argv[1]) == "--capture") {
+            const double scale=argc==8 ? QString::fromLocal8Bit(argv[7]).toDouble() : 1;
+            require(scale>0 && std::isfinite(scale), "Invalid capture scale");
             checkCapture(QString::fromLocal8Bit(argv[2]),QString::fromLocal8Bit(argv[3]),QString::fromLocal8Bit(argv[4]),
-                         QByteArray(argv[5]) == "linear",QByteArray(argv[6]) == "mild");
+                         QByteArray(argv[5]) == "linear",QByteArray(argv[6]) == "mild",scale);
             return 0;
         }
         require(argc == 9, "Usage: qt-native-probe expected-mode contrast pixels scale font1 font2 font3 diagnostic-directory");

@@ -1,5 +1,8 @@
 #include <QApplication>
 #include <QCryptographicHash>
+#include <QDBusConnection>
+#include <QElapsedTimer>
+#include <QEvent>
 #include <QFile>
 #include <QFontDatabase>
 #include <QFontMetricsF>
@@ -7,6 +10,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMap>
 #include <QPainter>
 #include <QQuickItem>
 #include <QQuickStyle>
@@ -51,6 +55,21 @@ void writeJson(const QString &path, const QJsonObject &value) {
     QFile file(path); require(file.open(QIODevice::WriteOnly),"Cannot write result");
     require(file.write(QJsonDocument(value).toJson()) > 0,"Cannot write JSON");
 }
+class SurfaceObserver:public QObject {
+    QWindow *window;
+    QString path;
+public:
+    SurfaceObserver(QWindow *target, const QString &output):QObject(target),window(target),path(output) {
+        window->installEventFilter(this); publish();
+    }
+    void publish() {
+        writeJson(path,{{"pid",QCoreApplication::applicationPid()},{"scale",window->devicePixelRatio()}});
+    }
+    bool eventFilter(QObject *object,QEvent *event) override {
+        if(event->type()==QEvent::DevicePixelRatioChange) publish();
+        return QObject::eventFilter(object,event);
+    }
+};
 QJsonObject identity() {
     QFile maps("/proc/self/maps"); require(maps.open(QIODevice::ReadOnly),"Cannot read maps");
     QString gui,quick;
@@ -290,9 +309,31 @@ int main(int argc,char **argv) {
     try {
         QQuickStyle::setStyle("org.kde.breeze");
         QApplication app(argc,argv);
+        const auto busName=qEnvironmentVariable("FONTREAL_TEST_DBUS_NAME");
+        if(!busName.isEmpty()) require(QDBusConnection::sessionBus().registerService(busName),"Cannot register activation service");
         const QStringList args=app.arguments();
         require(args.size()>=2,"Supply quick, widget, root, match, client, or view");
         const auto mode=args[1];
+        if(mode=="crop") {
+            require(args.size()==8,"crop input x y width height output");
+            QImage image(args[2]);
+            const QRect region(args[3].toInt(),args[4].toInt(),args[5].toInt(),args[6].toInt());
+            require(!image.isNull() && !region.isEmpty() && image.rect().contains(region),"Invalid image crop");
+            require(image.copy(region).convertToFormat(QImage::Format_RGB32).save(args[7]),"Cannot save image crop");
+            return 0;
+        }
+        if(mode=="equal") {
+            require(args.size()==4,"equal first second");
+            const QImage a=QImage(args[2]).convertToFormat(QImage::Format_RGB32),b=QImage(args[3]).convertToFormat(QImage::Format_RGB32);
+            require(!a.isNull() && !b.isNull() && a.size()==b.size(),"Presented opaque image dimensions differ from its buffer");
+            // Use the glyph oracle's one-unit allowance for GPU rounding.
+            for(int y=0;y<a.height();++y) for(int x=0;x<a.width();++x) {
+                const auto p=a.pixel(x,y),q=b.pixel(x,y);
+                require(std::max({qAbs(qRed(p)-qRed(q)),qAbs(qGreen(p)-qGreen(q)),qAbs(qBlue(p)-qBlue(q))})<=1,
+                        "Presented opaque image differs from its buffer");
+            }
+            return 0;
+        }
         if(mode=="root") {
             require(args.size()==3,"root output.png");
             require(app.primaryScreen()->grabWindow(0).save(args[2]),"Root capture failed"); return 0;
@@ -559,20 +600,43 @@ int main(int argc,char **argv) {
         const auto font=loadFont(args[2]);
         if(mode=="widget" || mode=="client") {
             Widget widget; widget.face=font; widget.resize(760,370);
-            if(mode=="widget" && args.size()>4) widget.text=args[4];
-            if(mode=="widget" && args.size()>5 && args[5]=="gray") widget.face.setStyleStrategy(QFont::NoSubpixelAntialias);
+            if(args.size()>4) widget.text=args[4];
+            if(args.size()>5 && args[5]=="gray") widget.face.setStyleStrategy(QFont::NoSubpixelAntialias);
+            if(args.size()>5 && args[5]=="emoji") widget.face.setFamilies({widget.face.family(),QStringLiteral("Noto Color Emoji")});
             widget.setWindowTitle("l m n o g W V w v"); widget.show();
-            QTimer::singleShot(500,&app,[&] {
+            new SurfaceObserver(widget.windowHandle(),args[3]+".surface.json");
+            const auto capture=[&] {
               try {
                 const auto image=widget.grab().toImage();
                 require(image.save(args[3]+".png"),"Widget capture failed");
                 auto result=identity(); result["imageHash"]=imageHash(image); result["font"]=widget.face.toString();
-                QRawFont raw=QRawFont::fromFont(widget.face); QJsonArray masks;
-                for(const auto glyph:raw.glyphIndexesForString(widget.text)) masks.append(maskHash(raw.alphaMapForGlyph(glyph,QRawFont::PixelAntialiasing)));
-                result["masks"]=masks; writeJson(args[3]+".json",result);
+                QRawFont raw=QRawFont::fromFont(widget.face); QJsonArray masks; int missing=0;
+                for(const auto glyph:raw.glyphIndexesForString(widget.text)) {
+                    masks.append(maskHash(raw.alphaMapForGlyph(glyph,QRawFont::PixelAntialiasing)));
+                    if(!glyph) ++missing;
+                }
+                QMap<QRgb,int> colors;
+                const auto characters=widget.text.toUcs4();
+                for(int i=0;i<characters.size();++i) if(!raw.supportsCharacter(characters[i])) {
+                    const QRect cell=QRect(qRound((20+i*64)*widget.devicePixelRatioF()),0,
+                                          qRound(64*widget.devicePixelRatioF()),qRound(60*widget.devicePixelRatioF())).intersected(image.rect());
+                    for(int y=cell.top();y<=cell.bottom();++y) for(int x=cell.left();x<=cell.right();++x) {
+                        const auto pixel=image.pixel(x,y);
+                        if(qRed(pixel)!=qGreen(pixel) || qGreen(pixel)!=qBlue(pixel)) ++colors[pixel];
+                    }
+                }
+                QJsonObject colorCounts;
+                for(auto i=colors.cbegin();i!=colors.cend();++i) colorCounts[QString::number(i.key(),16)]=i.value();
+                result["masks"]=masks; result["scale"]=widget.devicePixelRatioF();
+                result["missingPrimaryGlyphs"]=missing; result["fallbackColors"]=colorCounts;
+                writeJson(args[3]+".json",result);
                 if(mode=="widget") app.quit();
               } catch(const std::exception &error) { std::fprintf(stderr,"%s\n",error.what()); app.exit(2); }
-            });
+            };
+            QTimer::singleShot(500,&app,capture);
+            QTimer requests; requests.setInterval(150);
+            QObject::connect(&requests,&QTimer::timeout,&app,[&] { if(QFile::remove(args[3]+".recapture")) capture(); });
+            if(qgetenv("FONTREAL_TEST_HOLD")=="1") requests.start();
             return app.exec();
         }
         require((mode=="quick" || mode=="quick-hidden") && args.size()==5,"quick|quick-hidden font output-directory phase");
@@ -582,12 +646,18 @@ int main(int argc,char **argv) {
         view.rootObject()->setProperty("testFont",font); view.rootObject()->setProperty("phase",args[4].toDouble());
         view.resize(760,370);
         if(mode=="quick") view.show();
+        new SurfaceObserver(&view,args[3]+"/surface.json");
         QJsonArray frames;
+        QJsonArray captureTimes;
         int frame=0;
         QTimer timer; timer.setInterval(350);
         QObject::connect(&timer,&QTimer::timeout,&app,[&] {
           try {
-            const auto image=view.grabWindow().convertToFormat(QImage::Format_RGB32);
+            QElapsedTimer elapsed; elapsed.start();
+            const auto captured=view.grabWindow();
+            const auto captureNs=elapsed.nsecsElapsed();
+            const auto image=captured.convertToFormat(QImage::Format_RGB32);
+            captureTimes.append(double(captureNs));
             require(!image.isNull(),"Quick capture failed");
             require(mode!="quick-hidden" || !view.isExposed(),"Hidden capture exposed its window");
             const auto fg=view.rootObject()->property("ink").value<QColor>(),bg=view.rootObject()->property("paper").value<QColor>();
@@ -611,16 +681,30 @@ int main(int argc,char **argv) {
             require(image.save(args[3]+QString("/frame-%1.png").arg(frame)),"Cannot save Quick frame");
             const int controlledLeft=qRound(122*view.devicePixelRatio());
             frames.append(QJsonObject{{"frame",frame},{"hash",imageHash(image)},
+                {"scale",view.devicePixelRatio()},{"imageWidth",image.width()},{"imageHeight",image.height()},
                 {"cellHash",imageHash(image.copy(controlledLeft,0,image.width()-controlledLeft,image.height()))},{"cells",cells}});
             if(++frame==5) { auto result=identity(); result["frames"]=frames; result["scale"]=view.devicePixelRatio();
                 result["graphicsApi"]=int(view.rendererInterface()->graphicsApi()); result["phase"]=args[4].toDouble(); result["unexposed"]=mode=="quick-hidden";
-                writeJson(args[3]+"/result.json",result); app.quit();
+                result["captureNanoseconds"]=captureTimes;
+                writeJson(args[3]+"/result.json",result);
+                if(qgetenv("FONTREAL_TEST_HOLD")=="1") {
+                    timer.stop();
+                    view.rootObject()->setProperty("ink",QColor(Qt::black)); view.rootObject()->setProperty("paper",QColor(Qt::white));
+                    view.rootObject()->setProperty("glyphOpacity",1.); view.update();
+                } else app.quit();
             } else if(frame==2) { view.rootObject()->setProperty("ink",QColor(Qt::white)); view.rootObject()->setProperty("paper",QColor(Qt::black)); }
             else if(frame==3) { view.rootObject()->setProperty("ink",QColor(73,121,167)); view.rootObject()->setProperty("paper",QColor(219,197,181)); }
             else if(frame==4) { view.rootObject()->setProperty("ink",QColor(73,121,167,128)); view.rootObject()->setProperty("glyphOpacity",.75); }
             view.update();
           } catch(const std::exception &error) { std::fprintf(stderr,"%s\n",error.what()); app.exit(2); }
         });
+        QTimer requests; requests.setInterval(150);
+        QObject::connect(&requests,&QTimer::timeout,&app,[&] {
+            if(QFile::remove(args[3]+"/recapture")) {
+                frames=QJsonArray(); captureTimes=QJsonArray(); frame=0; timer.start();
+            }
+        });
+        if(qgetenv("FONTREAL_TEST_HOLD")=="1") requests.start();
         timer.start(); return app.exec();
     } catch(const std::exception &error) { std::fprintf(stderr,"%s\n",error.what()); return 2; }
 }
