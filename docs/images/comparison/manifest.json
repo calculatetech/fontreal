@@ -29827,7 +29827,7 @@
       "height": 1559,
       "regions": [
         {
-          "source": "widget-captures/stock-1-light.png",
+          "source": "widgets/stock-1-light.png",
           "source_rect": [
             0,
             0,
@@ -29843,7 +29843,7 @@
           "pixels_sha256": "873f1e187728b5a5429c1c4bae3e581dd6bf482619e6b6b5999277b7ff2adcdc"
         },
         {
-          "source": "widget-captures/fontreal-1-light.png",
+          "source": "widgets/fontreal-1-light.png",
           "source_rect": [
             0,
             0,
@@ -29891,7 +29891,7 @@
           "pixels_sha256": "ff312a67f4f0500d1e0458ca51f57e06a1c04f9b59695341b4e173982d9dbcf3"
         },
         {
-          "source": "widget-captures/stock-1.25-light.png",
+          "source": "widgets/stock-1.25-light.png",
           "source_rect": [
             0,
             0,
@@ -29907,7 +29907,7 @@
           "pixels_sha256": "53a13f28d8ee420320f6dad4c75cd89b6e6c8813f2def6162cc40af500e6d4cc"
         },
         {
-          "source": "widget-captures/fontreal-1.25-light.png",
+          "source": "widgets/fontreal-1.25-light.png",
           "source_rect": [
             0,
             0,
@@ -29963,7 +29963,7 @@
       "height": 1559,
       "regions": [
         {
-          "source": "widget-captures/stock-1-dark.png",
+          "source": "widgets/stock-1-dark.png",
           "source_rect": [
             0,
             0,
@@ -29979,7 +29979,7 @@
           "pixels_sha256": "162d9112c27bf7160a688bd24140d3793802d4c22cfb715c33cbc45473430b89"
         },
         {
-          "source": "widget-captures/fontreal-1-dark.png",
+          "source": "widgets/fontreal-1-dark.png",
           "source_rect": [
             0,
             0,
@@ -30027,7 +30027,7 @@
           "pixels_sha256": "4ddfe784b29b49e0ce8f520078b057e350d51e1e8ea3a1f984fbd40a864fff8d"
         },
         {
-          "source": "widget-captures/stock-1.25-dark.png",
+          "source": "widgets/stock-1.25-dark.png",
           "source_rect": [
             0,
             0,
@@ -30043,7 +30043,7 @@
           "pixels_sha256": "6ea25802fee4efd62fedab564c772eb804a80148a5120b1dcd459b841432f39d"
         },
         {
-          "source": "widget-captures/fontreal-1.25-dark.png",
+          "source": "widgets/fontreal-1.25-dark.png",
           "source_rect": [
             0,
             0,
@@ -30099,7 +30099,7 @@
       "height": 1341,
       "regions": [
         {
-          "source": "packages-ubuntu-final/session-checks/official/1/normal-widget/title.png",
+          "source": "desktop-session/official/1/normal-widget/title.png",
           "source_rect": [
             210,
             0,
@@ -30115,7 +30115,7 @@
           "pixels_sha256": "7ba34d58bb9127b51af840378e8fe8fd50d16c4556fd2bca2c2be298faf9f3cc"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1/normal-widget/title.png",
+          "source": "desktop-session/enabled/1/normal-widget/title.png",
           "source_rect": [
             210,
             0,
@@ -30131,7 +30131,7 @@
           "pixels_sha256": "f97a70917727a557e071de9b55271e16af65812c6b42bb14ecc625ad07e4a366"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1/normal-quick/frame-1.png",
           "source_rect": [
             190,
             128,
@@ -30147,7 +30147,7 @@
           "pixels_sha256": "4abd04cb5824c2d2acea4aa3ce0ee285bb292df9609e37dfc9d6700819f18548"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1/normal-quick/frame-1.png",
           "source_rect": [
             190,
             128,
@@ -30163,7 +30163,7 @@
           "pixels_sha256": "0d9bc215f1ac2e4dba14c6d92ac731930919a4ff9acbf5b2fdec0d31ecc4a28e"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1/normal-quick/frame-1.png",
           "source_rect": [
             462,
             128,
@@ -30179,7 +30179,7 @@
           "pixels_sha256": "53a301f8731eb4be4b63e62c109a6da0fae4cdf56bf7e4b1681ea48e9d0b9af7"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1/normal-quick/frame-1.png",
           "source_rect": [
             462,
             128,
@@ -30195,7 +30195,7 @@
           "pixels_sha256": "64f3e06ae422fdba4547dbbfc0f69fdc95aad83e0157eac4dcd9efb6518e4cbd"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1/normal-quick/frame-1.png",
           "source_rect": [
             190,
             240,
@@ -30211,7 +30211,7 @@
           "pixels_sha256": "279aa357be9d7b498607158ffdac035b0931efdf43a5b7be7ce3ca70f7ec5e4a"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1/normal-quick/frame-1.png",
           "source_rect": [
             190,
             240,
@@ -30227,7 +30227,7 @@
           "pixels_sha256": "0d9bc215f1ac2e4dba14c6d92ac731930919a4ff9acbf5b2fdec0d31ecc4a28e"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1/normal-quick/frame-1.png",
           "source_rect": [
             462,
             240,
@@ -30243,7 +30243,7 @@
           "pixels_sha256": "755eff083a1e98b9cc52069192925fe0152bf9511fd45fc609eb1c4aa4db082b"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1/normal-quick/frame-1.png",
           "source_rect": [
             462,
             240,
@@ -30259,7 +30259,7 @@
           "pixels_sha256": "64f3e06ae422fdba4547dbbfc0f69fdc95aad83e0157eac4dcd9efb6518e4cbd"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1/normal-quick/frame-1.png",
           "source_rect": [
             190,
             296,
@@ -30275,7 +30275,7 @@
           "pixels_sha256": "1332cbd92bd896ea8ef9bdf7edd2a6922575b9912b0418cb4fd7c847dd9d9a6a"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1/normal-quick/frame-1.png",
           "source_rect": [
             190,
             296,
@@ -30291,7 +30291,7 @@
           "pixels_sha256": "b6da81ecfa35473ebbaf9cf0bfaa7e2a60b763d96662862a3881422c1664f9a2"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1/normal-quick/frame-1.png",
           "source_rect": [
             462,
             296,
@@ -30307,7 +30307,7 @@
           "pixels_sha256": "76b8cc2202fba1b750209fec16c7408a603808ebce0ff626f74d2914c67f1235"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1/normal-quick/frame-1.png",
           "source_rect": [
             462,
             296,
@@ -30323,7 +30323,7 @@
           "pixels_sha256": "1efc5a1ca86e4bb3f5a395344c895a248b4f91ea12c5b2cd3b9ea8049175af7c"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1.25/normal-widget/title.png",
+          "source": "desktop-session/official/1.25/normal-widget/title.png",
           "source_rect": [
             305,
             0,
@@ -30339,7 +30339,7 @@
           "pixels_sha256": "fb6cb119d9d2d35febf0ccf235b36c9c384aadffc056c58e061cb507673005b0"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1.25/normal-widget/title.png",
+          "source": "desktop-session/enabled/1.25/normal-widget/title.png",
           "source_rect": [
             305,
             0,
@@ -30355,7 +30355,7 @@
           "pixels_sha256": "8e80450450f8726bfda48b604996265f3449ee570130c7b913d1e5fb7a66c6b3"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1.25/normal-quick/frame-1.png",
           "source_rect": [
             238,
             160,
@@ -30371,7 +30371,7 @@
           "pixels_sha256": "56946b3f3121fc6bd3c6b1ff30094abda7eb39936a49b0a24add8596ab28c212"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1.25/normal-quick/frame-1.png",
           "source_rect": [
             238,
             160,
@@ -30387,7 +30387,7 @@
           "pixels_sha256": "8da432475cd5f8a4178bbbbd24bec6e426731729565870e8c23a2fec3d618544"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1.25/normal-quick/frame-1.png",
           "source_rect": [
             578,
             160,
@@ -30403,7 +30403,7 @@
           "pixels_sha256": "e6e63b7bea818dcf58351555419d4ecf92de88517101b8470f3b36217b8a6f30"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1.25/normal-quick/frame-1.png",
           "source_rect": [
             578,
             160,
@@ -30419,7 +30419,7 @@
           "pixels_sha256": "993edee33516bf92c766d41be17ec1e6000a0123cb42e2d7ac8e020fbfd15f6e"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1.25/normal-quick/frame-1.png",
           "source_rect": [
             238,
             300,
@@ -30435,7 +30435,7 @@
           "pixels_sha256": "59e7bcc7c79d0ff94c695f5b42bfa962d36ec0102bf5d884fe5ed4a4ecf36fa6"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1.25/normal-quick/frame-1.png",
           "source_rect": [
             238,
             300,
@@ -30451,7 +30451,7 @@
           "pixels_sha256": "8da432475cd5f8a4178bbbbd24bec6e426731729565870e8c23a2fec3d618544"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1.25/normal-quick/frame-1.png",
           "source_rect": [
             578,
             300,
@@ -30467,7 +30467,7 @@
           "pixels_sha256": "cfc8f0e9a6bffc34920e3e0efd010554fd817718ba97b49e3b48cc7da3a5cf00"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1.25/normal-quick/frame-1.png",
           "source_rect": [
             578,
             300,
@@ -30483,7 +30483,7 @@
           "pixels_sha256": "993edee33516bf92c766d41be17ec1e6000a0123cb42e2d7ac8e020fbfd15f6e"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1.25/normal-quick/frame-1.png",
           "source_rect": [
             238,
             370,
@@ -30499,7 +30499,7 @@
           "pixels_sha256": "0245d186ef629d066df953ab4d3aa134df4ee97bb6bed649472d9adb467d39d0"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1.25/normal-quick/frame-1.png",
           "source_rect": [
             238,
             370,
@@ -30515,7 +30515,7 @@
           "pixels_sha256": "bc04ee861dc37930dcd4a70957a3efede6fa55c47e87f6fe22b64e3f3105af8e"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/official/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/official/1.25/normal-quick/frame-1.png",
           "source_rect": [
             578,
             370,
@@ -30531,7 +30531,7 @@
           "pixels_sha256": "faa9797996dfcc8f1d5ff0e42500e832d8b83d7e71b5bc5c2f36f3120dbdb5aa"
         },
         {
-          "source": "packages-ubuntu-final/session-checks/enabled/1.25/normal-quick/frame-1.png",
+          "source": "desktop-session/enabled/1.25/normal-quick/frame-1.png",
           "source_rect": [
             578,
             370,
@@ -39190,12 +39190,12 @@
       "width": 340,
       "height": 115
     },
-    "widget-captures/stock-1-light.png": {
+    "widgets/stock-1-light.png": {
       "sha256": "16cc7a792e82dbc7115c0b161feddbe7f5f9752d7100eb95342bb780e4c85b71",
       "width": 340,
       "height": 288
     },
-    "widget-captures/fontreal-1-light.png": {
+    "widgets/fontreal-1-light.png": {
       "sha256": "ab66886b0caed6e2d10353a97166a9e7ece1c079e55c96b7c2e1e247459fa9fd",
       "width": 340,
       "height": 288
@@ -39210,12 +39210,12 @@
       "width": 600,
       "height": 300
     },
-    "widget-captures/stock-1.25-light.png": {
+    "widgets/stock-1.25-light.png": {
       "sha256": "3ca538681028e69fc2991d1f96f4e67927f0962357c34e24834085ef0f5bf180",
       "width": 340,
       "height": 360
     },
-    "widget-captures/fontreal-1.25-light.png": {
+    "widgets/fontreal-1.25-light.png": {
       "sha256": "bd9172421d22fd1875b48b4092f1102572ee39facef7882f46a0ab8c35df2b8e",
       "width": 340,
       "height": 360
@@ -39230,12 +39230,12 @@
       "width": 750,
       "height": 375
     },
-    "widget-captures/stock-1-dark.png": {
+    "widgets/stock-1-dark.png": {
       "sha256": "aba6bd2beafc25109329925a28ac5c60f6f40331e264101810c93428ef513911",
       "width": 340,
       "height": 288
     },
-    "widget-captures/fontreal-1-dark.png": {
+    "widgets/fontreal-1-dark.png": {
       "sha256": "359140538f7ba573d12117f18c81f4cab54f72b01ec35e448497c482f92c5fd7",
       "width": 340,
       "height": 288
@@ -39250,12 +39250,12 @@
       "width": 600,
       "height": 300
     },
-    "widget-captures/stock-1.25-dark.png": {
+    "widgets/stock-1.25-dark.png": {
       "sha256": "9d707072e3149b94e63f3ebbc621b9ffdebe654550535650526068362c3e40f5",
       "width": 340,
       "height": 360
     },
-    "widget-captures/fontreal-1.25-dark.png": {
+    "widgets/fontreal-1.25-dark.png": {
       "sha256": "d46e3fc3383d59ca22e6f310864839d315fe16e6b56688722c4c619dab71fc1e",
       "width": 340,
       "height": 360
@@ -39270,42 +39270,42 @@
       "width": 750,
       "height": 375
     },
-    "packages-ubuntu-final/session-checks/official/1/normal-widget/title.png": {
+    "desktop-session/official/1/normal-widget/title.png": {
       "sha256": "5e6a45e91409b2b7308cddbb53251bac8e565d895fbfebe51c340d5ea503340b",
       "width": 760,
       "height": 28
     },
-    "packages-ubuntu-final/session-checks/enabled/1/normal-widget/title.png": {
+    "desktop-session/enabled/1/normal-widget/title.png": {
       "sha256": "dbeee433c3d4743414f14f8d3945359f0c48690f986f64e5acef7640a5d8f4f7",
       "width": 760,
       "height": 28
     },
-    "packages-ubuntu-final/session-checks/official/1/normal-quick/frame-1.png": {
+    "desktop-session/official/1/normal-quick/frame-1.png": {
       "sha256": "aec019d9f8b2163223b0417185e74c35c5d9c0349caf7d97363b397228e196e4",
       "width": 760,
       "height": 370
     },
-    "packages-ubuntu-final/session-checks/enabled/1/normal-quick/frame-1.png": {
+    "desktop-session/enabled/1/normal-quick/frame-1.png": {
       "sha256": "c2348248cb74988404c54a492430588c2ffaddccf20fbdb9011f6f2242bae1f7",
       "width": 760,
       "height": 370
     },
-    "packages-ubuntu-final/session-checks/official/1.25/normal-widget/title.png": {
+    "desktop-session/official/1.25/normal-widget/title.png": {
       "sha256": "771b0fdada637b3e994255192052677906f225bd14f812ac4db008e12fe6fb00",
       "width": 950,
       "height": 35
     },
-    "packages-ubuntu-final/session-checks/enabled/1.25/normal-widget/title.png": {
+    "desktop-session/enabled/1.25/normal-widget/title.png": {
       "sha256": "eff4b7b86e9ee6a253e99a890c58c3367c0ed10ec12b9d00bdc7d6f3a206e42e",
       "width": 950,
       "height": 35
     },
-    "packages-ubuntu-final/session-checks/official/1.25/normal-quick/frame-1.png": {
+    "desktop-session/official/1.25/normal-quick/frame-1.png": {
       "sha256": "a57dec767c77e43b15c649ff0a2edb415fb36e6e01372ca13ee862abd26f2a3a",
       "width": 950,
       "height": 463
     },
-    "packages-ubuntu-final/session-checks/enabled/1.25/normal-quick/frame-1.png": {
+    "desktop-session/enabled/1.25/normal-quick/frame-1.png": {
       "sha256": "7921c80f26e1e3b0eed11d41dd204d5c236b047819e2e916abb766677262dce4",
       "width": 950,
       "height": 463
@@ -39323,11 +39323,11 @@
       "fixedFamily": "Hack",
       "fixedFont": "Hack,10,-1,7,400,0,0,0,0,0,0,0,0,0,0,1",
       "guiMappings": [
-        "/usr/lib/x86_64-linux-gnu/libQt6Gui.so.6.10.2",
-        "/usr/lib/x86_64-linux-gnu/libQt6Gui.so.6.10.2",
-        "/usr/lib/x86_64-linux-gnu/libQt6Gui.so.6.10.2",
-        "/usr/lib/x86_64-linux-gnu/libQt6Gui.so.6.10.2",
-        "/usr/lib/x86_64-linux-gnu/libQt6Gui.so.6.10.2"
+        "libQt6Gui.so.6.10.2",
+        "libQt6Gui.so.6.10.2",
+        "libQt6Gui.so.6.10.2",
+        "libQt6Gui.so.6.10.2",
+        "libQt6Gui.so.6.10.2"
       ],
       "platform": "xcb",
       "qt": "6.10.2",
@@ -39367,5 +39367,6 @@
       "gui_sha256": "3e775bfd10bb5fba9ee6b544ddc5a5905782a34270d09d60e2e62ce42f1fc39c"
     }
   },
-  "native_bundle_sha256": "31b557d9194996dc7d8660d434f082a3151709287fff7e5091b1660b5bee74c0"
+  "native_bundle_sha256": "31b557d9194996dc7d8660d434f082a3151709287fff7e5091b1660b5bee74c0",
+  "source_identifiers": "Portable capture labels, not build-directory links. Original source hashes, crop rectangles, and pixel hashes are retained."
 }

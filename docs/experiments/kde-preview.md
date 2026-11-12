@@ -83,7 +83,7 @@ Real Konsole checks record mapped Qt libraries and observe actual FreeType calls
 
 The native probe covers all three fonts, W/V/w/v, curves, stems, punctuation, blank text, cached redraw, recoloring, and two overlapping glyph draws. Independent expected masks track each pixel's contributing glyph layers. Color tolerance is one value per layer, normally one and at most two for the dedicated overlap fixture. Isolated capture glyphs retain the one-value tolerance. The overlap fixture also distinguishes per-glyph adjustment from adjusting accumulated coverage.
 
-The application check also reads both private font roles. A trace of some 15px glyphs alone does not establish the menu size. Before this correction, previews labeled 15px still used 13px menus on this machine. Earlier menu comparisons therefore do not establish a 15px blend preference.
+The application check also reads both private font roles. A trace of some 15px glyphs alone does not establish the menu size. Before this correction, recorded previews labeled 15px still used 13px menus. Earlier menu comparisons therefore do not establish a 15px blend preference.
 
 In the initial unadjusted application comparison, the user prefers linear blending. Large terminal text favors encoded blending in the limited View-menu test. Black text on white reduces the reported thickness but does not eliminate it. W and V remain fuzzy in that unadjusted treatment. The later mild-contrast study receives the user's preference at the viewed 15px condition. Hold font, actual size, foreground, and background equal when comparing the experiment and Konsole.
 

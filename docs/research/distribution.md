@@ -52,7 +52,7 @@ Test the package set in a disposable Plasma session or VM before the host deskto
 
 Provide two recovery levels. Disabling activation restores the stock conditional path after a new login. Full rollback removes activation and reinstalls the coherent official Qt package set. Removing the activation package alone does not restore the original libraries. Test both recovery levels, including recovery from a text console, before host installation.
 
-The first delivery is a local on-demand build bundle. A hosted APT repository with signed metadata and a dedicated trust key follows under FR-012. The repository remains private. Each supported distro release and architecture needs its own builds and update checks.
+The first delivery is an on-demand build bundle. A hosted APT repository with signed metadata and a dedicated trust key follows under FR-012. Public source distribution must include portable instructions and required notices. Each supported distro release and architecture needs its own builds and update checks.
 
 Distribute the corresponding modified Qt source, build instructions, and required notices with a reliable source-access route for recipients. Qt's LGPL guidance requires source for modified libraries and user replacement rights. Fontreal's original code uses [MIT](../../LICENSE). The [Qt-derived patches retain their upstream GNU license alternatives](../../THIRD_PARTY_NOTICES.md). This does not relicense the built Qt libraries. Confirm the licenses of all shipped components, and inspect each font license before bundling fonts. [Qt distribution obligations](https://www.qt.io/development/open-source-lgpl-obligations).
 

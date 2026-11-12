@@ -98,6 +98,8 @@ Tell us what you prefer, including cases where stock looks better. Reports about
 
 [Open an issue](https://github.com/calculatetech/fontreal/issues/new) with the application and desktop, font family and style, size, display scale, light/dark background, and the result you prefer. Include lossless before/after captures at their original pixel dimensions when possible.
 
+See the [contribution guide](CONTRIBUTING.md) before adding documentation or captures.
+
 ## License
 
 Fontreal's original code and documentation use [MIT](LICENSE). The Qt-derived patches retain their upstream LGPL/GPL alternatives. The FreeType-derived patch uses the FreeType Project License. Built libraries retain their upstream licenses and distribution obligations. See [licensing and third-party notices](THIRD_PARTY_NOTICES.md).

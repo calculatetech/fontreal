@@ -16,7 +16,7 @@ Git base: `ab206c61228c1f1106284ec904062533a3d55687`. Task branch: `feature/gtk-
 
 ## Product boundary and operating model
 
-One personal user and one writer use normal local filesystems. All generated sources, builds, profiles, and captures belong under the existing `/storage` build and result directories. The initial runtime target is the installed Ubuntu 26.04 FreeType `2.14.2+dfsg-1ubuntu0.2`, Firefox 160, and Floorp 12.21.1/Gecko 159.0.1. Preserve the distro's security patches and dynamic HarfBuzz configuration. Debian 13 remains a later delivery target; this prototype must not claim a Debian build that has not been checked.
+One user and one writer use normal local filesystems. All generated sources, builds, profiles, and captures belong under the configured build and result directories. The initial runtime target is Ubuntu 26.04 FreeType `2.14.2+dfsg-1ubuntu0.2`, Firefox 160, and Floorp 12.21.1/Gecko 159.0.1. Preserve the distro's security patches and dynamic HarfBuzz configuration. Debian 13 remains a later delivery target; this prototype must not claim a Debian build that has not been checked.
 
 | Owner | Classification | Required relationship |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ The local source packet is the exact Ubuntu FreeType source, exact Firefox sourc
 | Clause | Disposition | Boundary |
 | --- | --- | --- |
 | Preserve accepted Qt and record font, size, scale, polarity, placement, and blend | mapped | B1 |
-| Private profiles/libraries and generated data on `/storage`; preserve normal host state | mapped | B1 |
+| Private profiles/libraries and generated data in configured output directories; preserve normal host state | mapped | B1 |
 | Opt-in scalable non-color TrueType eligibility; preserve CFF/color/bitmap-only faces | mapped | B2 |
 | Forced auto-hinter, monochrome hint target, no embedded bitmap | mapped | B3 |
 | Normal grayscale raster output and optional 32..223 mild ramp | mapped | B3 |

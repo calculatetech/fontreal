@@ -14,7 +14,7 @@ Base: `6c543fc` on `integration/qt-native`, branched from `main` at `038dd179a67
 ## Product boundary and operating model
 
 
-Support this machine's Qt 6.10.2, FreeType, installed Noto Sans and DejaVu Sans TrueType outlines, and Konsole. Build generated Qt sources and libraries under ignored `build/qt-native/`. Keep only the patch, build and launch tools, checks, and documentation in Git. Use the official Qt archive with SHA-256 `aeb78d29291a2b5fd53cb55950f8f5065b4978c25fb1d77f627d695ab9adf21e`.
+Support the reference Qt 6.10.2 environment, FreeType, installed Noto Sans and DejaVu Sans TrueType outlines, and Konsole. Build generated Qt sources and libraries under ignored `build/qt-native/`. Keep only the patch, build and launch tools, checks, and documentation in Git. Use the official Qt archive with SHA-256 `aeb78d29291a2b5fd53cb55950f8f5065b4978c25fb1d77f627d695ab9adf21e`.
 
 The Qt FreeType engine, Fontconfig setup, and raster text composition compose the integration. The patch changes these owners only under an opt-in environment switch. Existing Qt shaping, font selection, non-text painting, and installed application code remain opaque dependencies. The reference renderer remains unchanged. GNOME, Wine, Windows, Qt Quick, KWin, global configuration, and package replacement are deferred.
 
@@ -43,7 +43,7 @@ Add a native Qt probe and one integration check. The probe paints normal QFont/Q
 | B5 | Continue until a real-world test is ready | The installed Konsole runs in a separate process with the private library and selected treatment. Its menu and terminal text are available for native-scale judgment. Stock is also launchable. | Konsole preview command; S5 |
 | B6 | Preserve the user's normal application and desktop configuration | Each preview uses separate XDG roots and reads only a copy of KDE configuration. Existing configuration bytes stay unchanged. Closing the process ends its library selection. | Preview lifecycle from launch through normal close; S5 |
 
-The private repository and incremental publication clauses map to the publication checkpoints. The roadmap clauses map to `docs/roadmap.md`. GNOME, Wine, and conditional Windows 11 implementation are deferred by the user's first-test stopping point. The +/- one-pixel transition is calibration context, not an automatic policy. Non-native LCD resolution is excluded. No source clause introduces desktop installation.
+Incremental publication clauses map to the publication checkpoints. The roadmap clauses map to `docs/roadmap.md`. GNOME, Wine, and conditional Windows 11 implementation are deferred from this first application test. The +/- one-pixel transition is calibration context, not an automatic policy. Non-native LCD resolution is excluded. No source clause introduces desktop installation.
 
 ## Scenario Proof
 

@@ -10,7 +10,7 @@ The first build targets amd64 Ubuntu 26.04 with FreeType `2.14.2+dfsg-1ubuntu0.2
 
 Use Python 3, a C compiler, make, pkg-config, patch, dpkg-source, and APT download access. The builder downloads matching development packages into its private directory. It does not install them. The exact source archives have pinned checksums from Ubuntu's authenticated source index. Both builds preserve the distro security patches and use dynamic HarfBuzz.
 
-Keep the repository's `build` and `results` directories on your build storage. On the development machine they point into `/storage/builds/fontreal`. All source extraction, compilation, temporary profiles, and results use those directories.
+Keep the repository's `build` and `results` directories on storage with enough free space. They can be links to a separate build volume. All source extraction, compilation, temporary profiles, and results use those directories.
 
 ```sh
 python3 tools/build-freetype.py

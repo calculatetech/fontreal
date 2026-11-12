@@ -10,7 +10,7 @@ Keep the accepted Qt result. The reference uses automatic monochrome hints, gray
 
 The user named Firefox-based browsers first, followed by Flatpak applications such as Teams for Linux. These applications need their own rendering work. Using GTK for Linux integration does not make all application text use GTK's renderer.
 
-Use private test profiles and libraries. Keep generated data on `/storage`. Do not change the user's browser profiles, Teams account data, desktop configuration, installed packages, or Flatpak overrides during comparisons. Debian 13 remains a delivery target. An application's exact engine and packaging matter in addition to the host distro.
+Use private test profiles and libraries. Keep generated data in the configured build and result directories. Do not change normal browser profiles, Teams account data, desktop configuration, installed packages, or Flatpak overrides during comparisons. Debian 13 remains a delivery target. An application's exact engine and packaging matter in addition to the host distro.
 
 ## Options
 

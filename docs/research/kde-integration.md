@@ -99,4 +99,4 @@ Revisit the integration choice if a distro or upstream Qt update exposes the mis
 
 ## Sources
 
-The linked Qt 6.10.2 and Breeze 6.6.6 sources identify the relevant owners and selection rules. The installed-library trace independently confirms the hinting-target and scaling behavior on this machine. The isolated prototype adds direct widget and application checks. The separate KDE path guide distinguishes measured applet-host output from untested full-session coverage.
+The linked Qt 6.10.2 and Breeze 6.6.6 sources identify the relevant owners and selection rules. The recorded installed-library trace independently confirms the hinting-target and scaling behavior for that reference environment. The isolated prototype adds direct widget and application checks. The separate KDE path guide distinguishes measured applet-host output from untested full-session coverage.

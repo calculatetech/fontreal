@@ -20,7 +20,7 @@ This command briefly opens comparison windows. It keeps the private configuratio
 
 The runner creates private XDG directories, an owned Xvfb display, and a D-Bus session without service-activation directories. It disables desktop-portal requests for these fixtures. This keeps desktop helpers out of the experiment. It checks normal KDE/KWin configuration and font hashes before and after, then checks that the original compositor remains alive.
 
-KWin carries `cap_sys_nice` on this machine. That prevents the ordinary library override and `/proc` inspection used for application previews. The test invokes the installed KWin through the system loader, uses its upstream `KWIN_FORCE_OWN_QPA` switch, and records the loader's resolved Qt library. It does not change the installed file or its capability. This nested test does not request real-time scheduling.
+When KWin carries `cap_sys_nice`, it prevents the ordinary library override and process-map inspection used for application previews. The test invokes the installed KWin through the system loader, uses its upstream `KWIN_FORCE_OWN_QPA` switch, and records the loader's resolved Qt library. It does not change the installed file or its capability. This nested test does not request real-time scheduling.
 
 Each KWin condition uses fresh configuration. The runner applies the nested output scale through `kscreen-doctor` and reads it back before starting the client. It also checks the captured buffer dimensions. Wayland's integer screen scale can differ from the window's fractional buffer scale. A requested scale alone is not evidence.
 
