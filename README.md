@@ -2,7 +2,7 @@
 
 The [roadmap](docs/roadmap.md) covers KDE, GNOME, Wine, and conditional Windows 11 support.
 
-The [deployment decision](docs/research/distribution.md) proposes distro Qt packages, separate session activation, tested rollback, and an APT distribution channel. Desktop installation is planned. The current preview remains isolated.
+The [system build guide](docs/build-system.md) starts with on-demand builds for the running Debian 13 or Ubuntu 26.04 amd64 system. It uses the installed Qt source revisions and distro package rules. Builds do not install packages or enable the treatment. The [deployment decision](docs/research/distribution.md) defines separate activation, rollback, and later distribution. The current preview remains isolated.
 
 The [KDE path checks](docs/experiments/kde-paths.md) compare real nested KWin titles, a Plasma applet host, and Qt Quick against independent pixel predictions. The private GPU prototype adds the selected text blend and shared-origin snapping. It preserves ordinary colors and noneligible fonts in the tested scenes.
 

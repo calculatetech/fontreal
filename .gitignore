@@ -1,4 +1,4 @@
-/build/
-/results/
+/build
+/results
 /.repowise/
-/.agent/test-results/
+/.agent/test-results

@@ -169,7 +169,7 @@ QImage readTarget(QQuickRenderControl &control,QRhiTexture *texture) {
     readback.completed=[&] {
         const QImage raw(reinterpret_cast<const uchar *>(readback.data.constData()),
                          readback.pixelSize.width(),readback.pixelSize.height(),QImage::Format_RGBA8888_Premultiplied);
-        image=control.rhi()->isYUpInFramebuffer() ? raw.flipped() : raw.copy();
+        image=control.rhi()->isYUpInFramebuffer() ? raw.mirrored(false,true) : raw.copy();
     };
     auto *batch=control.rhi()->nextResourceUpdateBatch();
     batch->readBackTexture(texture,&readback);
@@ -477,7 +477,7 @@ int main(int argc,char **argv) {
                 reading=true;
                 windowReadback.completed=[&,rhi] {
                     const QImage raw(reinterpret_cast<const uchar *>(windowReadback.data.constData()),windowReadback.pixelSize.width(),windowReadback.pixelSize.height(),QImage::Format_RGBA8888_Premultiplied);
-                    windowBuffer=(rhi->isYUpInFramebuffer() ? raw.flipped() : raw.copy()).convertToFormat(QImage::Format_RGB32);
+                    windowBuffer=(rhi->isYUpInFramebuffer() ? raw.mirrored(false,true) : raw.copy()).convertToFormat(QImage::Format_RGB32);
                     reading=false;
                 };
                 auto *updates=rhi->nextResourceUpdateBatch();

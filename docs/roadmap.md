@@ -17,11 +17,10 @@ The user accepts the viewed KWin title result. Qt Quick looks good overall, whil
 
 ## Active
 
-No task is active.
+- **FR-011: Package a KDE desktop pilot.** Build on demand for the running Debian 13 or Ubuntu 26.04 amd64 system from its exact Qt distro sources and build rules. Port the rendering changes to Debian's Qt 6.8.2. Add separate, initially disabled session activation. Test package application, complete-session coverage and disabling, saved official-package rollback, and an official Qt update before host installation. Preserve font choices and normal security updates. See the [deployment decision](research/distribution.md) and [package specification](plans/FR-011-system-builds.md).
 
 ## Planned next
 
-- **FR-011: Package a KDE desktop pilot.** Build patched Ubuntu 26.04 amd64 Qt packages from distro source and build rules. Add separate, initially disabled session activation. Test complete-session coverage and disabling, official-package rollback, and an official Qt update before host installation. Preserve font choices and normal security updates. See the [deployment decision](research/distribution.md).
 - **FR-003: Calibrate native application text.** Focus on Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales, and light/dark colors. Retain other fonts as comparison controls. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
 - **FR-012: Make the KDE packages distributable.** Supply matching source and binary packages, build provenance, required licenses and notices, signed APT metadata, supported versions, and recovery instructions. Establish the Qt security-update rebuild process. Resolve the project license before public release. Keep the GitHub repository private unless the user changes that choice.
 

@@ -6,7 +6,7 @@ How can Fontreal cover a normal desktop session and ship maintainable packages w
 
 ## Repository constraints
 
-The first target is the current Ubuntu 26.04 amd64 desktop. Installed packages are Qt Base `6.10.2+dfsg-7`, Qt Declarative `6.10.2+dfsg-3`, and Plasma/KWin `4:6.6.6-0ubuntu0.1`. Recheck these versions before building. The prototype uses upstream Qt 6.10.2, not Ubuntu's complete source package and build rules.
+The initial targets are Debian 13 and Ubuntu 26.04, native amd64. Builds run on demand for the running system. Debian 13 supplies Qt Base `6.8.2+dfsg-9+deb13u2` and Qt Declarative `6.8.2+dfsg-7` at this inspection. The current Ubuntu desktop has Qt Base `6.10.2+dfsg-7`, Qt Declarative `6.10.2+dfsg-3`, and Plasma/KWin `4:6.6.6-0ubuntu0.1`. Detect exact installed binary and source versions for every build. The upstream 6.10.2 prototype remains a separate experiment.
 
 The accepted treatment is automatic monochrome hints with grayscale rasterization, snapped origins, mild contrast, and linear blending. Noto Sans and Inconsolata Nerd Font at 15px are useful starting conditions. Blend preference depends on effective size and font. Preserve explicit controls and the user's font choices.
 
@@ -34,7 +34,7 @@ APT authenticates signed archive metadata and its package checksum chain. Use a 
 
 ## Decision
 
-Use distro Qt source packages and their build rules, with a small Fontreal patch queue. Start with Ubuntu 26.04 amd64. Keep the existing package names and package-manager ownership. Build a coherent package set in a clean build environment. Record source versions, patches, build dependencies, checksums, and validation results.
+Use distro Qt source packages and their build rules, with a small Fontreal patch queue. Start with on-demand builds for Debian 13 and Ubuntu 26.04 amd64. Use separate ports for Qt 6.8.2 and 6.10.2. Keep the existing package names and package-manager ownership. Build a coherent package set in a clean container for the detected release. Record exact installed and source versions, patches, build dependencies, checksums, and validation results. Retain original packages for rollback and corresponding modified source. The [build guide](../build-system.md) owns commands. Unknown versions stop instead of using a different Qt.
 
 Use a downstream package revision that sorts above its base and below the next official revision. Prove that ordering for each release. Do not hold Qt or install broad priority rules that block Ubuntu updates. A newer official Qt must remain installable even if Fontreal support temporarily disappears. Activation must detect an unsupported backend and avoid leaving a Qt Quick override active after that fallback.
 
@@ -52,11 +52,11 @@ Test the package set in a disposable Plasma session or VM before the host deskto
 
 Provide two recovery levels. Disabling activation restores the stock conditional path after a new login. Full rollback removes activation and reinstalls the coherent official Qt package set. Removing the activation package alone does not restore the original libraries. Test both recovery levels, including recovery from a text console, before host installation.
 
-Distribute the tested binary and source packages through an APT repository with signed metadata and a dedicated trust key. Start with a pilot channel. The repository can remain private. Publishing it does not require changing the private GitHub repository's visibility. Each supported distro release and architecture needs its own builds and update checks.
+The first delivery is a local on-demand build bundle. A hosted APT repository with signed metadata and a dedicated trust key follows under FR-012. The repository remains private. Each supported distro release and architecture needs its own builds and update checks.
 
 Distribute the corresponding modified Qt source, build instructions, and required notices with a reliable source-access route for recipients. Qt's LGPL guidance requires source for modified libraries and user replacement rights. Confirm the licenses of the actual shipped components. Fontreal has no root project license yet. Choose that license before a public release, and inspect each font license before bundling fonts. [Qt distribution obligations](https://www.qt.io/development/open-source-lgpl-obligations).
 
-Keep Ubuntu security updates flowing. For each new Qt source revision, reapply the patch, build, run the existing widget/application checks, and repeat the supported desktop checks. Publish supported version ranges and known gaps. Upstreaming the controls can reduce this maintenance cost later.
+Keep Debian and Ubuntu security updates flowing. For each new Qt source revision, reapply the patch, build, run the existing widget/application checks, and repeat the supported desktop checks. Publish supported version ranges and known gaps. Upstreaming the controls can reduce this maintenance cost later.
 
 The initial claim is KDE and supported host Qt 6 paths. GNOME, Wine, Windows 11, Qt 5, browsers, and bundled runtimes remain separate work. A Qt package cannot establish those results. The [roadmap](../roadmap.md) owns the order of work.
 
