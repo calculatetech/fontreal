@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check the private browser experiment through public FreeType and real windows."""
 import argparse
+from contextlib import contextmanager
 import hashlib
 import json
 import math
@@ -37,7 +38,7 @@ def digest(path):
 def protected():
     paths = [Path.home() / name for name in (
         ".config/kdeglobals", ".config/kcmfonts", ".config/fontconfig/fonts.conf",
-        ".mozilla/firefox/profiles.ini", ".floorp/profiles.ini")]
+        ".config/mozilla/firefox/profiles.ini", ".mozilla/firefox/profiles.ini", ".floorp/profiles.ini")]
     paths += [Path("/usr/lib/x86_64-linux-gnu/libfreetype.so.6").resolve()]
     return {str(p): digest(p) if p.exists() else None for p in paths}
 
@@ -297,11 +298,12 @@ def browser_run(record, env, browser, mode, scale, pixels=15):
         reservation.bind(("127.0.0.1", 0))
         port = reservation.getsockname()[1]
     log_path = directory / "browser.log"
+    inherited_scope = "/usr/lib/floorp/floorp" if browser == "firefox" else "/usr/lib/firefox/firefox-bin"
     with log_path.open("w") as log:
         child = subprocess.Popen([sys.executable, str(ROOT / "tools/preview-browser.py"), mode,
             (ROOT / "tests/browser_masks.html").as_uri() + f"?size={pixels}#{mode}",
             "--browser", browser, "--scale", str(scale), "--trace", "--marionette-port", str(port)],
-            env=dict(env, GDK_BACKEND="wayland", MOZ_ENABLE_WAYLAND="1"),
+            env=dict(env, GDK_BACKEND="wayland", MOZ_ENABLE_WAYLAND="1", FONTREAL_FT_EXECUTABLE=inherited_scope),
             stdout=log, stderr=log, start_new_session=True)
         client = None
         try:
@@ -336,6 +338,8 @@ def browser_run(record, env, browser, mode, scale, pixels=15):
                           for line in log_path.read_text().splitlines() if line.startswith("FONTREAL_BROWSER ")]
             assert len(identities) == 1
             identity = identities[0]
+            assert not any(entry.startswith(b"FONTREAL_FT_EXECUTABLE=") for entry in
+                           Path(f"/proc/{identity['pid']}/environ").read_bytes().split(b"\0")), "Preview retained caller process scope"
             assert Path(identity["profile"]).is_relative_to(WORK)
             assert Path(identity["library"]).resolve() == Path(record["libraries"][
                 "stock" if mode.startswith("control") else "candidate"]["library"])
@@ -413,7 +417,7 @@ def browser_run(record, env, browser, mode, scale, pixels=15):
                 if name != "cff":
                     assert after.tobytes() == neighbors[name].tobytes(), (name, "repaint")
                 neighbors["repaint-" + name] = after
-            result = dict(identity=identity, measure=measured, masks=len(rows), blend_errors=errors,
+            result = dict(identity=identity, inherited_scope=inherited_scope, measure=measured, masks=len(rows), blend_errors=errors,
                           placement={c["name"]: c["rect"] for c in measured["cells"]},
                           chrome="captured through measured content origin; exact control-font coverage unresolved",
                           chrome_rect=[0, 0, image.width, chrome_height])
@@ -433,13 +437,14 @@ def browser_run(record, env, browser, mode, scale, pixels=15):
                 child.wait(timeout=25)
 
 
-def browser_checks(record):
-    results = []
+@contextmanager
+def nested_display():
     with tempfile.TemporaryDirectory(prefix="browser-test-", dir=WORK) as temporary:
         state = Path(temporary)
         env = os.environ.copy()
         for key in ("LD_PRELOAD", "LD_LIBRARY_PATH", "WAYLAND_SOCKET", "WAYLAND_DISPLAY",
                     "FONTREAL_RENDERING", "FONTREAL_BLEND", "FONTREAL_CONTRAST",
+                    "FONTREAL_FT_RENDERING", "FONTREAL_FT_CONTRAST", "FONTREAL_FT_EXECUTABLE",
                     "QT_SCALE_FACTOR", "QT_SCREEN_SCALE_FACTORS", "QT_QPA_PLATFORM"):
             env.pop(key, None)
         for role in ("CONFIG", "CACHE", "DATA", "STATE", "RUNTIME"):
@@ -469,32 +474,38 @@ def browser_checks(record):
                     time.sleep(.1)
                 else:
                     raise AssertionError("Nested display did not start")
-                for browser in ("firefox", "floorp"):
-                    controls = {}
-                    for mode in ("control", "control-preblend", "encoded", "preblend"):
-                        result, neighbors, cells = browser_run(record, env, browser, mode, 1)
-                        results.append(result)
-                        blend_mode = "preblend" if mode.endswith("preblend") else "encoded"
-                        if mode.startswith("control"):
-                            controls[blend_mode] = neighbors
-                        else:
-                            for name in ("cff", "emoji", "solid", "repaint-cff", "repaint-emoji", "repaint-solid"):
-                                assert neighbors[name].tobytes() == controls[blend_mode][name].tobytes(), (browser, mode, name)
-                    for scale in (1.25, 1.5):
-                        result, control_neighbors, _ = browser_run(record, env, browser, "control-preblend", scale)
-                        results.append(result)
-                        result, neighbors, _ = browser_run(record, env, browser, "preblend", scale)
-                        results.append(result)
-                        for name in ("cff", "emoji", "solid", "repaint-cff", "repaint-emoji", "repaint-solid"):
-                            assert neighbors[name].tobytes() == control_neighbors[name].tobytes(), (browser, scale, name)
-                    result, _, _ = browser_run(record, env, browser, "preblend", 1, pixels=16)
-                    results.append(result)
-                assert len(results) == 18
+                yield env
             finally:
                 os.close(read)
                 if kwin:
                     stop(kwin)
                 stop(server)
+
+
+def browser_checks(record):
+    results = []
+    with nested_display() as env:
+        for browser in ("firefox", "floorp"):
+            controls = {}
+            for mode in ("control", "control-preblend", "encoded", "preblend"):
+                result, neighbors, cells = browser_run(record, env, browser, mode, 1)
+                results.append(result)
+                blend_mode = "preblend" if mode.endswith("preblend") else "encoded"
+                if mode.startswith("control"):
+                    controls[blend_mode] = neighbors
+                else:
+                    for name in ("cff", "emoji", "solid", "repaint-cff", "repaint-emoji", "repaint-solid"):
+                        assert neighbors[name].tobytes() == controls[blend_mode][name].tobytes(), (browser, mode, name)
+            for scale in (1.25, 1.5):
+                result, control_neighbors, _ = browser_run(record, env, browser, "control-preblend", scale)
+                results.append(result)
+                result, neighbors, _ = browser_run(record, env, browser, "preblend", scale)
+                results.append(result)
+                for name in ("cff", "emoji", "solid", "repaint-cff", "repaint-emoji", "repaint-solid"):
+                    assert neighbors[name].tobytes() == control_neighbors[name].tobytes(), (browser, scale, name)
+            result, _, _ = browser_run(record, env, browser, "preblend", 1, pixels=16)
+            results.append(result)
+        assert len(results) == 18
     return dict(scenarios=["S1", "S7", "S8", "S9", "S10"], runs=results)
 
 
@@ -502,6 +513,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", choices=("all", "build", "freetype", "isolation", "page", "chrome", "placement", "blend"), default="all")
     args = parser.parse_args()
+    os.environ.pop("FONTREAL_FT_EXECUTABLE", None)
     OUT.mkdir(parents=True, exist_ok=True)
     before = protected()
     record_path = Path(run([sys.executable, ROOT / "tools/build-freetype.py", "--trace"]).stdout.splitlines()[-1])

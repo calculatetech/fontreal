@@ -1,6 +1,17 @@
 --- a/src/base/ftobjs.c
 +++ b/src/base/ftobjs.c
-@@ -910,6 +910,28 @@
+@@ -16,6 +16,10 @@
+  */
+ 
+ 
++#ifdef __linux__
++#include <sys/auxv.h>
++#endif
++
+ #include <freetype/ftlist.h>
+ #include <freetype/ftoutln.h>
+ #include <freetype/ftfntfmt.h>
+@@ -910,6 +914,57 @@
  #endif /* GRID_FIT_METRICS */
  
  
@@ -10,6 +21,7 @@
 +  {
 +    const char*  enabled = ft_getenv( "FONTREAL_FT_RENDERING" );
 +    const char*  format;
++    const char*  scope = ft_getenv( "FONTREAL_FT_EXECUTABLE" );
 +
 +
 +    if ( !enabled || ft_strcmp( enabled, "1" ) ||
@@ -22,14 +34,42 @@
 +      return FALSE;
 +
 +    format = FT_Get_Font_Format( face );
-+    return format && !ft_strcmp( format, "TrueType" );
++    if ( !format || ft_strcmp( format, "TrueType" ) )
++      return FALSE;
++
++    if ( scope && *scope )
++    {
++#ifdef __linux__
++      const char*  executable = (const char*)getauxval( AT_EXECFN );
++      const char*  entry = scope;
++      const char*  end;
++      size_t       length;
++
++
++      /* The kernel's exec name remains available inside browser sandboxes. */
++      if ( !executable )
++        return FALSE;
++      do
++      {
++        end = strchr( entry, ':' );
++        length = end ? (size_t)( end - entry ) : ft_strlen( entry );
++        if ( length == ft_strlen( executable ) &&
++             !ft_strncmp( entry, executable, length ) )
++          return TRUE;
++        entry = end ? end + 1 : NULL;
++      } while ( entry );
++#endif
++      return FALSE;
++    }
++
++    return TRUE;
 +  }
 +
 +
    /* documentation is in freetype.h */
  
    FT_EXPORT_DEF( FT_Error )
-@@ -959,6 +981,14 @@
+@@ -959,6 +1014,14 @@
  
      if ( load_flags & FT_LOAD_BITMAP_METRICS_ONLY )
        load_flags &= ~FT_LOAD_RENDER;
@@ -44,7 +84,7 @@
  
      /*
       * Determine whether we need to auto-hint or not.
-@@ -4992,7 +5022,12 @@
+@@ -4992,7 +5055,12 @@
    FT_Render_Glyph( FT_GlyphSlot    slot,
                     FT_Render_Mode  render_mode )
    {
@@ -58,7 +98,7 @@
  
  
      if ( !slot || !slot->face )
-@@ -5000,7 +5035,48 @@
+@@ -5000,7 +5068,48 @@
  
      library = FT_FACE_LIBRARY( slot->face );
  

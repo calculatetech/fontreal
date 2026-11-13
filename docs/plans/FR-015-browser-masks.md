@@ -1,4 +1,103 @@
-# First Firefox mask comparison
+# Firefox working-profile integration
+
+## Working-profile delivery (FR-015-B)
+
+Use the approved rendering in the existing working Firefox and Floorp profiles through ordinary commands and desktop launches. Keep account data, bookmarks, history, sessions, and unrelated preferences in place. Provide reversible enable, disable, and status commands. The disposable comparison described below remains a diagnostic tool.
+
+Prior plan reconciliation: FR-015-A is the immutable accepted mask checkpoint `a3128b87a7ec09b319a5a3c8226db6cc99ebdbb4`. The user approved its samples and explicitly rejected separate browser data. The unfinished requirement to keep FR-015 active until full Mozilla composition is superseded. Complete working-profile activation with the approved sRGB preblend. Do not reopen rendering selection or claim actual-background linear blending. The unimplemented separate-profile proposal is rejected.
+
+FR-015-B has base `9acdba8a24192e3a7746891f345b190d4bd623b3` on `feature/gtk-rendering`, with one writable worktree and no pending Plan capture. The diagnostic constraints below still govern FR-015-A. The user overrides their normal-profile preservation rule only for necessary rendering preferences and ordinary launch integration. Their account-data, Qt, sandbox, and no-migration constraints remain.
+
+### Product boundary and smallest implementation
+
+One user and one writer use normal local filesystems. Retain the exact browser and FreeType versions below. Existing working data stays in its native location. Build and verification data use configured build/result storage. Small activation records and launch hooks use normal per-user directories.
+
+Add `tools/browser.py` with `enable`, `disable`, `status`, and `run`, each taking `firefox` or `floorp`. Reuse the verified release builder. Discover a unique ordinary Install-section default and require any active parent profile to agree. Ignore misleading legacy profile-level defaults. Reject missing, conflicting, or ambiguous targets before writes. Do not expose an arbitrary activation profile override or create a browser profile.
+
+Append a marked `user.js` block for exactly four rendering preferences: whole-pixel positioning, disabled subpixel antialiasing, gamma `0`, and enhanced contrast `0`. Save the original selected `prefs.js` lines or their absence once. Repeated enable retains that baseline. Preserve all bytes outside the owned block.
+
+Install per-user command wrappers and desktop copies under the existing desktop IDs. Preserve every native argument and desktop action. Leave XDG browser directories, scale, startup, font family, remoting identity, and normal Fontconfig unchanged. Firefox's packaged `firefox-bin` is distinct from its small launcher; scope treatment to the actual browser executable.
+
+Add optional `FONTREAL_FT_EXECUTABLE` eligibility to the FreeType patch. With no selector, preserve the approved experiment. With a selector, compare the kernel's immutable execution name against exact colon-separated browser launch paths. Include the installed command, its resolved launcher, and actual browser executable. Use glibc `getauxval(AT_EXECFN)`, which reads startup data without filesystem access inside the browser sandbox. An unrelated executable inheriting the environment must use the normal mask path. Do not change mask math or cache mutable process decisions.
+
+Enable can safely append `user.js` while the browser runs, but activation requires a full normal restart. Status distinguishes configured launches from a treated running parent. Disable requires a closed profile before writing preferences. Remove only the owned block, restore only the original selected `prefs.js` lines, preserve unrelated changes, and remove unchanged owned hooks. Never delete browser data.
+
+Replace preference files atomically and retain their permissions and unrelated bytes. A parent remains live when a package update unlinks its old executable. Interpret Linux's deleted-executable suffix when identifying that parent so disable still requires its normal exit. The [Linux process-executable contract](https://man7.org/linux/man-pages/man5/proc_pid_exe.5.html) defines this suffix. The [auxiliary-vector contract](https://man7.org/linux/man-pages/man3/getauxval.3.html) defines the immutable execution name used by the raster selector.
+
+Ordinary launches do not build or download. Verify the recorded browser version, installed FreeType revision, and library identity. After an incompatible update, warn and launch the installed browser without the private override. Retained rendering preferences remain until disable or rebuild. This fallback does not restore every original preference.
+
+| Owner | Classification | Required relationship |
+| --- | --- | --- |
+| Working-profile activation, preferences, wrappers, desktop entries | composes | Apply and reverse only owned rendering changes |
+| Optional FreeType process selector | composes | Contain treatment across inherited child environments |
+| Existing builder and approved rendering algorithm | opaque | Preserve provenance, ABI, features, notices, and accepted pixels |
+| Mozilla profile selection, remoting, storage, and composition | opaque | Retain native behavior and measure actual startup |
+| Account data, unrelated preferences, host packages, accepted Qt | opaque | Preserve their existing owners |
+| Full Mozilla blending, toolbar-font equality, other engines, Debian browser certification | deferred | Require separate evidence before broader claims |
+
+The behavior floor is reversible treatment of ordinary working data. The ceiling excludes profile copying, alternate data, forced termination, forced profile arguments, changed remoting identity, global loader changes, system-library installation, sandbox relaxation, new dependencies, and new rendering algorithms. Faults, concurrent writers, hostile changes, and recovery do not add requirements.
+
+### Source-clause inventory
+
+| Clause and authority | Disposition | Boundary |
+| --- | --- | --- |
+| Approved samples and existing working profile, latest user instructions | mapped | B10 |
+| Preserve account data, sessions, unrelated preferences, scale, and startup behavior | mapped | B10, B12 |
+| Actual Install default differs from legacy defaults, installed profile metadata | mapped | B10 |
+| Preserve ordinary commands and every desktop action, installed desktop entries | mapped | B11 |
+| Remoting precedes new startup, Mozilla `nsAppRunner.cpp` | mapped | B11 |
+| Retain first restoration baseline across repeated enable and actual persistence | mapped | B12 |
+| Live preference edits are overwritten at exit, Mozilla `Preferences.cpp` | mapped | B12 |
+| Preserve accepted Qt and external helper output | mapped | B13 |
+| Exact matching build and verified artifacts, existing builder contract | mapped | B14 |
+| Keep browser use available after an incompatible update without unsafe override | mapped | B14 |
+| Generated build and verification data use configured storage | mapped | B15 |
+| Portable, accurate public instructions and approval status | mapped | B16 |
+| Preserve all diagnostic modes, independent masks, styles, and scales | mapped | B17 |
+| Approved eligibility, mask algorithm, slot ordering, single mild ramp | opaque | FR-015-A |
+| Full composition, toolbar-font equality, other engines | deferred | Separate scope |
+| Incremental commit and branch push | non-boundary | Delivery |
+
+### Boundary inventory and Scenario Proof
+
+The named executable check is `python3 tests/browser_delivery_test.py`, except D9. Its profiles are synthetic existing working profiles, not copies of accounts. Controlled inputs can replace only opaque OS-home, process-inventory, installed-index, version, and native-executable observations. Production preference edits, wrappers, desktop parsing, remoting, and rendering remain real.
+
+| Boundary | Discriminator and minimal contrast | Production path and terminal oracle | Scenarios |
+| --- | --- | --- | --- |
+| B10 | Install default versus misleading legacy references; owned keys versus adjacent settings | Enable discovery → verified build → exact working-profile edits → actual startup; same profile and approved settings, unrelated data unchanged | D1, D2 |
+| B11 | Cold startup versus URL remoting; each native desktop action | Command/GIO action → wrapper → native browser; intact arguments, original profile, pending status before restart, candidate mapping/output after restart | D2, D3 |
+| B12 | Original absence versus explicit value; repeated enable after actual persistence | Enable → treated session → normal exit → repeat enable → disable → stock startup; original rendering state and unrelated data retained | D4 |
+| B13 | Browser executable versus unrelated inherited-environment helper | Wrapper → FreeType process gate → public raster/Qt draw; approved browser masks and unchanged eligible/CFF helper pixels | D5 |
+| B14 | Matching version/artifact versus later incompatible revision | Enable or wrapper → compatibility gate → native executable; unsafe enable rejects before writes, updated browser launches without override | D6 |
+| B15 | Generated verification data versus existing browser data | Builder/check → resolved output roots; generated files stay on configured storage, working data is neither copied nor moved | D7 |
+| B16 | Portable working-profile instructions versus stale or excessive claims | Documentation checks and source comparison; accurate commands, restart, reversal, versions, and compositor limits | D8 |
+| B17 | Existing diagnostic modes and native raster restrictions | Existing full comparison → independent masks and actual windows → normal cleanup | D9 |
+
+| Scenario | Complete sequence and required oracle |
+| --- | --- |
+| D1 | Duplicate legacy references precede a different Install target. Real enable selects only the ordinary profile for both browsers. Missing/conflicting targets reject before writes. Require unchanged unused profiles and indexes, with no new profile. |
+| D2 | Start the ordinary stock parent. Enable, remote a URL through the wrapper, and observe the same stock parent with restart pending. Quit normally and cold-launch through the wrapper. Require the original profile, actual candidate mapping, effective settings, and independent white-background pixels. |
+| D3 | Run both command wrappers and every GIO desktop action through an opaque recording native executable. Compare all original arguments, including a URL with spaces and shell characters. Require results for the entire declared action set. |
+| D4 | Cover absent/explicit original keys and absent/present `user.js`. After an actual treated session persists preferences, repeat enable, add an unrelated `user.js` line, disable, and start stock. Require original key values/absence, retained cookies/storage and unrelated settings, same profile, and stock mapping. Live disable rejects before writes. Repeat disable is a no-op. |
+| D5 | Compare public FreeType masks with process scope absent, matching, and mismatching. Browser output matches the independent approved reference. In the same native lifecycle, launch a real Qt helper from the stock parent and then from the wrapper-started treated parent through Mozilla's native process interface. Require the actual inherited loader/FreeType environment, identical eligible/CFF masks and images, and unchanged Fontconfig identity. Retain the unscoped control that exposes double treatment. |
+| D6 | Change only the opaque observed browser revision. Unsafe enable rejects before writes. A later wrapper launch reaches the installed executable without private loader/FreeType injection, with a warning and unchanged profile data. |
+| D7 | Inspect actual child identity and resolved generated destinations. Include the modern Firefox index in protected checks. Caller environment, Qt activation, installed libraries, unused profiles, and profile indexes remain unchanged. |
+| D8 | Run `python3 tests/docs_test.py --self-test`, `python3 tests/docs_test.py`, and focused command/link comparison. Keep machine-specific references out of public instructions. |
+| D9 | Run `python3 tests/browser_delivery_test.py --case diagnostic`. It installs real normal-launch hooks in test-owned user directories and invokes `python3 tests/browser_masks_test.py --case all` with those hooks first on PATH and an inherited browser process selector. Require every original component/window result and disposable cleanup. The diagnostic launcher selects the installed native binary and clears the inherited selector, so ordinary activation cannot override its explicit modes. Run scratch-file-sharing checks sequentially. |
+
+Include both browsers, every action, and repeated early values followed by a changed storage marker. Missing targets reject rather than create profiles. No grouping limit or partial result can establish success.
+
+### Implementation and decisions
+
+FR-015-B owns the activation tool, small FreeType eligibility gate, focused test support, and authoritative documentation as one coherent delivery. It depends on the accepted FR-015-A renderer. Complete the named checks, substantive documentation, fresh read-only trace closure, and native correctness review from the stated base before its local commit. Keep operational results in the ignored task record and carry the existing branch-push authorization forward.
+
+- Use working data because the user explicitly rejects separate data.
+- Omit arbitrary profile overrides because they can disagree with ordinary Mozilla startup.
+- Leave normal Fontconfig unchanged because inherited forced configuration can alter external Qt helpers.
+- Scope only the optional FreeType treatment by the actual browser executable.
+- Restore persisted preferences while the browser is closed because Mozilla writes them on exit.
+- Keep the approved preblend limitation explicit without reopening visual selection.
+- The algorithm is fixed. Research is limited to official startup, preference, desktop-entry, and process contracts.
 
 ## Observable outcome
 
@@ -103,7 +202,7 @@ The browser scenarios share one actual-window capture run through `--case all`. 
 
 One atomic subtask, FR-015-A, owns the private mask experiment, builder/launcher, local fixture, independent probe, browser checks, documentation, and notices. It depends on the accepted Qt reference and authenticated unmodified FreeType baseline. Allowed production changes are the FreeType patch and focused private build/launch tools; accepted Qt code and system activation stay unchanged.
 
-Complete the named checks and human-viewable comparisons before full native correctness review from the task base. Run a fresh read-only boundary trace closure before native review. Keep operational results in the ignored task record. A clean review permits a coherent progress commit and the previously authorized private branch push. Browser integration remains Active while visual acceptance and full composition work remain.
+Complete the named checks and human-viewable comparisons before full native correctness review from the task base. Run a fresh read-only boundary trace closure before native review. Keep operational results in the ignored task record. A clean review permits a coherent progress commit and the previously authorized branch push. The working-profile delivery above replaces the former full-composition completion gate.
 
 ## Decision Log
 

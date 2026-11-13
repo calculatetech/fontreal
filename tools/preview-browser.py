@@ -40,6 +40,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix=f"{args.browser}-{args.mode}-", dir=previews) as directory:
         state = Path(directory).resolve()
         env = os.environ.copy()
+        env.pop("FONTREAL_FT_EXECUTABLE", None)
         for role in ("CONFIG", "CACHE", "DATA", "STATE"):
             path = state / role.lower()
             path.mkdir()
@@ -87,7 +88,7 @@ def main():
         env["LD_LIBRARY_PATH"] = str(library.parent) + (
             ":" + env["LD_LIBRARY_PATH"] if env.get("LD_LIBRARY_PATH") else "")
         url = args.url or (ROOT / "tests/browser_masks.html").as_uri() + "#" + args.mode
-        command = [args.browser, "--new-instance", "--no-remote", "--profile", str(profile)]
+        command = [f"/usr/bin/{args.browser}", "--new-instance", "--no-remote", "--profile", str(profile)]
         if args.marionette_port is not None:
             command.append("--marionette")
         command.append(url)

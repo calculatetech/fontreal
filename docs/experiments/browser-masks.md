@@ -1,8 +1,43 @@
-# Private browser comparison
+# Firefox and Floorp
 
-This experiment brings automatic monochrome hinting, grayscale edges, and mild contrast into actual Firefox and Floorp windows. It targets regular text on white, where the existing browser controls still looked blurry. The page also includes bold, italic, and bold italic on light and dark backgrounds.
+Use the approved rendering in your existing working browser profile. Your accounts, bookmarks, history, sessions, and unrelated settings stay in place. Normal commands and desktop launchers keep their browser identity and native actions.
 
-This is an early browser experiment. Mozilla still controls layout, glyph placement, caching, and final blending. Its sRGB preblend adjusts the glyph mask using a guessed background. It does not implement the full Qt blend against each actual background.
+The preset combines automatic monochrome hints, grayscale edges, mild contrast, and Mozilla sRGB preblend. The user approved the actual-browser samples, including regular text on white. Mozilla still controls layout, caching, and final blending. Its preblend estimates the background. It does not implement full actual-background linear blending.
+
+## Enable the working profile
+
+Use the supported versions and build requirements below. Run the command for each browser you use:
+
+```sh
+python3 tools/browser.py enable firefox
+python3 tools/browser.py enable floorp
+```
+
+Fully quit and reopen each browser to activate the treatment. An already running browser keeps its loaded library until that restart. The tool configures the ordinary Install-default profile and checks that any running profile agrees. It does not create or copy browser profiles.
+
+Activation manages four rendering preferences and installs per-user launch hooks. Your font family, display scale, startup settings, normal Fontconfig configuration, and browser data stay in place. Unrelated applications, including Qt helpers launched by the browser, keep their normal rendering.
+
+Keep the checkout and active build artifacts while enabled. Open a new terminal if an existing shell caches the old browser command. If you change the ordinary default profile, disable treatment before that change and enable it again afterward.
+
+To inspect activation:
+
+```sh
+python3 tools/browser.py status firefox
+python3 tools/browser.py status floorp
+```
+
+The status shows the configured working profile, treated parent processes, and processes that still need a restart. A browser or FreeType update can make the recorded override incompatible. The wrapper then warns and starts the installed browser without the private library. Its rendering preferences remain configured until you disable or rebuild. Matching build support must be updated before enabling an unsupported revision.
+
+## Restore the original rendering
+
+Fully quit the browser before disabling. The browser saves its preferences when it exits, so live edits cannot safely restore the original values.
+
+```sh
+python3 tools/browser.py disable firefox
+python3 tools/browser.py disable floorp
+```
+
+Disable restores the original rendering preferences, removes the owned launch hooks, and keeps unrelated settings and browser data. It also removes treatment values that the browser saved during use. A later normal launch uses the installed library. Existing custom launch hooks or modified Fontreal hooks are left untouched when they prevent safe activation or removal.
 
 ## Requirements and build
 
@@ -20,7 +55,7 @@ The final output line names `build.json`. This file records the source archives,
 
 ## Compare actual windows
 
-Run each command separately. Close each window when you finish its comparison. The default local page needs no account or remote service.
+The diagnostic comparison uses disposable profiles. Daily browsing uses the working-profile commands above. The comparison page includes regular, bold, italic, and bold italic on light and dark backgrounds. Run each command separately and close each window when finished. The default local page needs no account or remote service.
 
 ```sh
 python3 tools/preview-browser.py control
@@ -44,7 +79,7 @@ python3 tools/preview-browser.py preblend --browser floorp --scale 1.25
 python3 tools/preview-browser.py preblend --scale 1.5
 ```
 
-An optional positional URL opens another test page in the same disposable profile. Each launch uses a fresh profile and private XDG configuration directories. Closing the window removes that state. Your normal browser profile, installed FreeType, accepted Qt installation, and Flatpak overrides stay unchanged. There is no system installation to undo.
+An optional positional URL opens another test page in the same disposable profile. Each comparison launch uses a fresh profile and private XDG configuration directories. Closing that window removes its state. These diagnostic launches do not change the working profile or its activation. Installed FreeType, accepted Qt, and Flatpak overrides stay unchanged.
 
 The patch applies only to explicitly enabled raster requests for scalable, non-color TrueType faces. CFF fonts, color fonts, bitmap-only fonts, and requests for unscaled, unhinted, or metrics-only data retain their original path. Browser shaping and transform restrictions remain in place.
 
@@ -54,6 +89,7 @@ The checks need the installed fonts from the fixture, Qt 6 Core development file
 
 ```sh
 python3 tests/browser_masks_test.py --case all
+python3 tests/browser_delivery_test.py
 ```
 
 The component check compares public FreeType results with an independent, unmodified FreeType reference. It creates local synthetic font fixtures for embedded bitmaps and FreeType's name-based native-hinter restriction. It also checks transform restrictions and an unavailable auto-hinter through public FreeType APIs. These fixtures derive from the installed Noto font. They are not distributed font files.
@@ -61,6 +97,8 @@ The component check compares public FreeType results with an independent, unmodi
 Test builds report final glyph masks from real browser raster calls. Actual window captures measure placement and compare encoded and actual-background linear predictions separately. Browser controls have separate captures and must not inherit page-text results.
 
 The generated reports and lossless captures are under `results/browser-masks`. Inspect original PNGs at one image pixel per display pixel. Native window results do not certify every hardware compositor or every browser version.
+
+The delivery check exercises ordinary commands and desktop actions, native profile selection and remoting, and enable/use/disable restoration. Synthetic existing profiles run in an isolated filesystem view with the normal browser sandbox. Real account profiles stay untouched by these checks. Delivery results are under `results/browser-delivery`.
 
 The current color-emoji browser fixture produces no visible glyph in both control and candidate. Its empty matching regions do not prove visible emoji rendering. The separate FreeType component check uses an actual color bitmap. Browser toolbar font matching remains unresolved even though separate toolbar captures exist.
 

@@ -17,7 +17,7 @@ The user accepts the current Qt result, including KWin and Qt Quick. Preserve th
 
 ## Active
 
-- **FR-015: Support Firefox-based browsers.** Start with the installed Firefox and Floorp builds in disposable profiles. Compare existing font controls, then reproduce the accepted hinting, grayscale edges, contrast, placement, and blending through Mozilla's own rendering paths. Check browser controls and page text separately. Do not treat a GTK change as browser-text coverage. The first implementation is a [private FreeType mask comparison](plans/FR-015-browser-masks.md); full browser composition remains separate from mask correctness. See the [rendering coverage investigation](research/non-qt-rendering.md).
+No task is active.
 
 ## Planned next
 
@@ -42,6 +42,7 @@ No task is declined. Non-native LCD resolution remains outside the project scope
 
 ## Completed
 
+- **FR-015: Support Firefox-based browsers.** The approved automatic monochrome hints, grayscale masks, mild contrast, and Mozilla sRGB preblend work in existing Firefox and Floorp profiles. Reversible per-user activation preserves account data, unrelated preferences, native launches, and accepted Qt output. Normal browser startup and the disposable comparison are verified. Mozilla's background approximation and unverified toolbar-font equality remain stated limits. See the [browser specification](plans/FR-015-browser-masks.md) and [rendering investigation](research/non-qt-rendering.md).
 - **FR-011: Package a KDE desktop pilot.** On-demand builds support Debian 13/Qt 6.8.2 and Ubuntu 26.04/Qt 6.10.2 amd64 using exact distro sources and rules. Separate per-user activation starts disabled. Native package and complete-session checks cover enabling, disabling, independent Qt updates, font preservation, guarded installation, and offline official-package rollback. The host-matching bundle passes installation simulation. See the [build and deployment guide](build-system.md) and [package specification](plans/FR-011-system-builds.md).
 - **FR-013: Match Qt Quick composition and placement.** Eligible OpenGL text now uses the selected blend and stable fractional placement. Independent checks pass for real Qt Quick and Plasma output at 100% and 125%, including Intel GPU controls. Ordinary colors, noneligible fonts, and accepted native/KWin output remain correct. See the [GPU specification](plans/FR-013-quick-linear.md).
 - **FR-014: Confine the A8 text transfer profile.** The selected profile now follows the current eligible TrueType raster draw. Ordinary and static mixed-font checks preserve stock CFF/color pixels, including grayscale CFF after TrueType. Existing independent widget, Konsole, and 100%/125% KWin title checks pass. See the [profile-scope specification](plans/FR-014-a8-profile-scope.md).

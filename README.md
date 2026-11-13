@@ -76,7 +76,7 @@ The current pilot supports **Debian 13 with Qt 6.8.2** and **Ubuntu 26.04 with Q
 
 GTK/GNOME application integration, Wine, Windows 11, Qt 5, and applications with bundled rendering libraries remain separate work. See the [roadmap](docs/roadmap.md).
 
-A [private Firefox/Floorp experiment](docs/experiments/browser-masks.md) tests the same glyph masks in actual browser windows. It uses disposable profiles and does not install libraries. Browser blending, Electron, and Flatpak support remain separate work.
+[Firefox and Floorp activation](docs/experiments/browser-masks.md) applies the approved masks and Mozilla sRGB preblend to existing working profiles on the supported Ubuntu build. Accounts and unrelated settings stay in place. Enable the per-user launch integration, then fully quit and reopen the browser. Disable restores the original rendering settings. Mozilla's preblend estimates the background; full background-aware browser blending, Electron, and Flatpak remain separate work.
 
 ## Try it
 

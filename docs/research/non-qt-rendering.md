@@ -76,6 +76,8 @@ The user prefers the private masks with sRGB preblend. Keep this as the explicit
 
 A matched comparison of Noto Sans Regular at 15px and 100%, black on white, finds exact mild/linear pixels for `mnogWV` in both the retained native Qt gallery and the actual Firefox capture. The user then reports no perceptible difference. This establishes equality for those glyphs and conditions only. It does not justify a change to the accepted Qt implementation or establish equality across other applications, fonts, scales, or palettes.
 
+Working-profile Firefox/Floorp delivery reuses the approved mask and preblend result. Reversible per-user activation changes four rendering preferences and normal launch hooks. It preserves native profile selection, remoting, account data, and normal Fontconfig configuration. The optional FreeType executable selector contains treatment when browser environments reach unrelated Qt helpers. See the [activation and reversal guide](../experiments/browser-masks.md).
+
 ### Electron is another rendering engine
 
 Teams for Linux wraps the Teams web application with Electron. Electron uses Chromium renderer processes for web content, alongside native integration in its main process. The next trace must establish the font backend used by this exact Electron build, including whether relevant font work is bundled. Do not assume replacing host Cairo or FreeType reaches it. [Teams package source](https://github.com/IsmaelMartinez/teams-for-linux/blob/v2.28.0/package.json), [Electron process model](https://www.electronjs.org/docs/latest/tutorial/process-model).
