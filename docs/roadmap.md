@@ -17,7 +17,7 @@ The user accepts the current Qt result, including KWin and Qt Quick. Preserve th
 
 ## Active
 
-- **FR-018: Find a general browser rendering policy.** Improve stroke consistency and weak curve pixels across fonts, weights, sizes, scales, and palettes. Compare 192 and 230 coverage floors with explicit cutoffs using numbered 5/W grids. Preserve the desired regular/bold V/W appearance; light-face strokes can change. Keep native gray edges, font identity, and the accepted crisp references. Test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md) and [native studies](plans/FR-018-axis-study.md).
+- **FR-018: Find a general browser rendering policy.** Improve stroke consistency and weak curve pixels across fonts, weights, sizes, scales, and palettes. Compare a 242 coverage floor with cutoff 160 for regular and heavier faces, and 128 for light faces. Retain the 230 control and numbered 5/W grids. Preserve the desired regular/bold V/W appearance; light-face strokes can change. Keep native gray edges, font identity, and the accepted crisp references. Test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md) and [native studies](plans/FR-018-axis-study.md).
 
 ## Planned next
 

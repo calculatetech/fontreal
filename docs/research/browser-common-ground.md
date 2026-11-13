@@ -220,6 +220,33 @@ The user finds 192 insufficient and requests a 230 floor, particularly with D's 
 
 Further sheets cover [Noto 12px on black](../images/browser-common-ground/floor230-noto-12-dark.png), [Noto 15px on black](../images/browser-common-ground/floor230-noto-15-dark.png), [Lato Light 12px on white](../images/browser-common-ground/floor230-lato-light-12-light.png), [Lato Light 12px on black](../images/browser-common-ground/floor230-lato-light-12-dark.png), and [Lato Light 15px on black](../images/browser-common-ground/floor230-lato-light-15-dark.png). D changes eight cells in the exact 12px 5 and 20 cells in its W. These counts expose the side effects; visual acceptance remains open. The [230 capture record](../images/browser-common-ground/floor230-captures.json) uses the same source masks and checks.
 
+### A 242 floor with weight-dependent cutoffs
+
+The user selects a cutoff of 160 for regular and heavier faces, and 128 for light faces. The next comparison raises the floor to 242. This is about 95% coverage, compared with about 90% at 230. Values already above the floor stay unchanged.
+
+The four-column layout remains the same. C raises values from 128 through 241 to 242. D raises values from 160 through 241 to 242. Each sheet marks the selected column: C for Lato Light, D for Noto Sans Regular and Bold. Lower edge values retain their original coverage. The original 230 sheets remain available as controls.
+
+![242 floor with D selected for Noto Sans Regular at 12px](../images/browser-common-ground/floor242-noto-12-light.png)
+
+![242 floor with C selected for Lato Light at 15px](../images/browser-common-ground/floor242-lato-light-15-light.png)
+
+![242 floor with D selected for Noto Sans Bold at 15px](../images/browser-common-ground/floor242-noto-bold-15-light.png)
+
+All six conditions include both palettes:
+
+| Face and device size | Selected column | White background | Black background |
+| --- | --- | --- | --- |
+| Noto Sans Regular 12px | D, cutoff 160 | [Image](../images/browser-common-ground/floor242-noto-12-light.png) | [Image](../images/browser-common-ground/floor242-noto-12-dark.png) |
+| Noto Sans Regular 15px | D, cutoff 160 | [Image](../images/browser-common-ground/floor242-noto-15-light.png) | [Image](../images/browser-common-ground/floor242-noto-15-dark.png) |
+| Lato Light 12px | C, cutoff 128 | [Image](../images/browser-common-ground/floor242-lato-light-12-light.png) | [Image](../images/browser-common-ground/floor242-lato-light-12-dark.png) |
+| Lato Light 15px | C, cutoff 128 | [Image](../images/browser-common-ground/floor242-lato-light-15-light.png) | [Image](../images/browser-common-ground/floor242-lato-light-15-dark.png) |
+| Noto Sans Bold 12px | D, cutoff 160 | [Image](../images/browser-common-ground/floor242-noto-bold-12-light.png) | [Image](../images/browser-common-ground/floor242-noto-bold-12-dark.png) |
+| Noto Sans Bold 15px | D, cutoff 160 | [Image](../images/browser-common-ground/floor242-noto-bold-15-light.png) | [Image](../images/browser-common-ground/floor242-noto-bold-15-dark.png) |
+
+The [242 capture record](../images/browser-common-ground/floor242-captures.json) includes source masks, font identities, selected columns, changed-pixel counts, and image hashes. Existing light and regular source masks match the 230 controls exactly. The added bold masks match an independent native outline raster. Every changed coordinate matches its declared interval. Saved native and enlarged strips retain exact pixels.
+
+These weight choices define the comparison candidate. They do not establish a runtime rule for variable fonts or intermediate weights. The cutoff can still change regular and bold V/W pixels. Keep those glyphs visible while judging the stronger floor. Application settings remain unchanged.
+
 ### Direction for selective core detection
 
 If the scalar cutoff probes cannot satisfy the visual constraints, the recommended research direction is an outline-assisted stroke-core map with local direction and curvature information. First use the exact 5 fixture and the protected regular/bold V/W as positive and negative checks. Keep light-face behavior separate because those diagonals are allowed to change. Inspect the selection map before applying a coverage floor. Curve-control tags alone are insufficient: the measured Noto V and W outlines also contain curve controls. The unresolved test is whether a general selector can separate weak curve cores from native edge pixels across sizes and fonts.
@@ -245,7 +272,7 @@ Real arXiv API searches covered graphics, human interaction, and image processin
 
 ## Decision
 
-Contrast alone and a native stem minimum do not address every weak curve pixel. Keep the accepted crisp reference and the exact supplied 5 fixture. Compare the 192 and 230 floors with explicit cutoffs to inspect the unresolved core/edge transition. Preserve the desired regular/bold V/W appearance while allowing light-face strokes to change. If scalar controls cannot satisfy that visual constraint, investigate geometric context before selecting an automatic core floor. Leave the working preset unchanged. Before changing a native crown policy, trace the relevant classification, stem links, and alignment decisions so a policy bypass is not confused with missing stroke detection.
+Contrast alone and a native stem minimum do not address every weak curve pixel. Keep the accepted crisp reference and the exact supplied 5 fixture. Compare the 242 floor with cutoff 160 for regular and heavier faces, and 128 for light faces. Retain the 230 control and numbered 5/W grids. Preserve the desired regular/bold V/W appearance while allowing light-face strokes to change. If scalar controls cannot satisfy that visual constraint, investigate geometric context before selecting an automatic core floor. Leave the working preset unchanged. Before changing a native crown policy, trace the relevant classification, stem links, and alignment decisions so a policy bypass is not confused with missing stroke detection.
 
 Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy. Do not infer a general minimum-thickness policy from blanket outline expansion.
 
