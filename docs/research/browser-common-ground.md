@@ -104,6 +104,22 @@ The pixel grid does not inherently require different treatment of horizontal and
 
 The next research target is a reliable solid core with antialiased boundaries across stems, curves, and diagonals. A curve or diagonal needs a staircase of core pixels, with geometry changes to control local weight and preserve open counters. An opaque path alone does not establish consistent apparent thickness. Investigate coherent stroke fitting before selecting a rule. The current evidence does not choose a new minimum width, a threshold, or an adaptive algorithm.
 
+### Inspect the source before choosing a fitting rule
+
+An outline font stores closed boundaries, curve control points, spacing data, and optional hint instructions. It does not store a finished pixel image. The selected TrueType faces use quadratic curves. Their boundaries do not identify a stroke centerline or require equal horizontal and vertical thickness. The [OpenType glyph contract](https://learn.microsoft.com/en-us/typography/opentype/spec/glyf) describes this source format.
+
+![Original contours and control points over a 15px target grid](../images/browser-common-ground/source-outlines.png)
+
+Open the [vector diagram](../images/browser-common-ground/source-outlines.svg) to inspect the boundaries at higher zoom. Blue dots are on-curve points. Orange dots are curve controls. The grid shows target pixels at 15px. The diagram scales the original coordinates for inspection. Its boundary stroke and dots are annotations. The preview still uses a renderer to display the vector graphic.
+
+![Unhinted rasters and the F reference at 15px](../images/browser-common-ground/source-unhinted-15px.png)
+
+Read the raster sheet from left to right. Column 1 uses unhinted grayscale coverage directly. Column 2 uses the identical mask with linear-light blending. Column 3 uses unhinted binary scan conversion with dropout repair disabled. Column 4 retains the prior F component reference with linear-light blending. Small text uses native pixels. The enlarged l, 3, and 5 use exact 8x pixel repeats. View the image at 100% to judge native text.
+
+Columns 1 through 3 disable hinting, embedded bitmaps, outline expansion, and contrast clipping. Grayscale coverage also matches an independent native outline raster call. Removing the auto-hinter leaves those grayscale masks unchanged. Binary pixels contain only zero or full coverage. Saved native and enlarged image crops match their inputs. The [capture record](../images/browser-common-ground/source-captures.json) identifies the fonts, library, flags, and images.
+
+The source diagram exposes thin crowns before rasterization. The raster sheet separates authored geometry, scan conversion, and blending. Binary scan conversion can break narrow strokes, so it is not an untouched original. These five static faces at 15px establish a source baseline. They do not select a new fitting rule or establish browser behavior. Use this baseline to discuss which boundaries to move and which partial pixels to preserve before implementing the next candidate.
+
 ### Prior art search
 
 Real arXiv API searches covered graphics, human interaction, and image processing. The broad matches mainly addressed generated typography, virtual reality, and unrelated reconstruction. They did not supply a directly usable general browser policy.

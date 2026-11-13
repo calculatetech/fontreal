@@ -1,0 +1,1794 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1180" viewBox="0 0 1320 1180">
+<rect width="1320" height="1180" fill="white"/>
+<g font-family="sans-serif" fill="#18202a"><text x="16" y="24" font-size="19">Original TrueType contours: before scaling, hinting or rasterization</text>
+<text x="16" y="48" font-size="13">Shown at 8x a 15px target grid. Blue: on-curve points. Orange: off-curve controls. Black: actual boundary.</text>
+<text x="16" y="68" font-size="13">Each grid square represents one target pixel. The font stores filled contours, not a stroke centerline.</text></g>
+<text x="16" y="116" font-family="sans-serif" font-size="14">Noto Sans Regular</text>
+<text x="16" y="136" font-family="sans-serif" font-size="12">1000 units/em</text>
+<text x="196" y="112" font-family="sans-serif" font-size="17">H</text>
+<path d="M196 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M204 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M212 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M220 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M228 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M236 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M244 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M252 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M260 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M268 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M276 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M284 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M292 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M300 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M308 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M316 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M324 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M332 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M340 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M348 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M356 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M364 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M372 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M380 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M388 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M396 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M404 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M412 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M420 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 124H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 132H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 140H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 148H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 156H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 164H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 172H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 180H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 188H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 196H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 204H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 212H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 220H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 228H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 236H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 244H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 252H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 260H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 268H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 276H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 260H420 M228 124V276" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(228,260) scale(0.12,-0.12)"><path d="M643 0 L553 0 L553 333 L187 333 L187 0 L97 0 L97 714 L187 714 L187 412 L553 412 L553 714 L643 714 L643 0 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="643" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 0: 643, 0 font units; on curve</title></circle>
+<circle cx="553" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 1: 553, 0 font units; on curve</title></circle>
+<circle cx="553" cy="333" r="16.666666666666668" fill="#1369bd"><title>Point 2: 553, 333 font units; on curve</title></circle>
+<circle cx="187" cy="333" r="16.666666666666668" fill="#1369bd"><title>Point 3: 187, 333 font units; on curve</title></circle>
+<circle cx="187" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 4: 187, 0 font units; on curve</title></circle>
+<circle cx="97" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 5: 97, 0 font units; on curve</title></circle>
+<circle cx="97" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 6: 97, 714 font units; on curve</title></circle>
+<circle cx="187" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 7: 187, 714 font units; on curve</title></circle>
+<circle cx="187" cy="412" r="16.666666666666668" fill="#1369bd"><title>Point 8: 187, 412 font units; on curve</title></circle>
+<circle cx="553" cy="412" r="16.666666666666668" fill="#1369bd"><title>Point 9: 553, 412 font units; on curve</title></circle>
+<circle cx="553" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 10: 553, 714 font units; on curve</title></circle>
+<circle cx="643" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 11: 643, 714 font units; on curve</title></circle>
+</g>
+<text x="476" y="112" font-family="sans-serif" font-size="17">m</text>
+<path d="M476 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M484 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M492 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M500 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M508 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M516 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M524 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M532 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M540 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M548 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M556 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M564 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M572 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M580 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M588 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M596 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M604 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M612 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M620 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M628 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M636 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M644 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M652 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M660 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M668 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M676 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M684 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M692 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M700 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 124H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 132H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 140H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 148H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 156H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 164H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 172H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 180H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 188H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 196H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 204H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 212H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 220H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 228H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 236H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 244H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 252H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 260H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 268H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 276H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 260H700 M508 124V276" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(508,260) scale(0.12,-0.12)"><path d="M673 546 Q764 546 809 499.5 Q854 453 854 349 L854 0 L767 0 L767 345 Q767 472 658 472 Q580 472 546.5 427 Q513 382 513 296 L513 0 L426 0 L426 345 Q426 472 316 472 Q235 472 204 422 Q173 372 173 278 L173 0 L85 0 L85 536 L156 536 L169 463 L174 463 Q199 505 241.5 525.5 Q284 546 332 546 Q458 546 496 456 L501 456 Q528 502 574.5 524 Q621 546 673 546 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="673" cy="546" r="16.666666666666668" fill="#1369bd"><title>Point 0: 673, 546 font units; on curve</title></circle>
+<circle cx="764" cy="546" r="16.666666666666668" fill="#ce6a00"><title>Point 1: 764, 546 font units; control</title></circle>
+<circle cx="854" cy="453" r="16.666666666666668" fill="#ce6a00"><title>Point 2: 854, 453 font units; control</title></circle>
+<circle cx="854" cy="349" r="16.666666666666668" fill="#1369bd"><title>Point 3: 854, 349 font units; on curve</title></circle>
+<circle cx="854" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 4: 854, 0 font units; on curve</title></circle>
+<circle cx="767" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 5: 767, 0 font units; on curve</title></circle>
+<circle cx="767" cy="345" r="16.666666666666668" fill="#1369bd"><title>Point 6: 767, 345 font units; on curve</title></circle>
+<circle cx="767" cy="472" r="16.666666666666668" fill="#ce6a00"><title>Point 7: 767, 472 font units; control</title></circle>
+<circle cx="658" cy="472" r="16.666666666666668" fill="#1369bd"><title>Point 8: 658, 472 font units; on curve</title></circle>
+<circle cx="580" cy="472" r="16.666666666666668" fill="#ce6a00"><title>Point 9: 580, 472 font units; control</title></circle>
+<circle cx="513" cy="382" r="16.666666666666668" fill="#ce6a00"><title>Point 10: 513, 382 font units; control</title></circle>
+<circle cx="513" cy="296" r="16.666666666666668" fill="#1369bd"><title>Point 11: 513, 296 font units; on curve</title></circle>
+<circle cx="513" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 12: 513, 0 font units; on curve</title></circle>
+<circle cx="426" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 13: 426, 0 font units; on curve</title></circle>
+<circle cx="426" cy="345" r="16.666666666666668" fill="#1369bd"><title>Point 14: 426, 345 font units; on curve</title></circle>
+<circle cx="426" cy="472" r="16.666666666666668" fill="#ce6a00"><title>Point 15: 426, 472 font units; control</title></circle>
+<circle cx="316" cy="472" r="16.666666666666668" fill="#1369bd"><title>Point 16: 316, 472 font units; on curve</title></circle>
+<circle cx="235" cy="472" r="16.666666666666668" fill="#ce6a00"><title>Point 17: 235, 472 font units; control</title></circle>
+<circle cx="173" cy="372" r="16.666666666666668" fill="#ce6a00"><title>Point 18: 173, 372 font units; control</title></circle>
+<circle cx="173" cy="278" r="16.666666666666668" fill="#1369bd"><title>Point 19: 173, 278 font units; on curve</title></circle>
+<circle cx="173" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 20: 173, 0 font units; on curve</title></circle>
+<circle cx="85" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 21: 85, 0 font units; on curve</title></circle>
+<circle cx="85" cy="536" r="16.666666666666668" fill="#1369bd"><title>Point 22: 85, 536 font units; on curve</title></circle>
+<circle cx="156" cy="536" r="16.666666666666668" fill="#1369bd"><title>Point 23: 156, 536 font units; on curve</title></circle>
+<circle cx="169" cy="463" r="16.666666666666668" fill="#1369bd"><title>Point 24: 169, 463 font units; on curve</title></circle>
+<circle cx="174" cy="463" r="16.666666666666668" fill="#1369bd"><title>Point 25: 174, 463 font units; on curve</title></circle>
+<circle cx="199" cy="505" r="16.666666666666668" fill="#ce6a00"><title>Point 26: 199, 505 font units; control</title></circle>
+<circle cx="284" cy="546" r="16.666666666666668" fill="#ce6a00"><title>Point 27: 284, 546 font units; control</title></circle>
+<circle cx="332" cy="546" r="16.666666666666668" fill="#1369bd"><title>Point 28: 332, 546 font units; on curve</title></circle>
+<circle cx="458" cy="546" r="16.666666666666668" fill="#ce6a00"><title>Point 29: 458, 546 font units; control</title></circle>
+<circle cx="496" cy="456" r="16.666666666666668" fill="#1369bd"><title>Point 30: 496, 456 font units; on curve</title></circle>
+<circle cx="501" cy="456" r="16.666666666666668" fill="#1369bd"><title>Point 31: 501, 456 font units; on curve</title></circle>
+<circle cx="528" cy="502" r="16.666666666666668" fill="#ce6a00"><title>Point 32: 528, 502 font units; control</title></circle>
+<circle cx="621" cy="546" r="16.666666666666668" fill="#ce6a00"><title>Point 33: 621, 546 font units; control</title></circle>
+</g>
+<text x="756" y="112" font-family="sans-serif" font-size="17">3</text>
+<path d="M756 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M764 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M772 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M780 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M788 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M796 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M804 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M812 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M820 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M828 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M836 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M844 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M852 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M860 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M868 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M876 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M884 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M892 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M900 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M908 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M916 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M924 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M932 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M940 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M948 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M956 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M964 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M972 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M980 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 124H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 132H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 140H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 148H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 156H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 164H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 172H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 180H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 188H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 196H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 204H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 212H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 220H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 228H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 236H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 244H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 252H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 260H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 268H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 276H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 260H980 M788 124V276" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(788,260) scale(0.12,-0.12)"><path d="M493 547 Q493 475 453 432.5 Q413 390 345 376 L345 372 Q431 362 473 318 Q515 274 515 203 Q515 141 486 92.5 Q457 44 396.5 17 Q336 -10 241 -10 Q185 -10 137 -1.5 Q89 7 45 29 L45 111 Q90 89 142 76.5 Q194 64 242 64 Q338 64 380.5 101.5 Q423 139 423 205 Q423 272 370.5 301.5 Q318 331 223 331 L154 331 L154 406 L224 406 Q312 406 357.5 443 Q403 480 403 541 Q403 593 368 621.5 Q333 650 273 650 Q215 650 174 633 Q133 616 93 590 L49 650 Q87 680 143.5 702 Q200 724 272 724 Q384 724 438.5 674 Q493 624 493 547 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="493" cy="547" r="16.666666666666668" fill="#1369bd"><title>Point 0: 493, 547 font units; on curve</title></circle>
+<circle cx="493" cy="475" r="16.666666666666668" fill="#ce6a00"><title>Point 1: 493, 475 font units; control</title></circle>
+<circle cx="413" cy="390" r="16.666666666666668" fill="#ce6a00"><title>Point 2: 413, 390 font units; control</title></circle>
+<circle cx="345" cy="376" r="16.666666666666668" fill="#1369bd"><title>Point 3: 345, 376 font units; on curve</title></circle>
+<circle cx="345" cy="372" r="16.666666666666668" fill="#1369bd"><title>Point 4: 345, 372 font units; on curve</title></circle>
+<circle cx="431" cy="362" r="16.666666666666668" fill="#ce6a00"><title>Point 5: 431, 362 font units; control</title></circle>
+<circle cx="515" cy="274" r="16.666666666666668" fill="#ce6a00"><title>Point 6: 515, 274 font units; control</title></circle>
+<circle cx="515" cy="203" r="16.666666666666668" fill="#1369bd"><title>Point 7: 515, 203 font units; on curve</title></circle>
+<circle cx="515" cy="141" r="16.666666666666668" fill="#ce6a00"><title>Point 8: 515, 141 font units; control</title></circle>
+<circle cx="457" cy="44" r="16.666666666666668" fill="#ce6a00"><title>Point 9: 457, 44 font units; control</title></circle>
+<circle cx="336" cy="-10" r="16.666666666666668" fill="#ce6a00"><title>Point 10: 336, -10 font units; control</title></circle>
+<circle cx="241" cy="-10" r="16.666666666666668" fill="#1369bd"><title>Point 11: 241, -10 font units; on curve</title></circle>
+<circle cx="185" cy="-10" r="16.666666666666668" fill="#ce6a00"><title>Point 12: 185, -10 font units; control</title></circle>
+<circle cx="89" cy="7" r="16.666666666666668" fill="#ce6a00"><title>Point 13: 89, 7 font units; control</title></circle>
+<circle cx="45" cy="29" r="16.666666666666668" fill="#1369bd"><title>Point 14: 45, 29 font units; on curve</title></circle>
+<circle cx="45" cy="111" r="16.666666666666668" fill="#1369bd"><title>Point 15: 45, 111 font units; on curve</title></circle>
+<circle cx="90" cy="89" r="16.666666666666668" fill="#ce6a00"><title>Point 16: 90, 89 font units; control</title></circle>
+<circle cx="194" cy="64" r="16.666666666666668" fill="#ce6a00"><title>Point 17: 194, 64 font units; control</title></circle>
+<circle cx="242" cy="64" r="16.666666666666668" fill="#1369bd"><title>Point 18: 242, 64 font units; on curve</title></circle>
+<circle cx="338" cy="64" r="16.666666666666668" fill="#ce6a00"><title>Point 19: 338, 64 font units; control</title></circle>
+<circle cx="423" cy="139" r="16.666666666666668" fill="#ce6a00"><title>Point 20: 423, 139 font units; control</title></circle>
+<circle cx="423" cy="205" r="16.666666666666668" fill="#1369bd"><title>Point 21: 423, 205 font units; on curve</title></circle>
+<circle cx="423" cy="272" r="16.666666666666668" fill="#ce6a00"><title>Point 22: 423, 272 font units; control</title></circle>
+<circle cx="318" cy="331" r="16.666666666666668" fill="#ce6a00"><title>Point 23: 318, 331 font units; control</title></circle>
+<circle cx="223" cy="331" r="16.666666666666668" fill="#1369bd"><title>Point 24: 223, 331 font units; on curve</title></circle>
+<circle cx="154" cy="331" r="16.666666666666668" fill="#1369bd"><title>Point 25: 154, 331 font units; on curve</title></circle>
+<circle cx="154" cy="406" r="16.666666666666668" fill="#1369bd"><title>Point 26: 154, 406 font units; on curve</title></circle>
+<circle cx="224" cy="406" r="16.666666666666668" fill="#1369bd"><title>Point 27: 224, 406 font units; on curve</title></circle>
+<circle cx="312" cy="406" r="16.666666666666668" fill="#ce6a00"><title>Point 28: 312, 406 font units; control</title></circle>
+<circle cx="403" cy="480" r="16.666666666666668" fill="#ce6a00"><title>Point 29: 403, 480 font units; control</title></circle>
+<circle cx="403" cy="541" r="16.666666666666668" fill="#1369bd"><title>Point 30: 403, 541 font units; on curve</title></circle>
+<circle cx="403" cy="593" r="16.666666666666668" fill="#ce6a00"><title>Point 31: 403, 593 font units; control</title></circle>
+<circle cx="333" cy="650" r="16.666666666666668" fill="#ce6a00"><title>Point 32: 333, 650 font units; control</title></circle>
+<circle cx="273" cy="650" r="16.666666666666668" fill="#1369bd"><title>Point 33: 273, 650 font units; on curve</title></circle>
+<circle cx="215" cy="650" r="16.666666666666668" fill="#ce6a00"><title>Point 34: 215, 650 font units; control</title></circle>
+<circle cx="133" cy="616" r="16.666666666666668" fill="#ce6a00"><title>Point 35: 133, 616 font units; control</title></circle>
+<circle cx="93" cy="590" r="16.666666666666668" fill="#1369bd"><title>Point 36: 93, 590 font units; on curve</title></circle>
+<circle cx="49" cy="650" r="16.666666666666668" fill="#1369bd"><title>Point 37: 49, 650 font units; on curve</title></circle>
+<circle cx="87" cy="680" r="16.666666666666668" fill="#ce6a00"><title>Point 38: 87, 680 font units; control</title></circle>
+<circle cx="200" cy="724" r="16.666666666666668" fill="#ce6a00"><title>Point 39: 200, 724 font units; control</title></circle>
+<circle cx="272" cy="724" r="16.666666666666668" fill="#1369bd"><title>Point 40: 272, 724 font units; on curve</title></circle>
+<circle cx="384" cy="724" r="16.666666666666668" fill="#ce6a00"><title>Point 41: 384, 724 font units; control</title></circle>
+<circle cx="493" cy="624" r="16.666666666666668" fill="#ce6a00"><title>Point 42: 493, 624 font units; control</title></circle>
+</g>
+<text x="1036" y="112" font-family="sans-serif" font-size="17">5</text>
+<path d="M1036 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1044 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1052 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1060 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1068 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1076 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1084 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1092 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1100 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1108 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1116 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1124 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1132 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1140 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1148 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1156 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1164 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1172 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1180 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1188 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1196 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1204 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1212 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1220 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1228 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1236 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1244 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1252 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1260 124V276" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 124H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 132H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 140H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 148H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 156H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 164H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 172H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 180H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 188H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 196H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 204H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 212H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 220H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 228H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 236H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 244H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 252H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 260H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 268H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 276H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 260H1260 M1068 124V276" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(1068,260) scale(0.12,-0.12)"><path d="M275 438 Q385 438 450 383 Q515 328 515 228 Q515 117 444.5 53.5 Q374 -10 248 -10 Q193 -10 144.5 0 Q96 10 63 29 L63 112 Q99 90 150.5 77.5 Q202 65 249 65 Q328 65 376.5 102.5 Q425 140 425 219 Q425 289 382 326.5 Q339 364 246 364 Q218 364 182 359 Q146 354 124 349 L80 377 L107 714 L465 714 L465 634 L182 634 L165 427 Q182 430 211 434 Q240 438 275 438 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="275" cy="438" r="16.666666666666668" fill="#1369bd"><title>Point 0: 275, 438 font units; on curve</title></circle>
+<circle cx="385" cy="438" r="16.666666666666668" fill="#ce6a00"><title>Point 1: 385, 438 font units; control</title></circle>
+<circle cx="515" cy="328" r="16.666666666666668" fill="#ce6a00"><title>Point 2: 515, 328 font units; control</title></circle>
+<circle cx="515" cy="228" r="16.666666666666668" fill="#1369bd"><title>Point 3: 515, 228 font units; on curve</title></circle>
+<circle cx="515" cy="117" r="16.666666666666668" fill="#ce6a00"><title>Point 4: 515, 117 font units; control</title></circle>
+<circle cx="374" cy="-10" r="16.666666666666668" fill="#ce6a00"><title>Point 5: 374, -10 font units; control</title></circle>
+<circle cx="248" cy="-10" r="16.666666666666668" fill="#1369bd"><title>Point 6: 248, -10 font units; on curve</title></circle>
+<circle cx="193" cy="-10" r="16.666666666666668" fill="#ce6a00"><title>Point 7: 193, -10 font units; control</title></circle>
+<circle cx="96" cy="10" r="16.666666666666668" fill="#ce6a00"><title>Point 8: 96, 10 font units; control</title></circle>
+<circle cx="63" cy="29" r="16.666666666666668" fill="#1369bd"><title>Point 9: 63, 29 font units; on curve</title></circle>
+<circle cx="63" cy="112" r="16.666666666666668" fill="#1369bd"><title>Point 10: 63, 112 font units; on curve</title></circle>
+<circle cx="99" cy="90" r="16.666666666666668" fill="#ce6a00"><title>Point 11: 99, 90 font units; control</title></circle>
+<circle cx="202" cy="65" r="16.666666666666668" fill="#ce6a00"><title>Point 12: 202, 65 font units; control</title></circle>
+<circle cx="249" cy="65" r="16.666666666666668" fill="#1369bd"><title>Point 13: 249, 65 font units; on curve</title></circle>
+<circle cx="328" cy="65" r="16.666666666666668" fill="#ce6a00"><title>Point 14: 328, 65 font units; control</title></circle>
+<circle cx="425" cy="140" r="16.666666666666668" fill="#ce6a00"><title>Point 15: 425, 140 font units; control</title></circle>
+<circle cx="425" cy="219" r="16.666666666666668" fill="#1369bd"><title>Point 16: 425, 219 font units; on curve</title></circle>
+<circle cx="425" cy="289" r="16.666666666666668" fill="#ce6a00"><title>Point 17: 425, 289 font units; control</title></circle>
+<circle cx="339" cy="364" r="16.666666666666668" fill="#ce6a00"><title>Point 18: 339, 364 font units; control</title></circle>
+<circle cx="246" cy="364" r="16.666666666666668" fill="#1369bd"><title>Point 19: 246, 364 font units; on curve</title></circle>
+<circle cx="218" cy="364" r="16.666666666666668" fill="#ce6a00"><title>Point 20: 218, 364 font units; control</title></circle>
+<circle cx="146" cy="354" r="16.666666666666668" fill="#ce6a00"><title>Point 21: 146, 354 font units; control</title></circle>
+<circle cx="124" cy="349" r="16.666666666666668" fill="#1369bd"><title>Point 22: 124, 349 font units; on curve</title></circle>
+<circle cx="80" cy="377" r="16.666666666666668" fill="#1369bd"><title>Point 23: 80, 377 font units; on curve</title></circle>
+<circle cx="107" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 24: 107, 714 font units; on curve</title></circle>
+<circle cx="465" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 25: 465, 714 font units; on curve</title></circle>
+<circle cx="465" cy="634" r="16.666666666666668" fill="#1369bd"><title>Point 26: 465, 634 font units; on curve</title></circle>
+<circle cx="182" cy="634" r="16.666666666666668" fill="#1369bd"><title>Point 27: 182, 634 font units; on curve</title></circle>
+<circle cx="165" cy="427" r="16.666666666666668" fill="#1369bd"><title>Point 28: 165, 427 font units; on curve</title></circle>
+<circle cx="182" cy="430" r="16.666666666666668" fill="#ce6a00"><title>Point 29: 182, 430 font units; control</title></circle>
+<circle cx="240" cy="438" r="16.666666666666668" fill="#ce6a00"><title>Point 30: 240, 438 font units; control</title></circle>
+</g>
+<text x="16" y="328" font-family="sans-serif" font-size="14">Noto Sans Bold</text>
+<text x="16" y="348" font-family="sans-serif" font-size="12">1000 units/em</text>
+<text x="196" y="324" font-family="sans-serif" font-size="17">H</text>
+<path d="M196 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M204 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M212 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M220 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M228 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M236 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M244 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M252 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M260 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M268 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M276 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M284 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M292 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M300 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M308 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M316 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M324 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M332 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M340 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M348 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M356 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M364 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M372 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M380 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M388 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M396 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M404 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M412 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M420 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 336H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 344H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 352H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 360H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 368H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 376H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 384H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 392H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 400H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 408H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 416H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 424H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 432H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 440H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 448H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 456H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 464H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 472H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 480H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 488H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 472H420 M228 336V488" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(228,472) scale(0.12,-0.12)"><path d="M675 0 L524 0 L524 308 L241 308 L241 0 L90 0 L90 714 L241 714 L241 434 L524 434 L524 714 L675 714 L675 0 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="675" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 0: 675, 0 font units; on curve</title></circle>
+<circle cx="524" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 1: 524, 0 font units; on curve</title></circle>
+<circle cx="524" cy="308" r="16.666666666666668" fill="#1369bd"><title>Point 2: 524, 308 font units; on curve</title></circle>
+<circle cx="241" cy="308" r="16.666666666666668" fill="#1369bd"><title>Point 3: 241, 308 font units; on curve</title></circle>
+<circle cx="241" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 4: 241, 0 font units; on curve</title></circle>
+<circle cx="90" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 5: 90, 0 font units; on curve</title></circle>
+<circle cx="90" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 6: 90, 714 font units; on curve</title></circle>
+<circle cx="241" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 7: 241, 714 font units; on curve</title></circle>
+<circle cx="241" cy="434" r="16.666666666666668" fill="#1369bd"><title>Point 8: 241, 434 font units; on curve</title></circle>
+<circle cx="524" cy="434" r="16.666666666666668" fill="#1369bd"><title>Point 9: 524, 434 font units; on curve</title></circle>
+<circle cx="524" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 10: 524, 714 font units; on curve</title></circle>
+<circle cx="675" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 11: 675, 714 font units; on curve</title></circle>
+</g>
+<text x="476" y="324" font-family="sans-serif" font-size="17">m</text>
+<path d="M476 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M484 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M492 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M500 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M508 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M516 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M524 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M532 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M540 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M548 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M556 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M564 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M572 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M580 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M588 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M596 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M604 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M612 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M620 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M628 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M636 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M644 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M652 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M660 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M668 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M676 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M684 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M692 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M700 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 336H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 344H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 352H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 360H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 368H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 376H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 384H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 392H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 400H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 408H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 416H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 424H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 432H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 440H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 448H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 456H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 464H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 472H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 480H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 488H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 472H700 M508 336V488" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(508,472) scale(0.12,-0.12)"><path d="M719 556 Q812 556 859.5 508.5 Q907 461 907 356 L907 0 L758 0 L758 319 Q758 437 676 437 Q617 437 592 395 Q567 353 567 274 L567 0 L418 0 L418 319 Q418 437 336 437 Q274 437 250.5 390.5 Q227 344 227 257 L227 0 L78 0 L78 546 L192 546 L212 476 L220 476 Q245 518 288.5 537 Q332 556 379 556 Q439 556 481 536.5 Q523 517 545 476 L558 476 Q583 518 627.5 537 Q672 556 719 556 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="719" cy="556" r="16.666666666666668" fill="#1369bd"><title>Point 0: 719, 556 font units; on curve</title></circle>
+<circle cx="812" cy="556" r="16.666666666666668" fill="#ce6a00"><title>Point 1: 812, 556 font units; control</title></circle>
+<circle cx="907" cy="461" r="16.666666666666668" fill="#ce6a00"><title>Point 2: 907, 461 font units; control</title></circle>
+<circle cx="907" cy="356" r="16.666666666666668" fill="#1369bd"><title>Point 3: 907, 356 font units; on curve</title></circle>
+<circle cx="907" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 4: 907, 0 font units; on curve</title></circle>
+<circle cx="758" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 5: 758, 0 font units; on curve</title></circle>
+<circle cx="758" cy="319" r="16.666666666666668" fill="#1369bd"><title>Point 6: 758, 319 font units; on curve</title></circle>
+<circle cx="758" cy="437" r="16.666666666666668" fill="#ce6a00"><title>Point 7: 758, 437 font units; control</title></circle>
+<circle cx="676" cy="437" r="16.666666666666668" fill="#1369bd"><title>Point 8: 676, 437 font units; on curve</title></circle>
+<circle cx="617" cy="437" r="16.666666666666668" fill="#ce6a00"><title>Point 9: 617, 437 font units; control</title></circle>
+<circle cx="567" cy="353" r="16.666666666666668" fill="#ce6a00"><title>Point 10: 567, 353 font units; control</title></circle>
+<circle cx="567" cy="274" r="16.666666666666668" fill="#1369bd"><title>Point 11: 567, 274 font units; on curve</title></circle>
+<circle cx="567" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 12: 567, 0 font units; on curve</title></circle>
+<circle cx="418" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 13: 418, 0 font units; on curve</title></circle>
+<circle cx="418" cy="319" r="16.666666666666668" fill="#1369bd"><title>Point 14: 418, 319 font units; on curve</title></circle>
+<circle cx="418" cy="437" r="16.666666666666668" fill="#ce6a00"><title>Point 15: 418, 437 font units; control</title></circle>
+<circle cx="336" cy="437" r="16.666666666666668" fill="#1369bd"><title>Point 16: 336, 437 font units; on curve</title></circle>
+<circle cx="274" cy="437" r="16.666666666666668" fill="#ce6a00"><title>Point 17: 274, 437 font units; control</title></circle>
+<circle cx="227" cy="344" r="16.666666666666668" fill="#ce6a00"><title>Point 18: 227, 344 font units; control</title></circle>
+<circle cx="227" cy="257" r="16.666666666666668" fill="#1369bd"><title>Point 19: 227, 257 font units; on curve</title></circle>
+<circle cx="227" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 20: 227, 0 font units; on curve</title></circle>
+<circle cx="78" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 21: 78, 0 font units; on curve</title></circle>
+<circle cx="78" cy="546" r="16.666666666666668" fill="#1369bd"><title>Point 22: 78, 546 font units; on curve</title></circle>
+<circle cx="192" cy="546" r="16.666666666666668" fill="#1369bd"><title>Point 23: 192, 546 font units; on curve</title></circle>
+<circle cx="212" cy="476" r="16.666666666666668" fill="#1369bd"><title>Point 24: 212, 476 font units; on curve</title></circle>
+<circle cx="220" cy="476" r="16.666666666666668" fill="#1369bd"><title>Point 25: 220, 476 font units; on curve</title></circle>
+<circle cx="245" cy="518" r="16.666666666666668" fill="#ce6a00"><title>Point 26: 245, 518 font units; control</title></circle>
+<circle cx="332" cy="556" r="16.666666666666668" fill="#ce6a00"><title>Point 27: 332, 556 font units; control</title></circle>
+<circle cx="379" cy="556" r="16.666666666666668" fill="#1369bd"><title>Point 28: 379, 556 font units; on curve</title></circle>
+<circle cx="439" cy="556" r="16.666666666666668" fill="#ce6a00"><title>Point 29: 439, 556 font units; control</title></circle>
+<circle cx="523" cy="517" r="16.666666666666668" fill="#ce6a00"><title>Point 30: 523, 517 font units; control</title></circle>
+<circle cx="545" cy="476" r="16.666666666666668" fill="#1369bd"><title>Point 31: 545, 476 font units; on curve</title></circle>
+<circle cx="558" cy="476" r="16.666666666666668" fill="#1369bd"><title>Point 32: 558, 476 font units; on curve</title></circle>
+<circle cx="583" cy="518" r="16.666666666666668" fill="#ce6a00"><title>Point 33: 583, 518 font units; control</title></circle>
+<circle cx="672" cy="556" r="16.666666666666668" fill="#ce6a00"><title>Point 34: 672, 556 font units; control</title></circle>
+</g>
+<text x="756" y="324" font-family="sans-serif" font-size="17">3</text>
+<path d="M756 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M764 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M772 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M780 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M788 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M796 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M804 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M812 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M820 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M828 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M836 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M844 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M852 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M860 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M868 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M876 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M884 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M892 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M900 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M908 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M916 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M924 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M932 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M940 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M948 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M956 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M964 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M972 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M980 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 336H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 344H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 352H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 360H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 368H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 376H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 384H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 392H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 400H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 408H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 416H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 424H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 432H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 440H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 448H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 456H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 464H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 472H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 480H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 488H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 472H980 M788 336V488" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(788,472) scale(0.12,-0.12)"><path d="M511 554 Q511 480 466.5 436 Q422 392 357 376 L357 373 Q443 363 487.5 321 Q532 279 532 208 Q532 146 501.5 96.5 Q471 47 407.5 18.5 Q344 -10 244 -10 Q128 -10 38 29 L38 157 Q84 134 134.5 122 Q185 110 228 110 Q309 110 341.5 138 Q374 166 374 217 Q374 247 359 267.5 Q344 288 306.5 298.5 Q269 309 202 309 L148 309 L148 425 L203 425 Q269 425 303.5 437.5 Q338 450 350.5 471.5 Q363 493 363 521 Q363 559 339.5 580.5 Q316 602 261 602 Q210 602 172.5 584.5 Q135 567 109 550 L39 654 Q81 684 137.5 704 Q194 724 272 724 Q382 724 446.5 679.5 Q511 635 511 554 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="511" cy="554" r="16.666666666666668" fill="#1369bd"><title>Point 0: 511, 554 font units; on curve</title></circle>
+<circle cx="511" cy="480" r="16.666666666666668" fill="#ce6a00"><title>Point 1: 511, 480 font units; control</title></circle>
+<circle cx="422" cy="392" r="16.666666666666668" fill="#ce6a00"><title>Point 2: 422, 392 font units; control</title></circle>
+<circle cx="357" cy="376" r="16.666666666666668" fill="#1369bd"><title>Point 3: 357, 376 font units; on curve</title></circle>
+<circle cx="357" cy="373" r="16.666666666666668" fill="#1369bd"><title>Point 4: 357, 373 font units; on curve</title></circle>
+<circle cx="443" cy="363" r="16.666666666666668" fill="#ce6a00"><title>Point 5: 443, 363 font units; control</title></circle>
+<circle cx="532" cy="279" r="16.666666666666668" fill="#ce6a00"><title>Point 6: 532, 279 font units; control</title></circle>
+<circle cx="532" cy="208" r="16.666666666666668" fill="#1369bd"><title>Point 7: 532, 208 font units; on curve</title></circle>
+<circle cx="532" cy="146" r="16.666666666666668" fill="#ce6a00"><title>Point 8: 532, 146 font units; control</title></circle>
+<circle cx="471" cy="47" r="16.666666666666668" fill="#ce6a00"><title>Point 9: 471, 47 font units; control</title></circle>
+<circle cx="344" cy="-10" r="16.666666666666668" fill="#ce6a00"><title>Point 10: 344, -10 font units; control</title></circle>
+<circle cx="244" cy="-10" r="16.666666666666668" fill="#1369bd"><title>Point 11: 244, -10 font units; on curve</title></circle>
+<circle cx="128" cy="-10" r="16.666666666666668" fill="#ce6a00"><title>Point 12: 128, -10 font units; control</title></circle>
+<circle cx="38" cy="29" r="16.666666666666668" fill="#1369bd"><title>Point 13: 38, 29 font units; on curve</title></circle>
+<circle cx="38" cy="157" r="16.666666666666668" fill="#1369bd"><title>Point 14: 38, 157 font units; on curve</title></circle>
+<circle cx="84" cy="134" r="16.666666666666668" fill="#ce6a00"><title>Point 15: 84, 134 font units; control</title></circle>
+<circle cx="185" cy="110" r="16.666666666666668" fill="#ce6a00"><title>Point 16: 185, 110 font units; control</title></circle>
+<circle cx="228" cy="110" r="16.666666666666668" fill="#1369bd"><title>Point 17: 228, 110 font units; on curve</title></circle>
+<circle cx="309" cy="110" r="16.666666666666668" fill="#ce6a00"><title>Point 18: 309, 110 font units; control</title></circle>
+<circle cx="374" cy="166" r="16.666666666666668" fill="#ce6a00"><title>Point 19: 374, 166 font units; control</title></circle>
+<circle cx="374" cy="217" r="16.666666666666668" fill="#1369bd"><title>Point 20: 374, 217 font units; on curve</title></circle>
+<circle cx="374" cy="247" r="16.666666666666668" fill="#ce6a00"><title>Point 21: 374, 247 font units; control</title></circle>
+<circle cx="344" cy="288" r="16.666666666666668" fill="#ce6a00"><title>Point 22: 344, 288 font units; control</title></circle>
+<circle cx="269" cy="309" r="16.666666666666668" fill="#ce6a00"><title>Point 23: 269, 309 font units; control</title></circle>
+<circle cx="202" cy="309" r="16.666666666666668" fill="#1369bd"><title>Point 24: 202, 309 font units; on curve</title></circle>
+<circle cx="148" cy="309" r="16.666666666666668" fill="#1369bd"><title>Point 25: 148, 309 font units; on curve</title></circle>
+<circle cx="148" cy="425" r="16.666666666666668" fill="#1369bd"><title>Point 26: 148, 425 font units; on curve</title></circle>
+<circle cx="203" cy="425" r="16.666666666666668" fill="#1369bd"><title>Point 27: 203, 425 font units; on curve</title></circle>
+<circle cx="269" cy="425" r="16.666666666666668" fill="#ce6a00"><title>Point 28: 269, 425 font units; control</title></circle>
+<circle cx="338" cy="450" r="16.666666666666668" fill="#ce6a00"><title>Point 29: 338, 450 font units; control</title></circle>
+<circle cx="363" cy="493" r="16.666666666666668" fill="#ce6a00"><title>Point 30: 363, 493 font units; control</title></circle>
+<circle cx="363" cy="521" r="16.666666666666668" fill="#1369bd"><title>Point 31: 363, 521 font units; on curve</title></circle>
+<circle cx="363" cy="559" r="16.666666666666668" fill="#ce6a00"><title>Point 32: 363, 559 font units; control</title></circle>
+<circle cx="316" cy="602" r="16.666666666666668" fill="#ce6a00"><title>Point 33: 316, 602 font units; control</title></circle>
+<circle cx="261" cy="602" r="16.666666666666668" fill="#1369bd"><title>Point 34: 261, 602 font units; on curve</title></circle>
+<circle cx="210" cy="602" r="16.666666666666668" fill="#ce6a00"><title>Point 35: 210, 602 font units; control</title></circle>
+<circle cx="135" cy="567" r="16.666666666666668" fill="#ce6a00"><title>Point 36: 135, 567 font units; control</title></circle>
+<circle cx="109" cy="550" r="16.666666666666668" fill="#1369bd"><title>Point 37: 109, 550 font units; on curve</title></circle>
+<circle cx="39" cy="654" r="16.666666666666668" fill="#1369bd"><title>Point 38: 39, 654 font units; on curve</title></circle>
+<circle cx="81" cy="684" r="16.666666666666668" fill="#ce6a00"><title>Point 39: 81, 684 font units; control</title></circle>
+<circle cx="194" cy="724" r="16.666666666666668" fill="#ce6a00"><title>Point 40: 194, 724 font units; control</title></circle>
+<circle cx="272" cy="724" r="16.666666666666668" fill="#1369bd"><title>Point 41: 272, 724 font units; on curve</title></circle>
+<circle cx="382" cy="724" r="16.666666666666668" fill="#ce6a00"><title>Point 42: 382, 724 font units; control</title></circle>
+<circle cx="511" cy="635" r="16.666666666666668" fill="#ce6a00"><title>Point 43: 511, 635 font units; control</title></circle>
+</g>
+<text x="1036" y="324" font-family="sans-serif" font-size="17">5</text>
+<path d="M1036 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1044 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1052 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1060 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1068 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1076 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1084 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1092 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1100 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1108 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1116 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1124 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1132 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1140 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1148 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1156 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1164 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1172 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1180 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1188 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1196 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1204 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1212 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1220 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1228 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1236 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1244 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1252 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1260 336V488" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 336H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 344H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 352H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 360H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 368H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 376H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 384H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 392H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 400H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 408H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 416H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 424H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 432H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 440H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 448H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 456H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 464H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 472H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 480H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 488H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 472H1260 M1068 336V488" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(1068,472) scale(0.12,-0.12)"><path d="M300 456 Q365 456 416 431 Q467 406 496.5 358 Q526 310 526 239 Q526 123 454 56.5 Q382 -10 241 -10 Q185 -10 135.5 0 Q86 10 49 29 L49 159 Q86 140 138 126.5 Q190 113 236 113 Q303 113 338.5 140.5 Q374 168 374 226 Q374 334 231 334 Q203 334 173 328.5 Q143 323 123 318 L63 350 L90 714 L477 714 L477 586 L222 586 L209 446 Q226 449 245.5 452.5 Q265 456 300 456 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="300" cy="456" r="16.666666666666668" fill="#1369bd"><title>Point 0: 300, 456 font units; on curve</title></circle>
+<circle cx="365" cy="456" r="16.666666666666668" fill="#ce6a00"><title>Point 1: 365, 456 font units; control</title></circle>
+<circle cx="467" cy="406" r="16.666666666666668" fill="#ce6a00"><title>Point 2: 467, 406 font units; control</title></circle>
+<circle cx="526" cy="310" r="16.666666666666668" fill="#ce6a00"><title>Point 3: 526, 310 font units; control</title></circle>
+<circle cx="526" cy="239" r="16.666666666666668" fill="#1369bd"><title>Point 4: 526, 239 font units; on curve</title></circle>
+<circle cx="526" cy="123" r="16.666666666666668" fill="#ce6a00"><title>Point 5: 526, 123 font units; control</title></circle>
+<circle cx="382" cy="-10" r="16.666666666666668" fill="#ce6a00"><title>Point 6: 382, -10 font units; control</title></circle>
+<circle cx="241" cy="-10" r="16.666666666666668" fill="#1369bd"><title>Point 7: 241, -10 font units; on curve</title></circle>
+<circle cx="185" cy="-10" r="16.666666666666668" fill="#ce6a00"><title>Point 8: 185, -10 font units; control</title></circle>
+<circle cx="86" cy="10" r="16.666666666666668" fill="#ce6a00"><title>Point 9: 86, 10 font units; control</title></circle>
+<circle cx="49" cy="29" r="16.666666666666668" fill="#1369bd"><title>Point 10: 49, 29 font units; on curve</title></circle>
+<circle cx="49" cy="159" r="16.666666666666668" fill="#1369bd"><title>Point 11: 49, 159 font units; on curve</title></circle>
+<circle cx="86" cy="140" r="16.666666666666668" fill="#ce6a00"><title>Point 12: 86, 140 font units; control</title></circle>
+<circle cx="190" cy="113" r="16.666666666666668" fill="#ce6a00"><title>Point 13: 190, 113 font units; control</title></circle>
+<circle cx="236" cy="113" r="16.666666666666668" fill="#1369bd"><title>Point 14: 236, 113 font units; on curve</title></circle>
+<circle cx="303" cy="113" r="16.666666666666668" fill="#ce6a00"><title>Point 15: 303, 113 font units; control</title></circle>
+<circle cx="374" cy="168" r="16.666666666666668" fill="#ce6a00"><title>Point 16: 374, 168 font units; control</title></circle>
+<circle cx="374" cy="226" r="16.666666666666668" fill="#1369bd"><title>Point 17: 374, 226 font units; on curve</title></circle>
+<circle cx="374" cy="334" r="16.666666666666668" fill="#ce6a00"><title>Point 18: 374, 334 font units; control</title></circle>
+<circle cx="231" cy="334" r="16.666666666666668" fill="#1369bd"><title>Point 19: 231, 334 font units; on curve</title></circle>
+<circle cx="203" cy="334" r="16.666666666666668" fill="#ce6a00"><title>Point 20: 203, 334 font units; control</title></circle>
+<circle cx="143" cy="323" r="16.666666666666668" fill="#ce6a00"><title>Point 21: 143, 323 font units; control</title></circle>
+<circle cx="123" cy="318" r="16.666666666666668" fill="#1369bd"><title>Point 22: 123, 318 font units; on curve</title></circle>
+<circle cx="63" cy="350" r="16.666666666666668" fill="#1369bd"><title>Point 23: 63, 350 font units; on curve</title></circle>
+<circle cx="90" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 24: 90, 714 font units; on curve</title></circle>
+<circle cx="477" cy="714" r="16.666666666666668" fill="#1369bd"><title>Point 25: 477, 714 font units; on curve</title></circle>
+<circle cx="477" cy="586" r="16.666666666666668" fill="#1369bd"><title>Point 26: 477, 586 font units; on curve</title></circle>
+<circle cx="222" cy="586" r="16.666666666666668" fill="#1369bd"><title>Point 27: 222, 586 font units; on curve</title></circle>
+<circle cx="209" cy="446" r="16.666666666666668" fill="#1369bd"><title>Point 28: 209, 446 font units; on curve</title></circle>
+<circle cx="226" cy="449" r="16.666666666666668" fill="#ce6a00"><title>Point 29: 226, 449 font units; control</title></circle>
+<circle cx="265" cy="456" r="16.666666666666668" fill="#ce6a00"><title>Point 30: 265, 456 font units; control</title></circle>
+</g>
+<text x="16" y="540" font-family="sans-serif" font-size="14">Lato Light</text>
+<text x="16" y="560" font-family="sans-serif" font-size="12">2000 units/em</text>
+<text x="196" y="536" font-family="sans-serif" font-size="17">H</text>
+<path d="M196 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M204 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M212 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M220 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M228 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M236 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M244 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M252 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M260 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M268 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M276 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M284 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M292 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M300 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M308 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M316 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M324 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M332 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M340 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M348 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M356 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M364 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M372 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M380 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M388 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M396 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M404 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M412 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M420 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 548H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 556H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 564H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 572H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 580H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 588H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 596H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 604H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 612H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 620H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 628H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 636H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 644H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 652H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 660H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 668H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 676H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 684H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 692H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 700H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 684H420 M228 548V700" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(228,684) scale(0.06,-0.06)"><path d="M1301 1415 L1301 0 L1198 0 L1198 678 L312 678 L312 0 L209 0 L209 1415 L312 1415 L312 755 L1198 755 L1198 1415 L1301 1415 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="20.0"/>
+<circle cx="1301" cy="1415" r="33.333333333333336" fill="#1369bd"><title>Point 0: 1301, 1415 font units; on curve</title></circle>
+<circle cx="1301" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 1: 1301, 0 font units; on curve</title></circle>
+<circle cx="1198" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 2: 1198, 0 font units; on curve</title></circle>
+<circle cx="1198" cy="678" r="33.333333333333336" fill="#1369bd"><title>Point 3: 1198, 678 font units; on curve</title></circle>
+<circle cx="312" cy="678" r="33.333333333333336" fill="#1369bd"><title>Point 4: 312, 678 font units; on curve</title></circle>
+<circle cx="312" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 5: 312, 0 font units; on curve</title></circle>
+<circle cx="209" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 6: 209, 0 font units; on curve</title></circle>
+<circle cx="209" cy="1415" r="33.333333333333336" fill="#1369bd"><title>Point 7: 209, 1415 font units; on curve</title></circle>
+<circle cx="312" cy="1415" r="33.333333333333336" fill="#1369bd"><title>Point 8: 312, 1415 font units; on curve</title></circle>
+<circle cx="312" cy="755" r="33.333333333333336" fill="#1369bd"><title>Point 9: 312, 755 font units; on curve</title></circle>
+<circle cx="1198" cy="755" r="33.333333333333336" fill="#1369bd"><title>Point 10: 1198, 755 font units; on curve</title></circle>
+<circle cx="1198" cy="1415" r="33.333333333333336" fill="#1369bd"><title>Point 11: 1198, 1415 font units; on curve</title></circle>
+</g>
+<text x="476" y="536" font-family="sans-serif" font-size="17">m</text>
+<path d="M476 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M484 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M492 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M500 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M508 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M516 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M524 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M532 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M540 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M548 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M556 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M564 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M572 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M580 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M588 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M596 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M604 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M612 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M620 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M628 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M636 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M644 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M652 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M660 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M668 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M676 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M684 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M692 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M700 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 548H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 556H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 564H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 572H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 580H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 588H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 596H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 604H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 612H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 620H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 628H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 636H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 644H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 652H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 660H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 668H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 676H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 684H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 692H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 700H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 684H700 M508 548V700" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(508,684) scale(0.06,-0.06)"><path d="M164 0 L164 995 L217 995 Q242 995 246 970 L255 826 Q313 909 388 960 Q463 1011 557 1011 Q666 1011 731.5 948 Q797 885 820 773 Q838 834 870.5 879 Q903 924 945 953.5 Q987 983 1036.5 997 Q1086 1011 1138 1011 Q1212 1011 1271 986.5 Q1330 962 1371 914 Q1412 866 1434 796 Q1456 726 1456 636 L1456 0 L1361 0 L1361 636 Q1361 782 1298 858.5 Q1235 935 1118 935 Q1066 935 1018.5 916 Q971 897 934.5 859.5 Q898 822 876.5 766 Q855 710 855 636 L855 0 L759 0 L759 636 Q759 781 701.5 858 Q644 935 533 935 Q452 935 383 887 Q314 839 260 754 L260 0 L164 0 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="20.0"/>
+<circle cx="164" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 0: 164, 0 font units; on curve</title></circle>
+<circle cx="164" cy="995" r="33.333333333333336" fill="#1369bd"><title>Point 1: 164, 995 font units; on curve</title></circle>
+<circle cx="217" cy="995" r="33.333333333333336" fill="#1369bd"><title>Point 2: 217, 995 font units; on curve</title></circle>
+<circle cx="242" cy="995" r="33.333333333333336" fill="#ce6a00"><title>Point 3: 242, 995 font units; control</title></circle>
+<circle cx="246" cy="970" r="33.333333333333336" fill="#1369bd"><title>Point 4: 246, 970 font units; on curve</title></circle>
+<circle cx="255" cy="826" r="33.333333333333336" fill="#1369bd"><title>Point 5: 255, 826 font units; on curve</title></circle>
+<circle cx="313" cy="909" r="33.333333333333336" fill="#ce6a00"><title>Point 6: 313, 909 font units; control</title></circle>
+<circle cx="463" cy="1011" r="33.333333333333336" fill="#ce6a00"><title>Point 7: 463, 1011 font units; control</title></circle>
+<circle cx="557" cy="1011" r="33.333333333333336" fill="#1369bd"><title>Point 8: 557, 1011 font units; on curve</title></circle>
+<circle cx="666" cy="1011" r="33.333333333333336" fill="#ce6a00"><title>Point 9: 666, 1011 font units; control</title></circle>
+<circle cx="797" cy="885" r="33.333333333333336" fill="#ce6a00"><title>Point 10: 797, 885 font units; control</title></circle>
+<circle cx="820" cy="773" r="33.333333333333336" fill="#1369bd"><title>Point 11: 820, 773 font units; on curve</title></circle>
+<circle cx="838" cy="834" r="33.333333333333336" fill="#ce6a00"><title>Point 12: 838, 834 font units; control</title></circle>
+<circle cx="903" cy="924" r="33.333333333333336" fill="#ce6a00"><title>Point 13: 903, 924 font units; control</title></circle>
+<circle cx="987" cy="983" r="33.333333333333336" fill="#ce6a00"><title>Point 14: 987, 983 font units; control</title></circle>
+<circle cx="1086" cy="1011" r="33.333333333333336" fill="#ce6a00"><title>Point 15: 1086, 1011 font units; control</title></circle>
+<circle cx="1138" cy="1011" r="33.333333333333336" fill="#1369bd"><title>Point 16: 1138, 1011 font units; on curve</title></circle>
+<circle cx="1212" cy="1011" r="33.333333333333336" fill="#ce6a00"><title>Point 17: 1212, 1011 font units; control</title></circle>
+<circle cx="1330" cy="962" r="33.333333333333336" fill="#ce6a00"><title>Point 18: 1330, 962 font units; control</title></circle>
+<circle cx="1412" cy="866" r="33.333333333333336" fill="#ce6a00"><title>Point 19: 1412, 866 font units; control</title></circle>
+<circle cx="1456" cy="726" r="33.333333333333336" fill="#ce6a00"><title>Point 20: 1456, 726 font units; control</title></circle>
+<circle cx="1456" cy="636" r="33.333333333333336" fill="#1369bd"><title>Point 21: 1456, 636 font units; on curve</title></circle>
+<circle cx="1456" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 22: 1456, 0 font units; on curve</title></circle>
+<circle cx="1361" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 23: 1361, 0 font units; on curve</title></circle>
+<circle cx="1361" cy="636" r="33.333333333333336" fill="#1369bd"><title>Point 24: 1361, 636 font units; on curve</title></circle>
+<circle cx="1361" cy="782" r="33.333333333333336" fill="#ce6a00"><title>Point 25: 1361, 782 font units; control</title></circle>
+<circle cx="1235" cy="935" r="33.333333333333336" fill="#ce6a00"><title>Point 26: 1235, 935 font units; control</title></circle>
+<circle cx="1118" cy="935" r="33.333333333333336" fill="#1369bd"><title>Point 27: 1118, 935 font units; on curve</title></circle>
+<circle cx="1066" cy="935" r="33.333333333333336" fill="#ce6a00"><title>Point 28: 1066, 935 font units; control</title></circle>
+<circle cx="971" cy="897" r="33.333333333333336" fill="#ce6a00"><title>Point 29: 971, 897 font units; control</title></circle>
+<circle cx="898" cy="822" r="33.333333333333336" fill="#ce6a00"><title>Point 30: 898, 822 font units; control</title></circle>
+<circle cx="855" cy="710" r="33.333333333333336" fill="#ce6a00"><title>Point 31: 855, 710 font units; control</title></circle>
+<circle cx="855" cy="636" r="33.333333333333336" fill="#1369bd"><title>Point 32: 855, 636 font units; on curve</title></circle>
+<circle cx="855" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 33: 855, 0 font units; on curve</title></circle>
+<circle cx="759" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 34: 759, 0 font units; on curve</title></circle>
+<circle cx="759" cy="636" r="33.333333333333336" fill="#1369bd"><title>Point 35: 759, 636 font units; on curve</title></circle>
+<circle cx="759" cy="781" r="33.333333333333336" fill="#ce6a00"><title>Point 36: 759, 781 font units; control</title></circle>
+<circle cx="644" cy="935" r="33.333333333333336" fill="#ce6a00"><title>Point 37: 644, 935 font units; control</title></circle>
+<circle cx="533" cy="935" r="33.333333333333336" fill="#1369bd"><title>Point 38: 533, 935 font units; on curve</title></circle>
+<circle cx="452" cy="935" r="33.333333333333336" fill="#ce6a00"><title>Point 39: 452, 935 font units; control</title></circle>
+<circle cx="314" cy="839" r="33.333333333333336" fill="#ce6a00"><title>Point 40: 314, 839 font units; control</title></circle>
+<circle cx="260" cy="754" r="33.333333333333336" fill="#1369bd"><title>Point 41: 260, 754 font units; on curve</title></circle>
+<circle cx="260" cy="0" r="33.333333333333336" fill="#1369bd"><title>Point 42: 260, 0 font units; on curve</title></circle>
+</g>
+<text x="756" y="536" font-family="sans-serif" font-size="17">3</text>
+<path d="M756 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M764 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M772 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M780 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M788 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M796 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M804 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M812 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M820 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M828 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M836 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M844 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M852 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M860 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M868 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M876 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M884 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M892 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M900 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M908 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M916 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M924 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M932 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M940 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M948 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M956 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M964 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M972 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M980 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 548H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 556H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 564H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 572H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 580H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 588H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 596H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 604H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 612H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 620H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 628H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 636H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 644H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 652H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 660H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 668H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 676H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 684H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 692H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 700H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 684H980 M788 548V700" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(788,684) scale(0.06,-0.06)"><path d="M156 1049 Q169 1140 206 1211 Q243 1282 300 1331 Q357 1380 432 1405.5 Q507 1431 594 1431 Q675 1431 747 1408.5 Q819 1386 873.5 1341 Q928 1296 959.5 1229 Q991 1162 991 1074 Q991 1005 970 949.5 Q949 894 911.5 852 Q874 810 823 781.5 Q772 753 712 738 Q868 709 947.5 617.5 Q1027 526 1027 389 Q1027 302 992 227.5 Q957 153 896 99 Q835 45 752 14.5 Q669 -16 572 -16 Q451 -16 370.5 16.5 Q290 49 238 101 Q186 153 157 217.5 Q128 282 110 346 L148 362 Q164 369 181.5 366 Q199 363 207 343 Q212 331 220.5 305.5 Q229 280 245 249 Q261 218 286.5 185.5 Q312 153 350.5 126 Q389 99 443 82 Q497 65 571 65 Q661 65 728.5 95 Q796 125 841.5 171.5 Q887 218 909.5 275.5 Q932 333 932 387 Q932 452 911.5 508 Q891 564 843 604.5 Q795 645 716.5 668.5 Q638 692 523 692 L523 761 Q615 763 685 785.5 Q755 808 802 847 Q849 886 873 940 Q897 994 897 1059 Q897 1134 872 1189 Q847 1244 805 1280 Q763 1316 707 1333 Q651 1350 590 1350 Q523 1350 466 1329.5 Q409 1309 365.5 1272.5 Q322 1236 293 1185.5 Q264 1135 253 1075 Q247 1053 236 1046 Q225 1039 205 1041 L156 1049 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="20.0"/>
+<circle cx="156" cy="1049" r="33.333333333333336" fill="#1369bd"><title>Point 0: 156, 1049 font units; on curve</title></circle>
+<circle cx="169" cy="1140" r="33.333333333333336" fill="#ce6a00"><title>Point 1: 169, 1140 font units; control</title></circle>
+<circle cx="243" cy="1282" r="33.333333333333336" fill="#ce6a00"><title>Point 2: 243, 1282 font units; control</title></circle>
+<circle cx="357" cy="1380" r="33.333333333333336" fill="#ce6a00"><title>Point 3: 357, 1380 font units; control</title></circle>
+<circle cx="507" cy="1431" r="33.333333333333336" fill="#ce6a00"><title>Point 4: 507, 1431 font units; control</title></circle>
+<circle cx="594" cy="1431" r="33.333333333333336" fill="#1369bd"><title>Point 5: 594, 1431 font units; on curve</title></circle>
+<circle cx="675" cy="1431" r="33.333333333333336" fill="#ce6a00"><title>Point 6: 675, 1431 font units; control</title></circle>
+<circle cx="819" cy="1386" r="33.333333333333336" fill="#ce6a00"><title>Point 7: 819, 1386 font units; control</title></circle>
+<circle cx="928" cy="1296" r="33.333333333333336" fill="#ce6a00"><title>Point 8: 928, 1296 font units; control</title></circle>
+<circle cx="991" cy="1162" r="33.333333333333336" fill="#ce6a00"><title>Point 9: 991, 1162 font units; control</title></circle>
+<circle cx="991" cy="1074" r="33.333333333333336" fill="#1369bd"><title>Point 10: 991, 1074 font units; on curve</title></circle>
+<circle cx="991" cy="1005" r="33.333333333333336" fill="#ce6a00"><title>Point 11: 991, 1005 font units; control</title></circle>
+<circle cx="949" cy="894" r="33.333333333333336" fill="#ce6a00"><title>Point 12: 949, 894 font units; control</title></circle>
+<circle cx="874" cy="810" r="33.333333333333336" fill="#ce6a00"><title>Point 13: 874, 810 font units; control</title></circle>
+<circle cx="772" cy="753" r="33.333333333333336" fill="#ce6a00"><title>Point 14: 772, 753 font units; control</title></circle>
+<circle cx="712" cy="738" r="33.333333333333336" fill="#1369bd"><title>Point 15: 712, 738 font units; on curve</title></circle>
+<circle cx="868" cy="709" r="33.333333333333336" fill="#ce6a00"><title>Point 16: 868, 709 font units; control</title></circle>
+<circle cx="1027" cy="526" r="33.333333333333336" fill="#ce6a00"><title>Point 17: 1027, 526 font units; control</title></circle>
+<circle cx="1027" cy="389" r="33.333333333333336" fill="#1369bd"><title>Point 18: 1027, 389 font units; on curve</title></circle>
+<circle cx="1027" cy="302" r="33.333333333333336" fill="#ce6a00"><title>Point 19: 1027, 302 font units; control</title></circle>
+<circle cx="957" cy="153" r="33.333333333333336" fill="#ce6a00"><title>Point 20: 957, 153 font units; control</title></circle>
+<circle cx="835" cy="45" r="33.333333333333336" fill="#ce6a00"><title>Point 21: 835, 45 font units; control</title></circle>
+<circle cx="669" cy="-16" r="33.333333333333336" fill="#ce6a00"><title>Point 22: 669, -16 font units; control</title></circle>
+<circle cx="572" cy="-16" r="33.333333333333336" fill="#1369bd"><title>Point 23: 572, -16 font units; on curve</title></circle>
+<circle cx="451" cy="-16" r="33.333333333333336" fill="#ce6a00"><title>Point 24: 451, -16 font units; control</title></circle>
+<circle cx="290" cy="49" r="33.333333333333336" fill="#ce6a00"><title>Point 25: 290, 49 font units; control</title></circle>
+<circle cx="186" cy="153" r="33.333333333333336" fill="#ce6a00"><title>Point 26: 186, 153 font units; control</title></circle>
+<circle cx="128" cy="282" r="33.333333333333336" fill="#ce6a00"><title>Point 27: 128, 282 font units; control</title></circle>
+<circle cx="110" cy="346" r="33.333333333333336" fill="#1369bd"><title>Point 28: 110, 346 font units; on curve</title></circle>
+<circle cx="148" cy="362" r="33.333333333333336" fill="#1369bd"><title>Point 29: 148, 362 font units; on curve</title></circle>
+<circle cx="164" cy="369" r="33.333333333333336" fill="#ce6a00"><title>Point 30: 164, 369 font units; control</title></circle>
+<circle cx="199" cy="363" r="33.333333333333336" fill="#ce6a00"><title>Point 31: 199, 363 font units; control</title></circle>
+<circle cx="207" cy="343" r="33.333333333333336" fill="#1369bd"><title>Point 32: 207, 343 font units; on curve</title></circle>
+<circle cx="212" cy="331" r="33.333333333333336" fill="#ce6a00"><title>Point 33: 212, 331 font units; control</title></circle>
+<circle cx="229" cy="280" r="33.333333333333336" fill="#ce6a00"><title>Point 34: 229, 280 font units; control</title></circle>
+<circle cx="261" cy="218" r="33.333333333333336" fill="#ce6a00"><title>Point 35: 261, 218 font units; control</title></circle>
+<circle cx="312" cy="153" r="33.333333333333336" fill="#ce6a00"><title>Point 36: 312, 153 font units; control</title></circle>
+<circle cx="389" cy="99" r="33.333333333333336" fill="#ce6a00"><title>Point 37: 389, 99 font units; control</title></circle>
+<circle cx="497" cy="65" r="33.333333333333336" fill="#ce6a00"><title>Point 38: 497, 65 font units; control</title></circle>
+<circle cx="571" cy="65" r="33.333333333333336" fill="#1369bd"><title>Point 39: 571, 65 font units; on curve</title></circle>
+<circle cx="661" cy="65" r="33.333333333333336" fill="#ce6a00"><title>Point 40: 661, 65 font units; control</title></circle>
+<circle cx="796" cy="125" r="33.333333333333336" fill="#ce6a00"><title>Point 41: 796, 125 font units; control</title></circle>
+<circle cx="887" cy="218" r="33.333333333333336" fill="#ce6a00"><title>Point 42: 887, 218 font units; control</title></circle>
+<circle cx="932" cy="333" r="33.333333333333336" fill="#ce6a00"><title>Point 43: 932, 333 font units; control</title></circle>
+<circle cx="932" cy="387" r="33.333333333333336" fill="#1369bd"><title>Point 44: 932, 387 font units; on curve</title></circle>
+<circle cx="932" cy="452" r="33.333333333333336" fill="#ce6a00"><title>Point 45: 932, 452 font units; control</title></circle>
+<circle cx="891" cy="564" r="33.333333333333336" fill="#ce6a00"><title>Point 46: 891, 564 font units; control</title></circle>
+<circle cx="795" cy="645" r="33.333333333333336" fill="#ce6a00"><title>Point 47: 795, 645 font units; control</title></circle>
+<circle cx="638" cy="692" r="33.333333333333336" fill="#ce6a00"><title>Point 48: 638, 692 font units; control</title></circle>
+<circle cx="523" cy="692" r="33.333333333333336" fill="#1369bd"><title>Point 49: 523, 692 font units; on curve</title></circle>
+<circle cx="523" cy="761" r="33.333333333333336" fill="#1369bd"><title>Point 50: 523, 761 font units; on curve</title></circle>
+<circle cx="615" cy="763" r="33.333333333333336" fill="#ce6a00"><title>Point 51: 615, 763 font units; control</title></circle>
+<circle cx="755" cy="808" r="33.333333333333336" fill="#ce6a00"><title>Point 52: 755, 808 font units; control</title></circle>
+<circle cx="849" cy="886" r="33.333333333333336" fill="#ce6a00"><title>Point 53: 849, 886 font units; control</title></circle>
+<circle cx="897" cy="994" r="33.333333333333336" fill="#ce6a00"><title>Point 54: 897, 994 font units; control</title></circle>
+<circle cx="897" cy="1059" r="33.333333333333336" fill="#1369bd"><title>Point 55: 897, 1059 font units; on curve</title></circle>
+<circle cx="897" cy="1134" r="33.333333333333336" fill="#ce6a00"><title>Point 56: 897, 1134 font units; control</title></circle>
+<circle cx="847" cy="1244" r="33.333333333333336" fill="#ce6a00"><title>Point 57: 847, 1244 font units; control</title></circle>
+<circle cx="763" cy="1316" r="33.333333333333336" fill="#ce6a00"><title>Point 58: 763, 1316 font units; control</title></circle>
+<circle cx="651" cy="1350" r="33.333333333333336" fill="#ce6a00"><title>Point 59: 651, 1350 font units; control</title></circle>
+<circle cx="590" cy="1350" r="33.333333333333336" fill="#1369bd"><title>Point 60: 590, 1350 font units; on curve</title></circle>
+<circle cx="523" cy="1350" r="33.333333333333336" fill="#ce6a00"><title>Point 61: 523, 1350 font units; control</title></circle>
+<circle cx="409" cy="1309" r="33.333333333333336" fill="#ce6a00"><title>Point 62: 409, 1309 font units; control</title></circle>
+<circle cx="322" cy="1236" r="33.333333333333336" fill="#ce6a00"><title>Point 63: 322, 1236 font units; control</title></circle>
+<circle cx="264" cy="1135" r="33.333333333333336" fill="#ce6a00"><title>Point 64: 264, 1135 font units; control</title></circle>
+<circle cx="253" cy="1075" r="33.333333333333336" fill="#1369bd"><title>Point 65: 253, 1075 font units; on curve</title></circle>
+<circle cx="247" cy="1053" r="33.333333333333336" fill="#ce6a00"><title>Point 66: 247, 1053 font units; control</title></circle>
+<circle cx="225" cy="1039" r="33.333333333333336" fill="#ce6a00"><title>Point 67: 225, 1039 font units; control</title></circle>
+<circle cx="205" cy="1041" r="33.333333333333336" fill="#1369bd"><title>Point 68: 205, 1041 font units; on curve</title></circle>
+</g>
+<text x="1036" y="536" font-family="sans-serif" font-size="17">5</text>
+<path d="M1036 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1044 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1052 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1060 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1068 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1076 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1084 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1092 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1100 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1108 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1116 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1124 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1132 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1140 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1148 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1156 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1164 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1172 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1180 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1188 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1196 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1204 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1212 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1220 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1228 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1236 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1244 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1252 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1260 548V700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 548H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 556H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 564H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 572H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 580H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 588H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 596H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 604H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 612H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 620H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 628H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 636H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 644H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 652H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 660H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 668H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 676H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 684H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 692H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 700H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 684H1260 M1068 548V700" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(1068,684) scale(0.06,-0.06)"><path d="M310 855 Q377 872 436.5 879.5 Q496 887 550 887 Q661 887 745 855.5 Q829 824 885.5 767.5 Q942 711 970.5 633 Q999 555 999 463 Q999 351 960.5 262.5 Q922 174 855 112 Q788 50 699 17 Q610 -16 510 -16 Q452 -16 398.5 -5.5 Q345 5 298.5 22.5 Q252 40 212.5 63 Q173 86 143 110 L172 149 Q181 164 200 164 Q213 164 237.5 149 Q262 134 300.5 116 Q339 98 392 83 Q445 68 515 68 Q597 68 668 94.5 Q739 121 791 171 Q843 221 872.5 294.5 Q902 368 902 461 Q902 537 879.5 601 Q857 665 811.5 710.5 Q766 756 696.5 781.5 Q627 807 533 807 Q476 807 412 798 Q348 789 276 769 L215 788 L325 1415 L962 1415 L962 1374 Q962 1354 948.5 1340.5 Q935 1327 906 1327 L394 1327 L310 855 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="20.0"/>
+<circle cx="310" cy="855" r="33.333333333333336" fill="#1369bd"><title>Point 0: 310, 855 font units; on curve</title></circle>
+<circle cx="377" cy="872" r="33.333333333333336" fill="#ce6a00"><title>Point 1: 377, 872 font units; control</title></circle>
+<circle cx="496" cy="887" r="33.333333333333336" fill="#ce6a00"><title>Point 2: 496, 887 font units; control</title></circle>
+<circle cx="550" cy="887" r="33.333333333333336" fill="#1369bd"><title>Point 3: 550, 887 font units; on curve</title></circle>
+<circle cx="661" cy="887" r="33.333333333333336" fill="#ce6a00"><title>Point 4: 661, 887 font units; control</title></circle>
+<circle cx="829" cy="824" r="33.333333333333336" fill="#ce6a00"><title>Point 5: 829, 824 font units; control</title></circle>
+<circle cx="942" cy="711" r="33.333333333333336" fill="#ce6a00"><title>Point 6: 942, 711 font units; control</title></circle>
+<circle cx="999" cy="555" r="33.333333333333336" fill="#ce6a00"><title>Point 7: 999, 555 font units; control</title></circle>
+<circle cx="999" cy="463" r="33.333333333333336" fill="#1369bd"><title>Point 8: 999, 463 font units; on curve</title></circle>
+<circle cx="999" cy="351" r="33.333333333333336" fill="#ce6a00"><title>Point 9: 999, 351 font units; control</title></circle>
+<circle cx="922" cy="174" r="33.333333333333336" fill="#ce6a00"><title>Point 10: 922, 174 font units; control</title></circle>
+<circle cx="788" cy="50" r="33.333333333333336" fill="#ce6a00"><title>Point 11: 788, 50 font units; control</title></circle>
+<circle cx="610" cy="-16" r="33.333333333333336" fill="#ce6a00"><title>Point 12: 610, -16 font units; control</title></circle>
+<circle cx="510" cy="-16" r="33.333333333333336" fill="#1369bd"><title>Point 13: 510, -16 font units; on curve</title></circle>
+<circle cx="452" cy="-16" r="33.333333333333336" fill="#ce6a00"><title>Point 14: 452, -16 font units; control</title></circle>
+<circle cx="345" cy="5" r="33.333333333333336" fill="#ce6a00"><title>Point 15: 345, 5 font units; control</title></circle>
+<circle cx="252" cy="40" r="33.333333333333336" fill="#ce6a00"><title>Point 16: 252, 40 font units; control</title></circle>
+<circle cx="173" cy="86" r="33.333333333333336" fill="#ce6a00"><title>Point 17: 173, 86 font units; control</title></circle>
+<circle cx="143" cy="110" r="33.333333333333336" fill="#1369bd"><title>Point 18: 143, 110 font units; on curve</title></circle>
+<circle cx="172" cy="149" r="33.333333333333336" fill="#1369bd"><title>Point 19: 172, 149 font units; on curve</title></circle>
+<circle cx="181" cy="164" r="33.333333333333336" fill="#ce6a00"><title>Point 20: 181, 164 font units; control</title></circle>
+<circle cx="200" cy="164" r="33.333333333333336" fill="#1369bd"><title>Point 21: 200, 164 font units; on curve</title></circle>
+<circle cx="213" cy="164" r="33.333333333333336" fill="#ce6a00"><title>Point 22: 213, 164 font units; control</title></circle>
+<circle cx="262" cy="134" r="33.333333333333336" fill="#ce6a00"><title>Point 23: 262, 134 font units; control</title></circle>
+<circle cx="339" cy="98" r="33.333333333333336" fill="#ce6a00"><title>Point 24: 339, 98 font units; control</title></circle>
+<circle cx="445" cy="68" r="33.333333333333336" fill="#ce6a00"><title>Point 25: 445, 68 font units; control</title></circle>
+<circle cx="515" cy="68" r="33.333333333333336" fill="#1369bd"><title>Point 26: 515, 68 font units; on curve</title></circle>
+<circle cx="597" cy="68" r="33.333333333333336" fill="#ce6a00"><title>Point 27: 597, 68 font units; control</title></circle>
+<circle cx="739" cy="121" r="33.333333333333336" fill="#ce6a00"><title>Point 28: 739, 121 font units; control</title></circle>
+<circle cx="843" cy="221" r="33.333333333333336" fill="#ce6a00"><title>Point 29: 843, 221 font units; control</title></circle>
+<circle cx="902" cy="368" r="33.333333333333336" fill="#ce6a00"><title>Point 30: 902, 368 font units; control</title></circle>
+<circle cx="902" cy="461" r="33.333333333333336" fill="#1369bd"><title>Point 31: 902, 461 font units; on curve</title></circle>
+<circle cx="902" cy="537" r="33.333333333333336" fill="#ce6a00"><title>Point 32: 902, 537 font units; control</title></circle>
+<circle cx="857" cy="665" r="33.333333333333336" fill="#ce6a00"><title>Point 33: 857, 665 font units; control</title></circle>
+<circle cx="766" cy="756" r="33.333333333333336" fill="#ce6a00"><title>Point 34: 766, 756 font units; control</title></circle>
+<circle cx="627" cy="807" r="33.333333333333336" fill="#ce6a00"><title>Point 35: 627, 807 font units; control</title></circle>
+<circle cx="533" cy="807" r="33.333333333333336" fill="#1369bd"><title>Point 36: 533, 807 font units; on curve</title></circle>
+<circle cx="476" cy="807" r="33.333333333333336" fill="#ce6a00"><title>Point 37: 476, 807 font units; control</title></circle>
+<circle cx="348" cy="789" r="33.333333333333336" fill="#ce6a00"><title>Point 38: 348, 789 font units; control</title></circle>
+<circle cx="276" cy="769" r="33.333333333333336" fill="#1369bd"><title>Point 39: 276, 769 font units; on curve</title></circle>
+<circle cx="215" cy="788" r="33.333333333333336" fill="#1369bd"><title>Point 40: 215, 788 font units; on curve</title></circle>
+<circle cx="325" cy="1415" r="33.333333333333336" fill="#1369bd"><title>Point 41: 325, 1415 font units; on curve</title></circle>
+<circle cx="962" cy="1415" r="33.333333333333336" fill="#1369bd"><title>Point 42: 962, 1415 font units; on curve</title></circle>
+<circle cx="962" cy="1374" r="33.333333333333336" fill="#1369bd"><title>Point 43: 962, 1374 font units; on curve</title></circle>
+<circle cx="962" cy="1354" r="33.333333333333336" fill="#ce6a00"><title>Point 44: 962, 1354 font units; control</title></circle>
+<circle cx="935" cy="1327" r="33.333333333333336" fill="#ce6a00"><title>Point 45: 935, 1327 font units; control</title></circle>
+<circle cx="906" cy="1327" r="33.333333333333336" fill="#1369bd"><title>Point 46: 906, 1327 font units; on curve</title></circle>
+<circle cx="394" cy="1327" r="33.333333333333336" fill="#1369bd"><title>Point 47: 394, 1327 font units; on curve</title></circle>
+</g>
+<text x="16" y="752" font-family="sans-serif" font-size="14">IBM Plex Sans Light</text>
+<text x="16" y="772" font-family="sans-serif" font-size="12">1000 units/em</text>
+<text x="196" y="748" font-family="sans-serif" font-size="17">H</text>
+<path d="M196 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M204 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M212 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M220 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M228 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M236 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M244 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M252 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M260 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M268 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M276 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M284 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M292 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M300 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M308 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M316 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M324 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M332 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M340 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M348 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M356 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M364 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M372 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M380 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M388 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M396 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M404 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M412 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M420 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 760H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 768H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 776H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 784H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 792H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 800H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 808H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 816H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 824H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 832H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 840H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 848H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 856H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 864H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 872H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 880H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 888H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 896H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 904H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 912H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 896H420 M228 760V912" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(228,896) scale(0.12,-0.12)"><path d="M542 328 L159 328 L159 0 L99 0 L99 698 L159 698 L159 381 L542 381 L542 698 L602 698 L602 0 L542 0 L542 328 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="542" cy="328" r="16.666666666666668" fill="#1369bd"><title>Point 0: 542, 328 font units; on curve</title></circle>
+<circle cx="159" cy="328" r="16.666666666666668" fill="#1369bd"><title>Point 1: 159, 328 font units; on curve</title></circle>
+<circle cx="159" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 2: 159, 0 font units; on curve</title></circle>
+<circle cx="99" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 3: 99, 0 font units; on curve</title></circle>
+<circle cx="99" cy="698" r="16.666666666666668" fill="#1369bd"><title>Point 4: 99, 698 font units; on curve</title></circle>
+<circle cx="159" cy="698" r="16.666666666666668" fill="#1369bd"><title>Point 5: 159, 698 font units; on curve</title></circle>
+<circle cx="159" cy="381" r="16.666666666666668" fill="#1369bd"><title>Point 6: 159, 381 font units; on curve</title></circle>
+<circle cx="542" cy="381" r="16.666666666666668" fill="#1369bd"><title>Point 7: 542, 381 font units; on curve</title></circle>
+<circle cx="542" cy="698" r="16.666666666666668" fill="#1369bd"><title>Point 8: 542, 698 font units; on curve</title></circle>
+<circle cx="602" cy="698" r="16.666666666666668" fill="#1369bd"><title>Point 9: 602, 698 font units; on curve</title></circle>
+<circle cx="602" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 10: 602, 0 font units; on curve</title></circle>
+<circle cx="542" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 11: 542, 0 font units; on curve</title></circle>
+</g>
+<text x="476" y="748" font-family="sans-serif" font-size="17">m</text>
+<path d="M476 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M484 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M492 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M500 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M508 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M516 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M524 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M532 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M540 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M548 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M556 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M564 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M572 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M580 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M588 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M596 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M604 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M612 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M620 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M628 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M636 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M644 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M652 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M660 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M668 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M676 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M684 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M692 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M700 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 760H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 768H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 776H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 784H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 792H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 800H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 808H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 816H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 824H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 832H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 840H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 848H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 856H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 864H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 872H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 880H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 888H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 896H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 904H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 912H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 896H700 M508 760V912" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(508,896) scale(0.12,-0.12)"><path d="M93 0 L93 512 L150 512 L150 431 L153 431 Q161 450 173 466.5 Q185 483 202 496 Q219 509 242.5 516.5 Q266 524 298 524 Q353 524 395 498 Q437 472 456 416 L459 416 Q473 461 512.5 492.5 Q552 524 620 524 Q702 524 746 473.5 Q790 423 790 329 L790 0 L733 0 L733 319 Q733 473 604 473 Q577 473 553 466 Q529 459 510.5 444.5 Q492 430 481 408.5 Q470 387 470 359 L470 0 L413 0 L413 319 Q413 473 285 473 Q259 473 234.5 466 Q210 459 191 445 Q172 431 161 409.5 Q150 388 150 360 L150 0 L93 0 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="93" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 0: 93, 0 font units; on curve</title></circle>
+<circle cx="93" cy="512" r="16.666666666666668" fill="#1369bd"><title>Point 1: 93, 512 font units; on curve</title></circle>
+<circle cx="150" cy="512" r="16.666666666666668" fill="#1369bd"><title>Point 2: 150, 512 font units; on curve</title></circle>
+<circle cx="150" cy="431" r="16.666666666666668" fill="#1369bd"><title>Point 3: 150, 431 font units; on curve</title></circle>
+<circle cx="153" cy="431" r="16.666666666666668" fill="#1369bd"><title>Point 4: 153, 431 font units; on curve</title></circle>
+<circle cx="161" cy="450" r="16.666666666666668" fill="#ce6a00"><title>Point 5: 161, 450 font units; control</title></circle>
+<circle cx="185" cy="483" r="16.666666666666668" fill="#ce6a00"><title>Point 6: 185, 483 font units; control</title></circle>
+<circle cx="219" cy="509" r="16.666666666666668" fill="#ce6a00"><title>Point 7: 219, 509 font units; control</title></circle>
+<circle cx="266" cy="524" r="16.666666666666668" fill="#ce6a00"><title>Point 8: 266, 524 font units; control</title></circle>
+<circle cx="298" cy="524" r="16.666666666666668" fill="#1369bd"><title>Point 9: 298, 524 font units; on curve</title></circle>
+<circle cx="353" cy="524" r="16.666666666666668" fill="#ce6a00"><title>Point 10: 353, 524 font units; control</title></circle>
+<circle cx="437" cy="472" r="16.666666666666668" fill="#ce6a00"><title>Point 11: 437, 472 font units; control</title></circle>
+<circle cx="456" cy="416" r="16.666666666666668" fill="#1369bd"><title>Point 12: 456, 416 font units; on curve</title></circle>
+<circle cx="459" cy="416" r="16.666666666666668" fill="#1369bd"><title>Point 13: 459, 416 font units; on curve</title></circle>
+<circle cx="473" cy="461" r="16.666666666666668" fill="#ce6a00"><title>Point 14: 473, 461 font units; control</title></circle>
+<circle cx="552" cy="524" r="16.666666666666668" fill="#ce6a00"><title>Point 15: 552, 524 font units; control</title></circle>
+<circle cx="620" cy="524" r="16.666666666666668" fill="#1369bd"><title>Point 16: 620, 524 font units; on curve</title></circle>
+<circle cx="702" cy="524" r="16.666666666666668" fill="#ce6a00"><title>Point 17: 702, 524 font units; control</title></circle>
+<circle cx="790" cy="423" r="16.666666666666668" fill="#ce6a00"><title>Point 18: 790, 423 font units; control</title></circle>
+<circle cx="790" cy="329" r="16.666666666666668" fill="#1369bd"><title>Point 19: 790, 329 font units; on curve</title></circle>
+<circle cx="790" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 20: 790, 0 font units; on curve</title></circle>
+<circle cx="733" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 21: 733, 0 font units; on curve</title></circle>
+<circle cx="733" cy="319" r="16.666666666666668" fill="#1369bd"><title>Point 22: 733, 319 font units; on curve</title></circle>
+<circle cx="733" cy="473" r="16.666666666666668" fill="#ce6a00"><title>Point 23: 733, 473 font units; control</title></circle>
+<circle cx="604" cy="473" r="16.666666666666668" fill="#1369bd"><title>Point 24: 604, 473 font units; on curve</title></circle>
+<circle cx="577" cy="473" r="16.666666666666668" fill="#ce6a00"><title>Point 25: 577, 473 font units; control</title></circle>
+<circle cx="529" cy="459" r="16.666666666666668" fill="#ce6a00"><title>Point 26: 529, 459 font units; control</title></circle>
+<circle cx="492" cy="430" r="16.666666666666668" fill="#ce6a00"><title>Point 27: 492, 430 font units; control</title></circle>
+<circle cx="470" cy="387" r="16.666666666666668" fill="#ce6a00"><title>Point 28: 470, 387 font units; control</title></circle>
+<circle cx="470" cy="359" r="16.666666666666668" fill="#1369bd"><title>Point 29: 470, 359 font units; on curve</title></circle>
+<circle cx="470" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 30: 470, 0 font units; on curve</title></circle>
+<circle cx="413" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 31: 413, 0 font units; on curve</title></circle>
+<circle cx="413" cy="319" r="16.666666666666668" fill="#1369bd"><title>Point 32: 413, 319 font units; on curve</title></circle>
+<circle cx="413" cy="473" r="16.666666666666668" fill="#ce6a00"><title>Point 33: 413, 473 font units; control</title></circle>
+<circle cx="285" cy="473" r="16.666666666666668" fill="#1369bd"><title>Point 34: 285, 473 font units; on curve</title></circle>
+<circle cx="259" cy="473" r="16.666666666666668" fill="#ce6a00"><title>Point 35: 259, 473 font units; control</title></circle>
+<circle cx="210" cy="459" r="16.666666666666668" fill="#ce6a00"><title>Point 36: 210, 459 font units; control</title></circle>
+<circle cx="172" cy="431" r="16.666666666666668" fill="#ce6a00"><title>Point 37: 172, 431 font units; control</title></circle>
+<circle cx="150" cy="388" r="16.666666666666668" fill="#ce6a00"><title>Point 38: 150, 388 font units; control</title></circle>
+<circle cx="150" cy="360" r="16.666666666666668" fill="#1369bd"><title>Point 39: 150, 360 font units; on curve</title></circle>
+<circle cx="150" cy="0" r="16.666666666666668" fill="#1369bd"><title>Point 40: 150, 0 font units; on curve</title></circle>
+</g>
+<text x="756" y="748" font-family="sans-serif" font-size="17">3</text>
+<path d="M756 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M764 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M772 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M780 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M788 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M796 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M804 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M812 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M820 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M828 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M836 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M844 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M852 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M860 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M868 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M876 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M884 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M892 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M900 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M908 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M916 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M924 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M932 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M940 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M948 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M956 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M964 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M972 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M980 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 760H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 768H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 776H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 784H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 792H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 800H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 808H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 816H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 824H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 832H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 840H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 848H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 856H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 864H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 872H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 880H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 888H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 896H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 904H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 912H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 896H980 M788 760V912" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(788,896) scale(0.12,-0.12)"><path d="M268 392 Q340 392 380.5 427.5 Q421 463 421 520 L421 533 Q421 592 382 624 Q343 656 282 656 Q221 656 184.5 631.5 Q148 607 126 565 L81 597 Q93 619 111 639.5 Q129 660 153.5 676 Q178 692 210 701 Q242 710 283 710 Q326 710 363 698 Q400 686 427 663.5 Q454 641 469.5 608.5 Q485 576 485 535 Q485 464 446 424 Q407 384 349 370 L349 366 Q380 361 407 347.5 Q434 334 454.5 312 Q475 290 487 259 Q499 228 499 189 Q499 144 483 106.5 Q467 69 437.5 43 Q408 17 366.5 2.5 Q325 -12 274 -12 Q190 -12 138 20.5 Q86 53 53 102 L98 136 Q127 91 167.5 66.5 Q208 42 273 42 Q349 42 392 79.5 Q435 117 435 183 L435 199 Q435 265 393 302.5 Q351 340 273 340 L185 340 L185 392 L268 392 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="268" cy="392" r="16.666666666666668" fill="#1369bd"><title>Point 0: 268, 392 font units; on curve</title></circle>
+<circle cx="340" cy="392" r="16.666666666666668" fill="#ce6a00"><title>Point 1: 340, 392 font units; control</title></circle>
+<circle cx="421" cy="463" r="16.666666666666668" fill="#ce6a00"><title>Point 2: 421, 463 font units; control</title></circle>
+<circle cx="421" cy="520" r="16.666666666666668" fill="#1369bd"><title>Point 3: 421, 520 font units; on curve</title></circle>
+<circle cx="421" cy="533" r="16.666666666666668" fill="#1369bd"><title>Point 4: 421, 533 font units; on curve</title></circle>
+<circle cx="421" cy="592" r="16.666666666666668" fill="#ce6a00"><title>Point 5: 421, 592 font units; control</title></circle>
+<circle cx="343" cy="656" r="16.666666666666668" fill="#ce6a00"><title>Point 6: 343, 656 font units; control</title></circle>
+<circle cx="282" cy="656" r="16.666666666666668" fill="#1369bd"><title>Point 7: 282, 656 font units; on curve</title></circle>
+<circle cx="221" cy="656" r="16.666666666666668" fill="#ce6a00"><title>Point 8: 221, 656 font units; control</title></circle>
+<circle cx="148" cy="607" r="16.666666666666668" fill="#ce6a00"><title>Point 9: 148, 607 font units; control</title></circle>
+<circle cx="126" cy="565" r="16.666666666666668" fill="#1369bd"><title>Point 10: 126, 565 font units; on curve</title></circle>
+<circle cx="81" cy="597" r="16.666666666666668" fill="#1369bd"><title>Point 11: 81, 597 font units; on curve</title></circle>
+<circle cx="93" cy="619" r="16.666666666666668" fill="#ce6a00"><title>Point 12: 93, 619 font units; control</title></circle>
+<circle cx="129" cy="660" r="16.666666666666668" fill="#ce6a00"><title>Point 13: 129, 660 font units; control</title></circle>
+<circle cx="178" cy="692" r="16.666666666666668" fill="#ce6a00"><title>Point 14: 178, 692 font units; control</title></circle>
+<circle cx="242" cy="710" r="16.666666666666668" fill="#ce6a00"><title>Point 15: 242, 710 font units; control</title></circle>
+<circle cx="283" cy="710" r="16.666666666666668" fill="#1369bd"><title>Point 16: 283, 710 font units; on curve</title></circle>
+<circle cx="326" cy="710" r="16.666666666666668" fill="#ce6a00"><title>Point 17: 326, 710 font units; control</title></circle>
+<circle cx="400" cy="686" r="16.666666666666668" fill="#ce6a00"><title>Point 18: 400, 686 font units; control</title></circle>
+<circle cx="454" cy="641" r="16.666666666666668" fill="#ce6a00"><title>Point 19: 454, 641 font units; control</title></circle>
+<circle cx="485" cy="576" r="16.666666666666668" fill="#ce6a00"><title>Point 20: 485, 576 font units; control</title></circle>
+<circle cx="485" cy="535" r="16.666666666666668" fill="#1369bd"><title>Point 21: 485, 535 font units; on curve</title></circle>
+<circle cx="485" cy="464" r="16.666666666666668" fill="#ce6a00"><title>Point 22: 485, 464 font units; control</title></circle>
+<circle cx="407" cy="384" r="16.666666666666668" fill="#ce6a00"><title>Point 23: 407, 384 font units; control</title></circle>
+<circle cx="349" cy="370" r="16.666666666666668" fill="#1369bd"><title>Point 24: 349, 370 font units; on curve</title></circle>
+<circle cx="349" cy="366" r="16.666666666666668" fill="#1369bd"><title>Point 25: 349, 366 font units; on curve</title></circle>
+<circle cx="380" cy="361" r="16.666666666666668" fill="#ce6a00"><title>Point 26: 380, 361 font units; control</title></circle>
+<circle cx="434" cy="334" r="16.666666666666668" fill="#ce6a00"><title>Point 27: 434, 334 font units; control</title></circle>
+<circle cx="475" cy="290" r="16.666666666666668" fill="#ce6a00"><title>Point 28: 475, 290 font units; control</title></circle>
+<circle cx="499" cy="228" r="16.666666666666668" fill="#ce6a00"><title>Point 29: 499, 228 font units; control</title></circle>
+<circle cx="499" cy="189" r="16.666666666666668" fill="#1369bd"><title>Point 30: 499, 189 font units; on curve</title></circle>
+<circle cx="499" cy="144" r="16.666666666666668" fill="#ce6a00"><title>Point 31: 499, 144 font units; control</title></circle>
+<circle cx="467" cy="69" r="16.666666666666668" fill="#ce6a00"><title>Point 32: 467, 69 font units; control</title></circle>
+<circle cx="408" cy="17" r="16.666666666666668" fill="#ce6a00"><title>Point 33: 408, 17 font units; control</title></circle>
+<circle cx="325" cy="-12" r="16.666666666666668" fill="#ce6a00"><title>Point 34: 325, -12 font units; control</title></circle>
+<circle cx="274" cy="-12" r="16.666666666666668" fill="#1369bd"><title>Point 35: 274, -12 font units; on curve</title></circle>
+<circle cx="190" cy="-12" r="16.666666666666668" fill="#ce6a00"><title>Point 36: 190, -12 font units; control</title></circle>
+<circle cx="86" cy="53" r="16.666666666666668" fill="#ce6a00"><title>Point 37: 86, 53 font units; control</title></circle>
+<circle cx="53" cy="102" r="16.666666666666668" fill="#1369bd"><title>Point 38: 53, 102 font units; on curve</title></circle>
+<circle cx="98" cy="136" r="16.666666666666668" fill="#1369bd"><title>Point 39: 98, 136 font units; on curve</title></circle>
+<circle cx="127" cy="91" r="16.666666666666668" fill="#ce6a00"><title>Point 40: 127, 91 font units; control</title></circle>
+<circle cx="208" cy="42" r="16.666666666666668" fill="#ce6a00"><title>Point 41: 208, 42 font units; control</title></circle>
+<circle cx="273" cy="42" r="16.666666666666668" fill="#1369bd"><title>Point 42: 273, 42 font units; on curve</title></circle>
+<circle cx="349" cy="42" r="16.666666666666668" fill="#ce6a00"><title>Point 43: 349, 42 font units; control</title></circle>
+<circle cx="435" cy="117" r="16.666666666666668" fill="#ce6a00"><title>Point 44: 435, 117 font units; control</title></circle>
+<circle cx="435" cy="183" r="16.666666666666668" fill="#1369bd"><title>Point 45: 435, 183 font units; on curve</title></circle>
+<circle cx="435" cy="199" r="16.666666666666668" fill="#1369bd"><title>Point 46: 435, 199 font units; on curve</title></circle>
+<circle cx="435" cy="265" r="16.666666666666668" fill="#ce6a00"><title>Point 47: 435, 265 font units; control</title></circle>
+<circle cx="351" cy="340" r="16.666666666666668" fill="#ce6a00"><title>Point 48: 351, 340 font units; control</title></circle>
+<circle cx="273" cy="340" r="16.666666666666668" fill="#1369bd"><title>Point 49: 273, 340 font units; on curve</title></circle>
+<circle cx="185" cy="340" r="16.666666666666668" fill="#1369bd"><title>Point 50: 185, 340 font units; on curve</title></circle>
+<circle cx="185" cy="392" r="16.666666666666668" fill="#1369bd"><title>Point 51: 185, 392 font units; on curve</title></circle>
+</g>
+<text x="1036" y="748" font-family="sans-serif" font-size="17">5</text>
+<path d="M1036 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1044 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1052 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1060 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1068 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1076 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1084 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1092 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1100 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1108 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1116 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1124 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1132 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1140 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1148 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1156 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1164 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1172 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1180 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1188 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1196 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1204 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1212 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1220 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1228 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1236 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1244 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1252 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1260 760V912" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 760H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 768H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 776H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 784H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 792H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 800H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 808H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 816H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 824H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 832H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 840H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 848H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 856H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 864H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 872H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 880H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 888H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 896H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 904H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 912H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 896H1260 M1068 760V912" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(1068,896) scale(0.12,-0.12)"><path d="M491 645 L179 645 L157 353 L163 352 Q189 389 224 407.5 Q259 426 315 426 Q361 426 399 411.5 Q437 397 464 369.5 Q491 342 505.5 302.5 Q520 263 520 213 Q520 162 504.5 120.5 Q489 79 460 49.5 Q431 20 389.5 4 Q348 -12 296 -12 Q255 -12 222 -3.5 Q189 5 163 20.5 Q137 36 116.5 57 Q96 78 80 102 L125 136 Q154 91 192.5 66.5 Q231 42 296 42 Q374 42 415.5 84.5 Q457 127 457 200 L457 217 Q457 290 416.5 332.5 Q376 375 299 375 Q272 375 251 370.5 Q230 366 213.5 357.5 Q197 349 183.5 337.5 Q170 326 157 311 L105 319 L130 698 L491 698 L491 645 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="10.0"/>
+<circle cx="491" cy="645" r="16.666666666666668" fill="#1369bd"><title>Point 0: 491, 645 font units; on curve</title></circle>
+<circle cx="179" cy="645" r="16.666666666666668" fill="#1369bd"><title>Point 1: 179, 645 font units; on curve</title></circle>
+<circle cx="157" cy="353" r="16.666666666666668" fill="#1369bd"><title>Point 2: 157, 353 font units; on curve</title></circle>
+<circle cx="163" cy="352" r="16.666666666666668" fill="#1369bd"><title>Point 3: 163, 352 font units; on curve</title></circle>
+<circle cx="189" cy="389" r="16.666666666666668" fill="#ce6a00"><title>Point 4: 189, 389 font units; control</title></circle>
+<circle cx="259" cy="426" r="16.666666666666668" fill="#ce6a00"><title>Point 5: 259, 426 font units; control</title></circle>
+<circle cx="315" cy="426" r="16.666666666666668" fill="#1369bd"><title>Point 6: 315, 426 font units; on curve</title></circle>
+<circle cx="361" cy="426" r="16.666666666666668" fill="#ce6a00"><title>Point 7: 361, 426 font units; control</title></circle>
+<circle cx="437" cy="397" r="16.666666666666668" fill="#ce6a00"><title>Point 8: 437, 397 font units; control</title></circle>
+<circle cx="491" cy="342" r="16.666666666666668" fill="#ce6a00"><title>Point 9: 491, 342 font units; control</title></circle>
+<circle cx="520" cy="263" r="16.666666666666668" fill="#ce6a00"><title>Point 10: 520, 263 font units; control</title></circle>
+<circle cx="520" cy="213" r="16.666666666666668" fill="#1369bd"><title>Point 11: 520, 213 font units; on curve</title></circle>
+<circle cx="520" cy="162" r="16.666666666666668" fill="#ce6a00"><title>Point 12: 520, 162 font units; control</title></circle>
+<circle cx="489" cy="79" r="16.666666666666668" fill="#ce6a00"><title>Point 13: 489, 79 font units; control</title></circle>
+<circle cx="431" cy="20" r="16.666666666666668" fill="#ce6a00"><title>Point 14: 431, 20 font units; control</title></circle>
+<circle cx="348" cy="-12" r="16.666666666666668" fill="#ce6a00"><title>Point 15: 348, -12 font units; control</title></circle>
+<circle cx="296" cy="-12" r="16.666666666666668" fill="#1369bd"><title>Point 16: 296, -12 font units; on curve</title></circle>
+<circle cx="255" cy="-12" r="16.666666666666668" fill="#ce6a00"><title>Point 17: 255, -12 font units; control</title></circle>
+<circle cx="189" cy="5" r="16.666666666666668" fill="#ce6a00"><title>Point 18: 189, 5 font units; control</title></circle>
+<circle cx="137" cy="36" r="16.666666666666668" fill="#ce6a00"><title>Point 19: 137, 36 font units; control</title></circle>
+<circle cx="96" cy="78" r="16.666666666666668" fill="#ce6a00"><title>Point 20: 96, 78 font units; control</title></circle>
+<circle cx="80" cy="102" r="16.666666666666668" fill="#1369bd"><title>Point 21: 80, 102 font units; on curve</title></circle>
+<circle cx="125" cy="136" r="16.666666666666668" fill="#1369bd"><title>Point 22: 125, 136 font units; on curve</title></circle>
+<circle cx="154" cy="91" r="16.666666666666668" fill="#ce6a00"><title>Point 23: 154, 91 font units; control</title></circle>
+<circle cx="231" cy="42" r="16.666666666666668" fill="#ce6a00"><title>Point 24: 231, 42 font units; control</title></circle>
+<circle cx="296" cy="42" r="16.666666666666668" fill="#1369bd"><title>Point 25: 296, 42 font units; on curve</title></circle>
+<circle cx="374" cy="42" r="16.666666666666668" fill="#ce6a00"><title>Point 26: 374, 42 font units; control</title></circle>
+<circle cx="457" cy="127" r="16.666666666666668" fill="#ce6a00"><title>Point 27: 457, 127 font units; control</title></circle>
+<circle cx="457" cy="200" r="16.666666666666668" fill="#1369bd"><title>Point 28: 457, 200 font units; on curve</title></circle>
+<circle cx="457" cy="217" r="16.666666666666668" fill="#1369bd"><title>Point 29: 457, 217 font units; on curve</title></circle>
+<circle cx="457" cy="290" r="16.666666666666668" fill="#ce6a00"><title>Point 30: 457, 290 font units; control</title></circle>
+<circle cx="376" cy="375" r="16.666666666666668" fill="#ce6a00"><title>Point 31: 376, 375 font units; control</title></circle>
+<circle cx="299" cy="375" r="16.666666666666668" fill="#1369bd"><title>Point 32: 299, 375 font units; on curve</title></circle>
+<circle cx="272" cy="375" r="16.666666666666668" fill="#ce6a00"><title>Point 33: 272, 375 font units; control</title></circle>
+<circle cx="230" cy="366" r="16.666666666666668" fill="#ce6a00"><title>Point 34: 230, 366 font units; control</title></circle>
+<circle cx="197" cy="349" r="16.666666666666668" fill="#ce6a00"><title>Point 35: 197, 349 font units; control</title></circle>
+<circle cx="170" cy="326" r="16.666666666666668" fill="#ce6a00"><title>Point 36: 170, 326 font units; control</title></circle>
+<circle cx="157" cy="311" r="16.666666666666668" fill="#1369bd"><title>Point 37: 157, 311 font units; on curve</title></circle>
+<circle cx="105" cy="319" r="16.666666666666668" fill="#1369bd"><title>Point 38: 105, 319 font units; on curve</title></circle>
+<circle cx="130" cy="698" r="16.666666666666668" fill="#1369bd"><title>Point 39: 130, 698 font units; on curve</title></circle>
+<circle cx="491" cy="698" r="16.666666666666668" fill="#1369bd"><title>Point 40: 491, 698 font units; on curve</title></circle>
+</g>
+<text x="16" y="964" font-family="sans-serif" font-size="14">Hack Regular</text>
+<text x="16" y="984" font-family="sans-serif" font-size="12">2048 units/em</text>
+<text x="196" y="960" font-family="sans-serif" font-size="17">H</text>
+<path d="M196 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M204 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M212 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M220 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M228 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M236 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M244 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M252 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M260 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M268 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M276 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M284 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M292 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M300 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M308 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M316 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M324 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M332 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M340 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M348 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M356 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M364 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M372 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M380 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M388 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M396 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M404 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M412 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M420 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 972H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 980H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 988H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 996H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1004H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1012H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1020H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1028H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1036H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1044H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1052H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1060H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1068H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1076H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1084H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1092H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1100H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1108H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1116H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1124H420" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M196 1108H420 M228 972V1124" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(228,1108) scale(0.05859375,-0.05859375)"><path d="M137 1493 L340 1493 L340 881 L893 881 L893 1493 L1096 1493 L1096 0 L893 0 L893 711 L340 711 L340 0 L137 0 L137 1493 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="20.48"/>
+<circle cx="137" cy="1493" r="34.13333333333333" fill="#1369bd"><title>Point 0: 137, 1493 font units; on curve</title></circle>
+<circle cx="340" cy="1493" r="34.13333333333333" fill="#1369bd"><title>Point 1: 340, 1493 font units; on curve</title></circle>
+<circle cx="340" cy="881" r="34.13333333333333" fill="#1369bd"><title>Point 2: 340, 881 font units; on curve</title></circle>
+<circle cx="893" cy="881" r="34.13333333333333" fill="#1369bd"><title>Point 3: 893, 881 font units; on curve</title></circle>
+<circle cx="893" cy="1493" r="34.13333333333333" fill="#1369bd"><title>Point 4: 893, 1493 font units; on curve</title></circle>
+<circle cx="1096" cy="1493" r="34.13333333333333" fill="#1369bd"><title>Point 5: 1096, 1493 font units; on curve</title></circle>
+<circle cx="1096" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 6: 1096, 0 font units; on curve</title></circle>
+<circle cx="893" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 7: 893, 0 font units; on curve</title></circle>
+<circle cx="893" cy="711" r="34.13333333333333" fill="#1369bd"><title>Point 8: 893, 711 font units; on curve</title></circle>
+<circle cx="340" cy="711" r="34.13333333333333" fill="#1369bd"><title>Point 9: 340, 711 font units; on curve</title></circle>
+<circle cx="340" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 10: 340, 0 font units; on curve</title></circle>
+<circle cx="137" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 11: 137, 0 font units; on curve</title></circle>
+</g>
+<text x="476" y="960" font-family="sans-serif" font-size="17">m</text>
+<path d="M476 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M484 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M492 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M500 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M508 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M516 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M524 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M532 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M540 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M548 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M556 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M564 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M572 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M580 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M588 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M596 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M604 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M612 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M620 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M628 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M636 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M644 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M652 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M660 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M668 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M676 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M684 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M692 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M700 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 972H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 980H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 988H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 996H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1004H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1012H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1020H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1028H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1036H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1044H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1052H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1060H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1068H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1076H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1084H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1092H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1100H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1108H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1116H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1124H700" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M476 1108H700 M508 972V1124" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(508,1108) scale(0.05859375,-0.05859375)"><path d="M109 1120 L260 1120 L276 1024 Q344 1147 477 1147 Q620 1147 676 1006 Q744 1147 890 1147 Q1026 1147 1080 1045 Q1135 940 1135 649 L1135 0 L967 0 L967 641 Q967 767 960.5 836 Q954 905 940 938 Q915 993 841 993 Q765 993 736 933 Q719 898 712 831 Q705 764 705 641 L705 0 L537 0 L537 641 Q537 762 530 833 Q523 904 508 937 Q481 993 407 993 Q333 993 306 934 Q290 900 283 830.5 Q276 761 276 641 L276 0 L109 0 L109 1120 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="20.48"/>
+<circle cx="109" cy="1120" r="34.13333333333333" fill="#1369bd"><title>Point 0: 109, 1120 font units; on curve</title></circle>
+<circle cx="260" cy="1120" r="34.13333333333333" fill="#1369bd"><title>Point 1: 260, 1120 font units; on curve</title></circle>
+<circle cx="276" cy="1024" r="34.13333333333333" fill="#1369bd"><title>Point 2: 276, 1024 font units; on curve</title></circle>
+<circle cx="344" cy="1147" r="34.13333333333333" fill="#ce6a00"><title>Point 3: 344, 1147 font units; control</title></circle>
+<circle cx="477" cy="1147" r="34.13333333333333" fill="#1369bd"><title>Point 4: 477, 1147 font units; on curve</title></circle>
+<circle cx="620" cy="1147" r="34.13333333333333" fill="#ce6a00"><title>Point 5: 620, 1147 font units; control</title></circle>
+<circle cx="676" cy="1006" r="34.13333333333333" fill="#1369bd"><title>Point 6: 676, 1006 font units; on curve</title></circle>
+<circle cx="744" cy="1147" r="34.13333333333333" fill="#ce6a00"><title>Point 7: 744, 1147 font units; control</title></circle>
+<circle cx="890" cy="1147" r="34.13333333333333" fill="#1369bd"><title>Point 8: 890, 1147 font units; on curve</title></circle>
+<circle cx="1026" cy="1147" r="34.13333333333333" fill="#ce6a00"><title>Point 9: 1026, 1147 font units; control</title></circle>
+<circle cx="1080" cy="1045" r="34.13333333333333" fill="#1369bd"><title>Point 10: 1080, 1045 font units; on curve</title></circle>
+<circle cx="1135" cy="940" r="34.13333333333333" fill="#ce6a00"><title>Point 11: 1135, 940 font units; control</title></circle>
+<circle cx="1135" cy="649" r="34.13333333333333" fill="#1369bd"><title>Point 12: 1135, 649 font units; on curve</title></circle>
+<circle cx="1135" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 13: 1135, 0 font units; on curve</title></circle>
+<circle cx="967" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 14: 967, 0 font units; on curve</title></circle>
+<circle cx="967" cy="641" r="34.13333333333333" fill="#1369bd"><title>Point 15: 967, 641 font units; on curve</title></circle>
+<circle cx="967" cy="767" r="34.13333333333333" fill="#ce6a00"><title>Point 16: 967, 767 font units; control</title></circle>
+<circle cx="954" cy="905" r="34.13333333333333" fill="#ce6a00"><title>Point 17: 954, 905 font units; control</title></circle>
+<circle cx="940" cy="938" r="34.13333333333333" fill="#1369bd"><title>Point 18: 940, 938 font units; on curve</title></circle>
+<circle cx="915" cy="993" r="34.13333333333333" fill="#ce6a00"><title>Point 19: 915, 993 font units; control</title></circle>
+<circle cx="841" cy="993" r="34.13333333333333" fill="#1369bd"><title>Point 20: 841, 993 font units; on curve</title></circle>
+<circle cx="765" cy="993" r="34.13333333333333" fill="#ce6a00"><title>Point 21: 765, 993 font units; control</title></circle>
+<circle cx="736" cy="933" r="34.13333333333333" fill="#1369bd"><title>Point 22: 736, 933 font units; on curve</title></circle>
+<circle cx="719" cy="898" r="34.13333333333333" fill="#ce6a00"><title>Point 23: 719, 898 font units; control</title></circle>
+<circle cx="705" cy="764" r="34.13333333333333" fill="#ce6a00"><title>Point 24: 705, 764 font units; control</title></circle>
+<circle cx="705" cy="641" r="34.13333333333333" fill="#1369bd"><title>Point 25: 705, 641 font units; on curve</title></circle>
+<circle cx="705" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 26: 705, 0 font units; on curve</title></circle>
+<circle cx="537" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 27: 537, 0 font units; on curve</title></circle>
+<circle cx="537" cy="641" r="34.13333333333333" fill="#1369bd"><title>Point 28: 537, 641 font units; on curve</title></circle>
+<circle cx="537" cy="762" r="34.13333333333333" fill="#ce6a00"><title>Point 29: 537, 762 font units; control</title></circle>
+<circle cx="523" cy="904" r="34.13333333333333" fill="#ce6a00"><title>Point 30: 523, 904 font units; control</title></circle>
+<circle cx="508" cy="937" r="34.13333333333333" fill="#1369bd"><title>Point 31: 508, 937 font units; on curve</title></circle>
+<circle cx="481" cy="993" r="34.13333333333333" fill="#ce6a00"><title>Point 32: 481, 993 font units; control</title></circle>
+<circle cx="407" cy="993" r="34.13333333333333" fill="#1369bd"><title>Point 33: 407, 993 font units; on curve</title></circle>
+<circle cx="333" cy="993" r="34.13333333333333" fill="#ce6a00"><title>Point 34: 333, 993 font units; control</title></circle>
+<circle cx="306" cy="934" r="34.13333333333333" fill="#1369bd"><title>Point 35: 306, 934 font units; on curve</title></circle>
+<circle cx="290" cy="900" r="34.13333333333333" fill="#ce6a00"><title>Point 36: 290, 900 font units; control</title></circle>
+<circle cx="276" cy="761" r="34.13333333333333" fill="#ce6a00"><title>Point 37: 276, 761 font units; control</title></circle>
+<circle cx="276" cy="641" r="34.13333333333333" fill="#1369bd"><title>Point 38: 276, 641 font units; on curve</title></circle>
+<circle cx="276" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 39: 276, 0 font units; on curve</title></circle>
+<circle cx="109" cy="0" r="34.13333333333333" fill="#1369bd"><title>Point 40: 109, 0 font units; on curve</title></circle>
+</g>
+<text x="756" y="960" font-family="sans-serif" font-size="17">3</text>
+<path d="M756 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M764 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M772 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M780 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M788 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M796 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M804 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M812 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M820 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M828 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M836 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M844 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M852 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M860 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M868 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M876 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M884 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M892 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M900 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M908 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M916 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M924 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M932 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M940 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M948 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M956 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M964 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M972 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M980 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 972H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 980H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 988H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 996H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1004H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1012H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1020H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1028H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1036H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1044H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1052H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1060H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1068H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1076H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1084H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1092H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1100H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1108H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1116H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1124H980" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M756 1108H980 M788 972V1124" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(788,1108) scale(0.05859375,-0.05859375)"><path d="M566 -29 Q518 -29 465.5 -24.5 Q413 -20 359 -10 Q313 -2 258 12 Q203 26 149 45 L149 249 Q200 223 249 202 Q298 181 350 167 Q400 154 448.5 147.5 Q497 141 547 141 Q714 141 802 216 Q891 292 891 429 Q891 563 803 639 Q715 715 561 715 L407 715 L407 881 L561 881 Q702 881 779 942 Q856 1002 856 1115 Q856 1228 784 1289 Q714 1350 574 1350 Q491 1350 393 1330 Q297 1311 194 1270 L194 1456 Q316 1488 410 1504 Q499 1520 579 1520 Q684 1520 772.5 1493 Q861 1466 927 1411 Q1056 1304 1056 1122 Q1056 1057 1038.5 1006 Q1021 955 988 915 Q920 834 788 799 Q935 760 1013 661 Q1054 609 1072.5 546 Q1091 483 1091 411 Q1091 207 954 89 Q886 31 789.5 1 Q693 -29 566 -29 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="20.48"/>
+<circle cx="566" cy="-29" r="34.13333333333333" fill="#1369bd"><title>Point 0: 566, -29 font units; on curve</title></circle>
+<circle cx="518" cy="-29" r="34.13333333333333" fill="#ce6a00"><title>Point 1: 518, -29 font units; control</title></circle>
+<circle cx="413" cy="-20" r="34.13333333333333" fill="#ce6a00"><title>Point 2: 413, -20 font units; control</title></circle>
+<circle cx="359" cy="-10" r="34.13333333333333" fill="#1369bd"><title>Point 3: 359, -10 font units; on curve</title></circle>
+<circle cx="313" cy="-2" r="34.13333333333333" fill="#ce6a00"><title>Point 4: 313, -2 font units; control</title></circle>
+<circle cx="203" cy="26" r="34.13333333333333" fill="#ce6a00"><title>Point 5: 203, 26 font units; control</title></circle>
+<circle cx="149" cy="45" r="34.13333333333333" fill="#1369bd"><title>Point 6: 149, 45 font units; on curve</title></circle>
+<circle cx="149" cy="249" r="34.13333333333333" fill="#1369bd"><title>Point 7: 149, 249 font units; on curve</title></circle>
+<circle cx="200" cy="223" r="34.13333333333333" fill="#ce6a00"><title>Point 8: 200, 223 font units; control</title></circle>
+<circle cx="298" cy="181" r="34.13333333333333" fill="#ce6a00"><title>Point 9: 298, 181 font units; control</title></circle>
+<circle cx="350" cy="167" r="34.13333333333333" fill="#1369bd"><title>Point 10: 350, 167 font units; on curve</title></circle>
+<circle cx="400" cy="154" r="34.13333333333333" fill="#ce6a00"><title>Point 11: 400, 154 font units; control</title></circle>
+<circle cx="497" cy="141" r="34.13333333333333" fill="#ce6a00"><title>Point 12: 497, 141 font units; control</title></circle>
+<circle cx="547" cy="141" r="34.13333333333333" fill="#1369bd"><title>Point 13: 547, 141 font units; on curve</title></circle>
+<circle cx="714" cy="141" r="34.13333333333333" fill="#ce6a00"><title>Point 14: 714, 141 font units; control</title></circle>
+<circle cx="802" cy="216" r="34.13333333333333" fill="#1369bd"><title>Point 15: 802, 216 font units; on curve</title></circle>
+<circle cx="891" cy="292" r="34.13333333333333" fill="#ce6a00"><title>Point 16: 891, 292 font units; control</title></circle>
+<circle cx="891" cy="429" r="34.13333333333333" fill="#1369bd"><title>Point 17: 891, 429 font units; on curve</title></circle>
+<circle cx="891" cy="563" r="34.13333333333333" fill="#ce6a00"><title>Point 18: 891, 563 font units; control</title></circle>
+<circle cx="803" cy="639" r="34.13333333333333" fill="#1369bd"><title>Point 19: 803, 639 font units; on curve</title></circle>
+<circle cx="715" cy="715" r="34.13333333333333" fill="#ce6a00"><title>Point 20: 715, 715 font units; control</title></circle>
+<circle cx="561" cy="715" r="34.13333333333333" fill="#1369bd"><title>Point 21: 561, 715 font units; on curve</title></circle>
+<circle cx="407" cy="715" r="34.13333333333333" fill="#1369bd"><title>Point 22: 407, 715 font units; on curve</title></circle>
+<circle cx="407" cy="881" r="34.13333333333333" fill="#1369bd"><title>Point 23: 407, 881 font units; on curve</title></circle>
+<circle cx="561" cy="881" r="34.13333333333333" fill="#1369bd"><title>Point 24: 561, 881 font units; on curve</title></circle>
+<circle cx="702" cy="881" r="34.13333333333333" fill="#ce6a00"><title>Point 25: 702, 881 font units; control</title></circle>
+<circle cx="779" cy="942" r="34.13333333333333" fill="#1369bd"><title>Point 26: 779, 942 font units; on curve</title></circle>
+<circle cx="856" cy="1002" r="34.13333333333333" fill="#ce6a00"><title>Point 27: 856, 1002 font units; control</title></circle>
+<circle cx="856" cy="1115" r="34.13333333333333" fill="#1369bd"><title>Point 28: 856, 1115 font units; on curve</title></circle>
+<circle cx="856" cy="1228" r="34.13333333333333" fill="#ce6a00"><title>Point 29: 856, 1228 font units; control</title></circle>
+<circle cx="784" cy="1289" r="34.13333333333333" fill="#1369bd"><title>Point 30: 784, 1289 font units; on curve</title></circle>
+<circle cx="714" cy="1350" r="34.13333333333333" fill="#ce6a00"><title>Point 31: 714, 1350 font units; control</title></circle>
+<circle cx="574" cy="1350" r="34.13333333333333" fill="#1369bd"><title>Point 32: 574, 1350 font units; on curve</title></circle>
+<circle cx="491" cy="1350" r="34.13333333333333" fill="#ce6a00"><title>Point 33: 491, 1350 font units; control</title></circle>
+<circle cx="393" cy="1330" r="34.13333333333333" fill="#1369bd"><title>Point 34: 393, 1330 font units; on curve</title></circle>
+<circle cx="297" cy="1311" r="34.13333333333333" fill="#ce6a00"><title>Point 35: 297, 1311 font units; control</title></circle>
+<circle cx="194" cy="1270" r="34.13333333333333" fill="#1369bd"><title>Point 36: 194, 1270 font units; on curve</title></circle>
+<circle cx="194" cy="1456" r="34.13333333333333" fill="#1369bd"><title>Point 37: 194, 1456 font units; on curve</title></circle>
+<circle cx="316" cy="1488" r="34.13333333333333" fill="#ce6a00"><title>Point 38: 316, 1488 font units; control</title></circle>
+<circle cx="410" cy="1504" r="34.13333333333333" fill="#1369bd"><title>Point 39: 410, 1504 font units; on curve</title></circle>
+<circle cx="499" cy="1520" r="34.13333333333333" fill="#ce6a00"><title>Point 40: 499, 1520 font units; control</title></circle>
+<circle cx="579" cy="1520" r="34.13333333333333" fill="#1369bd"><title>Point 41: 579, 1520 font units; on curve</title></circle>
+<circle cx="684" cy="1520" r="34.13333333333333" fill="#ce6a00"><title>Point 42: 684, 1520 font units; control</title></circle>
+<circle cx="861" cy="1466" r="34.13333333333333" fill="#ce6a00"><title>Point 43: 861, 1466 font units; control</title></circle>
+<circle cx="927" cy="1411" r="34.13333333333333" fill="#1369bd"><title>Point 44: 927, 1411 font units; on curve</title></circle>
+<circle cx="1056" cy="1304" r="34.13333333333333" fill="#ce6a00"><title>Point 45: 1056, 1304 font units; control</title></circle>
+<circle cx="1056" cy="1122" r="34.13333333333333" fill="#1369bd"><title>Point 46: 1056, 1122 font units; on curve</title></circle>
+<circle cx="1056" cy="1057" r="34.13333333333333" fill="#ce6a00"><title>Point 47: 1056, 1057 font units; control</title></circle>
+<circle cx="1021" cy="955" r="34.13333333333333" fill="#ce6a00"><title>Point 48: 1021, 955 font units; control</title></circle>
+<circle cx="988" cy="915" r="34.13333333333333" fill="#1369bd"><title>Point 49: 988, 915 font units; on curve</title></circle>
+<circle cx="920" cy="834" r="34.13333333333333" fill="#ce6a00"><title>Point 50: 920, 834 font units; control</title></circle>
+<circle cx="788" cy="799" r="34.13333333333333" fill="#1369bd"><title>Point 51: 788, 799 font units; on curve</title></circle>
+<circle cx="935" cy="760" r="34.13333333333333" fill="#ce6a00"><title>Point 52: 935, 760 font units; control</title></circle>
+<circle cx="1013" cy="661" r="34.13333333333333" fill="#1369bd"><title>Point 53: 1013, 661 font units; on curve</title></circle>
+<circle cx="1054" cy="609" r="34.13333333333333" fill="#ce6a00"><title>Point 54: 1054, 609 font units; control</title></circle>
+<circle cx="1091" cy="483" r="34.13333333333333" fill="#ce6a00"><title>Point 55: 1091, 483 font units; control</title></circle>
+<circle cx="1091" cy="411" r="34.13333333333333" fill="#1369bd"><title>Point 56: 1091, 411 font units; on curve</title></circle>
+<circle cx="1091" cy="207" r="34.13333333333333" fill="#ce6a00"><title>Point 57: 1091, 207 font units; control</title></circle>
+<circle cx="954" cy="89" r="34.13333333333333" fill="#1369bd"><title>Point 58: 954, 89 font units; on curve</title></circle>
+<circle cx="886" cy="31" r="34.13333333333333" fill="#ce6a00"><title>Point 59: 886, 31 font units; control</title></circle>
+<circle cx="693" cy="-29" r="34.13333333333333" fill="#ce6a00"><title>Point 60: 693, -29 font units; control</title></circle>
+</g>
+<text x="1036" y="960" font-family="sans-serif" font-size="17">5</text>
+<path d="M1036 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1044 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1052 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1060 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1068 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1076 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1084 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1092 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1100 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1108 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1116 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1124 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1132 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1140 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1148 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1156 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1164 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1172 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1180 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1188 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1196 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1204 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1212 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1220 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1228 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1236 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1244 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1252 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1260 972V1124" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 972H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 980H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 988H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 996H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1004H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1012H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1020H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1028H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1036H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1044H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1052H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1060H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1068H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1076H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1084H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1092H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1100H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1108H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1116H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1124H1260" stroke="#d9e1eb" stroke-width="0.7"/>
+<path d="M1036 1108H1260 M1068 972V1124" stroke="#93a7bf" stroke-width="1"/>
+<g transform="translate(1068,1108) scale(0.05859375,-0.05859375)"><path d="M525 -29 Q480 -29 424.5 -25 Q369 -21 320 -13 Q269 -5 226 7 Q183 19 143 35 L143 240 Q237 190 328 166 Q421 141 513 141 Q688 141 776 229 Q866 318 866 477 Q866 564 841 626 Q816 688 773 729 Q731 769 665 793 Q599 817 508 817 Q431 817 354 799 Q276 780 207 743 L207 1493 L963 1493 L963 1323 L391 1323 L391 956 Q435 973 478 980 Q516 987 566 987 Q687 987 779 950 Q871 913 934 850 Q1069 714 1069 481 Q1069 242 928 106 Q859 40 759.5 5.5 Q660 -29 525 -29 Z" fill="#d9dde4" fill-rule="nonzero" stroke="#101820" stroke-width="20.48"/>
+<circle cx="525" cy="-29" r="34.13333333333333" fill="#1369bd"><title>Point 0: 525, -29 font units; on curve</title></circle>
+<circle cx="480" cy="-29" r="34.13333333333333" fill="#ce6a00"><title>Point 1: 480, -29 font units; control</title></circle>
+<circle cx="369" cy="-21" r="34.13333333333333" fill="#ce6a00"><title>Point 2: 369, -21 font units; control</title></circle>
+<circle cx="320" cy="-13" r="34.13333333333333" fill="#1369bd"><title>Point 3: 320, -13 font units; on curve</title></circle>
+<circle cx="269" cy="-5" r="34.13333333333333" fill="#ce6a00"><title>Point 4: 269, -5 font units; control</title></circle>
+<circle cx="183" cy="19" r="34.13333333333333" fill="#ce6a00"><title>Point 5: 183, 19 font units; control</title></circle>
+<circle cx="143" cy="35" r="34.13333333333333" fill="#1369bd"><title>Point 6: 143, 35 font units; on curve</title></circle>
+<circle cx="143" cy="240" r="34.13333333333333" fill="#1369bd"><title>Point 7: 143, 240 font units; on curve</title></circle>
+<circle cx="237" cy="190" r="34.13333333333333" fill="#ce6a00"><title>Point 8: 237, 190 font units; control</title></circle>
+<circle cx="328" cy="166" r="34.13333333333333" fill="#1369bd"><title>Point 9: 328, 166 font units; on curve</title></circle>
+<circle cx="421" cy="141" r="34.13333333333333" fill="#ce6a00"><title>Point 10: 421, 141 font units; control</title></circle>
+<circle cx="513" cy="141" r="34.13333333333333" fill="#1369bd"><title>Point 11: 513, 141 font units; on curve</title></circle>
+<circle cx="688" cy="141" r="34.13333333333333" fill="#ce6a00"><title>Point 12: 688, 141 font units; control</title></circle>
+<circle cx="776" cy="229" r="34.13333333333333" fill="#1369bd"><title>Point 13: 776, 229 font units; on curve</title></circle>
+<circle cx="866" cy="318" r="34.13333333333333" fill="#ce6a00"><title>Point 14: 866, 318 font units; control</title></circle>
+<circle cx="866" cy="477" r="34.13333333333333" fill="#1369bd"><title>Point 15: 866, 477 font units; on curve</title></circle>
+<circle cx="866" cy="564" r="34.13333333333333" fill="#ce6a00"><title>Point 16: 866, 564 font units; control</title></circle>
+<circle cx="816" cy="688" r="34.13333333333333" fill="#ce6a00"><title>Point 17: 816, 688 font units; control</title></circle>
+<circle cx="773" cy="729" r="34.13333333333333" fill="#1369bd"><title>Point 18: 773, 729 font units; on curve</title></circle>
+<circle cx="731" cy="769" r="34.13333333333333" fill="#ce6a00"><title>Point 19: 731, 769 font units; control</title></circle>
+<circle cx="599" cy="817" r="34.13333333333333" fill="#ce6a00"><title>Point 20: 599, 817 font units; control</title></circle>
+<circle cx="508" cy="817" r="34.13333333333333" fill="#1369bd"><title>Point 21: 508, 817 font units; on curve</title></circle>
+<circle cx="431" cy="817" r="34.13333333333333" fill="#ce6a00"><title>Point 22: 431, 817 font units; control</title></circle>
+<circle cx="354" cy="799" r="34.13333333333333" fill="#1369bd"><title>Point 23: 354, 799 font units; on curve</title></circle>
+<circle cx="276" cy="780" r="34.13333333333333" fill="#ce6a00"><title>Point 24: 276, 780 font units; control</title></circle>
+<circle cx="207" cy="743" r="34.13333333333333" fill="#1369bd"><title>Point 25: 207, 743 font units; on curve</title></circle>
+<circle cx="207" cy="1493" r="34.13333333333333" fill="#1369bd"><title>Point 26: 207, 1493 font units; on curve</title></circle>
+<circle cx="963" cy="1493" r="34.13333333333333" fill="#1369bd"><title>Point 27: 963, 1493 font units; on curve</title></circle>
+<circle cx="963" cy="1323" r="34.13333333333333" fill="#1369bd"><title>Point 28: 963, 1323 font units; on curve</title></circle>
+<circle cx="391" cy="1323" r="34.13333333333333" fill="#1369bd"><title>Point 29: 391, 1323 font units; on curve</title></circle>
+<circle cx="391" cy="956" r="34.13333333333333" fill="#1369bd"><title>Point 30: 391, 956 font units; on curve</title></circle>
+<circle cx="435" cy="973" r="34.13333333333333" fill="#ce6a00"><title>Point 31: 435, 973 font units; control</title></circle>
+<circle cx="478" cy="980" r="34.13333333333333" fill="#1369bd"><title>Point 32: 478, 980 font units; on curve</title></circle>
+<circle cx="516" cy="987" r="34.13333333333333" fill="#ce6a00"><title>Point 33: 516, 987 font units; control</title></circle>
+<circle cx="566" cy="987" r="34.13333333333333" fill="#1369bd"><title>Point 34: 566, 987 font units; on curve</title></circle>
+<circle cx="687" cy="987" r="34.13333333333333" fill="#ce6a00"><title>Point 35: 687, 987 font units; control</title></circle>
+<circle cx="871" cy="913" r="34.13333333333333" fill="#ce6a00"><title>Point 36: 871, 913 font units; control</title></circle>
+<circle cx="934" cy="850" r="34.13333333333333" fill="#1369bd"><title>Point 37: 934, 850 font units; on curve</title></circle>
+<circle cx="1069" cy="714" r="34.13333333333333" fill="#ce6a00"><title>Point 38: 1069, 714 font units; control</title></circle>
+<circle cx="1069" cy="481" r="34.13333333333333" fill="#1369bd"><title>Point 39: 1069, 481 font units; on curve</title></circle>
+<circle cx="1069" cy="242" r="34.13333333333333" fill="#ce6a00"><title>Point 40: 1069, 242 font units; control</title></circle>
+<circle cx="928" cy="106" r="34.13333333333333" fill="#1369bd"><title>Point 41: 928, 106 font units; on curve</title></circle>
+<circle cx="859" cy="40" r="34.13333333333333" fill="#ce6a00"><title>Point 42: 859, 40 font units; control</title></circle>
+<circle cx="660" cy="-29" r="34.13333333333333" fill="#ce6a00"><title>Point 43: 660, -29 font units; control</title></circle>
+</g>
+</svg>

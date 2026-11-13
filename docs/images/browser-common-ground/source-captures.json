@@ -1,0 +1,70 @@
+{
+  "kind": "source-outline and unhinted-raster inspection",
+  "source_version": "2.14.2+dfsg-1ubuntu0.2",
+  "library_sha256": "119762cc898175319d44c39f3ec5d7f1244739248999bfdef6ad2e34f81aaa7a",
+  "probe_source_sha256": "475ccd7696da515df5f17ea116d26125d3fbdf3a3624e2eea03774df1ad5882d",
+  "source_load_flags": "0x0b: NO_SCALE, NO_HINTING, NO_BITMAP",
+  "raster_load_flags": "0x0a: NO_HINTING, NO_BITMAP",
+  "binary_outline_flags": "0x08: IGNORE_DROPOUTS",
+  "source_curve_precision": "decompose with shift=1, divide coordinates by2 to retain implied half-unit quadratic points",
+  "font_sources": [
+    {
+      "font": "Noto Sans Regular",
+      "font_file": "NotoSans-Regular.ttf",
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "units_per_em": 1000
+    },
+    {
+      "font": "Noto Sans Bold",
+      "font_file": "NotoSans-Bold.ttf",
+      "font_sha256": "e83493c945848ecd4a9ad0f6d19164541a0d3e23a9c952304a00a46e00272ac5",
+      "units_per_em": 1000
+    },
+    {
+      "font": "Lato Light",
+      "font_file": "Lato-Light.ttf",
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "units_per_em": 2000
+    },
+    {
+      "font": "IBM Plex Sans Light",
+      "font_file": "IBMPlexSans-Light.ttf",
+      "font_sha256": "45934c7fc2267d3726698a52f37db7477bdc751abad6b5107304ebd7b967f1c6",
+      "units_per_em": 1000
+    },
+    {
+      "font": "Hack Regular",
+      "font_file": "Hack-Regular.ttf",
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "units_per_em": 2048
+    }
+  ],
+  "images": [
+    {
+      "file": "source-outlines.svg",
+      "sha256": "c262de592ffd075508640776bce93a3e24ab72d62e7e0df67734accad4d67fbf"
+    },
+    {
+      "file": "source-outlines.png",
+      "sha256": "aef521e54ffa7f67b40688b006e49bdaf3bceda663bdfda9995ded7a106b1178"
+    },
+    {
+      "file": "source-unhinted-15px.png",
+      "sha256": "01854df5ff466de9a381a09a9df398d7e354ed94fe57c15c73815467f7973565"
+    }
+  ],
+  "checks": [
+    "unhinted gray unchanged after removing auto-hinter",
+    "independent grayscale raster matches public probe",
+    "source and scaled outline contour/tag identities",
+    "binary has only0/255 coverage with dropout repair disabled",
+    "all source contours reach vector paths",
+    "native and enlarged saved raster crops equal originals"
+  ],
+  "limits": [
+    "SVG preview is rasterized by Qt or the viewer",
+    "binary remains a scan-conversion choice, not original font data",
+    "selected static TrueType glyphs only",
+    "component images, no browser or shaping claim"
+  ]
+}
