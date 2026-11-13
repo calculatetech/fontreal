@@ -17,7 +17,7 @@ The user accepts the current Qt result, including KWin and Qt Quick. Preserve th
 
 ## Active
 
-- **FR-018: Find a general browser rendering policy.** Improve stroke consistency and weak crowns across fonts, weights, sizes, scales, and palettes. Contrast-only samples are insufficient; retain no clipping as a comparison control and investigate the existing hinter's stroke geometry. Preserve the accepted crisp reference and test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md) and [native axis study](plans/FR-018-axis-study.md).
+- **FR-018: Find a general browser rendering policy.** Improve stroke consistency and weak crowns across fonts, weights, sizes, scales, and palettes. Contrast-only samples are insufficient; retain no clipping as a comparison control and investigate the existing hinter's stroke geometry. Compare nearest-pixel widths with a half-pixel minimum for very thin strokes. Preserve the accepted crisp reference and test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md) and [native studies](plans/FR-018-axis-study.md).
 
 ## Planned next
 

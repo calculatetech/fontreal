@@ -1,0 +1,1279 @@
+{
+  "kind": "test-only linked-stem experiment; no browser or universal snapping claim",
+  "source_version": "2.14.2+dfsg-1ubuntu0.2",
+  "stock_library_sha256": "119762cc898175319d44c39f3ec5d7f1244739248999bfdef6ad2e34f81aaa7a",
+  "experiment_library_sha256": "0983dc819c511ea8fc87e6a6ab030f282fdfbe4611900d5aaf18b7d8296f0b8f",
+  "native_source_sha256": "30189813d762de77aea2a0d9010a6b7656657809028ac433f92b3c027eeda7f7",
+  "helper_sha256": "6ad64be5f0f86f71d7903307de52e41d2705eb5c18ba65a47c26fabbb269ed60",
+  "runner_sha256": "78f4eec890b9a487737a3180a958f849e7aa6b811c08a7db32db78819cdc8a1c",
+  "reference_report_sha256": "88610bdafaf0631571a67a54f4a21016273430692537d3f29e3f13d8c0340316",
+  "modes": {
+    "F": "retained exact prior F masks",
+    "solid": "nearest width, half ties up, minimum one pixel",
+    "half": "as solid, but positive widths below half a pixel become half a pixel"
+  },
+  "conditions": [
+    {
+      "font": "Noto Sans Regular",
+      "font_file": "NotoSans-Regular.ttf",
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          255,
+          32
+        ],
+        "solid": [
+          255
+        ],
+        "half": [
+          255
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Bold",
+      "font_file": "NotoSans-Bold.ttf",
+      "font_sha256": "e83493c945848ecd4a9ad0f6d19164541a0d3e23a9c952304a00a46e00272ac5",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255
+        ],
+        "half": [
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Italic",
+      "font_file": "NotoSans-Italic.ttf",
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          0,
+          206,
+          96,
+          0
+        ],
+        "solid": [
+          0,
+          205,
+          64,
+          0
+        ],
+        "half": [
+          0,
+          205,
+          64,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans BoldItalic",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          0,
+          235,
+          245,
+          3,
+          0
+        ],
+        "solid": [
+          0,
+          234,
+          216,
+          0
+        ],
+        "half": [
+          0,
+          234,
+          216,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Lato Light",
+      "font_file": "Lato-Light.ttf",
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          180
+        ],
+        "solid": [
+          255
+        ],
+        "half": [
+          255
+        ]
+      }
+    },
+    {
+      "font": "Lato Regular",
+      "font_file": "Lato-Regular.ttf",
+      "font_sha256": "6f6940be0835c3ddec9199e5fc42be4cbc61ebcfd58c623fdf719366253f1780",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          255,
+          32
+        ],
+        "solid": [
+          255
+        ],
+        "half": [
+          255
+        ]
+      }
+    },
+    {
+      "font": "IBM Plex Sans Light",
+      "font_file": "IBMPlexSans-Light.ttf",
+      "font_sha256": "45934c7fc2267d3726698a52f37db7477bdc751abad6b5107304ebd7b967f1c6",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          255,
+          32,
+          0
+        ],
+        "solid": [
+          255,
+          0
+        ],
+        "half": [
+          255,
+          0
+        ]
+      }
+    },
+    {
+      "font": "IBM Plex Sans Bold",
+      "font_file": "IBMPlexSans-Bold.ttf",
+      "font_sha256": "b80a71fc5ac0f4d95f55dd97ca6be2c6073bea4ed6296336fe781620df41894b",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255,
+          0
+        ],
+        "half": [
+          255,
+          255,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Hack Regular",
+      "font_file": "Hack-Regular.ttf",
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "size_px": 12,
+      "profiles": {
+        "F": [
+          0,
+          0,
+          255,
+          32,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          0,
+          255,
+          0,
+          0,
+          0
+        ],
+        "half": [
+          0,
+          0,
+          255,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Regular",
+      "font_file": "NotoSans-Regular.ttf",
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          255,
+          32
+        ],
+        "solid": [
+          255
+        ],
+        "half": [
+          255
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Bold",
+      "font_file": "NotoSans-Bold.ttf",
+      "font_sha256": "e83493c945848ecd4a9ad0f6d19164541a0d3e23a9c952304a00a46e00272ac5",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255
+        ],
+        "half": [
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Italic",
+      "font_file": "NotoSans-Italic.ttf",
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          0,
+          98,
+          254,
+          17,
+          0
+        ],
+        "solid": [
+          0,
+          98,
+          238,
+          1,
+          0
+        ],
+        "half": [
+          0,
+          98,
+          238,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans BoldItalic",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          0,
+          134,
+          255,
+          205,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          134,
+          255,
+          173,
+          0
+        ],
+        "half": [
+          0,
+          134,
+          255,
+          173,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Lato Light",
+      "font_file": "Lato-Light.ttf",
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          255,
+          32
+        ],
+        "solid": [
+          255
+        ],
+        "half": [
+          255
+        ]
+      }
+    },
+    {
+      "font": "Lato Regular",
+      "font_file": "Lato-Regular.ttf",
+      "font_sha256": "6f6940be0835c3ddec9199e5fc42be4cbc61ebcfd58c623fdf719366253f1780",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          255,
+          32
+        ],
+        "solid": [
+          255
+        ],
+        "half": [
+          255
+        ]
+      }
+    },
+    {
+      "font": "IBM Plex Sans Light",
+      "font_file": "IBMPlexSans-Light.ttf",
+      "font_sha256": "45934c7fc2267d3726698a52f37db7477bdc751abad6b5107304ebd7b967f1c6",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          255,
+          32,
+          0
+        ],
+        "solid": [
+          255,
+          0,
+          0
+        ],
+        "half": [
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "IBM Plex Sans Bold",
+      "font_file": "IBMPlexSans-Bold.ttf",
+      "font_sha256": "b80a71fc5ac0f4d95f55dd97ca6be2c6073bea4ed6296336fe781620df41894b",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          32,
+          0
+        ],
+        "solid": [
+          255,
+          255,
+          0
+        ],
+        "half": [
+          255,
+          255,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Hack Regular",
+      "font_file": "Hack-Regular.ttf",
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "size_px": 15,
+      "profiles": {
+        "F": [
+          0,
+          0,
+          0,
+          255,
+          32,
+          0,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0
+        ],
+        "half": [
+          0,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Regular",
+      "font_file": "NotoSans-Regular.ttf",
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255
+        ],
+        "half": [
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Bold",
+      "font_file": "NotoSans-Bold.ttf",
+      "font_sha256": "e83493c945848ecd4a9ad0f6d19164541a0d3e23a9c952304a00a46e00272ac5",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255,
+          255
+        ],
+        "half": [
+          255,
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Italic",
+      "font_file": "NotoSans-Italic.ttf",
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          0,
+          22,
+          255,
+          175,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          22,
+          255,
+          143,
+          0,
+          0
+        ],
+        "half": [
+          0,
+          22,
+          255,
+          143,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans BoldItalic",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          0,
+          39,
+          255,
+          255,
+          185,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          38,
+          255,
+          255,
+          153,
+          0,
+          0
+        ],
+        "half": [
+          0,
+          38,
+          255,
+          255,
+          153,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Lato Light",
+      "font_file": "Lato-Light.ttf",
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          255,
+          32
+        ],
+        "solid": [
+          255
+        ],
+        "half": [
+          255
+        ]
+      }
+    },
+    {
+      "font": "Lato Regular",
+      "font_file": "Lato-Regular.ttf",
+      "font_sha256": "6f6940be0835c3ddec9199e5fc42be4cbc61ebcfd58c623fdf719366253f1780",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255
+        ],
+        "half": [
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "font": "IBM Plex Sans Light",
+      "font_file": "IBMPlexSans-Light.ttf",
+      "font_sha256": "45934c7fc2267d3726698a52f37db7477bdc751abad6b5107304ebd7b967f1c6",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          255,
+          32,
+          0
+        ],
+        "solid": [
+          255,
+          0,
+          0
+        ],
+        "half": [
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "IBM Plex Sans Bold",
+      "font_file": "IBMPlexSans-Bold.ttf",
+      "font_sha256": "b80a71fc5ac0f4d95f55dd97ca6be2c6073bea4ed6296336fe781620df41894b",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          255,
+          32,
+          0
+        ],
+        "solid": [
+          255,
+          255,
+          255,
+          0
+        ],
+        "half": [
+          255,
+          255,
+          255,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Hack Regular",
+      "font_file": "Hack-Regular.ttf",
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "size_px": 18.75,
+      "profiles": {
+        "F": [
+          0,
+          0,
+          0,
+          255,
+          255,
+          32,
+          0,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          0,
+          0,
+          255,
+          255,
+          0,
+          0,
+          0,
+          0
+        ],
+        "half": [
+          0,
+          0,
+          0,
+          255,
+          255,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Regular",
+      "font_file": "NotoSans-Regular.ttf",
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255
+        ],
+        "half": [
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Bold",
+      "font_file": "NotoSans-Bold.ttf",
+      "font_sha256": "e83493c945848ecd4a9ad0f6d19164541a0d3e23a9c952304a00a46e00272ac5",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255,
+          255
+        ],
+        "half": [
+          255,
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans Italic",
+      "font_file": "NotoSans-Italic.ttf",
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          0,
+          0,
+          176,
+          255,
+          108,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          0,
+          176,
+          255,
+          76,
+          0,
+          0
+        ],
+        "half": [
+          0,
+          0,
+          176,
+          255,
+          76,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Noto Sans BoldItalic",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          0,
+          0,
+          227,
+          255,
+          255,
+          139,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          0,
+          226,
+          255,
+          255,
+          107,
+          0,
+          0
+        ],
+        "half": [
+          0,
+          0,
+          226,
+          255,
+          255,
+          107,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Lato Light",
+      "font_file": "Lato-Light.ttf",
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          255,
+          32
+        ],
+        "solid": [
+          255
+        ],
+        "half": [
+          255
+        ]
+      }
+    },
+    {
+      "font": "Lato Regular",
+      "font_file": "Lato-Regular.ttf",
+      "font_sha256": "6f6940be0835c3ddec9199e5fc42be4cbc61ebcfd58c623fdf719366253f1780",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          32
+        ],
+        "solid": [
+          255,
+          255
+        ],
+        "half": [
+          255,
+          255
+        ]
+      }
+    },
+    {
+      "font": "IBM Plex Sans Light",
+      "font_file": "IBMPlexSans-Light.ttf",
+      "font_sha256": "45934c7fc2267d3726698a52f37db7477bdc751abad6b5107304ebd7b967f1c6",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          255,
+          32,
+          0
+        ],
+        "solid": [
+          255,
+          0,
+          0
+        ],
+        "half": [
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "IBM Plex Sans Bold",
+      "font_file": "IBMPlexSans-Bold.ttf",
+      "font_sha256": "b80a71fc5ac0f4d95f55dd97ca6be2c6073bea4ed6296336fe781620df41894b",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          255,
+          255,
+          255,
+          32,
+          0,
+          0
+        ],
+        "solid": [
+          255,
+          255,
+          255,
+          0,
+          0
+        ],
+        "half": [
+          255,
+          255,
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "font": "Hack Regular",
+      "font_file": "Hack-Regular.ttf",
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "size_px": 22.5,
+      "profiles": {
+        "F": [
+          0,
+          0,
+          0,
+          255,
+          255,
+          32,
+          0,
+          0,
+          0,
+          0
+        ],
+        "solid": [
+          0,
+          0,
+          0,
+          255,
+          255,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "half": [
+          0,
+          0,
+          0,
+          255,
+          255,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "coverage_128_encoded_pixels": {
+    "light": 187,
+    "dark": 188
+  },
+  "checks": [
+    "same C helper as native library, independent threshold table",
+    "every actual native width decision matches declared formula",
+    "profile-off equals retained stock probe results",
+    "independent native raster of loaded outlines",
+    "repeated render and next-glyph identity",
+    "exact F masks and shared origins",
+    "all occurrences, complete ink bounds and independent alpha composition",
+    "all 36 condition and 10 sheet identities",
+    "saved native and enlarged pixel crops",
+    "unchanged stock source, stock library and caller environment"
+  ],
+  "limits": [
+    "Native edge placement, blue zones, unlinked interpolation and italic X bypass remain active",
+    "Half-pixel width does not promise exactly 128 coverage throughout real curves",
+    "Coverage is opacity, not encoded brightness",
+    "No installation or browser/profile writes"
+  ],
+  "generated_sheet_count": 10,
+  "sheets": [
+    {
+      "file": "width-12-light.png",
+      "sha256": "fd97d2b5c1f06b6577ae7b6162486dd5be4df5448c362cbab923d04bd2b698cb",
+      "dimensions": [
+        1800,
+        1162
+      ]
+    },
+    {
+      "file": "width-12-dark.png",
+      "sha256": "4547df0ef13868043dc2a838a14cc64f6f4d69354b4736d3b4c6ff06d2a13d5b",
+      "dimensions": [
+        1800,
+        1162
+      ]
+    },
+    {
+      "file": "width-15-light.png",
+      "sha256": "195f16f35e3bff833db49c23125f723f5e563556477fc1f670970e828a1f2151",
+      "dimensions": [
+        1800,
+        1261
+      ]
+    },
+    {
+      "file": "width-15-dark.png",
+      "sha256": "891e796e364db0c3d0b87d2f67d6209c66945f2a70cc57c7ccd21a7cf4c15ed4",
+      "dimensions": [
+        1800,
+        1261
+      ]
+    },
+    {
+      "file": "width-synthetic-light.png",
+      "sha256": "1da103d35e727c3b961fe36029079472a99ad934410478d51aa9a43c613bbeeb",
+      "dimensions": [
+        1200,
+        898
+      ]
+    },
+    {
+      "file": "width-synthetic-dark.png",
+      "sha256": "e8397cb96ab402bdd15571bf974b74840539aba3eccbffdadc913cb37a793f34",
+      "dimensions": [
+        1200,
+        898
+      ]
+    }
+  ],
+  "synthetic": [
+    {
+      "source_width_26_6": 0,
+      "values": {
+        "raw": {
+          "width_26_6": 0,
+          "profile": []
+        },
+        "solid": {
+          "width_26_6": 0,
+          "profile": []
+        },
+        "half": {
+          "width_26_6": 0,
+          "profile": []
+        }
+      }
+    },
+    {
+      "source_width_26_6": 16,
+      "values": {
+        "raw": {
+          "width_26_6": 16,
+          "profile": [
+            63
+          ]
+        },
+        "solid": {
+          "width_26_6": 64,
+          "profile": [
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 32,
+          "profile": [
+            127
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 31,
+      "values": {
+        "raw": {
+          "width_26_6": 31,
+          "profile": [
+            123
+          ]
+        },
+        "solid": {
+          "width_26_6": 64,
+          "profile": [
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 32,
+          "profile": [
+            127
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 32,
+      "values": {
+        "raw": {
+          "width_26_6": 32,
+          "profile": [
+            127
+          ]
+        },
+        "solid": {
+          "width_26_6": 64,
+          "profile": [
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 64,
+          "profile": [
+            255
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 90,
+      "values": {
+        "raw": {
+          "width_26_6": 90,
+          "profile": [
+            255,
+            103
+          ]
+        },
+        "solid": {
+          "width_26_6": 64,
+          "profile": [
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 64,
+          "profile": [
+            255
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 95,
+      "values": {
+        "raw": {
+          "width_26_6": 95,
+          "profile": [
+            255,
+            123
+          ]
+        },
+        "solid": {
+          "width_26_6": 64,
+          "profile": [
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 64,
+          "profile": [
+            255
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 96,
+      "values": {
+        "raw": {
+          "width_26_6": 96,
+          "profile": [
+            255,
+            127
+          ]
+        },
+        "solid": {
+          "width_26_6": 128,
+          "profile": [
+            255,
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 128,
+          "profile": [
+            255,
+            255
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 97,
+      "values": {
+        "raw": {
+          "width_26_6": 97,
+          "profile": [
+            255,
+            131
+          ]
+        },
+        "solid": {
+          "width_26_6": 128,
+          "profile": [
+            255,
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 128,
+          "profile": [
+            255,
+            255
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 154,
+      "values": {
+        "raw": {
+          "width_26_6": 154,
+          "profile": [
+            255,
+            255,
+            103
+          ]
+        },
+        "solid": {
+          "width_26_6": 128,
+          "profile": [
+            255,
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 128,
+          "profile": [
+            255,
+            255
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 160,
+      "values": {
+        "raw": {
+          "width_26_6": 160,
+          "profile": [
+            255,
+            255,
+            127
+          ]
+        },
+        "solid": {
+          "width_26_6": 192,
+          "profile": [
+            255,
+            255,
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 192,
+          "profile": [
+            255,
+            255,
+            255
+          ]
+        }
+      }
+    },
+    {
+      "source_width_26_6": 180,
+      "values": {
+        "raw": {
+          "width_26_6": 180,
+          "profile": [
+            255,
+            255,
+            207
+          ]
+        },
+        "solid": {
+          "width_26_6": 192,
+          "profile": [
+            255,
+            255,
+            255
+          ]
+        },
+        "half": {
+          "width_26_6": 192,
+          "profile": [
+            255,
+            255,
+            255
+          ]
+        }
+      }
+    }
+  ]
+}
