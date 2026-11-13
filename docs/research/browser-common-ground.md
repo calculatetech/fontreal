@@ -155,6 +155,30 @@ The command checks the actual native width decisions against the formula. It als
 
 The sweep covers nine faces at 12, 15, 18.75, and 22.5 device pixels, with both palettes. These sizes represent different effective densities without proving browser scaling behavior. The [capture record](../images/browser-common-ground/width-captures.json) supplies hashes, conditions, measured profiles, and the selected public images. Native decision logs include the requested glyph and the following probe glyph. They do not identify every feature's stem link or blue-zone classification. Wider browser qualification and a coherent diagonal-core rule remain separate work.
 
+### Balance weak crowns and light-face opacity
+
+The user prefers the rounded-width study's third column at 15px. Keep its half-pixel minimum as the component reference. At 12px, crowns remain too light. Light faces also need less than 255 coverage on solid pixels. The user suggests an average across stroke width near 75%.
+
+The next comparison keeps the same native geometry and changes only coverage. A is the exact previous third column. B lifts partial coverage with `1-(1-a)^2`, where `a` is opacity from zero to one. This maps approximately half coverage to three-quarter coverage. Empty and full pixels stay unchanged. The operation affects every partial pixel, including italic stems and diagonals.
+
+C caps each light-face glyph pixel at 191, the nearest byte to 75% opacity. D applies B followed by C. Light eligibility comes from the static OpenType `usWeightClass` below 400. The selected light faces have class 300, regular faces have class 400, and bold faces have class 700. The [OpenType weight contract](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass) defines this metadata. The experiment uses no font-name or website selectors. For regular and bold faces, C equals A and D equals B.
+
+![Coverage balance at 12px on white](../images/browser-common-ground/balance-12-light.png)
+
+![Coverage balance at 12px on black](../images/browser-common-ground/balance-12-dark.png)
+
+![Coverage balance at 15px on white](../images/browser-common-ground/balance-15-light.png)
+
+![Coverage balance at 15px on black](../images/browser-common-ground/balance-15-dark.png)
+
+Open the images at 100% zoom. Small text uses native pixels. H, l, 3, 5, and V use exact 4x pixel repeats. At 12px, Lato Light's middle l profile changes from `[255]` in A to `[191]` in C and D. Its 3's first nonempty row has a peak of 151 in A and 191 in D. These are measured opacity changes, not a readability score or an accepted new preset.
+
+A pixel ceiling differs from a rule for average coverage across a geometric stroke. The [synthetic profiles on white](../images/browser-common-ground/balance-synthetic-light.png) and [on black](../images/browser-common-ground/balance-synthetic-dark.png) declare each measured pixel span. For example, `[191]` has mean 191, but `[191,0]` has mean 95.5 across two declared cells. Real l measurements use the original middle raster row from its first to last nonzero pixel. This horizontal interval is not a perpendicular measurement through every curved or diagonal stroke.
+
+The cap applies before glyphs overlap. Two treated pixels of 191 can combine to 239 in the final word. A final-word ceiling is a different operation. The experiment also preserves linear-light blending, so opacity percentages are not encoded display brightness. The [capture record](../images/browser-common-ground/balance-captures.json) supplies the operation definitions, input hashes, weight classes, selected profiles, and unchanged-geometry limits.
+
+Run `python3 tests/browser_coverage_balance_test.py` after the rounded-width command. It reads the retained native masks without rebuilding FreeType. It writes ten sheets under `results/browser-coverage-balance/` for nine faces at 12, 15, 18.75, and 22.5 device pixels. The command checks all coverage inputs against rational arithmetic and all blend values against high-precision arithmetic. It checks actual exported 12px crowns against independent expected values. A's native word pixels also match the prior third-column PNGs exactly on both palettes. Input hashes, glyph geometry, font files, origins, and zero pixels remain unchanged.
+
 ### Prior art search
 
 Real arXiv API searches covered graphics, human interaction, and image processing. The broad matches mainly addressed generated typography, virtual reality, and unrelated reconstruction. They did not supply a directly usable general browser policy.
@@ -163,7 +187,7 @@ Real arXiv API searches covered graphics, human interaction, and image processin
 
 ## Decision
 
-Contrast alone does not meet the user's result. The public-outline axis study establishes F as the preferred component compromise. The isolated width study now tests the user's nearest-pixel rule and a separate half-pixel minimum. Neither replaces the working preset. Before selecting a production fix for weak crowns, trace the thin-axis classification, crown segments, stem links, and alignment decisions. This distinguishes a policy bypass from a failure to detect the stroke.
+Contrast alone does not meet the user's result. F was the preferred axis-study compromise. The user now prefers the width study's half-pixel control at 15px. Preserve that control while testing partial-coverage lift and a light-face opacity ceiling. These mask controls do not implement a general average across geometric stroke width. They do not replace the working preset. Before selecting a production fix for weak crowns, trace the thin-axis classification, crown segments, stem links, and alignment decisions. This distinguishes a policy bypass from a failure to detect the stroke.
 
 Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy. Do not infer a general minimum-thickness policy from blanket outline expansion.
 
