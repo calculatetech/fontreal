@@ -21,6 +21,7 @@ No task is active.
 
 ## Planned next
 
+- **FR-018: Find a general browser rendering policy.** Compare restrained changes across fonts, weights, sizes, scales, and palettes. Start with coverage contrast and existing hint targets. Preserve the accepted crisp reference and test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md).
 - **FR-016: Support Electron applications.** Use Teams for Linux as the first real application. Trace its exact Electron/Chromium build and font backend. Match the reference in a local test page before testing the application. Include its Flatpak package; preserve the user's account, application data, and normal sandbox.
 - **FR-017: Deliver treatment inside Flatpak sandboxes.** Build against the application's actual runtime or bundled engine, with exact version records and a separate opt-in comparison. Check both Qt/GTK runtime libraries and bundled browser engines. Preserve normal application updates and a stock launch. A host library replacement alone is not coverage.
 - **FR-005: GNOME application support.** Identify the actual GTK 3 and GTK 4 text paths, including Pango, Cairo, and GPU composition. Build isolated tests in existing applications. Match the reference before proposing desktop configuration or library changes. [PangoCairo documentation](https://docs.gtk.org/PangoCairo/) identifies one relevant path, without establishing coverage of every GTK renderer.

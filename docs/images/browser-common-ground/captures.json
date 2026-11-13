@@ -1,0 +1,216 @@
+{
+  "kind": "native FreeType component comparison; not browser screenshots",
+  "text": "Minimum AV Wwmn 0123",
+  "freetype_version": "2.14.2",
+  "stock_library_sha256": "119762cc898175319d44c39f3ec5d7f1244739248999bfdef6ad2e34f81aaa7a",
+  "renderer": "src/experiment.cpp",
+  "glyph_probe": "tests/freetype_mask_probe.cpp",
+  "glyph_load_flags": {
+    "automatic_mono": "0x20028",
+    "automatic_normal": "0x28"
+  },
+  "render_mode": "grayscale",
+  "glyph_origins": "shared unhinted advances and unfitted kerning, rounded to integral device pixels; no shaping",
+  "ramps": {
+    "Current 32..223": [
+      32,
+      223
+    ],
+    "Gentler 16..239": [
+      16,
+      239
+    ],
+    "No clipping 0..255": [
+      0,
+      255
+    ]
+  },
+  "rounding": "floor((clamp(coverage,low,high)-low)*255/(high-low)+0.5), per glyph before integer alpha-over",
+  "font_conditions": [
+    {
+      "font": "Noto Sans Regular",
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Noto Sans Bold",
+      "font_sha256": "e83493c945848ecd4a9ad0f6d19164541a0d3e23a9c952304a00a46e00272ac5",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Noto Sans Italic",
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Noto Sans BoldItalic",
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Lato Light",
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Lato Regular",
+      "font_sha256": "6f6940be0835c3ddec9199e5fc42be4cbc61ebcfd58c623fdf719366253f1780",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Lato Bold",
+      "font_sha256": "bf1b8130069b44b9148eeece35e5423bedac49777ba746615b826b8276574a7b",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Lato Black",
+      "font_sha256": "4ed66fa3928ae769205635c916b4f9e6a63f6a77f5d9693ac31a83d0d96ae1ef",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Lato Italic",
+      "font_sha256": "8c863f833b12bc8486671d26e3a58b13b0f9eaff1d6b10398e7c107a9b7ee05a",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Lato BoldItalic",
+      "font_sha256": "e2f9244fdcd20840f2480f91370cea885bf99230c49d153199fa64853ad74b69",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "IBM Plex Sans Light",
+      "font_sha256": "45934c7fc2267d3726698a52f37db7477bdc751abad6b5107304ebd7b967f1c6",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "IBM Plex Sans Regular",
+      "font_sha256": "729908583fdfe9c29398238e922e3b5a086fce703456405e60d62e503b0ec537",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "IBM Plex Sans Bold",
+      "font_sha256": "b80a71fc5ac0f4d95f55dd97ca6be2c6073bea4ed6296336fe781620df41894b",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    },
+    {
+      "font": "Hack Regular",
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "size": 15,
+      "scale": 1,
+      "effective_size_26_6": 960
+    }
+  ],
+  "full_sweep": {
+    "font_faces": 14,
+    "requested_sizes_px": [
+      12,
+      15,
+      18,
+      24
+    ],
+    "scales": [
+      1,
+      1.25,
+      1.5
+    ],
+    "native_reference_conditions": 168,
+    "normal_hint_conditions": 168,
+    "native_raw_and_current_word_masks": "exact equality in every reference condition",
+    "sheets_per_experiment": 48,
+    "resizing": "none",
+    "palettes": [
+      "black on white",
+      "white on black"
+    ],
+    "blends": [
+      "linear-light",
+      "encoded"
+    ]
+  },
+  "images": [
+    {
+      "file": "contrast-15-light.png",
+      "sha256": "bd44d9dbd296f13ce6732fff5685ea92e637922bba5dd0ad8d078b4aa06915f2",
+      "dimensions": [
+        1740,
+        962
+      ],
+      "metadata_keys": [],
+      "size_px": 15,
+      "scale": 1,
+      "blend": "actual-background linear-light",
+      "palette": "black on white"
+    },
+    {
+      "file": "contrast-15-dark.png",
+      "sha256": "d52f7ee78034254be37b946d5209137d7c3fe37ffe64c3f308a4236bd1279bf5",
+      "dimensions": [
+        1740,
+        962
+      ],
+      "metadata_keys": [],
+      "size_px": 15,
+      "scale": 1,
+      "blend": "actual-background linear-light",
+      "palette": "white on black"
+    },
+    {
+      "file": "hinting-15-light.png",
+      "sha256": "a4a165f1f536e76e7e02e87ff8d684139a3416cf55ced6bef2e839aa3e521420",
+      "dimensions": [
+        1740,
+        962
+      ],
+      "metadata_keys": [],
+      "size_px": 15,
+      "scale": 1,
+      "blend": "actual-background linear-light",
+      "palette": "black on white"
+    },
+    {
+      "file": "hinting-15-dark.png",
+      "sha256": "4e07d64a1e3b83bc8dee7f36c75bc743061a6d8c216371215b83321cddec6977",
+      "dimensions": [
+        1740,
+        962
+      ],
+      "metadata_keys": [],
+      "size_px": 15,
+      "scale": 1,
+      "blend": "actual-background linear-light",
+      "palette": "white on black"
+    }
+  ],
+  "limits": [
+    "Not browser final composition",
+    "Not browser layout or shaping equivalence",
+    "Not a human readability score",
+    "Not a selected replacement default"
+  ]
+}
