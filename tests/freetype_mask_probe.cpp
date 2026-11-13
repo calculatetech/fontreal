@@ -59,6 +59,7 @@ int main(int argc, char **argv)
         require(argc == 12, "Expected FONT PIXELS FLAGS CODEPOINT MODE DX DY REPEATS OUT TRANSFORM REMOVE_AUTOHINTER");
         FT_Library library = nullptr;
         FT_Face face = nullptr;
+        FT_Face axisSource = nullptr;
         require(!FT_Init_FreeType(&library), "FT_Init_FreeType failed");
         if (std::atoi(argv[11])) {
             FT_Module hinter = FT_Get_Module(library, "autofitter");
@@ -66,13 +67,39 @@ int main(int argc, char **argv)
         }
         require(!FT_New_Face(library, argv[1], 0, &face), "FT_New_Face failed");
         const QByteArray transform(argv[10]);
+        const bool axis = transform == "axis-mono" || transform == "axis-d";
         require(transform == "none" || transform == "quarter" || transform == "diagonal" ||
-                transform == "deferred-diagonal", "Invalid transform");
+                transform == "deferred-diagonal" || transform == "expand-d" || axis,
+                "Invalid transform");
         FT_Matrix matrix = transform == "quarter" ? FT_Matrix{0, -65536, 65536, 0} :
                                                     FT_Matrix{65536, -32768, 32768, 65536};
         if (transform == "quarter" || transform == "diagonal")
             FT_Set_Transform(face, &matrix, nullptr);
         const auto deferred = [&] {
+            if (transform == "expand-d")
+                require(face->glyph->format == FT_GLYPH_FORMAT_OUTLINE &&
+                        !FT_Outline_EmboldenXY(&face->glyph->outline, 8, 16),
+                        "D outline expansion failed");
+            if (axis) {
+                require(face->glyph->format == FT_GLYPH_FORMAT_OUTLINE,
+                        "Axis study requires an outline");
+                require(!FT_Load_Glyph(axisSource, face->glyph->glyph_index,
+                        FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO | FT_LOAD_NO_BITMAP),
+                        "Axis source load failed");
+                auto &source = axisSource->glyph->outline;
+                auto &target = face->glyph->outline;
+                if (transform == "axis-d")
+                    require(!FT_Outline_EmboldenXY(&source, 8, 16), "Axis D expansion failed");
+                require(axisSource->glyph->format == FT_GLYPH_FORMAT_OUTLINE &&
+                        source.n_points == target.n_points && source.n_contours == target.n_contours,
+                        "Axis outline topology differs");
+                for (int i = 0; i < target.n_contours; ++i)
+                    require(source.contours[i] == target.contours[i], "Axis contours differ");
+                for (int i = 0; i < target.n_points; ++i)
+                    require(source.tags[i] == target.tags[i], "Axis curve tags differ");
+                for (int i = 0; i < target.n_points; ++i)
+                    target.points[i].x = source.points[i].x;
+            }
             if (transform == "deferred-diagonal" && face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
                 FT_Outline_Transform(&face->glyph->outline, &matrix);
                 FT_Vector_Transform(&face->glyph->advance, &matrix);
@@ -84,6 +111,14 @@ int main(int argc, char **argv)
                                      std::lround(pixels * 64), 0, 0), "FT size failed");
         else
             require(!FT_Select_Size(face, 0), "Bitmap strike failed");
+        if (axis) {
+            require(FT_IS_SCALABLE(face) && !FT_HAS_COLOR(face) &&
+                    QByteArray(FT_Get_Font_Format(face)) == "TrueType",
+                    "Axis study requires a scalable non-color TrueType face");
+            require(!FT_New_Face(library, argv[1], 0, &axisSource), "Axis face failed");
+            require(!FT_Set_Char_Size(axisSource, std::lround(pixels * 64),
+                                     std::lround(pixels * 64), 0, 0), "Axis size failed");
+        }
         const auto index = FT_Get_Char_Index(face, std::strtoul(argv[4], nullptr, 0));
         require(index != 0, "Missing requested glyph");
         const auto flags = FT_Int32(std::strtol(argv[3], nullptr, 0));
@@ -120,6 +155,7 @@ int main(int argc, char **argv)
         require(output.open(QIODevice::WriteOnly), "Cannot write probe output");
         const QByteArray data = QJsonDocument(result).toJson();
         require(output.write(data) == data.size(), "Incomplete probe output");
+        if (axisSource) FT_Done_Face(axisSource);
         FT_Done_Face(face);
         FT_Done_FreeType(library);
         return 0;

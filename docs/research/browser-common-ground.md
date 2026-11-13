@@ -88,6 +88,16 @@ C and D use the existing [outline expansion API](https://freetype.org/freetype2/
 
 Small text is native size. Enlarged digits use exact 4x pixel repeats. Nine faces cover regular, bold, italic, bold italic, and light controls. The component sweep uses 12, 15, 18.75, and 22.5 device pixels. Zero-strength calls match the existing public probe. Column A matches the native word masks. Outline expansion preserves the sampled advances. These checks establish faithful diagnostic images, not a new browser preset.
 
+### Retain B's balance with clearer vertical strokes
+
+The user chooses D overall. B has the preferred line widths but introduces vertical blur. This makes D the current comparison winner and B the width reference. Neither result replaces the working browser preset.
+
+The raw B masks expose a position and width problem. At 15px, Noto Sans Regular's l distributes its middle-row coverage across two columns as 184 and 220 out of 255. A horizontal phase shift can produce a fully covered column without changing its outline. Lato Light's stroke remains narrower than one pixel, so a phase shift alone cannot produce a fully covered column. These measurements explain distinct limits; they are not a readability score.
+
+The next study combines native outline coordinates before rasterization. E takes X from automatic monochrome hinting and Y from B. F takes X from D and Y from B. Matching contour structure and curve tags are required. B and D stay exact controls. This tests axis provenance without changing FreeType's internal fitting policy. It does not preserve B's complete shape or guarantee a visual improvement.
+
+The [reproducible axis study](../experiments/browser-stroke-axis.md) supplies native-size and exact 4x comparisons, independent glyph and word checks, and both polarities. Italic rows remain controls because the original hinter treats their horizontal fitting differently. The [specification](../plans/FR-018-axis-study.md) defines the bounded experiment.
+
 ### Prior art search
 
 Real arXiv API searches covered graphics, human interaction, and image processing. The broad matches mainly addressed generated typography, virtual reality, and unrelated reconstruction. They did not supply a directly usable general browser policy.
@@ -96,7 +106,7 @@ Real arXiv API searches covered graphics, human interaction, and image processin
 
 ## Decision
 
-Contrast alone does not meet the user's result. Investigate horizontal-stroke fitting and curve alignment in the existing hinter. First trace the thin-axis classification, crown segments, stem links, and alignment decisions in the observed failures. This distinguishes a policy bypass from a failure to detect the stroke. Then test the smallest geometry change that the trace supports.
+Contrast alone does not meet the user's result. Use the public-outline axis study to test B's balance with different horizontal fitting before modifying the hinter. If a later experiment changes the hinter's horizontal-stroke policy, first trace the thin-axis classification, crown segments, stem links, and alignment decisions. This distinguishes a policy bypass from a failure to detect the stroke.
 
 Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy. Do not infer a general minimum-thickness policy from blanket outline expansion.
 
