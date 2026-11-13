@@ -280,6 +280,36 @@ The [capture record](../images/browser-common-ground/chart242-captures.json) ide
 
 Every candidate glyph matches an independent native outline raster. Independent per-glyph floor, overlap, and blend calculations reproduce the final pixels. Retained source glyphs match the approved 242 fixtures at shared conditions. Both columns preserve their exact native strips in the saved charts. No application setting changes with this comparison.
 
+### The 15px comparison exposes missing cases
+
+The user rejects the broader 15px result, especially the serif faces, and reports a different appearance for Noto Sans V/W. The earlier selected strips contain `3 5 8 w V W`. They do not include i or serif faces. Approval of that subset does not establish a usable general preset.
+
+The saved-pixel comparison uses the selected column from each earlier PNG and actual glyph crops from the broader chart. It restores the earlier two-pixel gaps for comparison. At matching 15px conditions, the six glyphs have identical RGB pixels for Noto Sans Regular, Noto Sans Bold, and Lato Light. This includes V and W. It does not establish that the full words look acceptable. The earlier sheets also contain exact three-times enlargements. Native text and enlarged text must be judged separately.
+
+At 12px, adjacent letters enter the V/W bounding boxes in the broader Noto Sans text. Four pixels differ in the isolated reconstruction. Matching raw glyph masks alone cannot prove identical final text. Layout and neighboring glyphs need separate checks.
+
+![Matched saved pixels from the earlier sheets and broader chart](../images/browser-common-ground/checkpoint242-saved-pixels-light.png)
+
+The i fixture exposes a geometry change before the floor. At 15px, ordinary auto-mono hinting gives Noto Sans Regular i a one-pixel-wide stem and a one-pixel dot. The experimental width fitting gives it a two-pixel-wide stem and a two-by-two dot. The four dot coverage values are 199, 197, 196, and 193. The 242 floor raises all four. A useful result on the digit curves cannot establish that this geometry suits dots or other small features.
+
+The new diagnostic separates Qt defaults, ordinary auto-mono hinting, experimental width fitting, and the floor. All rows include `ilI1 Hllmn 0358 VvWw`. Native text is 15 device pixels. Enlargements use exact source pixels, with the same crop windows across columns.
+
+| Column | Treatment |
+| --- | --- |
+| A | Qt defaults with Fontreal disabled |
+| B | Ordinary auto-mono hinting, no floor, linear blending |
+| C | Experimental half-minimum width fitting, no floor, linear blending |
+| D | Ordinary auto-mono hinting plus the selected 242 floor, linear blending |
+| E | Experimental half-minimum width fitting plus the selected 242 floor, linear blending |
+
+| Diagnostic | White background | Black background |
+| --- | --- | --- |
+| Saved-pixel checkpoint | [Image](../images/browser-common-ground/checkpoint242-saved-pixels-light.png) | [Image](../images/browser-common-ground/checkpoint242-saved-pixels-dark.png) |
+| Noto Sans Regular/Bold and Lato Light, including i | [Image](../images/browser-common-ground/audit242-width-floor-i15-sans-compact-light.png) | [Image](../images/browser-common-ground/audit242-width-floor-i15-sans-compact-dark.png) |
+| Noto, DejaVu, and Liberation serif faces, including i | [Image](../images/browser-common-ground/audit242-width-floor-i15-serif-compact-light.png) | [Image](../images/browser-common-ground/audit242-width-floor-i15-serif-compact-dark.png) |
+
+The [audit record](../images/browser-common-ground/audit242-captures.json) contains the exact i masks, saved-pixel differences, font identities, and image hashes. Independent native raster, per-glyph floor, overlap, blend, and saved-crop checks cover these images. The tests establish faithful comparisons. Human judgment still determines whether the resulting text is usable. Keep the selected digit reference, but resolve the missing glyph and serif cases before choosing a general rule. No application setting changes.
+
 ### Direction for selective core detection
 
 If the scalar cutoff probes cannot satisfy the visual constraints, the recommended research direction is an outline-assisted stroke-core map with local direction and curvature information. First use the exact 5 fixture and the protected regular/bold V/W as positive and negative checks. Keep light-face behavior separate because those diagonals are allowed to change. Inspect the selection map before applying a coverage floor. Curve-control tags alone are insufficient: the measured Noto V and W outlines also contain curve controls. The unresolved test is whether a general selector can separate weak curve cores from native edge pixels across sizes and fonts.
@@ -305,7 +335,7 @@ Real arXiv API searches covered graphics, human interaction, and image processin
 
 ## Decision
 
-Contrast alone and a native stem minimum do not address every weak curve pixel. Keep the accepted crisp reference and the exact supplied 5 fixture. Compare the 242 floor with cutoff 160 for regular and heavier faces, and 128 for light faces. Retain the 230 control and numbered 5/W grids. Preserve the desired regular/bold V/W appearance while allowing light-face strokes to change. If scalar controls cannot satisfy that visual constraint, investigate geometric context before selecting an automatic core floor. Leave the working preset unchanged. Before changing a native crown policy, trace the relevant classification, stem links, and alignment decisions so a policy bypass is not confused with missing stroke detection.
+Contrast alone and a native stem minimum do not address every weak curve pixel. Keep the accepted crisp reference and the exact supplied 5 fixture. Approval of the selected 242 digit strip does not extend to the rejected broader 15px chart. Resolve the i geometry, serif faces, and word-context cases before selecting a general treatment. Compare the 242 floor with cutoff 160 for regular and heavier faces, and 128 for light faces. Retain the 230 control and numbered 5/W grids. Preserve the desired regular/bold V/W appearance while allowing light-face strokes to change. If scalar controls cannot satisfy that visual constraint, investigate geometric context before selecting an automatic core floor. Leave the working preset unchanged. Before changing a native crown policy, trace the relevant classification, stem links, and alignment decisions so a policy bypass is not confused with missing stroke detection.
 
 Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy. Do not infer a general minimum-thickness policy from blanket outline expansion.
 

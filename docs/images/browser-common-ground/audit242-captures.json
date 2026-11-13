@@ -1,0 +1,324 @@
+{
+  "kind": "diagnostic comparison, no renderer change",
+  "text": "ilI1 Hllmn 0358 VvWw",
+  "proofs": [
+    {
+      "font": "Noto Sans Regular",
+      "size_px": 15,
+      "palette": "light",
+      "different_rgb_pixels": 0,
+      "characters": "358wVW"
+    },
+    {
+      "font": "Lato Light",
+      "size_px": 15,
+      "palette": "light",
+      "different_rgb_pixels": 0,
+      "characters": "358wVW"
+    },
+    {
+      "font": "Noto Sans Bold",
+      "size_px": 15,
+      "palette": "light",
+      "different_rgb_pixels": 0,
+      "characters": "358wVW"
+    },
+    {
+      "font": "Noto Sans Regular",
+      "size_px": 12,
+      "palette": "light",
+      "different_rgb_pixels": 4,
+      "characters": "358wVW"
+    },
+    {
+      "font": "Noto Sans Regular",
+      "size_px": 15,
+      "palette": "dark",
+      "different_rgb_pixels": 0,
+      "characters": "358wVW"
+    },
+    {
+      "font": "Lato Light",
+      "size_px": 15,
+      "palette": "dark",
+      "different_rgb_pixels": 0,
+      "characters": "358wVW"
+    },
+    {
+      "font": "Noto Sans Bold",
+      "size_px": 15,
+      "palette": "dark",
+      "different_rgb_pixels": 0,
+      "characters": "358wVW"
+    },
+    {
+      "font": "Noto Sans Regular",
+      "size_px": 12,
+      "palette": "dark",
+      "different_rgb_pixels": 4,
+      "characters": "358wVW"
+    }
+  ],
+  "images": [
+    {
+      "file": "checkpoint242-saved-pixels-light.png",
+      "sha256": "8c14d2c5924bfaa43d59ec24ae1065be2fb0c10d53ca638e3a32b4017bf82cad"
+    },
+    {
+      "file": "checkpoint242-saved-pixels-dark.png",
+      "sha256": "9aabb1fbec7eafd17f77bbb63a1ea3c2186727bfb5a77fb1d95ff928ba9ca128"
+    },
+    {
+      "file": "audit242-width-floor-i15-sans-compact-light.png",
+      "sha256": "6e2c00402f801646306b781176fab056d7525d36538565d061d9296268fe351e"
+    },
+    {
+      "file": "audit242-width-floor-i15-sans-compact-dark.png",
+      "sha256": "0fa174210ebf530474d67c08cdc84a2afeda7800664aa33df2a44fb7f6b4b323"
+    },
+    {
+      "file": "audit242-width-floor-i15-serif-compact-light.png",
+      "sha256": "183ab28c3c226531746db2a8119ee9c85a5d4a8768407ee6cda588bb9cb2b995"
+    },
+    {
+      "file": "audit242-width-floor-i15-serif-compact-dark.png",
+      "sha256": "07f72e81b8446f575b4e1e32e4a2a975801e870c7eef067f06560b64b31315d2"
+    }
+  ],
+  "columns": [
+    "A: Qt default",
+    "B: Auto mono, no floor",
+    "C: Width fit, no floor",
+    "D: Auto mono + 242",
+    "E: Width fit + 242"
+  ],
+  "conditions": [
+    {
+      "base_px": 15,
+      "composed_mask_sha256": "73f19dbd1c174d034199cdf6e69c48d61b56d60af0f9bb0dc897226bb6a17936",
+      "cutoff": 160,
+      "family": "Noto Sans",
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "height": 39,
+      "id": "case-000",
+      "label": "Noto Sans Regular",
+      "qt_reported_weight": 400,
+      "scale": 1,
+      "style": "Regular",
+      "weight": 400,
+      "font_file": "NotoSans-Regular.ttf"
+    },
+    {
+      "base_px": 15,
+      "composed_mask_sha256": "435d55cf33351f7d76785dee0bbbe198738cebcfd409726ff96cb9d1d988959d",
+      "cutoff": 128,
+      "family": "Lato",
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "height": 37,
+      "id": "case-002",
+      "label": "Lato Light",
+      "qt_reported_weight": 400,
+      "scale": 1,
+      "style": "Light",
+      "weight": 300,
+      "font_file": "Lato-Light.ttf"
+    },
+    {
+      "base_px": 15,
+      "composed_mask_sha256": "4d2f0f6de72d03ccc4900789c9e0499a663a80eb12061bfe5ccb616e7bc58ea3",
+      "cutoff": 160,
+      "family": "Noto Serif",
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "height": 39,
+      "id": "case-006",
+      "label": "Noto Serif Regular",
+      "qt_reported_weight": 400,
+      "scale": 1,
+      "style": "Regular",
+      "weight": 400,
+      "font_file": "NotoSerif-Regular.ttf"
+    },
+    {
+      "base_px": 15,
+      "composed_mask_sha256": "bcdf6982f340b85ef9f5367045976b5419f1fd6b7521cffd663cba08c95817f0",
+      "cutoff": 160,
+      "family": "Noto Sans",
+      "font_sha256": "e83493c945848ecd4a9ad0f6d19164541a0d3e23a9c952304a00a46e00272ac5",
+      "height": 39,
+      "id": "case-011",
+      "label": "Noto Sans Bold",
+      "qt_reported_weight": 700,
+      "scale": 1,
+      "style": "Bold",
+      "weight": 700,
+      "font_file": "NotoSans-Bold.ttf"
+    },
+    {
+      "base_px": 15,
+      "composed_mask_sha256": "f0ee3858447c27e519a9b66b0cc090905058c18910881411f7409026b56a47f2",
+      "cutoff": 160,
+      "family": "DejaVu Serif",
+      "font_sha256": "a52c2a69dfc93d0b511b98c1019a57eb3d6a62d328bdf1387f00851b02e3a315",
+      "height": 37,
+      "id": "case-037",
+      "label": "DejaVu Serif Book",
+      "qt_reported_weight": 400,
+      "scale": 1,
+      "style": "Book",
+      "weight": 400,
+      "font_file": "DejaVuSerif.ttf"
+    },
+    {
+      "base_px": 15,
+      "composed_mask_sha256": "aaee6633944fe4ddd23ce6333607b0f635c6e48538e8f374e5940cf90c2edf4a",
+      "cutoff": 160,
+      "family": "Liberation Serif",
+      "font_sha256": "350f4ffd773cae53560c63dca3d89a5070595614fde12f772bf43feb63d81064",
+      "height": 35,
+      "id": "case-041",
+      "label": "Liberation Serif Regular",
+      "qt_reported_weight": 400,
+      "scale": 1,
+      "style": "Regular",
+      "weight": 400,
+      "font_file": "LiberationSerif-Regular.ttf"
+    }
+  ],
+  "limits": [
+    "Native 15px and exact 3x views are explicitly separate",
+    "B-E retain the same Qt layout",
+    "Serif acceptability and context effects remain visual questions"
+  ],
+  "i_fixtures": [
+    {
+      "font": "Noto Sans Regular",
+      "size_px": 15,
+      "glyph": 76,
+      "auto_mono": {
+        "width": 1,
+        "height": 11,
+        "left": 1,
+        "top": 11,
+        "mask": "ba0000ffffffffffffffff"
+      },
+      "width_fit": {
+        "width": 2,
+        "height": 11,
+        "left": 1,
+        "top": 11,
+        "mask": "c7c5c4c10000ffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "font": "Lato Light",
+      "size_px": 15,
+      "glyph": 98,
+      "auto_mono": {
+        "width": 2,
+        "height": 11,
+        "left": 1,
+        "top": 11,
+        "mask": "dd37470a0000ff00ff00ff00ff00ff00ff00ff00ff00"
+      },
+      "width_fit": {
+        "width": 2,
+        "height": 11,
+        "left": 1,
+        "top": 11,
+        "mask": "d22f00000000ff00ff00ff00ff00ff00ff00ff00ff00"
+      }
+    },
+    {
+      "font": "Noto Serif Regular",
+      "size_px": 15,
+      "glyph": 76,
+      "auto_mono": {
+        "width": 5,
+        "height": 11,
+        "left": 0,
+        "top": 11,
+        "mask": "0000c800000000c80000000000000010ffff0000002cff00000000ff00000000ff00000000ff00000000ff0000002cff350038ffffff58"
+      },
+      "width_fit": {
+        "width": 6,
+        "height": 11,
+        "left": 0,
+        "top": 11,
+        "mask": "0000c7c900000000c8c8000000000000000010ffffff0000002cffff00000000ffff00000000ffff00000000ffff00000000ffff0000002cffff350038ffffffff58"
+      }
+    },
+    {
+      "font": "Noto Sans Bold",
+      "size_px": 15,
+      "glyph": 76,
+      "auto_mono": {
+        "width": 2,
+        "height": 11,
+        "left": 1,
+        "top": 11,
+        "mask": "c9c800000000ffffffffffffffffffffffffffffffff"
+      },
+      "width_fit": {
+        "width": 2,
+        "height": 11,
+        "left": 1,
+        "top": 11,
+        "mask": "cac8cac80000ffffffffffffffffffffffffffffffff"
+      }
+    },
+    {
+      "font": "DejaVu Serif Book",
+      "size_px": 15,
+      "glyph": 76,
+      "auto_mono": {
+        "width": 5,
+        "height": 11,
+        "left": 0,
+        "top": 11,
+        "mask": "00bbbc000000000000000000000000e8ffff000000ffff000000ffff000000ffff000000ffff000000ffff000000ffff0000e8ffffff54"
+      },
+      "width_fit": {
+        "width": 5,
+        "height": 11,
+        "left": 0,
+        "top": 11,
+        "mask": "00c3c3000000c5c500000000000000e8ffff00000000ff00000000ff00000000ff00000000ff00000000ff00000000ff0000e8ffffff54"
+      }
+    },
+    {
+      "font": "Liberation Serif Regular",
+      "size_px": 15,
+      "glyph": 76,
+      "auto_mono": {
+        "width": 4,
+        "height": 10,
+        "left": 0,
+        "top": 10,
+        "mask": "00c00000005b00000000000048ff000000ff000000ff000000ff000000ff000000ff00005eff6e08"
+      },
+      "width_fit": {
+        "width": 4,
+        "height": 10,
+        "left": 0,
+        "top": 10,
+        "mask": "00bb000000bc00000000000048ff000000ff000000ff000000ff000000ff000000ff00005eff6e08"
+      }
+    }
+  ],
+  "qt_version": "6.10.2",
+  "stock_freetype_sha256": "119762cc898175319d44c39f3ec5d7f1244739248999bfdef6ad2e34f81aaa7a",
+  "candidate_freetype_sha256": "0983dc819c511ea8fc87e6a6ab030f282fdfbe4611900d5aaf18b7d8296f0b8f",
+  "native_profile": "half",
+  "load_flags": "0x20028",
+  "blend": "linear light with sRGB encoding for B-E",
+  "floor": 242,
+  "checks": [
+    "Actual saved RGB glyph crops match earlier selected columns at matched 15px conditions",
+    "Four RGB pixels differ in the 12px isolated reconstruction because adjacent glyphs enter V/W boxes",
+    "Every diagnostic raw glyph matches an independent stock outline raster",
+    "Every observed private width decision matches the retained half-minimum rule",
+    "Independent per-glyph floor and alpha-over match composed masks",
+    "Native PNG strips and nearest-neighbor enlarged crops match saved pixels",
+    "No font substitution, clipping, or caller-environment change"
+  ]
+}
