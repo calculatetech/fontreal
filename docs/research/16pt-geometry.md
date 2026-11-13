@@ -86,28 +86,28 @@ The [experiment record](../images/browser-common-ground/nearest-y-captures.json)
 
 ## Smaller points and explicit italic comparisons
 
-The user accepts the 16pt nearest-Y result as the reference and requests more work on smaller sizes. The new sheets preserve that rendering. Each sheet shows actual Qt point sizes from 8 through 16pt, plus the 11.25pt reference. Italic and bold italic now have dedicated sheets.
+The user finds 50% fitting more accurate in more cases, but no candidate meets the full visual target. Keep the earlier 16pt result as a geometry reference. Each sheet shows actual Qt point sizes from 8 through 16pt, plus the 11.25pt reference. Italic and bold italic have dedicated sheets.
 
-The left column uses the original 75% horizontal-stroke fitting rule. The middle uses the 50% rule. The right uses normal hinting with the same 242 floor. All three retain the same font, Qt positions, coverage cutoffs, and linear blending. The percentage describes width fitting before rasterization. It does not describe a coverage cutoff.
+The left column uses the original 75% horizontal-stroke fitting rule. The middle uses the 50% rule. Both candidates retain the same 242 floor, coverage cutoffs, and linear blending. The right column is stock Qt with Fontreal disabled. It retains Qt's own coverage, origins, and blending. All three use the same font and Qt layout. The percentage describes width fitting before rasterization. It does not describe a coverage cutoff.
 
 For Noto Sans Regular, the 75% and 50% columns are pixel-identical at every tested size below 16pt, on both backgrounds. Returning to 75% cannot improve those rows. Other faces enter the affected range at different sizes. Noto Sans Bold Italic changes at 9, 10, 11, 11.25, and 16pt. Noto Serif Italic changes at 14 and 15pt. These differences require visual judgment rather than a single size boundary for all fonts.
 
-Normal hinting provides a separate geometry control for smaller text. It uses the same loading flags as the traced Qt path, then applies the existing floor and blend. This control changes the hinting path and is not a further adjustment to the horizontal-stroke rounding constant. Its visual preference remains open.
+The user requires stock Qt as the control. These sheets replace the earlier normal-hinting-plus-242 diagnostic sheets. That diagnostic was another treatment, not stock output. Its historical images and record remain in commit `073b8e4de0ac446850f21a30bd47306a811e7cce`.
 
 | Face | White background | Black background |
 | --- | --- | --- |
-| Noto Sans Regular | [Image](../images/browser-common-ground/smallpt-noto-sans-regular-light.png) | [Image](../images/browser-common-ground/smallpt-noto-sans-regular-dark.png) |
-| Noto Serif Regular | [Image](../images/browser-common-ground/smallpt-noto-serif-regular-light.png) | [Image](../images/browser-common-ground/smallpt-noto-serif-regular-dark.png) |
-| Lato Light | [Image](../images/browser-common-ground/smallpt-lato-light-light.png) | [Image](../images/browser-common-ground/smallpt-lato-light-dark.png) |
-| Hack Regular | [Image](../images/browser-common-ground/smallpt-hack-regular-light.png) | [Image](../images/browser-common-ground/smallpt-hack-regular-dark.png) |
-| Noto Sans Italic | [Image](../images/browser-common-ground/smallpt-noto-sans-italic-light.png) | [Image](../images/browser-common-ground/smallpt-noto-sans-italic-dark.png) |
-| Noto Sans Bold Italic | [Image](../images/browser-common-ground/smallpt-noto-sans-bolditalic-light.png) | [Image](../images/browser-common-ground/smallpt-noto-sans-bolditalic-dark.png) |
-| Noto Serif Italic | [Image](../images/browser-common-ground/smallpt-noto-serif-italic-light.png) | [Image](../images/browser-common-ground/smallpt-noto-serif-italic-dark.png) |
-| Noto Serif Bold Italic | [Image](../images/browser-common-ground/smallpt-noto-serif-bolditalic-light.png) | [Image](../images/browser-common-ground/smallpt-noto-serif-bolditalic-dark.png) |
-| Hack Italic | [Image](../images/browser-common-ground/smallpt-hack-italic-light.png) | [Image](../images/browser-common-ground/smallpt-hack-italic-dark.png) |
-| Hack Bold Italic | [Image](../images/browser-common-ground/smallpt-hack-bolditalic-light.png) | [Image](../images/browser-common-ground/smallpt-hack-bolditalic-dark.png) |
+| Noto Sans Regular | [Image](../images/browser-common-ground/stockqt-smallpt-noto-sans-regular-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-noto-sans-regular-dark.png) |
+| Noto Serif Regular | [Image](../images/browser-common-ground/stockqt-smallpt-noto-serif-regular-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-noto-serif-regular-dark.png) |
+| Lato Light | [Image](../images/browser-common-ground/stockqt-smallpt-lato-light-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-lato-light-dark.png) |
+| Hack Regular | [Image](../images/browser-common-ground/stockqt-smallpt-hack-regular-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-hack-regular-dark.png) |
+| Noto Sans Italic | [Image](../images/browser-common-ground/stockqt-smallpt-noto-sans-italic-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-noto-sans-italic-dark.png) |
+| Noto Sans Bold Italic | [Image](../images/browser-common-ground/stockqt-smallpt-noto-sans-bolditalic-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-noto-sans-bolditalic-dark.png) |
+| Noto Serif Italic | [Image](../images/browser-common-ground/stockqt-smallpt-noto-serif-italic-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-noto-serif-italic-dark.png) |
+| Noto Serif Bold Italic | [Image](../images/browser-common-ground/stockqt-smallpt-noto-serif-bolditalic-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-noto-serif-bolditalic-dark.png) |
+| Hack Italic | [Image](../images/browser-common-ground/stockqt-smallpt-hack-italic-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-hack-italic-dark.png) |
+| Hack Bold Italic | [Image](../images/browser-common-ground/stockqt-smallpt-hack-bolditalic-light.png) | [Image](../images/browser-common-ground/stockqt-smallpt-hack-bolditalic-dark.png) |
 
-The [capture record](../images/browser-common-ground/smallpt-captures.json) covers 220 verified conditions and 100 displayed conditions across these 20 sheets. Independent native rasterization reproduces all normal-control masks. Separate calculations reproduce the floor, glyph overlap, blending, and saved image pixels. The earlier accepted 16pt image hashes remain unchanged. The charts cover 96 DPI at 100% scale. They do not establish a new application default.
+The [capture record](../images/browser-common-ground/stockqt-smallpt-captures.json) covers 220 matched layouts and 100 displayed conditions across these 20 sheets. Every saved crop matches its original stock Qt or candidate strip. The preserved native fixture reproduces all earlier stock, 75%, and 50% outputs on the capture system. The earlier 16pt reference images remain unchanged. The charts cover 96 DPI at 100% scale. They do not establish a new application default. The [handoff](handoff.md) retains source, rebuild instructions, limits, and the next investigation.
 
 ## Limits and decision
 

@@ -1,0 +1,7 @@
+--- a/src/autofit/aflatin.c
++++ b/src/autofit/aflatin.c
+@@ -4097,3 +4097,3 @@
+         if ( dist >= 64 )
+-          dist = ( dist + 16 ) & ~63;
++          dist = ( dist + 32 ) & ~63;
+         else

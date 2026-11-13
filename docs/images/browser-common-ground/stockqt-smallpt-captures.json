@@ -1,0 +1,4951 @@
+{
+  "kind": "75% versus 50% fitting with untouched stock Qt control",
+  "logical_dpi": 96,
+  "display_scale": 1,
+  "columns": [
+    "75% auto-mono +242",
+    "50% auto-mono +242",
+    "Stock Qt; Fontreal disabled; no floor or manual blend"
+  ],
+  "candidate_floor": 242,
+  "candidate_cutoffs": {
+    "light": 128,
+    "regular_and_heavier": 160
+  },
+  "compared_conditions": 220,
+  "displayed_conditions": 100,
+  "conditions": [
+    {
+      "id": "case-000",
+      "label": "Noto Sans Regular",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "15dfc26940e3aa8dc5729daee47df4a82db27db3e99ae7ee66a7646c417013e4"
+    },
+    {
+      "id": "case-001",
+      "label": "Noto Sans Regular",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "944cdf617e613fbf5d2375c24878bc27c40a8b273b0cdc8db487a2d610dab019"
+    },
+    {
+      "id": "case-002",
+      "label": "Noto Sans Regular",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "317f8fa69a7de0e5deffe36d4124785267567298b1ea5e235f41ed28d2b12a1e"
+    },
+    {
+      "id": "case-003",
+      "label": "Noto Sans Regular",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "d296baccde5e2bd3082bbd904215218b8d51655687482ad2f10bb02a0145724b"
+    },
+    {
+      "id": "case-004",
+      "label": "Noto Sans Regular",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "d296baccde5e2bd3082bbd904215218b8d51655687482ad2f10bb02a0145724b"
+    },
+    {
+      "id": "case-005",
+      "label": "Noto Sans Regular",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "434bc7cb1c21142bbc30f1a442e3abcba5f7694f0003a633131b5b6456f0d023"
+    },
+    {
+      "id": "case-006",
+      "label": "Noto Sans Regular",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "575a4338d517781e92361dec3965410cf54703e14e99eb6b79629496d15fcef7"
+    },
+    {
+      "id": "case-007",
+      "label": "Noto Sans Regular",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "481f29355f319381fa584e1127017a78142ce855a559af3b35fe5c2f6f6641d2"
+    },
+    {
+      "id": "case-008",
+      "label": "Noto Sans Regular",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "9f98c4963fa75d2c0ac92ed1275d763a16c8fbdb3dae8e36509adbaa9ac203e5"
+    },
+    {
+      "id": "case-009",
+      "label": "Noto Sans Regular",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "font_file": "NotoSans-Regular.ttf",
+      "layout_sha256": "060a20c6a8b1064fdc8ecfed4d92071d3f137d5195be1652540641b7e718d04f"
+    },
+    {
+      "id": "case-070",
+      "label": "Noto Serif Regular",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "6f317e33ff38cf804415b515483d6771af7881c1d35c2bce43c2c9579ab38b38"
+    },
+    {
+      "id": "case-071",
+      "label": "Noto Serif Regular",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "a4746bbd77dd997f77a5c5b63051a513da04d5cf5f34d1cddfcfd5b5cacfdc52"
+    },
+    {
+      "id": "case-072",
+      "label": "Noto Serif Regular",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "2f8fab3540d23245fc0c8c2a957dbb6f54381e64d461fe28a8fea04776522d00"
+    },
+    {
+      "id": "case-073",
+      "label": "Noto Serif Regular",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "fe14048bcb1d544ff358fdc83012883009c8c7e99c48eb833fd204f16561c25d"
+    },
+    {
+      "id": "case-074",
+      "label": "Noto Serif Regular",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "fe14048bcb1d544ff358fdc83012883009c8c7e99c48eb833fd204f16561c25d"
+    },
+    {
+      "id": "case-075",
+      "label": "Noto Serif Regular",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "7e47af4151f111202b296190f7117d73cb110b8fc4a9d51fbd1798255562bfbf"
+    },
+    {
+      "id": "case-076",
+      "label": "Noto Serif Regular",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "1943ec987e550cd8a8eec3a728b18b35f1b6b550efce33a7d5d2af39d7dc21c2"
+    },
+    {
+      "id": "case-077",
+      "label": "Noto Serif Regular",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "29aad277e534f92af3e37dd64478b1b22d7d945ccc8f7448a36dbba11b658bdd"
+    },
+    {
+      "id": "case-078",
+      "label": "Noto Serif Regular",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "db4cc3f6d1af230531844171e42366a427b8d468165cfb902ab3eb0b072e5f67"
+    },
+    {
+      "id": "case-079",
+      "label": "Noto Serif Regular",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "9d7583b7dc9e812afd32a14280c5cac3160012efe50c8d08938f4fea266ff67f",
+      "font_file": "NotoSerif-Regular.ttf",
+      "layout_sha256": "009fe2b5f3cae1d814175d68086818147e404d1628db769f97f685313473a8ba"
+    },
+    {
+      "id": "case-020",
+      "label": "Lato Light",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "df478e34ae4aeeb06c4e9c14f1e73f0cc6dad517bee5cc31cd93dfdec7152cfb"
+    },
+    {
+      "id": "case-021",
+      "label": "Lato Light",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "52cf57f0c8e018fb79cd613a1456766b155246a040a614a998c5fd374466c996"
+    },
+    {
+      "id": "case-022",
+      "label": "Lato Light",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "4350c4f0c150a34f0d7026fd57137f3604add2fba5e33bef0044ca5ec3901108"
+    },
+    {
+      "id": "case-023",
+      "label": "Lato Light",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "e814ace0452307de37e6015b845d483027ed66d17fc0f86d96b9378bf511206a"
+    },
+    {
+      "id": "case-024",
+      "label": "Lato Light",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "e814ace0452307de37e6015b845d483027ed66d17fc0f86d96b9378bf511206a"
+    },
+    {
+      "id": "case-025",
+      "label": "Lato Light",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "15aeaf99a19c2561f9ebe20aaf2a236017bdb0f88e4f832cfdefe2cd44553391"
+    },
+    {
+      "id": "case-026",
+      "label": "Lato Light",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "80267bb1d9f137ce9399f0ac24d0fbd71de65e70bdc999d18906b150386095fc"
+    },
+    {
+      "id": "case-027",
+      "label": "Lato Light",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "4c78738fc9ea2f227521ea1faa75c06f048cb7f656d5b58abeac53213492bdd4"
+    },
+    {
+      "id": "case-028",
+      "label": "Lato Light",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "51d74b649ad35588a546af38938b3466568df83ddf98c14f4913c9cfe986aa15"
+    },
+    {
+      "id": "case-029",
+      "label": "Lato Light",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 128,
+      "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+      "font_file": "Lato-Light.ttf",
+      "layout_sha256": "efdb26ed2b031974d986691bbed6dd2ec573ca2221a8a74e7e41d1f075ec0fd3"
+    },
+    {
+      "id": "case-100",
+      "label": "Hack Regular",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "8461e4f1a06fde3921184a1b5ffb8c4bfd9bfae904404080087ffdf0fccb300d"
+    },
+    {
+      "id": "case-101",
+      "label": "Hack Regular",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "c672b029279bb8617150b257a879b44f212ed47e96b1a8af69c9059ba4b2efa6"
+    },
+    {
+      "id": "case-102",
+      "label": "Hack Regular",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "33d9beb32265759cb1230362adb6a2875f1fff96c8aaccb00926833d81aab27c"
+    },
+    {
+      "id": "case-103",
+      "label": "Hack Regular",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "8499e77143fddddf0cdf300b05251e377cde3a41fe8784b4dce471dde982c070"
+    },
+    {
+      "id": "case-104",
+      "label": "Hack Regular",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "8499e77143fddddf0cdf300b05251e377cde3a41fe8784b4dce471dde982c070"
+    },
+    {
+      "id": "case-105",
+      "label": "Hack Regular",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "7392e7e9f84b5f87257efdb1c97b0b96667082ebc1e10956daeb25528b3297d4"
+    },
+    {
+      "id": "case-106",
+      "label": "Hack Regular",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "6ff636ddf1c57356881c5506ffd711157ada8c73e9494b335a32937706ff1dbe"
+    },
+    {
+      "id": "case-107",
+      "label": "Hack Regular",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "33752e5ac4a0f4c4708ca6548446e726d5a43f98b6064900629fd60fccdc89c0"
+    },
+    {
+      "id": "case-108",
+      "label": "Hack Regular",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "49dac7be54428fde09711185d6bec7ab08c23009da6b952e561b686f3c4b5190"
+    },
+    {
+      "id": "case-109",
+      "label": "Hack Regular",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+      "font_file": "Hack-Regular.ttf",
+      "layout_sha256": "a7d3cd42a1e6ef529f7229321bc68d53d7aba385eca8c9c82e79d69b3e19f5bf"
+    },
+    {
+      "id": "case-140",
+      "label": "Noto Sans Italic",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "de4e64a3332c4218600a95fcfe67936b21cba4a99d1ca6f653b4a7bca2044b03"
+    },
+    {
+      "id": "case-141",
+      "label": "Noto Sans Italic",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "b2ece3f5f9a0a234feb0b67dccb718fa6e59e19729d1c2b23f64cfea76b4ddf9"
+    },
+    {
+      "id": "case-142",
+      "label": "Noto Sans Italic",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "3e7369896ae02bf4d81572e262034da01d0479436b03d28981951f9eeab5b5b0"
+    },
+    {
+      "id": "case-143",
+      "label": "Noto Sans Italic",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "6ca21189d6df14e8b4cf357449ab221f4cd3995cc47fc636280274e2b8367e6d"
+    },
+    {
+      "id": "case-144",
+      "label": "Noto Sans Italic",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "6ca21189d6df14e8b4cf357449ab221f4cd3995cc47fc636280274e2b8367e6d"
+    },
+    {
+      "id": "case-145",
+      "label": "Noto Sans Italic",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "9ae60e36d1c63980681b73884bbc0cc292298bea92e54033155bbb1301d375eb"
+    },
+    {
+      "id": "case-146",
+      "label": "Noto Sans Italic",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "dc83f2e6033731c3bf7616e203c05c22411321c1e30ba73135ba82be2df4a5b4"
+    },
+    {
+      "id": "case-147",
+      "label": "Noto Sans Italic",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "f82dde1ede7189ef0bdb1d5b2572131750369f53d7f53c9be325025410a7a613"
+    },
+    {
+      "id": "case-148",
+      "label": "Noto Sans Italic",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "db4a5a9822a8d3dbc578c5c7118dc029c8ab977d1173d7d593897dee79c619c4"
+    },
+    {
+      "id": "case-149",
+      "label": "Noto Sans Italic",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+      "font_file": "NotoSans-Italic.ttf",
+      "layout_sha256": "7602e0eba861ec60e2975ff1fdd0e6ea1acd94fe76deb37783bf344f0f524754"
+    },
+    {
+      "id": "case-150",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "40adad3a0d6c32d0e4348165606eb9d69b38ba083aace75951694b064e43af36"
+    },
+    {
+      "id": "case-151",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "f0a5bd9a32afde0df30b00449daa8599343e2664f6f029809971cd55eebc6e03"
+    },
+    {
+      "id": "case-152",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "8b98e668e605f8f6745e6dc83119b1d514a8a5eddb145baf4f6c9c3838f6c58f"
+    },
+    {
+      "id": "case-153",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "2c3b7940464626ed348b26b4be69595a17811cc3fec9d9c052fd531a902574e6"
+    },
+    {
+      "id": "case-154",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "2c3b7940464626ed348b26b4be69595a17811cc3fec9d9c052fd531a902574e6"
+    },
+    {
+      "id": "case-155",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "3f1bc462e071c42531fb2f570444cc34cfe39fb3ef185cec1bead6e75750a491"
+    },
+    {
+      "id": "case-156",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "8ed052ac7c05e125a97ee29183392e32351bbe3467a64b82a823d4b21cd795d7"
+    },
+    {
+      "id": "case-157",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "379ccd042607031d7eb6c26b3d1794616ffa42b4cb87842e6a237b0145f9da80"
+    },
+    {
+      "id": "case-158",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "8c4934698e4138efdbd15fa10d407e1e6ab34d953b8915102f61340b6ecfc9b0"
+    },
+    {
+      "id": "case-159",
+      "label": "Noto Sans BoldItalic",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+      "font_file": "NotoSans-BoldItalic.ttf",
+      "layout_sha256": "ad93775c4dcce36f09234a5ae8118dd498dd4f912f31f6b710127cc592c2cefb"
+    },
+    {
+      "id": "case-170",
+      "label": "Noto Serif Italic",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "7b3facdd8562d06f73271c4142e2f8510e83372de60c1b7cc7f229ef8985ffb9"
+    },
+    {
+      "id": "case-171",
+      "label": "Noto Serif Italic",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "492118836bd352c56600d02e6205dc400fcde8f0d708655d61b4ad5b1521d297"
+    },
+    {
+      "id": "case-172",
+      "label": "Noto Serif Italic",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "6601d0e484171fb4574fc6da0e69c3c3797d1517069d9ffb66da4947931ade84"
+    },
+    {
+      "id": "case-173",
+      "label": "Noto Serif Italic",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "4c6ea301ba1ddab6f395d4e2da22df9e858236ada447cc24be78032a26dfb30a"
+    },
+    {
+      "id": "case-174",
+      "label": "Noto Serif Italic",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "4c6ea301ba1ddab6f395d4e2da22df9e858236ada447cc24be78032a26dfb30a"
+    },
+    {
+      "id": "case-175",
+      "label": "Noto Serif Italic",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "7fc613db0d212cdd6db7d0aef2535054cfed43ccc0e73943a15c9abd65d388ae"
+    },
+    {
+      "id": "case-176",
+      "label": "Noto Serif Italic",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "bc7ca23f1849cd66ff3c7599420b7e5e47dee08ac28a79c55752f5a54de2131a"
+    },
+    {
+      "id": "case-177",
+      "label": "Noto Serif Italic",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "6bbfe8f900ac2047a50577c8761afeb8f301913587409a18eac5b0530fd5b12a"
+    },
+    {
+      "id": "case-178",
+      "label": "Noto Serif Italic",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "b1e1ab960c5989f7fc5c4e2430f01eb2dee0b60dd3d6a0213f752ef8670b478c"
+    },
+    {
+      "id": "case-179",
+      "label": "Noto Serif Italic",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "bc25600aa27cd409e1e5b3d86340df3a329bb860fcfbe57a03a95070b229e1b0",
+      "font_file": "NotoSerif-Italic.ttf",
+      "layout_sha256": "d0c8db243dc8746e82a0efa148ce799ecbcceed29c385fada112f5b30d14a721"
+    },
+    {
+      "id": "case-180",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "97a7f8c6056f54aa3b45f3f8530bfa9c75742dde38fc663b33e82d8d456a96a6"
+    },
+    {
+      "id": "case-181",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "54a5932248055d26366caa7485de71406e037953863f8fdb525bcf0d35575c97"
+    },
+    {
+      "id": "case-182",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "abf1054cf0afec064fde1f6f57f18139a74094dd13e50f030742c34a32424908"
+    },
+    {
+      "id": "case-183",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "9183375e105e09de2101ef2ac0e1d9f58ca0ece828a1be23c8900c754e929693"
+    },
+    {
+      "id": "case-184",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "9183375e105e09de2101ef2ac0e1d9f58ca0ece828a1be23c8900c754e929693"
+    },
+    {
+      "id": "case-185",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "e680f591d480dbc93c6bea8777555a9bf2c0e053695312b0ed3cd8a70e794623"
+    },
+    {
+      "id": "case-186",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "2043c06c3abb4b44550f588d932742096685637f6a937e58ee018df737dea832"
+    },
+    {
+      "id": "case-187",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "c797f517c0bd6e9b034467099881089567ca9e410fffc1b6308edd8556556e69"
+    },
+    {
+      "id": "case-188",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "211897708a45c16ea7d18fb9b786c01f08c67f3dc6df7018361809cb05e79cc2"
+    },
+    {
+      "id": "case-189",
+      "label": "Noto Serif BoldItalic",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "78a6d685e5690b7dcda0f336b689193afc03b6bab5cf18fc1a9ecc3aa0600059",
+      "font_file": "NotoSerif-BoldItalic.ttf",
+      "layout_sha256": "0b3d8e45dee257237209aa58dcc31cbba0c68109162bb955f06d079c7054f423"
+    },
+    {
+      "id": "case-200",
+      "label": "Hack Italic",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "955db3ccb9eebac2f81e187790c7d41ea6824d669ed93a1bbf7a584b0e927d1c"
+    },
+    {
+      "id": "case-201",
+      "label": "Hack Italic",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "c0de9e6d82ffdb372938bd848589a2ef22df9c6c6b5edffe54595f0a499cbb86"
+    },
+    {
+      "id": "case-202",
+      "label": "Hack Italic",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "6a0c8f8f79fe97f66d0b867fda19ce9dcc55e76d4ffa51c5ab76bfb57fae7a3b"
+    },
+    {
+      "id": "case-203",
+      "label": "Hack Italic",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "a95852d7b97a441f017e6c7a13a9c5fb6c1fa62a424ccef1bf033fc958918dd6"
+    },
+    {
+      "id": "case-204",
+      "label": "Hack Italic",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "a95852d7b97a441f017e6c7a13a9c5fb6c1fa62a424ccef1bf033fc958918dd6"
+    },
+    {
+      "id": "case-205",
+      "label": "Hack Italic",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "7ebc4ddafab22599d4d5bf8bfc79075ebd0119da752528b3c1edeb197ef270d2"
+    },
+    {
+      "id": "case-206",
+      "label": "Hack Italic",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "9aadf0957a3f1c5a773aa0d5480079ffa5bfcf593101be4e119c084b35216641"
+    },
+    {
+      "id": "case-207",
+      "label": "Hack Italic",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "b64a2fe9087156acbaaeb42e71783283687be289ec0f6455532215e0dba4e086"
+    },
+    {
+      "id": "case-208",
+      "label": "Hack Italic",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "9548d2ea98b4ae7c31ede71e026220ed5875b3931b8095441afdbcde86eafbe5"
+    },
+    {
+      "id": "case-209",
+      "label": "Hack Italic",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "d7ea94938193b3bfecc61a350eb2698a8eb1b234dcfc24e85cb091a1df7e800e",
+      "font_file": "Hack-Italic.ttf",
+      "layout_sha256": "909c9931b508947063305751dfacda3619d40f91d9717759777f037a47ef578f"
+    },
+    {
+      "id": "case-210",
+      "label": "Hack BoldItalic",
+      "point_size": 8,
+      "base_px": 11,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "955db3ccb9eebac2f81e187790c7d41ea6824d669ed93a1bbf7a584b0e927d1c"
+    },
+    {
+      "id": "case-211",
+      "label": "Hack BoldItalic",
+      "point_size": 9,
+      "base_px": 12,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "c0de9e6d82ffdb372938bd848589a2ef22df9c6c6b5edffe54595f0a499cbb86"
+    },
+    {
+      "id": "case-212",
+      "label": "Hack BoldItalic",
+      "point_size": 10,
+      "base_px": 13,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "6a0c8f8f79fe97f66d0b867fda19ce9dcc55e76d4ffa51c5ab76bfb57fae7a3b"
+    },
+    {
+      "id": "case-213",
+      "label": "Hack BoldItalic",
+      "point_size": 11,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "a95852d7b97a441f017e6c7a13a9c5fb6c1fa62a424ccef1bf033fc958918dd6"
+    },
+    {
+      "id": "case-214",
+      "label": "Hack BoldItalic",
+      "point_size": 11.25,
+      "base_px": 15,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "a95852d7b97a441f017e6c7a13a9c5fb6c1fa62a424ccef1bf033fc958918dd6"
+    },
+    {
+      "id": "case-215",
+      "label": "Hack BoldItalic",
+      "point_size": 12,
+      "base_px": 16,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "7ebc4ddafab22599d4d5bf8bfc79075ebd0119da752528b3c1edeb197ef270d2"
+    },
+    {
+      "id": "case-216",
+      "label": "Hack BoldItalic",
+      "point_size": 13,
+      "base_px": 17,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "9aadf0957a3f1c5a773aa0d5480079ffa5bfcf593101be4e119c084b35216641"
+    },
+    {
+      "id": "case-217",
+      "label": "Hack BoldItalic",
+      "point_size": 14,
+      "base_px": 19,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "b64a2fe9087156acbaaeb42e71783283687be289ec0f6455532215e0dba4e086"
+    },
+    {
+      "id": "case-218",
+      "label": "Hack BoldItalic",
+      "point_size": 15,
+      "base_px": 20,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "9548d2ea98b4ae7c31ede71e026220ed5875b3931b8095441afdbcde86eafbe5"
+    },
+    {
+      "id": "case-219",
+      "label": "Hack BoldItalic",
+      "point_size": 16,
+      "base_px": 21,
+      "logical_dpi": 96,
+      "scale": 1,
+      "cutoff": 160,
+      "font_sha256": "4c7de59484724fd20d41a7a437f6808f26576254bc9dd75af3c5915759a5d084",
+      "font_file": "Hack-BoldItalic.ttf",
+      "layout_sha256": "909c9931b508947063305751dfacda3619d40f91d9717759777f037a47ef578f"
+    }
+  ],
+  "images": [
+    {
+      "file": "stockqt-smallpt-noto-sans-regular-light.png",
+      "font": "Noto Sans Regular",
+      "palette": "light",
+      "sha256": "a57c6bc3e4cd42cb3801584070ced16d5c17228d87c146b72eba936ec4f8ec1f"
+    },
+    {
+      "file": "stockqt-smallpt-noto-sans-regular-dark.png",
+      "font": "Noto Sans Regular",
+      "palette": "dark",
+      "sha256": "63c9268d1781408beccd7322f5362ad9d710d5559e7d46d4c173a5eeea2b3525"
+    },
+    {
+      "file": "stockqt-smallpt-noto-serif-regular-light.png",
+      "font": "Noto Serif Regular",
+      "palette": "light",
+      "sha256": "d2c12a337f54d96fca1baab2e155851e06f32c9b45cb6a71998364db02c0ab74"
+    },
+    {
+      "file": "stockqt-smallpt-noto-serif-regular-dark.png",
+      "font": "Noto Serif Regular",
+      "palette": "dark",
+      "sha256": "308d0d33520e9422e24584ab7f666f970f18dbacbe2576c3e97c394514f68978"
+    },
+    {
+      "file": "stockqt-smallpt-lato-light-light.png",
+      "font": "Lato Light",
+      "palette": "light",
+      "sha256": "16fd0e6adcbdda8fc6af710162051a47a630b5362cd0f396b2e60114ea172929"
+    },
+    {
+      "file": "stockqt-smallpt-lato-light-dark.png",
+      "font": "Lato Light",
+      "palette": "dark",
+      "sha256": "16bf3c978614c1c6854cadea96305700e9a935714ded148948a9215013338fa9"
+    },
+    {
+      "file": "stockqt-smallpt-hack-regular-light.png",
+      "font": "Hack Regular",
+      "palette": "light",
+      "sha256": "84f95de28911a99bda6ae68c6ede519561cbba06bfceb5e1ac857060432b2fdd"
+    },
+    {
+      "file": "stockqt-smallpt-hack-regular-dark.png",
+      "font": "Hack Regular",
+      "palette": "dark",
+      "sha256": "28e0cb05437af62b1a75109dd2a68c32e6d1d9fec81f3d5c86869976dddeef39"
+    },
+    {
+      "file": "stockqt-smallpt-noto-sans-italic-light.png",
+      "font": "Noto Sans Italic",
+      "palette": "light",
+      "sha256": "e5ee577e2f4979c10490f4ecec91162bd92dee6b6c7d16c339d015cf88d758a3"
+    },
+    {
+      "file": "stockqt-smallpt-noto-sans-italic-dark.png",
+      "font": "Noto Sans Italic",
+      "palette": "dark",
+      "sha256": "90d16b64130c3484ecd885071b0d72d611aa17b7241c82e631150fd21d8c0afb"
+    },
+    {
+      "file": "stockqt-smallpt-noto-sans-bolditalic-light.png",
+      "font": "Noto Sans BoldItalic",
+      "palette": "light",
+      "sha256": "84ba37f55f521afa13a5fc9a070aa89e446baab9637515eb359f820bea56722d"
+    },
+    {
+      "file": "stockqt-smallpt-noto-sans-bolditalic-dark.png",
+      "font": "Noto Sans BoldItalic",
+      "palette": "dark",
+      "sha256": "abb15f89819ea45bebe702aadc29f57faff8f3da3787cefc5a86b023fe9a8995"
+    },
+    {
+      "file": "stockqt-smallpt-noto-serif-italic-light.png",
+      "font": "Noto Serif Italic",
+      "palette": "light",
+      "sha256": "82b46f34e354a2cc46e0526e393e648c603197ad9369f2ecdaf1207f5af5f8e9"
+    },
+    {
+      "file": "stockqt-smallpt-noto-serif-italic-dark.png",
+      "font": "Noto Serif Italic",
+      "palette": "dark",
+      "sha256": "70634cf1bdfb0b81f9d1c9fbd201f1c56805708cf056a2aaaadd6ff4853f048a"
+    },
+    {
+      "file": "stockqt-smallpt-noto-serif-bolditalic-light.png",
+      "font": "Noto Serif BoldItalic",
+      "palette": "light",
+      "sha256": "450238ab7b72a376967efcc6eac81e7bf59b9b31abd5ebc718481e60df581867"
+    },
+    {
+      "file": "stockqt-smallpt-noto-serif-bolditalic-dark.png",
+      "font": "Noto Serif BoldItalic",
+      "palette": "dark",
+      "sha256": "f3bfd52f65906a46b6e7ec20acd1ef880f89624cab49e4a2c92f15dc3b2d9ee1"
+    },
+    {
+      "file": "stockqt-smallpt-hack-italic-light.png",
+      "font": "Hack Italic",
+      "palette": "light",
+      "sha256": "201b77064e816740e7b279751d09df9195bd4882e0288159c98565256cba10c5"
+    },
+    {
+      "file": "stockqt-smallpt-hack-italic-dark.png",
+      "font": "Hack Italic",
+      "palette": "dark",
+      "sha256": "f759b9c911d4d5d55195f4badbe6cd3abdbb906115dbeff030e1e8f8f68a8606"
+    },
+    {
+      "file": "stockqt-smallpt-hack-bolditalic-light.png",
+      "font": "Hack BoldItalic",
+      "palette": "light",
+      "sha256": "a0e9c67468f50b672fb62ba40b590f27f89ad7ca8be248976affc0c794ce6c54"
+    },
+    {
+      "file": "stockqt-smallpt-hack-bolditalic-dark.png",
+      "font": "Hack BoldItalic",
+      "palette": "dark",
+      "sha256": "7924a8cabc9a813201430b201a6d4055ebf64803d5e9bb8e7c46e499c61ba4f0"
+    }
+  ],
+  "source_strips": [
+    {
+      "id": "case-000",
+      "palette": "light",
+      "column": 0,
+      "sha256": "726f2b7bdecd585a5896eb4babe533d8d989c46447cccdbaea40759012579220"
+    },
+    {
+      "id": "case-000",
+      "palette": "light",
+      "column": 1,
+      "sha256": "726f2b7bdecd585a5896eb4babe533d8d989c46447cccdbaea40759012579220"
+    },
+    {
+      "id": "case-000",
+      "palette": "light",
+      "column": 2,
+      "sha256": "982edbd608728c6410a12e71436a6cfa04cc27b4727eddd7abdda42d81df570e"
+    },
+    {
+      "id": "case-001",
+      "palette": "light",
+      "column": 0,
+      "sha256": "9707d513e5480d6bb756aae79bc8802c005355cc4c825d1bac235359ef771d4e"
+    },
+    {
+      "id": "case-001",
+      "palette": "light",
+      "column": 1,
+      "sha256": "9707d513e5480d6bb756aae79bc8802c005355cc4c825d1bac235359ef771d4e"
+    },
+    {
+      "id": "case-001",
+      "palette": "light",
+      "column": 2,
+      "sha256": "eecf01359bc9ed88248b98611dceedc6209747f45fe676e99d63ff1cf0be5e42"
+    },
+    {
+      "id": "case-002",
+      "palette": "light",
+      "column": 0,
+      "sha256": "182fcec286c69c5d6ef87fc2e7d0f2557160cb804b1d9cc6bd36cce4e44f73e8"
+    },
+    {
+      "id": "case-002",
+      "palette": "light",
+      "column": 1,
+      "sha256": "182fcec286c69c5d6ef87fc2e7d0f2557160cb804b1d9cc6bd36cce4e44f73e8"
+    },
+    {
+      "id": "case-002",
+      "palette": "light",
+      "column": 2,
+      "sha256": "ef5c580f4c101b770cc3a9340ce3fdbf288b37c8cea61a708b3ce9e0f5e38d5b"
+    },
+    {
+      "id": "case-003",
+      "palette": "light",
+      "column": 0,
+      "sha256": "32b5a7bcceae3b091366f62f0260bbc5efd666215ad3617481ecbe2de86a3470"
+    },
+    {
+      "id": "case-003",
+      "palette": "light",
+      "column": 1,
+      "sha256": "32b5a7bcceae3b091366f62f0260bbc5efd666215ad3617481ecbe2de86a3470"
+    },
+    {
+      "id": "case-003",
+      "palette": "light",
+      "column": 2,
+      "sha256": "087628328869d470d767c863f152b5fd850a52ede5fe289b56b825849a00191c"
+    },
+    {
+      "id": "case-004",
+      "palette": "light",
+      "column": 0,
+      "sha256": "32b5a7bcceae3b091366f62f0260bbc5efd666215ad3617481ecbe2de86a3470"
+    },
+    {
+      "id": "case-004",
+      "palette": "light",
+      "column": 1,
+      "sha256": "32b5a7bcceae3b091366f62f0260bbc5efd666215ad3617481ecbe2de86a3470"
+    },
+    {
+      "id": "case-004",
+      "palette": "light",
+      "column": 2,
+      "sha256": "087628328869d470d767c863f152b5fd850a52ede5fe289b56b825849a00191c"
+    },
+    {
+      "id": "case-005",
+      "palette": "light",
+      "column": 0,
+      "sha256": "3d006987e77b06927d7dccb209c8e85630fb6aebb8717b107af1e503cbc1932f"
+    },
+    {
+      "id": "case-005",
+      "palette": "light",
+      "column": 1,
+      "sha256": "3d006987e77b06927d7dccb209c8e85630fb6aebb8717b107af1e503cbc1932f"
+    },
+    {
+      "id": "case-005",
+      "palette": "light",
+      "column": 2,
+      "sha256": "2f1077168feecca6965c9f605b10a0c846f692db7bbac8910bbd8f61e9cc1b48"
+    },
+    {
+      "id": "case-006",
+      "palette": "light",
+      "column": 0,
+      "sha256": "cb935ce3f4ead9a381fcf872c8be6d82be02eaa0cf639718f89cc6adf164b181"
+    },
+    {
+      "id": "case-006",
+      "palette": "light",
+      "column": 1,
+      "sha256": "cb935ce3f4ead9a381fcf872c8be6d82be02eaa0cf639718f89cc6adf164b181"
+    },
+    {
+      "id": "case-006",
+      "palette": "light",
+      "column": 2,
+      "sha256": "3154e924706f38a31a78c927dc9b9607a375ccd2da811827f6461401c202fa95"
+    },
+    {
+      "id": "case-007",
+      "palette": "light",
+      "column": 0,
+      "sha256": "ebc4591a886d3302d09211778ec72f86daeaa3402ebcd54262bbc5e453b0f9d3"
+    },
+    {
+      "id": "case-007",
+      "palette": "light",
+      "column": 1,
+      "sha256": "ebc4591a886d3302d09211778ec72f86daeaa3402ebcd54262bbc5e453b0f9d3"
+    },
+    {
+      "id": "case-007",
+      "palette": "light",
+      "column": 2,
+      "sha256": "f16f0973cd127b109654324a2d6fd2257bc62ff86988d3def152d88ae5fa491c"
+    },
+    {
+      "id": "case-008",
+      "palette": "light",
+      "column": 0,
+      "sha256": "f6de5f1988df7550b39f1048dee3e77f9a741c86b7f6e0146c67d42ffcdd7043"
+    },
+    {
+      "id": "case-008",
+      "palette": "light",
+      "column": 1,
+      "sha256": "f6de5f1988df7550b39f1048dee3e77f9a741c86b7f6e0146c67d42ffcdd7043"
+    },
+    {
+      "id": "case-008",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b52b266c24ae0d8151168757347123ab0f24a14337d69e4a7f24e321c5882419"
+    },
+    {
+      "id": "case-009",
+      "palette": "light",
+      "column": 0,
+      "sha256": "36015189ff094e76ceb4f210b42fe2788671acc8c6b10d263c207a088aafe492"
+    },
+    {
+      "id": "case-009",
+      "palette": "light",
+      "column": 1,
+      "sha256": "8fbf0205e651a25c6e6a814873fa77c70295d0d286857b042df1f27a490782e5"
+    },
+    {
+      "id": "case-009",
+      "palette": "light",
+      "column": 2,
+      "sha256": "1a94bb3fc8602deb10bed293b5abc2fe49fb716f30a0e9fa7a52a8f8c593fe4e"
+    },
+    {
+      "id": "case-000",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "f788bf24991273047243d5e83072b10bf040f57865603bc6ce790c757c9a6c49"
+    },
+    {
+      "id": "case-000",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "f788bf24991273047243d5e83072b10bf040f57865603bc6ce790c757c9a6c49"
+    },
+    {
+      "id": "case-000",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "05006ff5aac77f219c3595dff24d161d65d4d179ebf4611b10ba4c0940a16582"
+    },
+    {
+      "id": "case-001",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "e10f489b341cf3f64b706d4d64f16d479ae9c1d7cb960f89bf91509f83d1d7ca"
+    },
+    {
+      "id": "case-001",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "e10f489b341cf3f64b706d4d64f16d479ae9c1d7cb960f89bf91509f83d1d7ca"
+    },
+    {
+      "id": "case-001",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "673ad524cc65c8d47c858e656c07a6123488c631a254549084db138301c87982"
+    },
+    {
+      "id": "case-002",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "3f89089e1fa4171d01295c0f69c7d3227ede4bffe5e7ad7c39e9f5918817baaa"
+    },
+    {
+      "id": "case-002",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "3f89089e1fa4171d01295c0f69c7d3227ede4bffe5e7ad7c39e9f5918817baaa"
+    },
+    {
+      "id": "case-002",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "d9497a390707727f61e634f2b04b76266f1e0fbfef37d24a532ed162b0e68e6c"
+    },
+    {
+      "id": "case-003",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "e823a57ba3847ebe2b2cc045eb34f4beba5e00e16fae643016428c5675ea2304"
+    },
+    {
+      "id": "case-003",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "e823a57ba3847ebe2b2cc045eb34f4beba5e00e16fae643016428c5675ea2304"
+    },
+    {
+      "id": "case-003",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "711980f3366126ddf252625639620a90110acd8788c8630a46075b94d5d7b482"
+    },
+    {
+      "id": "case-004",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "e823a57ba3847ebe2b2cc045eb34f4beba5e00e16fae643016428c5675ea2304"
+    },
+    {
+      "id": "case-004",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "e823a57ba3847ebe2b2cc045eb34f4beba5e00e16fae643016428c5675ea2304"
+    },
+    {
+      "id": "case-004",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "711980f3366126ddf252625639620a90110acd8788c8630a46075b94d5d7b482"
+    },
+    {
+      "id": "case-005",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "9f55c29edee0313bc1ca026be7012cfa99e1e890164f929733fd08e97c28a214"
+    },
+    {
+      "id": "case-005",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "9f55c29edee0313bc1ca026be7012cfa99e1e890164f929733fd08e97c28a214"
+    },
+    {
+      "id": "case-005",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "70cd636d291c354d556562148ddb80f903a8d17affdaa49953f2c44456f93eb7"
+    },
+    {
+      "id": "case-006",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "8cabe30c9c2ece95e33a4ced5ac5754505ead3a109bb3381eb50e33508291a79"
+    },
+    {
+      "id": "case-006",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "8cabe30c9c2ece95e33a4ced5ac5754505ead3a109bb3381eb50e33508291a79"
+    },
+    {
+      "id": "case-006",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "14b15f001c3a68f203ffd94ee5265b8db6e73eae27bddea77190d8806ceac1cf"
+    },
+    {
+      "id": "case-007",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "48ead53cf2a9d606d7d223ec9e71d732ae567c3de75bacdf960227205703905c"
+    },
+    {
+      "id": "case-007",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "48ead53cf2a9d606d7d223ec9e71d732ae567c3de75bacdf960227205703905c"
+    },
+    {
+      "id": "case-007",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "bce4eaa5f85c1738b7f8262568e0469d4189d03632ae60910d106b7c324f0f85"
+    },
+    {
+      "id": "case-008",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "389bd713a2e00d36488ef0502145941b40dfd6ad2665b781ff160a712d2da6f4"
+    },
+    {
+      "id": "case-008",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "389bd713a2e00d36488ef0502145941b40dfd6ad2665b781ff160a712d2da6f4"
+    },
+    {
+      "id": "case-008",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "09793bd388dbdf6f9506e590879671fe8f68d934ed711cd7fa3569727b89e287"
+    },
+    {
+      "id": "case-009",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "8824f3b21c3260cee8899278a92b1095e9653ad6b6b2136397481b65f0d7d303"
+    },
+    {
+      "id": "case-009",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "019fd6ae8ec781b5555e8bffaf356cea0aa77055f9f88434f585eaf31006725f"
+    },
+    {
+      "id": "case-009",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "0e468d9c5527e8497841f1b9196813b18fe78e155470f9345e1216faaed18d7e"
+    },
+    {
+      "id": "case-070",
+      "palette": "light",
+      "column": 0,
+      "sha256": "19505b46369c3bdae094d5efb724786fd70af0a44e1b04bd2fa7e91d1b644ea5"
+    },
+    {
+      "id": "case-070",
+      "palette": "light",
+      "column": 1,
+      "sha256": "19505b46369c3bdae094d5efb724786fd70af0a44e1b04bd2fa7e91d1b644ea5"
+    },
+    {
+      "id": "case-070",
+      "palette": "light",
+      "column": 2,
+      "sha256": "15d94ec6f2e6673060b2a4b756d61b06eccff0c7e51c3de5c1e08cf99b07d574"
+    },
+    {
+      "id": "case-071",
+      "palette": "light",
+      "column": 0,
+      "sha256": "7e57a6898fbaaf5fe634ffd2c06d947adbfcc9399c043a15949a3ba792a89e61"
+    },
+    {
+      "id": "case-071",
+      "palette": "light",
+      "column": 1,
+      "sha256": "7e57a6898fbaaf5fe634ffd2c06d947adbfcc9399c043a15949a3ba792a89e61"
+    },
+    {
+      "id": "case-071",
+      "palette": "light",
+      "column": 2,
+      "sha256": "c842b287b877b0b08bce8303bf47e07708583d8f741be6fdebc9ff765b351d8c"
+    },
+    {
+      "id": "case-072",
+      "palette": "light",
+      "column": 0,
+      "sha256": "714c45b129d9869d5a079b8d037c85d6a567ef11c38c84b54800e6a4443f0ea8"
+    },
+    {
+      "id": "case-072",
+      "palette": "light",
+      "column": 1,
+      "sha256": "714c45b129d9869d5a079b8d037c85d6a567ef11c38c84b54800e6a4443f0ea8"
+    },
+    {
+      "id": "case-072",
+      "palette": "light",
+      "column": 2,
+      "sha256": "7b017721d4d5a1f91672f4472031c2f5913ca22b52fea0ce755b7dcc8d29c89c"
+    },
+    {
+      "id": "case-073",
+      "palette": "light",
+      "column": 0,
+      "sha256": "1d9d907c82a43f0f0d28720313680fe584b8e5f2cb6b79a69f9ac3da0f425e0c"
+    },
+    {
+      "id": "case-073",
+      "palette": "light",
+      "column": 1,
+      "sha256": "1d9d907c82a43f0f0d28720313680fe584b8e5f2cb6b79a69f9ac3da0f425e0c"
+    },
+    {
+      "id": "case-073",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b7802361e160585d05d183cea267660c4f80778e014d584d258f0380b684a6d7"
+    },
+    {
+      "id": "case-074",
+      "palette": "light",
+      "column": 0,
+      "sha256": "1d9d907c82a43f0f0d28720313680fe584b8e5f2cb6b79a69f9ac3da0f425e0c"
+    },
+    {
+      "id": "case-074",
+      "palette": "light",
+      "column": 1,
+      "sha256": "1d9d907c82a43f0f0d28720313680fe584b8e5f2cb6b79a69f9ac3da0f425e0c"
+    },
+    {
+      "id": "case-074",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b7802361e160585d05d183cea267660c4f80778e014d584d258f0380b684a6d7"
+    },
+    {
+      "id": "case-075",
+      "palette": "light",
+      "column": 0,
+      "sha256": "8d403ed1e081615634dba333552fe66bf13f2c449692ad6b80acb1cc6ed26181"
+    },
+    {
+      "id": "case-075",
+      "palette": "light",
+      "column": 1,
+      "sha256": "8d403ed1e081615634dba333552fe66bf13f2c449692ad6b80acb1cc6ed26181"
+    },
+    {
+      "id": "case-075",
+      "palette": "light",
+      "column": 2,
+      "sha256": "06e53c6468a57e38074942d1313c407cb24950ebb0ba6ba4c887aa73d3c3a9c1"
+    },
+    {
+      "id": "case-076",
+      "palette": "light",
+      "column": 0,
+      "sha256": "dc0f3f798396663aadcc6e580b8e183ec858a7da9115b1a02c9c87d07e841cbc"
+    },
+    {
+      "id": "case-076",
+      "palette": "light",
+      "column": 1,
+      "sha256": "dc0f3f798396663aadcc6e580b8e183ec858a7da9115b1a02c9c87d07e841cbc"
+    },
+    {
+      "id": "case-076",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b1d82a924cbf1f6b9964a48b635362b2458618330c9ea407556358c73607b171"
+    },
+    {
+      "id": "case-077",
+      "palette": "light",
+      "column": 0,
+      "sha256": "ca14974b8c24c8de404ad176dc5777ec89cab14e62b0348b6de90522442cd3e3"
+    },
+    {
+      "id": "case-077",
+      "palette": "light",
+      "column": 1,
+      "sha256": "0d040898a9d9310ea7cb09fcfea0f7e13bf9785d6d7e786963a7b6046fba5185"
+    },
+    {
+      "id": "case-077",
+      "palette": "light",
+      "column": 2,
+      "sha256": "46a34bdc1453c5ff8ac1d2068b83164c3b57cfde60135f598af2582f9abdea61"
+    },
+    {
+      "id": "case-078",
+      "palette": "light",
+      "column": 0,
+      "sha256": "e1cbf67d9cc7b65a3ae579dd1877d0decafa5439b572ce51c68a7dda1cd9695b"
+    },
+    {
+      "id": "case-078",
+      "palette": "light",
+      "column": 1,
+      "sha256": "88115a37a620c608c25680aed9f32a1bea11be40794be6e755b013048530dc03"
+    },
+    {
+      "id": "case-078",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b3eb04f3cd0018497666d4ea4a49f28eca3536dbb2d0c0a639d99927284fadb3"
+    },
+    {
+      "id": "case-079",
+      "palette": "light",
+      "column": 0,
+      "sha256": "4de4c515bb1fb376975df793bf3bbb90630c6d9be0ae831648d7010f9281e40e"
+    },
+    {
+      "id": "case-079",
+      "palette": "light",
+      "column": 1,
+      "sha256": "fa8355893ac22a3b6739d4d140c4b333e0625ebf1e4cec7356bd196b6c6cb0c9"
+    },
+    {
+      "id": "case-079",
+      "palette": "light",
+      "column": 2,
+      "sha256": "ee60a3a4d4020a86fba521cf9a83bf5a675ffd8b8dfab4b7ef92c5b5631d79ca"
+    },
+    {
+      "id": "case-070",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "15c5fe897466c99386c36bf343b7cf83799e85cb824f68f4c103fc304a3ec221"
+    },
+    {
+      "id": "case-070",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "15c5fe897466c99386c36bf343b7cf83799e85cb824f68f4c103fc304a3ec221"
+    },
+    {
+      "id": "case-070",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "b9179c4be3de3f7037efbfb863b770baedd38cc0e6cd1451114588e4f395d1b7"
+    },
+    {
+      "id": "case-071",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "a89a8d7379de461cbcf074c46efc59b63cdb1bb1bb403dee6030f1c03ab60589"
+    },
+    {
+      "id": "case-071",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "a89a8d7379de461cbcf074c46efc59b63cdb1bb1bb403dee6030f1c03ab60589"
+    },
+    {
+      "id": "case-071",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "b816c4138d0f4ebc08c7f9a84d19506dcaf4735a74fb07017c151d41d7132ae1"
+    },
+    {
+      "id": "case-072",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "b23fb707d3cd30bf7c8ef6998561075c6d89f96aadc47bfd5dbf6ce3348ba717"
+    },
+    {
+      "id": "case-072",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "b23fb707d3cd30bf7c8ef6998561075c6d89f96aadc47bfd5dbf6ce3348ba717"
+    },
+    {
+      "id": "case-072",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "8b12698e1c0bb6f4ff8f80c6dedab121891c8deab208908d09cd6de81155ab99"
+    },
+    {
+      "id": "case-073",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "b0d28c6523156efa791c3670b661f6ed096f2cf83354deff98a40e00d3d80eaa"
+    },
+    {
+      "id": "case-073",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "b0d28c6523156efa791c3670b661f6ed096f2cf83354deff98a40e00d3d80eaa"
+    },
+    {
+      "id": "case-073",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "cdfc8b6ba25d4f8fba40321ba86da0dd43c86757867479b98cc75ad94001b101"
+    },
+    {
+      "id": "case-074",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "b0d28c6523156efa791c3670b661f6ed096f2cf83354deff98a40e00d3d80eaa"
+    },
+    {
+      "id": "case-074",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "b0d28c6523156efa791c3670b661f6ed096f2cf83354deff98a40e00d3d80eaa"
+    },
+    {
+      "id": "case-074",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "cdfc8b6ba25d4f8fba40321ba86da0dd43c86757867479b98cc75ad94001b101"
+    },
+    {
+      "id": "case-075",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "720159ac9fcd398fa95cf44bca11c9b5046a6efe3b82212c13908adeb8cbcf2d"
+    },
+    {
+      "id": "case-075",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "720159ac9fcd398fa95cf44bca11c9b5046a6efe3b82212c13908adeb8cbcf2d"
+    },
+    {
+      "id": "case-075",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "c20ba4f4d59110332984e022d7aa91efac141f23b9346e3b1abe529f375f3d4a"
+    },
+    {
+      "id": "case-076",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "d11992c44ad4e80cbe6d6e634642c792a15ff5229e196b541c71c016976eafc0"
+    },
+    {
+      "id": "case-076",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "d11992c44ad4e80cbe6d6e634642c792a15ff5229e196b541c71c016976eafc0"
+    },
+    {
+      "id": "case-076",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "5c1f296998ea83115f3412d0e011620c9aa75264fbf9b0fb18060b7884a0bd52"
+    },
+    {
+      "id": "case-077",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "8cbcc9309ad13bd9292682179ed537dd9ae07be4d1292930a0d0f337756f52f4"
+    },
+    {
+      "id": "case-077",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "474c690d3e77759fd7b3c906b50e1720a75944f83655cab3a185b37df02c73e7"
+    },
+    {
+      "id": "case-077",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "7a815d929a0426a5117bc25b5f9eeeb3eaa260678a9dd290a64e112ce53e18ac"
+    },
+    {
+      "id": "case-078",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "f4968ff48236e208e430c7777dd5f5ac0bbaec91e75abce9e6f7848cb2c81e0b"
+    },
+    {
+      "id": "case-078",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "b03f72c0e1e5b2d39ed1623bc993beeb10ced12eb723bb81ec635a483fb59e61"
+    },
+    {
+      "id": "case-078",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "12f5b22660e37c237099d1e70e41be79bd34add1d9fdc2f86909e97d6c5d1ddc"
+    },
+    {
+      "id": "case-079",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "a19ea72ce011ec3131e5ad75d54cc0515bd5b1940480578a9311e844e7fc14fd"
+    },
+    {
+      "id": "case-079",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "73ecefe10c7a719fc0ff7320722571bab605d2fc5e164228e5cd86e4a3707d79"
+    },
+    {
+      "id": "case-079",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "eb5ebdcbb572b6f96a145e61f5e6a6607e737a3eae53fe455494db1a876fb502"
+    },
+    {
+      "id": "case-020",
+      "palette": "light",
+      "column": 0,
+      "sha256": "69495f8f2907c5cd466b1ebb22a867b81963f940dc383f90690fb3ec5cbe5fd5"
+    },
+    {
+      "id": "case-020",
+      "palette": "light",
+      "column": 1,
+      "sha256": "69495f8f2907c5cd466b1ebb22a867b81963f940dc383f90690fb3ec5cbe5fd5"
+    },
+    {
+      "id": "case-020",
+      "palette": "light",
+      "column": 2,
+      "sha256": "0922d5516c3a42d8afeb30c2aef1720cfccc6c138d26883df76d5e9e53c19389"
+    },
+    {
+      "id": "case-021",
+      "palette": "light",
+      "column": 0,
+      "sha256": "9e642172f1b3dbe04225231e646cfaf369067ce8d48bb4c4dbb5e13f3bf1c8fc"
+    },
+    {
+      "id": "case-021",
+      "palette": "light",
+      "column": 1,
+      "sha256": "9e642172f1b3dbe04225231e646cfaf369067ce8d48bb4c4dbb5e13f3bf1c8fc"
+    },
+    {
+      "id": "case-021",
+      "palette": "light",
+      "column": 2,
+      "sha256": "010caf7185c9a7b7fe2bbfe56a7a0777216c4a674ff09c8aea40f4d153e2e1bb"
+    },
+    {
+      "id": "case-022",
+      "palette": "light",
+      "column": 0,
+      "sha256": "7496057b38c4b41560fef790966e2f246889c34571fa3960eba96251bef6b382"
+    },
+    {
+      "id": "case-022",
+      "palette": "light",
+      "column": 1,
+      "sha256": "7496057b38c4b41560fef790966e2f246889c34571fa3960eba96251bef6b382"
+    },
+    {
+      "id": "case-022",
+      "palette": "light",
+      "column": 2,
+      "sha256": "712884c6f080c712e83cac70a3f5c15cd06677b5d4e1980121ce6181a969319d"
+    },
+    {
+      "id": "case-023",
+      "palette": "light",
+      "column": 0,
+      "sha256": "bcbfc7859af673fc6aef8f033398cbbe3634cd09204d641824055c249813c884"
+    },
+    {
+      "id": "case-023",
+      "palette": "light",
+      "column": 1,
+      "sha256": "bcbfc7859af673fc6aef8f033398cbbe3634cd09204d641824055c249813c884"
+    },
+    {
+      "id": "case-023",
+      "palette": "light",
+      "column": 2,
+      "sha256": "f8d87534b5cea10ce9485d0cff2ca2e9f95b88fe8aacb7851eed608b088625a7"
+    },
+    {
+      "id": "case-024",
+      "palette": "light",
+      "column": 0,
+      "sha256": "bcbfc7859af673fc6aef8f033398cbbe3634cd09204d641824055c249813c884"
+    },
+    {
+      "id": "case-024",
+      "palette": "light",
+      "column": 1,
+      "sha256": "bcbfc7859af673fc6aef8f033398cbbe3634cd09204d641824055c249813c884"
+    },
+    {
+      "id": "case-024",
+      "palette": "light",
+      "column": 2,
+      "sha256": "f8d87534b5cea10ce9485d0cff2ca2e9f95b88fe8aacb7851eed608b088625a7"
+    },
+    {
+      "id": "case-025",
+      "palette": "light",
+      "column": 0,
+      "sha256": "abb8e7d9901cb108d485f2a750c8124210434dbb4d3e5b1927ebebca5a7668ee"
+    },
+    {
+      "id": "case-025",
+      "palette": "light",
+      "column": 1,
+      "sha256": "abb8e7d9901cb108d485f2a750c8124210434dbb4d3e5b1927ebebca5a7668ee"
+    },
+    {
+      "id": "case-025",
+      "palette": "light",
+      "column": 2,
+      "sha256": "2fe3ac32df92f9082458ab5607348968fd3694148ba677458983af7952dfccf2"
+    },
+    {
+      "id": "case-026",
+      "palette": "light",
+      "column": 0,
+      "sha256": "07673de034533b6e9ed5196b73326f07f445223b81f6643f930e53cc5da91356"
+    },
+    {
+      "id": "case-026",
+      "palette": "light",
+      "column": 1,
+      "sha256": "07673de034533b6e9ed5196b73326f07f445223b81f6643f930e53cc5da91356"
+    },
+    {
+      "id": "case-026",
+      "palette": "light",
+      "column": 2,
+      "sha256": "8ae40d6b7bdf8aa9d23c552b154ac360efff8ffee7d4ee6d35f245ebc784dd6b"
+    },
+    {
+      "id": "case-027",
+      "palette": "light",
+      "column": 0,
+      "sha256": "33a23007520d5bca0b2705b9d0013d9eaa001a5f1bc476039e9548ffb7bace44"
+    },
+    {
+      "id": "case-027",
+      "palette": "light",
+      "column": 1,
+      "sha256": "33a23007520d5bca0b2705b9d0013d9eaa001a5f1bc476039e9548ffb7bace44"
+    },
+    {
+      "id": "case-027",
+      "palette": "light",
+      "column": 2,
+      "sha256": "ba60e643fd166435b5e841d4df768d6707db12b109ac0d8f796905da7833e430"
+    },
+    {
+      "id": "case-028",
+      "palette": "light",
+      "column": 0,
+      "sha256": "17986e886dd793b3813d33fe0d95b1c0a06a9dde483184d78b1ebee8d6c19fa0"
+    },
+    {
+      "id": "case-028",
+      "palette": "light",
+      "column": 1,
+      "sha256": "17986e886dd793b3813d33fe0d95b1c0a06a9dde483184d78b1ebee8d6c19fa0"
+    },
+    {
+      "id": "case-028",
+      "palette": "light",
+      "column": 2,
+      "sha256": "15ffb1568bbdae2629d5b7ac8bc1afb9c6de5cd7e74e54bea03d8b5b8d31ee4a"
+    },
+    {
+      "id": "case-029",
+      "palette": "light",
+      "column": 0,
+      "sha256": "156ef20c3a89c9d3ae24cf44f91924c55065f15a97d28288f8fe131e2c2ac6c4"
+    },
+    {
+      "id": "case-029",
+      "palette": "light",
+      "column": 1,
+      "sha256": "156ef20c3a89c9d3ae24cf44f91924c55065f15a97d28288f8fe131e2c2ac6c4"
+    },
+    {
+      "id": "case-029",
+      "palette": "light",
+      "column": 2,
+      "sha256": "67a8c3b7a45ecb066eb42081e4e0f86e248f2785f0ccc1490d9c22d0374646f8"
+    },
+    {
+      "id": "case-020",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "33bc6a333b64b23a4730728cfecb866c3a8f8f6a71a73b29dc7dc72ac158dc05"
+    },
+    {
+      "id": "case-020",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "33bc6a333b64b23a4730728cfecb866c3a8f8f6a71a73b29dc7dc72ac158dc05"
+    },
+    {
+      "id": "case-020",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "435175bc433b563dd3e792c6340daf424d8e468f027b9e08548f4ef4400ca416"
+    },
+    {
+      "id": "case-021",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "331d06cd0da6c948f756ae229da5e9fd77b569e179209fd84e41ef26bc950b88"
+    },
+    {
+      "id": "case-021",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "331d06cd0da6c948f756ae229da5e9fd77b569e179209fd84e41ef26bc950b88"
+    },
+    {
+      "id": "case-021",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "a71183392f3aaf0854374e5284040d61fcabc28c2e0bfdbaad4d1b4152f21397"
+    },
+    {
+      "id": "case-022",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "289d93b0f1b1c306ed35e6a575dfe1dcfd85cfb0f8655b578fc0137255b4c82b"
+    },
+    {
+      "id": "case-022",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "289d93b0f1b1c306ed35e6a575dfe1dcfd85cfb0f8655b578fc0137255b4c82b"
+    },
+    {
+      "id": "case-022",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "7b957479c58db68a98fde92d74a4a93603a29012472d2d269035dd8fd8a4844f"
+    },
+    {
+      "id": "case-023",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "46d5808e4449ab0b5c311ee57948ac20723c0a59514764228d833fb2a41dbc34"
+    },
+    {
+      "id": "case-023",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "46d5808e4449ab0b5c311ee57948ac20723c0a59514764228d833fb2a41dbc34"
+    },
+    {
+      "id": "case-023",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "91ce6dbb902ec693b7790cdf63ea7106f3569ae6ac0643b704dac6a70b0925e3"
+    },
+    {
+      "id": "case-024",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "46d5808e4449ab0b5c311ee57948ac20723c0a59514764228d833fb2a41dbc34"
+    },
+    {
+      "id": "case-024",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "46d5808e4449ab0b5c311ee57948ac20723c0a59514764228d833fb2a41dbc34"
+    },
+    {
+      "id": "case-024",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "91ce6dbb902ec693b7790cdf63ea7106f3569ae6ac0643b704dac6a70b0925e3"
+    },
+    {
+      "id": "case-025",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "c4b203d35c63cf4c8bbdf1c3b9483e2f1d62defd9685091d424e40e4fe5a94c3"
+    },
+    {
+      "id": "case-025",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "c4b203d35c63cf4c8bbdf1c3b9483e2f1d62defd9685091d424e40e4fe5a94c3"
+    },
+    {
+      "id": "case-025",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "565b58c7c325f4cd0a0624de414699c2288ad55dd24ba5a773ae547840ba8d20"
+    },
+    {
+      "id": "case-026",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "f3ce651986f1e0fee0e6ab93040c8ac20fcbc5c6850ff518ac36d1646b23a489"
+    },
+    {
+      "id": "case-026",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "f3ce651986f1e0fee0e6ab93040c8ac20fcbc5c6850ff518ac36d1646b23a489"
+    },
+    {
+      "id": "case-026",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "1b3d3b21e99a718f6618c3ee8be327614fbd79f8f2e9534e4ba9aba7efc174b8"
+    },
+    {
+      "id": "case-027",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "6f70fe9b662c6fab742d76d076eac2be785c06d205e0a0cee422189d281ca74a"
+    },
+    {
+      "id": "case-027",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "6f70fe9b662c6fab742d76d076eac2be785c06d205e0a0cee422189d281ca74a"
+    },
+    {
+      "id": "case-027",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "348e533f68d8f522fd4fb9a4c76d784e0c2351cafd6ffde996f68dcc0401f22d"
+    },
+    {
+      "id": "case-028",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "ca63644ebd4e57ae1869df49ba6b997153f4cb30abab4dac5ec4e245521584ef"
+    },
+    {
+      "id": "case-028",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "ca63644ebd4e57ae1869df49ba6b997153f4cb30abab4dac5ec4e245521584ef"
+    },
+    {
+      "id": "case-028",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "d40af0f42e5577c0d92dc0957f65a6fa8d399305d4998eff712797a0cdab302d"
+    },
+    {
+      "id": "case-029",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "d70807c7d99fdd1e0709576a9fd5498928ea9d45a58ac7bb61c5d9d502ed101f"
+    },
+    {
+      "id": "case-029",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "d70807c7d99fdd1e0709576a9fd5498928ea9d45a58ac7bb61c5d9d502ed101f"
+    },
+    {
+      "id": "case-029",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "e8b49f96e28fb3c7dd35dd83ea445d7b4486bc4fdcc1d479b442c0cf84126ab7"
+    },
+    {
+      "id": "case-100",
+      "palette": "light",
+      "column": 0,
+      "sha256": "68d224fbad9f0f2dc9806f8b74cd95bab9eac11ce64d6f071336fafcc9b78324"
+    },
+    {
+      "id": "case-100",
+      "palette": "light",
+      "column": 1,
+      "sha256": "6d366ce01ca2d6b3b413ccbd974a11b22565dbc97cb39db8d49a9557d0839b1e"
+    },
+    {
+      "id": "case-100",
+      "palette": "light",
+      "column": 2,
+      "sha256": "468f3cfe2c73762414639f33571682689b421ab28823199b8ff7d013e6269962"
+    },
+    {
+      "id": "case-101",
+      "palette": "light",
+      "column": 0,
+      "sha256": "b80ca7fdca5b888c5825dffc60496b8c9b1e0850aa161081546a88e5f00d1bd7"
+    },
+    {
+      "id": "case-101",
+      "palette": "light",
+      "column": 1,
+      "sha256": "b80ca7fdca5b888c5825dffc60496b8c9b1e0850aa161081546a88e5f00d1bd7"
+    },
+    {
+      "id": "case-101",
+      "palette": "light",
+      "column": 2,
+      "sha256": "be08212f37154461fea96dc9c372119673358abbf16585809b6a5d0773580a30"
+    },
+    {
+      "id": "case-102",
+      "palette": "light",
+      "column": 0,
+      "sha256": "160210264064a554c1723e4ff6f74f7d4c5d8c042c8369d325c71d81e318c7c2"
+    },
+    {
+      "id": "case-102",
+      "palette": "light",
+      "column": 1,
+      "sha256": "160210264064a554c1723e4ff6f74f7d4c5d8c042c8369d325c71d81e318c7c2"
+    },
+    {
+      "id": "case-102",
+      "palette": "light",
+      "column": 2,
+      "sha256": "3b63647f46911488aad173d244847037c98b708afbf8fef7341959bb46bb868c"
+    },
+    {
+      "id": "case-103",
+      "palette": "light",
+      "column": 0,
+      "sha256": "156ddc0151d87bd9b62a6f0c95fe23b44205d371f830e3fa6ab79079ce2299e6"
+    },
+    {
+      "id": "case-103",
+      "palette": "light",
+      "column": 1,
+      "sha256": "156ddc0151d87bd9b62a6f0c95fe23b44205d371f830e3fa6ab79079ce2299e6"
+    },
+    {
+      "id": "case-103",
+      "palette": "light",
+      "column": 2,
+      "sha256": "2f3a71e26c64a5eedb5d59c6543bf083b3d0316171d892a0a88ce44060fd8fc9"
+    },
+    {
+      "id": "case-104",
+      "palette": "light",
+      "column": 0,
+      "sha256": "156ddc0151d87bd9b62a6f0c95fe23b44205d371f830e3fa6ab79079ce2299e6"
+    },
+    {
+      "id": "case-104",
+      "palette": "light",
+      "column": 1,
+      "sha256": "156ddc0151d87bd9b62a6f0c95fe23b44205d371f830e3fa6ab79079ce2299e6"
+    },
+    {
+      "id": "case-104",
+      "palette": "light",
+      "column": 2,
+      "sha256": "2f3a71e26c64a5eedb5d59c6543bf083b3d0316171d892a0a88ce44060fd8fc9"
+    },
+    {
+      "id": "case-105",
+      "palette": "light",
+      "column": 0,
+      "sha256": "a3a0d7db79d1d08a4b6d99dc147537dfc7b332b15ece6ad13f4a878f8af1b6ea"
+    },
+    {
+      "id": "case-105",
+      "palette": "light",
+      "column": 1,
+      "sha256": "a3a0d7db79d1d08a4b6d99dc147537dfc7b332b15ece6ad13f4a878f8af1b6ea"
+    },
+    {
+      "id": "case-105",
+      "palette": "light",
+      "column": 2,
+      "sha256": "3d46c8ab1f618b994da377137eb15b968d6c45d60aa19b6e0805a417b92198fd"
+    },
+    {
+      "id": "case-106",
+      "palette": "light",
+      "column": 0,
+      "sha256": "52291f7959fc9d8fd326c5b2b880aacbe97c5b97ecf4f64f1d39cac6100549c8"
+    },
+    {
+      "id": "case-106",
+      "palette": "light",
+      "column": 1,
+      "sha256": "52291f7959fc9d8fd326c5b2b880aacbe97c5b97ecf4f64f1d39cac6100549c8"
+    },
+    {
+      "id": "case-106",
+      "palette": "light",
+      "column": 2,
+      "sha256": "7e7ad086fd412287e5444b48588b6d6e0a7c48f37e2bcdabbadc5fd2df6e11d0"
+    },
+    {
+      "id": "case-107",
+      "palette": "light",
+      "column": 0,
+      "sha256": "fc45aced1c1276f2ff64914eacf259256858188f78af1483053b09b5a246f9da"
+    },
+    {
+      "id": "case-107",
+      "palette": "light",
+      "column": 1,
+      "sha256": "774fb4d8fd9f12484403ab22c32b3082cbb70a3d25899e9b1a0ed00b904a5a59"
+    },
+    {
+      "id": "case-107",
+      "palette": "light",
+      "column": 2,
+      "sha256": "ee363aa8df341540e2f9ae939c3c062892716193fad4638cd570c9cbfa649354"
+    },
+    {
+      "id": "case-108",
+      "palette": "light",
+      "column": 0,
+      "sha256": "cd1a85ca76f136409cc249f951f73b6a93c1a0d30b7353a9eb8b936742f2753d"
+    },
+    {
+      "id": "case-108",
+      "palette": "light",
+      "column": 1,
+      "sha256": "84d1ec695252edad9ec5084f6767f30e1fd978dc23c65b4fa55c1c2949abfb5b"
+    },
+    {
+      "id": "case-108",
+      "palette": "light",
+      "column": 2,
+      "sha256": "da31962297fdfb34227e5c5b1c909b93fdd3ebf089aa145b6e552c5540fcf691"
+    },
+    {
+      "id": "case-109",
+      "palette": "light",
+      "column": 0,
+      "sha256": "0ef54e3f83763326fe338cb79ba864404a1072757df316286467ef6760003405"
+    },
+    {
+      "id": "case-109",
+      "palette": "light",
+      "column": 1,
+      "sha256": "6f02e6844949cf1d6ab20fea45e26120e24d66dffe90bae106282835808eb166"
+    },
+    {
+      "id": "case-109",
+      "palette": "light",
+      "column": 2,
+      "sha256": "4c9dac27ea02e890d33b2c6ca687c09092c51f8b6ea13174b89a8fcfc98a8e4a"
+    },
+    {
+      "id": "case-100",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "effb18b46ab5bcd02d8b71a1b0c356b8d30c7f93bbdf0d68356d93a7ea998787"
+    },
+    {
+      "id": "case-100",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "98d749ca84201d28c0f16d85af5a0850d3409363d65b5e10519f42d343be870d"
+    },
+    {
+      "id": "case-100",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "4096293d1782f4450d44c897fc53258fb437a135fb348aad9d7262faf709831e"
+    },
+    {
+      "id": "case-101",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "212c1ae8f76e8c21c10f5c87153a1ddc42bb7ddc3d7c8eb88457da4dcccb8174"
+    },
+    {
+      "id": "case-101",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "212c1ae8f76e8c21c10f5c87153a1ddc42bb7ddc3d7c8eb88457da4dcccb8174"
+    },
+    {
+      "id": "case-101",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "84e6434142ee35739a25790511c66ec1e5d359f2669277d18a4b55cc7018bd94"
+    },
+    {
+      "id": "case-102",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "ac50354c4a40a69fd69125d02637daa88d1687caf9dbc710b015ccede37e871e"
+    },
+    {
+      "id": "case-102",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "ac50354c4a40a69fd69125d02637daa88d1687caf9dbc710b015ccede37e871e"
+    },
+    {
+      "id": "case-102",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "52ebcf4e05d052b207ec857a44181661f36ae61ae7ea929300bfa999fd3ef822"
+    },
+    {
+      "id": "case-103",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "e310773371793940d8387e75487e47b5c30a6e6213b8efbd114f26dd0e8ed6ed"
+    },
+    {
+      "id": "case-103",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "e310773371793940d8387e75487e47b5c30a6e6213b8efbd114f26dd0e8ed6ed"
+    },
+    {
+      "id": "case-103",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "d3da315bb03905b660e44927799fa268e7f53cc42fe81f7e86c5726b5465d672"
+    },
+    {
+      "id": "case-104",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "e310773371793940d8387e75487e47b5c30a6e6213b8efbd114f26dd0e8ed6ed"
+    },
+    {
+      "id": "case-104",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "e310773371793940d8387e75487e47b5c30a6e6213b8efbd114f26dd0e8ed6ed"
+    },
+    {
+      "id": "case-104",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "d3da315bb03905b660e44927799fa268e7f53cc42fe81f7e86c5726b5465d672"
+    },
+    {
+      "id": "case-105",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "85d347d2c248165ad871315f5e9bc456d7a8be59538acafd1063525a033705a1"
+    },
+    {
+      "id": "case-105",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "85d347d2c248165ad871315f5e9bc456d7a8be59538acafd1063525a033705a1"
+    },
+    {
+      "id": "case-105",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "ea1581e95f8c1ae3caf8315207cf26aae33f0a3ccd66020193560562e13e7a5d"
+    },
+    {
+      "id": "case-106",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "d7c4f67101ae5c899b884caeee6132e47c6026592dfe02a8afbb508ef17bbd2e"
+    },
+    {
+      "id": "case-106",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "d7c4f67101ae5c899b884caeee6132e47c6026592dfe02a8afbb508ef17bbd2e"
+    },
+    {
+      "id": "case-106",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "855301502c748fd7e276f0e8b2ec0f6166b29f4e0a4b71263a07b6e9933e0a16"
+    },
+    {
+      "id": "case-107",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "4f5201de62da72eedca5eb3b3584df485889c9c7c5a6c21c236ebc87c07ed31a"
+    },
+    {
+      "id": "case-107",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "5a4756d25c2f5cbedb8ce5b61e94728d06018b05e8876210d3f65e29f2cd09db"
+    },
+    {
+      "id": "case-107",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "f14a379a31ff12c9e6bdab7b1fbc684b89f331470de932cb81a39799ea6dea39"
+    },
+    {
+      "id": "case-108",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "4a7328a2d6512b90777fa707eacd6e84efc0dce9d0213c4b75829523f4147f6d"
+    },
+    {
+      "id": "case-108",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "050bac37daf9b70e6458e08bb89326409b833075d4b545505290aebfcd7fb09a"
+    },
+    {
+      "id": "case-108",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "693c3f1d8a313da55c848bf3a27aa7e04646412621757c1243138f872d85adac"
+    },
+    {
+      "id": "case-109",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "2c9aa7f72129bab53cf9c4a8c0915cd14a4d717282697d4e05e6ad4c79f65c82"
+    },
+    {
+      "id": "case-109",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "896de248646880d1e34c816601c77387ee9976c2651fb5f890acb9e691c00e5b"
+    },
+    {
+      "id": "case-109",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "ad4e278c29d92aa5401f082978f7f3787e71c6772e9a1de7874c267017aaae1a"
+    },
+    {
+      "id": "case-140",
+      "palette": "light",
+      "column": 0,
+      "sha256": "3c6fd02391d1f6a0038505fa6f33e0c6efcf936d1580e19e45616f5ef0c84298"
+    },
+    {
+      "id": "case-140",
+      "palette": "light",
+      "column": 1,
+      "sha256": "3c6fd02391d1f6a0038505fa6f33e0c6efcf936d1580e19e45616f5ef0c84298"
+    },
+    {
+      "id": "case-140",
+      "palette": "light",
+      "column": 2,
+      "sha256": "4007bc2b28912787026a428b1c89181baaa0d83465f8e36aaaf5a8d16d124ca3"
+    },
+    {
+      "id": "case-141",
+      "palette": "light",
+      "column": 0,
+      "sha256": "ccb22c56e06005cde1b890c416f73fd4f070236f2b6274f33fae218ec12570d0"
+    },
+    {
+      "id": "case-141",
+      "palette": "light",
+      "column": 1,
+      "sha256": "ccb22c56e06005cde1b890c416f73fd4f070236f2b6274f33fae218ec12570d0"
+    },
+    {
+      "id": "case-141",
+      "palette": "light",
+      "column": 2,
+      "sha256": "d9ab53bfee3d1121eb06e987165a5802f76cb717f4cf8efa0930a670927c5e4b"
+    },
+    {
+      "id": "case-142",
+      "palette": "light",
+      "column": 0,
+      "sha256": "0066ba9740408ef12850dd6e40ae8764b560307803091177ac532b5acae5c590"
+    },
+    {
+      "id": "case-142",
+      "palette": "light",
+      "column": 1,
+      "sha256": "0066ba9740408ef12850dd6e40ae8764b560307803091177ac532b5acae5c590"
+    },
+    {
+      "id": "case-142",
+      "palette": "light",
+      "column": 2,
+      "sha256": "09217634716492736bcacfaf5d3010284998587e0dd6ed0fcaf209604f692c1d"
+    },
+    {
+      "id": "case-143",
+      "palette": "light",
+      "column": 0,
+      "sha256": "1be127436d0b41b15636aaba07c78c70f2601004fc4519a33ddbac3bfcc874af"
+    },
+    {
+      "id": "case-143",
+      "palette": "light",
+      "column": 1,
+      "sha256": "1be127436d0b41b15636aaba07c78c70f2601004fc4519a33ddbac3bfcc874af"
+    },
+    {
+      "id": "case-143",
+      "palette": "light",
+      "column": 2,
+      "sha256": "15cd456b1cf582fe66d2201595e41ead685468f2dadc1577b0d4e057cfc65aee"
+    },
+    {
+      "id": "case-144",
+      "palette": "light",
+      "column": 0,
+      "sha256": "1be127436d0b41b15636aaba07c78c70f2601004fc4519a33ddbac3bfcc874af"
+    },
+    {
+      "id": "case-144",
+      "palette": "light",
+      "column": 1,
+      "sha256": "1be127436d0b41b15636aaba07c78c70f2601004fc4519a33ddbac3bfcc874af"
+    },
+    {
+      "id": "case-144",
+      "palette": "light",
+      "column": 2,
+      "sha256": "15cd456b1cf582fe66d2201595e41ead685468f2dadc1577b0d4e057cfc65aee"
+    },
+    {
+      "id": "case-145",
+      "palette": "light",
+      "column": 0,
+      "sha256": "18f388fca572752d2fb8e86dcf3f46e5a766d63adfd93ca718a91c43fd78dca2"
+    },
+    {
+      "id": "case-145",
+      "palette": "light",
+      "column": 1,
+      "sha256": "18f388fca572752d2fb8e86dcf3f46e5a766d63adfd93ca718a91c43fd78dca2"
+    },
+    {
+      "id": "case-145",
+      "palette": "light",
+      "column": 2,
+      "sha256": "31bf6999165e5feafa006598056435f66615ec9c43b15deeb3f9e2c9c9abc749"
+    },
+    {
+      "id": "case-146",
+      "palette": "light",
+      "column": 0,
+      "sha256": "3611897b4c7ae7878e3422afca5d7f1cb36f4e766c83af4a93f59b98ed252296"
+    },
+    {
+      "id": "case-146",
+      "palette": "light",
+      "column": 1,
+      "sha256": "3611897b4c7ae7878e3422afca5d7f1cb36f4e766c83af4a93f59b98ed252296"
+    },
+    {
+      "id": "case-146",
+      "palette": "light",
+      "column": 2,
+      "sha256": "5b72b1417823eb299f2be2f161a8e607db1ddf38d1664c4e4f08e19db0e56d73"
+    },
+    {
+      "id": "case-147",
+      "palette": "light",
+      "column": 0,
+      "sha256": "147a82407c08bd008414cb0f11a70f207fa96b8469fd8947124476fffdd3a6db"
+    },
+    {
+      "id": "case-147",
+      "palette": "light",
+      "column": 1,
+      "sha256": "147a82407c08bd008414cb0f11a70f207fa96b8469fd8947124476fffdd3a6db"
+    },
+    {
+      "id": "case-147",
+      "palette": "light",
+      "column": 2,
+      "sha256": "991cd816c4037c683551b31fe632d68d57e5e37924b148b80dbc958147d9b059"
+    },
+    {
+      "id": "case-148",
+      "palette": "light",
+      "column": 0,
+      "sha256": "198a3f3060ff90ab1a802ba785acbd20960e7513960150c236eae8c22c420cf6"
+    },
+    {
+      "id": "case-148",
+      "palette": "light",
+      "column": 1,
+      "sha256": "198a3f3060ff90ab1a802ba785acbd20960e7513960150c236eae8c22c420cf6"
+    },
+    {
+      "id": "case-148",
+      "palette": "light",
+      "column": 2,
+      "sha256": "3ebadad6943e7fd9ae7776f76070235d6802367cb809b2b26e292e2a7c9e3936"
+    },
+    {
+      "id": "case-149",
+      "palette": "light",
+      "column": 0,
+      "sha256": "b3012a90281ed1fa463cc82693f2db932fef7c129d8e19430554212fc83bac3c"
+    },
+    {
+      "id": "case-149",
+      "palette": "light",
+      "column": 1,
+      "sha256": "8c73ad54d9bb23034dbcdb4f976191773e40eddf5b74f987208da196a352000e"
+    },
+    {
+      "id": "case-149",
+      "palette": "light",
+      "column": 2,
+      "sha256": "0041a684b209abbba797685b4f75b6709dce7218aab602550e87a155420ecd98"
+    },
+    {
+      "id": "case-140",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "f88f6bc23b44f56a8fbe85e683b5d396e0684d23090b4f6da835e24a5ca2bc45"
+    },
+    {
+      "id": "case-140",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "f88f6bc23b44f56a8fbe85e683b5d396e0684d23090b4f6da835e24a5ca2bc45"
+    },
+    {
+      "id": "case-140",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "5a2cc5e1e9eee3e1d1102617e9161ccda018387fe3bcaff9091e28801cbab0ba"
+    },
+    {
+      "id": "case-141",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "32af9f2d74ea3cd341adbb15aac8f0d1587055a16a96e98a878deb669e1d68be"
+    },
+    {
+      "id": "case-141",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "32af9f2d74ea3cd341adbb15aac8f0d1587055a16a96e98a878deb669e1d68be"
+    },
+    {
+      "id": "case-141",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "2ec798c3a875357fb3c6837ee054061620cd44b132b2f18c1adc0991a8f0d471"
+    },
+    {
+      "id": "case-142",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "18465a3b550fa8a5f41883b0609e19da6bb6074d93c7fe602f01da860e003ec1"
+    },
+    {
+      "id": "case-142",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "18465a3b550fa8a5f41883b0609e19da6bb6074d93c7fe602f01da860e003ec1"
+    },
+    {
+      "id": "case-142",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "a55a8307f89d8e5c873caaa1c523c318f8cb0484a0fa43986e296703ca9f3930"
+    },
+    {
+      "id": "case-143",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "46e98dcc18a74d3a811f08bbaeef79fca239dadb7ae0221c4260923f51012b88"
+    },
+    {
+      "id": "case-143",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "46e98dcc18a74d3a811f08bbaeef79fca239dadb7ae0221c4260923f51012b88"
+    },
+    {
+      "id": "case-143",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "4f01c673aee9331d8d6c1285a2e8e134c8ad1ca549d6a22e77e7bc8c865f03fd"
+    },
+    {
+      "id": "case-144",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "46e98dcc18a74d3a811f08bbaeef79fca239dadb7ae0221c4260923f51012b88"
+    },
+    {
+      "id": "case-144",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "46e98dcc18a74d3a811f08bbaeef79fca239dadb7ae0221c4260923f51012b88"
+    },
+    {
+      "id": "case-144",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "4f01c673aee9331d8d6c1285a2e8e134c8ad1ca549d6a22e77e7bc8c865f03fd"
+    },
+    {
+      "id": "case-145",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "d955dec552b6bd7228d85d60ae303f91c1d4ca8e210354f8150541777228d4c8"
+    },
+    {
+      "id": "case-145",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "d955dec552b6bd7228d85d60ae303f91c1d4ca8e210354f8150541777228d4c8"
+    },
+    {
+      "id": "case-145",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "f315dddf336be6882c592af6025d58c426d91dea37246329b2d0ba2d55bdfe9f"
+    },
+    {
+      "id": "case-146",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "ca8b1c9db72c45d6ee879a4a52b32592e5ad7666036bbdfa6dc36a05a94c61f9"
+    },
+    {
+      "id": "case-146",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "ca8b1c9db72c45d6ee879a4a52b32592e5ad7666036bbdfa6dc36a05a94c61f9"
+    },
+    {
+      "id": "case-146",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "7408c5a7b318b02bee1d520164cad2ecf610b614169da908900084d748081513"
+    },
+    {
+      "id": "case-147",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "6a1910e0b3e52d18185abf82034c5849e2ead446f341346bd0c70dc96f595546"
+    },
+    {
+      "id": "case-147",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "6a1910e0b3e52d18185abf82034c5849e2ead446f341346bd0c70dc96f595546"
+    },
+    {
+      "id": "case-147",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "4fe03e82de98c1a3721eefc3a57882374d6a56a65ea7539cc025136b5b58aecf"
+    },
+    {
+      "id": "case-148",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "5e5b3da7b70bdc5628eaf9ae80494cb88211c69ef933788c1e7bbdfdada3119e"
+    },
+    {
+      "id": "case-148",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "5e5b3da7b70bdc5628eaf9ae80494cb88211c69ef933788c1e7bbdfdada3119e"
+    },
+    {
+      "id": "case-148",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "906fa178627de5b9cc4fa8591a3ed9e49594fce7d866310421d99030af45d2b1"
+    },
+    {
+      "id": "case-149",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "2a7de18558cde294cfdc11636c64b7decdf53fa01d3eec657c54cecf0d1489b4"
+    },
+    {
+      "id": "case-149",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "11cc214a4a9d9492a06eade971af540a347ddca8bd3eaba39ae766a1f0f4e334"
+    },
+    {
+      "id": "case-149",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "cca60dd4c68acc350aac3fe1483515c3fe7aec96ecd2e31b0b71c79132d90614"
+    },
+    {
+      "id": "case-150",
+      "palette": "light",
+      "column": 0,
+      "sha256": "520cbaacfd4a82aa7c9c96b94b2ed265204f90879fa6f04422249490091a6d80"
+    },
+    {
+      "id": "case-150",
+      "palette": "light",
+      "column": 1,
+      "sha256": "520cbaacfd4a82aa7c9c96b94b2ed265204f90879fa6f04422249490091a6d80"
+    },
+    {
+      "id": "case-150",
+      "palette": "light",
+      "column": 2,
+      "sha256": "1c295bc4cb5e31983cb86d84fc8de511806dd2d7843103d8d00e3f3a230c4663"
+    },
+    {
+      "id": "case-151",
+      "palette": "light",
+      "column": 0,
+      "sha256": "065d0fac3e8359ca7535ff97deeacada95cda69a62989ebdd844049a5cd08848"
+    },
+    {
+      "id": "case-151",
+      "palette": "light",
+      "column": 1,
+      "sha256": "04297700e59a6d8b022d98daba20640b334d8d704b39f49b2cee875990c44ec5"
+    },
+    {
+      "id": "case-151",
+      "palette": "light",
+      "column": 2,
+      "sha256": "98e5bb6c9c0f7a8be63573f9855ca8d07f6a5f41990e2004cf75351cd9c00672"
+    },
+    {
+      "id": "case-152",
+      "palette": "light",
+      "column": 0,
+      "sha256": "6a81b5986abd5f44f61db97d44c73a60353a5a9a20b14df92ce5de88892d36fc"
+    },
+    {
+      "id": "case-152",
+      "palette": "light",
+      "column": 1,
+      "sha256": "9ea5ef56797b0a6b2a52c610641503920929930b33f3b00b5436e387b75402cb"
+    },
+    {
+      "id": "case-152",
+      "palette": "light",
+      "column": 2,
+      "sha256": "ddefd11e4ba13d5fce12aed0376e0bb4722f204a1b5e6fb50cbe624e3a84b962"
+    },
+    {
+      "id": "case-153",
+      "palette": "light",
+      "column": 0,
+      "sha256": "a58f53344b33e31fc88f155f3f42e66a810ec5f6bcfafb732d945a246ac74595"
+    },
+    {
+      "id": "case-153",
+      "palette": "light",
+      "column": 1,
+      "sha256": "e6f9295f839a058d094e7c62568957be6eaa309cc7086d87bade128aee2bb4a0"
+    },
+    {
+      "id": "case-153",
+      "palette": "light",
+      "column": 2,
+      "sha256": "87ece9f0dacc7e0afc77604e021da26cd466f1f93eaccb035a6f00af72b6924e"
+    },
+    {
+      "id": "case-154",
+      "palette": "light",
+      "column": 0,
+      "sha256": "a58f53344b33e31fc88f155f3f42e66a810ec5f6bcfafb732d945a246ac74595"
+    },
+    {
+      "id": "case-154",
+      "palette": "light",
+      "column": 1,
+      "sha256": "e6f9295f839a058d094e7c62568957be6eaa309cc7086d87bade128aee2bb4a0"
+    },
+    {
+      "id": "case-154",
+      "palette": "light",
+      "column": 2,
+      "sha256": "87ece9f0dacc7e0afc77604e021da26cd466f1f93eaccb035a6f00af72b6924e"
+    },
+    {
+      "id": "case-155",
+      "palette": "light",
+      "column": 0,
+      "sha256": "cf74f3b8a627a0b0549d5a2581db82199723ed9e7d32bd6c41f0311b707ce68c"
+    },
+    {
+      "id": "case-155",
+      "palette": "light",
+      "column": 1,
+      "sha256": "cf74f3b8a627a0b0549d5a2581db82199723ed9e7d32bd6c41f0311b707ce68c"
+    },
+    {
+      "id": "case-155",
+      "palette": "light",
+      "column": 2,
+      "sha256": "a954efc02f46608f22d37e321dd7268170b95ffcc505af0a9f60279615eedce9"
+    },
+    {
+      "id": "case-156",
+      "palette": "light",
+      "column": 0,
+      "sha256": "b34f0b1af9537d58dbdf240f4e8cecabd802a92d413b6877b049a8ed17a2e28f"
+    },
+    {
+      "id": "case-156",
+      "palette": "light",
+      "column": 1,
+      "sha256": "b34f0b1af9537d58dbdf240f4e8cecabd802a92d413b6877b049a8ed17a2e28f"
+    },
+    {
+      "id": "case-156",
+      "palette": "light",
+      "column": 2,
+      "sha256": "46bbfac042eb005f156b6bcd0babb1343f71b0849a7ff3f47b551a87a94d8a57"
+    },
+    {
+      "id": "case-157",
+      "palette": "light",
+      "column": 0,
+      "sha256": "f5280c4ee6cc49d034ac6e4e6c90ee37924df186b266072fb4511e9671f5da3d"
+    },
+    {
+      "id": "case-157",
+      "palette": "light",
+      "column": 1,
+      "sha256": "f5280c4ee6cc49d034ac6e4e6c90ee37924df186b266072fb4511e9671f5da3d"
+    },
+    {
+      "id": "case-157",
+      "palette": "light",
+      "column": 2,
+      "sha256": "a91b1d03536a3047b59361677834b7082171ddb078dbd91a3dbdea27020bd469"
+    },
+    {
+      "id": "case-158",
+      "palette": "light",
+      "column": 0,
+      "sha256": "73c6d0d5ed93a32a7d37dd261f2c4271fb9cec1b24653df1b4e8cdba24e0da21"
+    },
+    {
+      "id": "case-158",
+      "palette": "light",
+      "column": 1,
+      "sha256": "73c6d0d5ed93a32a7d37dd261f2c4271fb9cec1b24653df1b4e8cdba24e0da21"
+    },
+    {
+      "id": "case-158",
+      "palette": "light",
+      "column": 2,
+      "sha256": "056e9b05219733779c324c5c13204c4acc6c2df48730b035504e20884659c553"
+    },
+    {
+      "id": "case-159",
+      "palette": "light",
+      "column": 0,
+      "sha256": "f0d9c87ba2d0fdb7853cdd13d200f3baa815a22ffc4d6a506310fa3762a80531"
+    },
+    {
+      "id": "case-159",
+      "palette": "light",
+      "column": 1,
+      "sha256": "177fa1060aae959c7a56aacfb7dd9c1d722dfa4809c81c0d7c55f9cdb057dd05"
+    },
+    {
+      "id": "case-159",
+      "palette": "light",
+      "column": 2,
+      "sha256": "626465eed30fde74195b54e8d9504cc598e18c8dcf4148e2e4a31149e468d970"
+    },
+    {
+      "id": "case-150",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "2bbdcc91e84ba420abfabfb3add4259be574b63db7448893cf2dc9c82bfe8695"
+    },
+    {
+      "id": "case-150",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "2bbdcc91e84ba420abfabfb3add4259be574b63db7448893cf2dc9c82bfe8695"
+    },
+    {
+      "id": "case-150",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "e62236d279797b8bb247ec0774b27dc9602b49a1247b53277eabed23c088e8c1"
+    },
+    {
+      "id": "case-151",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "0f703beaed60ce11efe4ed2ae8703b802227137560318254416cbc0c647b9360"
+    },
+    {
+      "id": "case-151",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "e09d555720d97d3a59ca8e1b1614220e696f9b8f315a81ef2ecd6c114ebaf526"
+    },
+    {
+      "id": "case-151",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "2b5269de165e68315b0d9d44e29d6661996af614c4eb3d66ebe42367625b6e88"
+    },
+    {
+      "id": "case-152",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "256dc1e304798a428d18e0b9a1bf5abf4e3536dd65489cedf76936ac8a6ef67d"
+    },
+    {
+      "id": "case-152",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "f0cb509ea78ccdf45d1339eb8a924400a267c5b58e14e8e761d31701f32417fc"
+    },
+    {
+      "id": "case-152",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "0aa2dfabbf55d6280277ec16df143b470b688a5a8ab0716ca75d5244394bbe20"
+    },
+    {
+      "id": "case-153",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "35eb6ce119f44fb0b8b4af03a03754a59ec5c8ab0194cf36308ad246c9f943f6"
+    },
+    {
+      "id": "case-153",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "d4496e58ea8320339b000bae05e2792aadbc6333540ed78c87e2b120833feca2"
+    },
+    {
+      "id": "case-153",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "6ac69bf1d00f9b00257ad12629c04cff7abb2a50cfc4379ee82d375906a2aba8"
+    },
+    {
+      "id": "case-154",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "35eb6ce119f44fb0b8b4af03a03754a59ec5c8ab0194cf36308ad246c9f943f6"
+    },
+    {
+      "id": "case-154",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "d4496e58ea8320339b000bae05e2792aadbc6333540ed78c87e2b120833feca2"
+    },
+    {
+      "id": "case-154",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "6ac69bf1d00f9b00257ad12629c04cff7abb2a50cfc4379ee82d375906a2aba8"
+    },
+    {
+      "id": "case-155",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "a2bf15d42bb5d2f5e72a6170483197b862863e6eac175fe2744f119dd5f01621"
+    },
+    {
+      "id": "case-155",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "a2bf15d42bb5d2f5e72a6170483197b862863e6eac175fe2744f119dd5f01621"
+    },
+    {
+      "id": "case-155",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "b609b428e6d6a3c2418200da2fd2c71ca2b7417db86327d91eb99f9b3107c21a"
+    },
+    {
+      "id": "case-156",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "b6187041ff5ca69487abf0f25d0bae6c75c65235e646bd80112dd64ad215b2fc"
+    },
+    {
+      "id": "case-156",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "b6187041ff5ca69487abf0f25d0bae6c75c65235e646bd80112dd64ad215b2fc"
+    },
+    {
+      "id": "case-156",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "41a8272eea5c22cce69d094d33ce21a19ae611ef38b67f62761025186279851d"
+    },
+    {
+      "id": "case-157",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "c6cf2acd45af9d25de7eea27f18383f9529ef0edaf3b18a4fc7d705a14719de2"
+    },
+    {
+      "id": "case-157",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "c6cf2acd45af9d25de7eea27f18383f9529ef0edaf3b18a4fc7d705a14719de2"
+    },
+    {
+      "id": "case-157",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "3956f81e54bee6907a51c84d4755d7ff71486be0a5ee1bbed4ae692f08a2d3a2"
+    },
+    {
+      "id": "case-158",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "159dd15d600d58c29c462c58508ae883233baff87ea765d6c69fd87c994f8d71"
+    },
+    {
+      "id": "case-158",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "159dd15d600d58c29c462c58508ae883233baff87ea765d6c69fd87c994f8d71"
+    },
+    {
+      "id": "case-158",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "f59d3d14cca17771b552523b2d1fae7a9f7fb350eeda5b95456566f0b9e562e1"
+    },
+    {
+      "id": "case-159",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "1def53fa7555e3a54716874846ac98c4036e2f8fc881d0786a0c10d7a28913a1"
+    },
+    {
+      "id": "case-159",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "5e783cb843c6b68c446ad25b0047f037fd467ecdc6569da86e6deb5972a83648"
+    },
+    {
+      "id": "case-159",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "203cdbc1a4c4c1ad286e641cbfee40deff06987d09ab3b5d49f40d288015d8b9"
+    },
+    {
+      "id": "case-170",
+      "palette": "light",
+      "column": 0,
+      "sha256": "72648985b9f0986aaa8bba7fd7b8912d65ab55b10a4b314f79319fd4406b5b38"
+    },
+    {
+      "id": "case-170",
+      "palette": "light",
+      "column": 1,
+      "sha256": "72648985b9f0986aaa8bba7fd7b8912d65ab55b10a4b314f79319fd4406b5b38"
+    },
+    {
+      "id": "case-170",
+      "palette": "light",
+      "column": 2,
+      "sha256": "c75382d8d07796cca4b73f84802116822de5c084c60c6adff3523ef4765a9e4d"
+    },
+    {
+      "id": "case-171",
+      "palette": "light",
+      "column": 0,
+      "sha256": "8326026dda29693af1eddf42c182a2fc40dfd505f7dc075f049a903d1223d5f1"
+    },
+    {
+      "id": "case-171",
+      "palette": "light",
+      "column": 1,
+      "sha256": "8326026dda29693af1eddf42c182a2fc40dfd505f7dc075f049a903d1223d5f1"
+    },
+    {
+      "id": "case-171",
+      "palette": "light",
+      "column": 2,
+      "sha256": "46ccea34729f10488cd9e81983c8a0320b62ca77c7c78fe03e0f76429880c78e"
+    },
+    {
+      "id": "case-172",
+      "palette": "light",
+      "column": 0,
+      "sha256": "0851c035e00a396b355279f6e8fe74421c5df3688be2d29071a53573ba95a339"
+    },
+    {
+      "id": "case-172",
+      "palette": "light",
+      "column": 1,
+      "sha256": "0851c035e00a396b355279f6e8fe74421c5df3688be2d29071a53573ba95a339"
+    },
+    {
+      "id": "case-172",
+      "palette": "light",
+      "column": 2,
+      "sha256": "7e81ffda0ebacb28544ea85073eb0f5c09a4d91caac71f8299c5826330a710b6"
+    },
+    {
+      "id": "case-173",
+      "palette": "light",
+      "column": 0,
+      "sha256": "21edf0606758622b5a7acc9b3c1e711f84630861078118669d97e28fcb2f7d5e"
+    },
+    {
+      "id": "case-173",
+      "palette": "light",
+      "column": 1,
+      "sha256": "21edf0606758622b5a7acc9b3c1e711f84630861078118669d97e28fcb2f7d5e"
+    },
+    {
+      "id": "case-173",
+      "palette": "light",
+      "column": 2,
+      "sha256": "2b6f11162558e8808fb8ea702bfb4084785298645ea9cde477018a14374dd914"
+    },
+    {
+      "id": "case-174",
+      "palette": "light",
+      "column": 0,
+      "sha256": "21edf0606758622b5a7acc9b3c1e711f84630861078118669d97e28fcb2f7d5e"
+    },
+    {
+      "id": "case-174",
+      "palette": "light",
+      "column": 1,
+      "sha256": "21edf0606758622b5a7acc9b3c1e711f84630861078118669d97e28fcb2f7d5e"
+    },
+    {
+      "id": "case-174",
+      "palette": "light",
+      "column": 2,
+      "sha256": "2b6f11162558e8808fb8ea702bfb4084785298645ea9cde477018a14374dd914"
+    },
+    {
+      "id": "case-175",
+      "palette": "light",
+      "column": 0,
+      "sha256": "6ac28c106a124733664e78e6bea73fc36bf4f0243ea815874aedeb18f3ec2365"
+    },
+    {
+      "id": "case-175",
+      "palette": "light",
+      "column": 1,
+      "sha256": "6ac28c106a124733664e78e6bea73fc36bf4f0243ea815874aedeb18f3ec2365"
+    },
+    {
+      "id": "case-175",
+      "palette": "light",
+      "column": 2,
+      "sha256": "1ee18e5cde8ebd3cb49d225b0ed0188a1baf440e1a71cb5779e33b0c2d7796d8"
+    },
+    {
+      "id": "case-176",
+      "palette": "light",
+      "column": 0,
+      "sha256": "60351e9e5c23a4c041120a6bf8b123faf80f023fa0b57b00cb8ec0a7e712406f"
+    },
+    {
+      "id": "case-176",
+      "palette": "light",
+      "column": 1,
+      "sha256": "60351e9e5c23a4c041120a6bf8b123faf80f023fa0b57b00cb8ec0a7e712406f"
+    },
+    {
+      "id": "case-176",
+      "palette": "light",
+      "column": 2,
+      "sha256": "176ef8f5bef582e03e53c28f39442a021590ad13645a3e93c0feb785c1ac351c"
+    },
+    {
+      "id": "case-177",
+      "palette": "light",
+      "column": 0,
+      "sha256": "b0303366f6654187e771185e1f2548f9a52a1d4d5d7efb4fc22d523aa90d0948"
+    },
+    {
+      "id": "case-177",
+      "palette": "light",
+      "column": 1,
+      "sha256": "f991c091335d0548a5a784477805cc9d7fc1b08f06028714331a4971c8c9784b"
+    },
+    {
+      "id": "case-177",
+      "palette": "light",
+      "column": 2,
+      "sha256": "2643daa889caaee82b32506762c0cf6d1a6fefb7bada420562ba6540ee6e198c"
+    },
+    {
+      "id": "case-178",
+      "palette": "light",
+      "column": 0,
+      "sha256": "fa85ac7466d2864632fdcb431d9f227f736ad18ebeda9f6384f624c80dffebb7"
+    },
+    {
+      "id": "case-178",
+      "palette": "light",
+      "column": 1,
+      "sha256": "57aba47578530e0061c62cf51dcc4c6358d2a2ca5d66a9f9a2f5c4a82d9e3001"
+    },
+    {
+      "id": "case-178",
+      "palette": "light",
+      "column": 2,
+      "sha256": "5e89726bd32b48fcedd548d2f3b78c885c51d6745295ffc000eee86c8d51d6b0"
+    },
+    {
+      "id": "case-179",
+      "palette": "light",
+      "column": 0,
+      "sha256": "d83d3977faf05f066501fdab0c7e8d3255b7e8c3213b818da2c7569e10337d0f"
+    },
+    {
+      "id": "case-179",
+      "palette": "light",
+      "column": 1,
+      "sha256": "d83d3977faf05f066501fdab0c7e8d3255b7e8c3213b818da2c7569e10337d0f"
+    },
+    {
+      "id": "case-179",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b360fefdfbae2c45cd528b4825970d409387be762f1753c3b87d830a574c2fa8"
+    },
+    {
+      "id": "case-170",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "c9a9b06ab0d2278e4db6948c8896a9473a96d3b076d7a2ea2ebc03f96a2f6f90"
+    },
+    {
+      "id": "case-170",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "c9a9b06ab0d2278e4db6948c8896a9473a96d3b076d7a2ea2ebc03f96a2f6f90"
+    },
+    {
+      "id": "case-170",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "4e013c048cc31c82ae9279df6fb3bfa0cbd5e35082ab3a614accf61bdf82a4e8"
+    },
+    {
+      "id": "case-171",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "5dad1f293268c56a3a3f9c36886886ffb4325ac8fdbec34c312184f1572debb6"
+    },
+    {
+      "id": "case-171",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "5dad1f293268c56a3a3f9c36886886ffb4325ac8fdbec34c312184f1572debb6"
+    },
+    {
+      "id": "case-171",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "788a0670e56d791cb41548a40ee015d95da3612448a571740c86bcddf778c7b2"
+    },
+    {
+      "id": "case-172",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "dabc0a6c5559de8d995a8b6dafe62c62b516096fb1705fb1ab217aa27835f9eb"
+    },
+    {
+      "id": "case-172",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "dabc0a6c5559de8d995a8b6dafe62c62b516096fb1705fb1ab217aa27835f9eb"
+    },
+    {
+      "id": "case-172",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "6ba35868455a2a7946ac24e3ed261df0908f8bb38fede1b8d82b414f4053d0de"
+    },
+    {
+      "id": "case-173",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "080a2ea07d4ab2f185e4d859aa0842345e8d561277bcc23915086a1a0e4ea1df"
+    },
+    {
+      "id": "case-173",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "080a2ea07d4ab2f185e4d859aa0842345e8d561277bcc23915086a1a0e4ea1df"
+    },
+    {
+      "id": "case-173",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "474e3b28c459329bef6e83f1b98608b0ce441ba16b9cf2b30c1830932fee7e3b"
+    },
+    {
+      "id": "case-174",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "080a2ea07d4ab2f185e4d859aa0842345e8d561277bcc23915086a1a0e4ea1df"
+    },
+    {
+      "id": "case-174",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "080a2ea07d4ab2f185e4d859aa0842345e8d561277bcc23915086a1a0e4ea1df"
+    },
+    {
+      "id": "case-174",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "474e3b28c459329bef6e83f1b98608b0ce441ba16b9cf2b30c1830932fee7e3b"
+    },
+    {
+      "id": "case-175",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "7c58bafb53ec5f137f80fc369af4bd7f61e7b4a07d8d07e1fec1336eebaa8af4"
+    },
+    {
+      "id": "case-175",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "7c58bafb53ec5f137f80fc369af4bd7f61e7b4a07d8d07e1fec1336eebaa8af4"
+    },
+    {
+      "id": "case-175",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "7f05bcaa22453274330e5ef7fd2b1416c19855ff5d8025356d0e4984dfb85b6a"
+    },
+    {
+      "id": "case-176",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "4987b22b3c965c30ec727a8be20f38bf0f02c96f0b35f9dbfe21bbfd89c517cf"
+    },
+    {
+      "id": "case-176",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "4987b22b3c965c30ec727a8be20f38bf0f02c96f0b35f9dbfe21bbfd89c517cf"
+    },
+    {
+      "id": "case-176",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "2861764e63ed329227256a5bf6ad7196d0b3edbe03ef9c8f0d66009b8d72daa2"
+    },
+    {
+      "id": "case-177",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "40bb57049f75ff61e42448cb3b3bb9abd79922981e737a7b8d97c135f2386503"
+    },
+    {
+      "id": "case-177",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "2fafb9ffc9c93d838660cf4a88a90b1903d86af29f57ac7a92b159e32c70963e"
+    },
+    {
+      "id": "case-177",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "96065add529b2eff722f825a831b45551e6cddd4223c722932fdf5c9a6568831"
+    },
+    {
+      "id": "case-178",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "46bd292edfe0a217c097b892a848d8442e2effaf261dc2e0ba139e8a4e38a8e6"
+    },
+    {
+      "id": "case-178",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "81fe7eaa1c5baf7368eb11b65482e74e00a972bbb9fbaf32de9687db95e45a86"
+    },
+    {
+      "id": "case-178",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "89089aab682e42300ac0c756901521f14375ce934c8b72d1850e996e3c9dd11e"
+    },
+    {
+      "id": "case-179",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "0f7bd485d9d01f93f58b4b6f52f9d218894fa2a9062b32bb34624a297891382b"
+    },
+    {
+      "id": "case-179",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "0f7bd485d9d01f93f58b4b6f52f9d218894fa2a9062b32bb34624a297891382b"
+    },
+    {
+      "id": "case-179",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "258aaf03f8ce3ae1b89fe9d8fd0601ad0695cc0b026dcb5ae05a18d24373dd14"
+    },
+    {
+      "id": "case-180",
+      "palette": "light",
+      "column": 0,
+      "sha256": "0eff3a9fc21fbc3b79df4e8a3ab97017a36e17df655ae09830dfa32bb64a45fc"
+    },
+    {
+      "id": "case-180",
+      "palette": "light",
+      "column": 1,
+      "sha256": "0eff3a9fc21fbc3b79df4e8a3ab97017a36e17df655ae09830dfa32bb64a45fc"
+    },
+    {
+      "id": "case-180",
+      "palette": "light",
+      "column": 2,
+      "sha256": "8eefdeee67289d8c820b12a6d6e3b8667a70c255373948dff14d74dd3a16683e"
+    },
+    {
+      "id": "case-181",
+      "palette": "light",
+      "column": 0,
+      "sha256": "b1df9f14a32f3e886bc2d14eda9d5e0498a6cf05fe226cb9e609383e525d7818"
+    },
+    {
+      "id": "case-181",
+      "palette": "light",
+      "column": 1,
+      "sha256": "b1df9f14a32f3e886bc2d14eda9d5e0498a6cf05fe226cb9e609383e525d7818"
+    },
+    {
+      "id": "case-181",
+      "palette": "light",
+      "column": 2,
+      "sha256": "ec85a2ff1b2ff24eaaa193b9f179dcc76a6dc6191f5ec558b3526e49cc89a926"
+    },
+    {
+      "id": "case-182",
+      "palette": "light",
+      "column": 0,
+      "sha256": "42c46574bd4770ff32e12936151ff674ae503ae154f16157fc27803b75b31d83"
+    },
+    {
+      "id": "case-182",
+      "palette": "light",
+      "column": 1,
+      "sha256": "42c46574bd4770ff32e12936151ff674ae503ae154f16157fc27803b75b31d83"
+    },
+    {
+      "id": "case-182",
+      "palette": "light",
+      "column": 2,
+      "sha256": "a837640aed237817e9899f66e76e59f22104b577f3cb9846398a456a3f63c361"
+    },
+    {
+      "id": "case-183",
+      "palette": "light",
+      "column": 0,
+      "sha256": "65b83aada331a99b09c7be4e53d762d6ee4cc1a8ea957b47ef6e9dba7f54a2db"
+    },
+    {
+      "id": "case-183",
+      "palette": "light",
+      "column": 1,
+      "sha256": "65b83aada331a99b09c7be4e53d762d6ee4cc1a8ea957b47ef6e9dba7f54a2db"
+    },
+    {
+      "id": "case-183",
+      "palette": "light",
+      "column": 2,
+      "sha256": "dc2d54ead82d2ddaa0e5d9b82a2291816fcab74363b77a0baeb14f738e65facb"
+    },
+    {
+      "id": "case-184",
+      "palette": "light",
+      "column": 0,
+      "sha256": "65b83aada331a99b09c7be4e53d762d6ee4cc1a8ea957b47ef6e9dba7f54a2db"
+    },
+    {
+      "id": "case-184",
+      "palette": "light",
+      "column": 1,
+      "sha256": "65b83aada331a99b09c7be4e53d762d6ee4cc1a8ea957b47ef6e9dba7f54a2db"
+    },
+    {
+      "id": "case-184",
+      "palette": "light",
+      "column": 2,
+      "sha256": "dc2d54ead82d2ddaa0e5d9b82a2291816fcab74363b77a0baeb14f738e65facb"
+    },
+    {
+      "id": "case-185",
+      "palette": "light",
+      "column": 0,
+      "sha256": "031d76c1df8679fec07de8bb0079a3e6715b08a104e5d36c10f094ef7f6197c9"
+    },
+    {
+      "id": "case-185",
+      "palette": "light",
+      "column": 1,
+      "sha256": "031d76c1df8679fec07de8bb0079a3e6715b08a104e5d36c10f094ef7f6197c9"
+    },
+    {
+      "id": "case-185",
+      "palette": "light",
+      "column": 2,
+      "sha256": "924df819223bd870eeacebbab532c5c7fc977e11111644fc4e85e70660839e7e"
+    },
+    {
+      "id": "case-186",
+      "palette": "light",
+      "column": 0,
+      "sha256": "3147d17f25127d53e795e02aced4f920045cd61afc8a7b9b49a2891696505a33"
+    },
+    {
+      "id": "case-186",
+      "palette": "light",
+      "column": 1,
+      "sha256": "3147d17f25127d53e795e02aced4f920045cd61afc8a7b9b49a2891696505a33"
+    },
+    {
+      "id": "case-186",
+      "palette": "light",
+      "column": 2,
+      "sha256": "96035b9d1fa5b5a045caa7ecad2f9a2f2c93462e5114b3f35ef8ff9f6060df06"
+    },
+    {
+      "id": "case-187",
+      "palette": "light",
+      "column": 0,
+      "sha256": "f99c9adc027dec9015b0e21ee521bc6a14cfce25a9ccb3e95814401f1d2282c9"
+    },
+    {
+      "id": "case-187",
+      "palette": "light",
+      "column": 1,
+      "sha256": "f99c9adc027dec9015b0e21ee521bc6a14cfce25a9ccb3e95814401f1d2282c9"
+    },
+    {
+      "id": "case-187",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b567e5edc9c614b6b051c772030e92ca11778702d65b314908ebd46000352458"
+    },
+    {
+      "id": "case-188",
+      "palette": "light",
+      "column": 0,
+      "sha256": "7d4ed130e35d10f0456ee8122652621ead39c8dce2d04c7606715068186b8c6a"
+    },
+    {
+      "id": "case-188",
+      "palette": "light",
+      "column": 1,
+      "sha256": "7d4ed130e35d10f0456ee8122652621ead39c8dce2d04c7606715068186b8c6a"
+    },
+    {
+      "id": "case-188",
+      "palette": "light",
+      "column": 2,
+      "sha256": "18a5232633902beeba182cc1d2d0b991082dc2af4ceeb360156306b44f31c3b3"
+    },
+    {
+      "id": "case-189",
+      "palette": "light",
+      "column": 0,
+      "sha256": "d18d39510dd99ab0af16ba83da076c5ec78d7dbe2f4957c40f90e1a2d987160d"
+    },
+    {
+      "id": "case-189",
+      "palette": "light",
+      "column": 1,
+      "sha256": "78f87afe9f79535c1bb1cee88fe25e1e2f2db32b074a8caa30e67e4ae403ea1c"
+    },
+    {
+      "id": "case-189",
+      "palette": "light",
+      "column": 2,
+      "sha256": "0268a8f2cc23314fe93babb1c852b14db274a81cd18ff873c826c5556be9b2fc"
+    },
+    {
+      "id": "case-180",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "d16559a3e8dd0cf7398dec591d18b74d04f1a5c75bc07e89db9f9b14dd78581f"
+    },
+    {
+      "id": "case-180",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "d16559a3e8dd0cf7398dec591d18b74d04f1a5c75bc07e89db9f9b14dd78581f"
+    },
+    {
+      "id": "case-180",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "8986e68beecf32b46b84c36e22000825ea205064862e158d71d231a3515e51b5"
+    },
+    {
+      "id": "case-181",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "70e1b65960be49bb959369dff1f40ba9e2b72a245e3b614a209ff6bda0e4702e"
+    },
+    {
+      "id": "case-181",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "70e1b65960be49bb959369dff1f40ba9e2b72a245e3b614a209ff6bda0e4702e"
+    },
+    {
+      "id": "case-181",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "bf0c7e757067d774ffc8894552a22097167781adfac427e2dab3f1d41ae0d3df"
+    },
+    {
+      "id": "case-182",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "ca0ab99b0ecb6a1258cac26b5cc72996734fa79b7885863d05af8285eec685d7"
+    },
+    {
+      "id": "case-182",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "ca0ab99b0ecb6a1258cac26b5cc72996734fa79b7885863d05af8285eec685d7"
+    },
+    {
+      "id": "case-182",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "541a8ef70780772c2ad4bf9fcc1b1c459f3cb404131349528e794ae365a82571"
+    },
+    {
+      "id": "case-183",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "bf17d6a85ff3e5ed1349752d896ef09d1f049d04843d04479eaff703bb3e2747"
+    },
+    {
+      "id": "case-183",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "bf17d6a85ff3e5ed1349752d896ef09d1f049d04843d04479eaff703bb3e2747"
+    },
+    {
+      "id": "case-183",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "9eafe006b445d63ac8da179cd0bbabb1c5af58235e40970b0a131e64d2eb145a"
+    },
+    {
+      "id": "case-184",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "bf17d6a85ff3e5ed1349752d896ef09d1f049d04843d04479eaff703bb3e2747"
+    },
+    {
+      "id": "case-184",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "bf17d6a85ff3e5ed1349752d896ef09d1f049d04843d04479eaff703bb3e2747"
+    },
+    {
+      "id": "case-184",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "9eafe006b445d63ac8da179cd0bbabb1c5af58235e40970b0a131e64d2eb145a"
+    },
+    {
+      "id": "case-185",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "5fde27930b1e4bc23536d05a23db4814b03840e2347eaf04133ddb0f397dea49"
+    },
+    {
+      "id": "case-185",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "5fde27930b1e4bc23536d05a23db4814b03840e2347eaf04133ddb0f397dea49"
+    },
+    {
+      "id": "case-185",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "ab7f5479cffa6495dd8335dea5e490ff3ede4921443fea0600f5283c24cebddd"
+    },
+    {
+      "id": "case-186",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "e9001f14454c5d4a25876c810c1f71e874a8eb4014247f9960741b5bf6204911"
+    },
+    {
+      "id": "case-186",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "e9001f14454c5d4a25876c810c1f71e874a8eb4014247f9960741b5bf6204911"
+    },
+    {
+      "id": "case-186",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "46c56b13cec9305d5bf6c33c4a863d47ccb839726820e35a2b5721df1299e424"
+    },
+    {
+      "id": "case-187",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "67b0baf41fc0aa905ece147dbdb3277e22aaed6c1166d6303af851a305f3d098"
+    },
+    {
+      "id": "case-187",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "67b0baf41fc0aa905ece147dbdb3277e22aaed6c1166d6303af851a305f3d098"
+    },
+    {
+      "id": "case-187",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "19a501e5178d25609e6ca033a5f2565783658baa84ded291f2cc6be6ca054f6e"
+    },
+    {
+      "id": "case-188",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "85dda7da8ad78759c7980080f702cf59f5d56d17e77fcfaab9ce4f51716e8042"
+    },
+    {
+      "id": "case-188",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "85dda7da8ad78759c7980080f702cf59f5d56d17e77fcfaab9ce4f51716e8042"
+    },
+    {
+      "id": "case-188",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "de3fc544ee560f27c57c3afa89d306aa809dbbc8e85ed05ac3142fb1cad8c284"
+    },
+    {
+      "id": "case-189",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "184271a1fc69ce0720a6d676035df7fabda9607d80670bc34df038ed149a236a"
+    },
+    {
+      "id": "case-189",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "6e905a80c40611e3a62b10efea2650e7d3f99da080fb22b686522043b120d97b"
+    },
+    {
+      "id": "case-189",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "6a84a81e72ee7202fa6d07f61a4932df1aa8574bdf9e5c6f1aebf1f6ca2cb0e9"
+    },
+    {
+      "id": "case-200",
+      "palette": "light",
+      "column": 0,
+      "sha256": "0b70946e8191e3813b233857e45b362bcc63e21d32b030d3fdc98e76655e91e7"
+    },
+    {
+      "id": "case-200",
+      "palette": "light",
+      "column": 1,
+      "sha256": "0b70946e8191e3813b233857e45b362bcc63e21d32b030d3fdc98e76655e91e7"
+    },
+    {
+      "id": "case-200",
+      "palette": "light",
+      "column": 2,
+      "sha256": "70c4fd06642cef90b96582204e1f3f938d99728b792931ba56c1272412afe28a"
+    },
+    {
+      "id": "case-201",
+      "palette": "light",
+      "column": 0,
+      "sha256": "de0560ea8be33a4da76dfce7bacafdff3e0878b6cb493ce76085a88595b67908"
+    },
+    {
+      "id": "case-201",
+      "palette": "light",
+      "column": 1,
+      "sha256": "de0560ea8be33a4da76dfce7bacafdff3e0878b6cb493ce76085a88595b67908"
+    },
+    {
+      "id": "case-201",
+      "palette": "light",
+      "column": 2,
+      "sha256": "69e71cfdada006d3fecbf1cacbfe6f9752fb4d8dc2b3de1c532a3ba2d0f608cd"
+    },
+    {
+      "id": "case-202",
+      "palette": "light",
+      "column": 0,
+      "sha256": "5090638d988ad7132a3129ddbc40d00536e9640215aeff5e869d9f2a2e48e1c8"
+    },
+    {
+      "id": "case-202",
+      "palette": "light",
+      "column": 1,
+      "sha256": "5090638d988ad7132a3129ddbc40d00536e9640215aeff5e869d9f2a2e48e1c8"
+    },
+    {
+      "id": "case-202",
+      "palette": "light",
+      "column": 2,
+      "sha256": "0d677e52cd2de2f0bc6ca1acccf90390eb0f93306d226a2eb90c3a3a2f0f19b8"
+    },
+    {
+      "id": "case-203",
+      "palette": "light",
+      "column": 0,
+      "sha256": "d204cfe16ff14812cd9d5ebc265d5ae9df9102a1a88b4e940c62ceab7556793a"
+    },
+    {
+      "id": "case-203",
+      "palette": "light",
+      "column": 1,
+      "sha256": "d204cfe16ff14812cd9d5ebc265d5ae9df9102a1a88b4e940c62ceab7556793a"
+    },
+    {
+      "id": "case-203",
+      "palette": "light",
+      "column": 2,
+      "sha256": "6103532fe3ea0f6de7b318efa6767a1aa467ebee54c5b58986fd2d65463b92eb"
+    },
+    {
+      "id": "case-204",
+      "palette": "light",
+      "column": 0,
+      "sha256": "d204cfe16ff14812cd9d5ebc265d5ae9df9102a1a88b4e940c62ceab7556793a"
+    },
+    {
+      "id": "case-204",
+      "palette": "light",
+      "column": 1,
+      "sha256": "d204cfe16ff14812cd9d5ebc265d5ae9df9102a1a88b4e940c62ceab7556793a"
+    },
+    {
+      "id": "case-204",
+      "palette": "light",
+      "column": 2,
+      "sha256": "6103532fe3ea0f6de7b318efa6767a1aa467ebee54c5b58986fd2d65463b92eb"
+    },
+    {
+      "id": "case-205",
+      "palette": "light",
+      "column": 0,
+      "sha256": "afe3fc709df42c4860d8b6bf91431d1a9d00595f14b1449962947cb3ffc12a7e"
+    },
+    {
+      "id": "case-205",
+      "palette": "light",
+      "column": 1,
+      "sha256": "afe3fc709df42c4860d8b6bf91431d1a9d00595f14b1449962947cb3ffc12a7e"
+    },
+    {
+      "id": "case-205",
+      "palette": "light",
+      "column": 2,
+      "sha256": "d5d0276da700164d6564d0dbc534e61d2620a26551f4a0e82d00d735752b52fa"
+    },
+    {
+      "id": "case-206",
+      "palette": "light",
+      "column": 0,
+      "sha256": "3e310f49177a2bcc95909a36722d0f99a56a8da833aceaadecfdb05d4344eb0f"
+    },
+    {
+      "id": "case-206",
+      "palette": "light",
+      "column": 1,
+      "sha256": "3e310f49177a2bcc95909a36722d0f99a56a8da833aceaadecfdb05d4344eb0f"
+    },
+    {
+      "id": "case-206",
+      "palette": "light",
+      "column": 2,
+      "sha256": "f5277886f63cd685742f321f16f18983860636d191d0b607b47c6bbc53bef67e"
+    },
+    {
+      "id": "case-207",
+      "palette": "light",
+      "column": 0,
+      "sha256": "7a0a287ab6730172827ae8b88d13721ed346c3b81187ad125d9d730856f97914"
+    },
+    {
+      "id": "case-207",
+      "palette": "light",
+      "column": 1,
+      "sha256": "80d00d0588f4aeccbaf6f80effb76c43fc314f0fe887232491e3b377e2b44e1c"
+    },
+    {
+      "id": "case-207",
+      "palette": "light",
+      "column": 2,
+      "sha256": "4b117d602adf33d0d38c9d197dea6ea3310a930dc64fa9579af34d4f73fd0d37"
+    },
+    {
+      "id": "case-208",
+      "palette": "light",
+      "column": 0,
+      "sha256": "98cbad0d4606676757400d6d0de5fc8683bfce84154d988f72ff017620406355"
+    },
+    {
+      "id": "case-208",
+      "palette": "light",
+      "column": 1,
+      "sha256": "3df66be8bb6e1ad00ee59bfa2c984b6d80a644996eb7601f01e9e8de52e889b8"
+    },
+    {
+      "id": "case-208",
+      "palette": "light",
+      "column": 2,
+      "sha256": "886d7be4be5b4bfc6f440f16ef75d4ad9a6f9e1596700142d49e86d5de86852b"
+    },
+    {
+      "id": "case-209",
+      "palette": "light",
+      "column": 0,
+      "sha256": "76599d0caf7355e53a5297d681174b6e729b1ed1c6b9b920d6c97d0e9d06e62d"
+    },
+    {
+      "id": "case-209",
+      "palette": "light",
+      "column": 1,
+      "sha256": "d4b0174b42b70d0eff2a927ede9a54acac26f1c491e6acd80906e7c97d862276"
+    },
+    {
+      "id": "case-209",
+      "palette": "light",
+      "column": 2,
+      "sha256": "1640049fd8f2c7a97616391bf046715b5cfcd61314f07535fe86d02a2f54534d"
+    },
+    {
+      "id": "case-200",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "1e0e41286b0015835bef9e5ea2a446661ffdb660bb6ffc2ee52d02d019bb7dec"
+    },
+    {
+      "id": "case-200",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "1e0e41286b0015835bef9e5ea2a446661ffdb660bb6ffc2ee52d02d019bb7dec"
+    },
+    {
+      "id": "case-200",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "099042613a4e6e50b78da9fad3673674dbd638394347bd4604d2d9304366e057"
+    },
+    {
+      "id": "case-201",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "3005bfcc77b6392b210fb7a50874ff6c40826384d30a013aa0827214755a4c1e"
+    },
+    {
+      "id": "case-201",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "3005bfcc77b6392b210fb7a50874ff6c40826384d30a013aa0827214755a4c1e"
+    },
+    {
+      "id": "case-201",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "a161de6008f6127b491f8c37db21b9831ecd3490224b97b176d4b67c85b20ef3"
+    },
+    {
+      "id": "case-202",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "13a82292cb3680222aa74ed34fb17c594bd209e7b7062bdce1f104c227bce036"
+    },
+    {
+      "id": "case-202",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "13a82292cb3680222aa74ed34fb17c594bd209e7b7062bdce1f104c227bce036"
+    },
+    {
+      "id": "case-202",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "b0c7806e3d0e32b16d22bdb07db1a186912102d602fd93d49fbcba47d428c8f6"
+    },
+    {
+      "id": "case-203",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "79a5f73cb792f938802f6f9d1ba1cebbd619e76fd830488a1deaf8b37499b3ed"
+    },
+    {
+      "id": "case-203",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "79a5f73cb792f938802f6f9d1ba1cebbd619e76fd830488a1deaf8b37499b3ed"
+    },
+    {
+      "id": "case-203",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "f8608a92e9c76b8d1424d2240065a2298b5afdcb795253507a6b5ed1bd88417e"
+    },
+    {
+      "id": "case-204",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "79a5f73cb792f938802f6f9d1ba1cebbd619e76fd830488a1deaf8b37499b3ed"
+    },
+    {
+      "id": "case-204",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "79a5f73cb792f938802f6f9d1ba1cebbd619e76fd830488a1deaf8b37499b3ed"
+    },
+    {
+      "id": "case-204",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "f8608a92e9c76b8d1424d2240065a2298b5afdcb795253507a6b5ed1bd88417e"
+    },
+    {
+      "id": "case-205",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "dfa6721727f574f98788c91ca02cab5531b7ce721879e65898dac1b51b723c81"
+    },
+    {
+      "id": "case-205",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "dfa6721727f574f98788c91ca02cab5531b7ce721879e65898dac1b51b723c81"
+    },
+    {
+      "id": "case-205",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "a320ec6f3ef1e99272664ce21fcc99961d80c1d677fe217a4c949050c297ca3d"
+    },
+    {
+      "id": "case-206",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "72b49871095f1c6be8451ba582f0b64936dd9b679bbe68b35776366ac1196d2f"
+    },
+    {
+      "id": "case-206",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "72b49871095f1c6be8451ba582f0b64936dd9b679bbe68b35776366ac1196d2f"
+    },
+    {
+      "id": "case-206",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "5801ae843011b57b935b33b9f89871b0cb6260c786bc302fef4f6a36064a0444"
+    },
+    {
+      "id": "case-207",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "7d5f319971ee240df095e3f71f15fdd0c40f1ebd0b816a5eecce47ed16cc0bb4"
+    },
+    {
+      "id": "case-207",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "6e7f73e297c93ff061cd3788f2e6139b7f012dada8c3bdb515e0800ec213c757"
+    },
+    {
+      "id": "case-207",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "3cf393cfbc2de301478e47e9efc5b52df24bb55cf8e3811a729581653d308b6c"
+    },
+    {
+      "id": "case-208",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "c24980fc703ccc3e9b5b1f3f84fd4ed311038f8e15ea6b3d4f9291f77a567781"
+    },
+    {
+      "id": "case-208",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "26d7e44aa2184f0106e0238435e70b2ea5a9a20ff769785a9e82d1ea7c67df4b"
+    },
+    {
+      "id": "case-208",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "d978a55beab06b1040cbf2d382aa4adb3d0651a308d019b8b37d75bb49983a2d"
+    },
+    {
+      "id": "case-209",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "26ff22f43a07d7074395afed0fe47080e31b2f75ca10c0b41bd83870ebcfcb5c"
+    },
+    {
+      "id": "case-209",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "8168b395173b2d85751b5aa509136d0684710fc474aa982f5430dc065f340d0e"
+    },
+    {
+      "id": "case-209",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "5e66da207be596f37a9fa9df8814b6e9fb0d8ec532032f1f5bc403dc14fe6aff"
+    },
+    {
+      "id": "case-210",
+      "palette": "light",
+      "column": 0,
+      "sha256": "3445b2e956efaea643c3c14a836c4ff54d65f356e8d2f6e0d4e87068a6796ccf"
+    },
+    {
+      "id": "case-210",
+      "palette": "light",
+      "column": 1,
+      "sha256": "3445b2e956efaea643c3c14a836c4ff54d65f356e8d2f6e0d4e87068a6796ccf"
+    },
+    {
+      "id": "case-210",
+      "palette": "light",
+      "column": 2,
+      "sha256": "2bd91b6b38068774a86685ab7035c10d9fb157071997b550538b3ca25dde32d9"
+    },
+    {
+      "id": "case-211",
+      "palette": "light",
+      "column": 0,
+      "sha256": "85bd34ae5223a4cf43983e3a3ed863e3b43f15a40c00024c667fef08b6ec9614"
+    },
+    {
+      "id": "case-211",
+      "palette": "light",
+      "column": 1,
+      "sha256": "85bd34ae5223a4cf43983e3a3ed863e3b43f15a40c00024c667fef08b6ec9614"
+    },
+    {
+      "id": "case-211",
+      "palette": "light",
+      "column": 2,
+      "sha256": "06e1ab06c18245a2e15049a007f19e88c1ff2c7c5fb16eef94628defa65f7b43"
+    },
+    {
+      "id": "case-212",
+      "palette": "light",
+      "column": 0,
+      "sha256": "181e2ede85e89165ce719d7c273a156429814cc220df11d1adef3a8905ae6e83"
+    },
+    {
+      "id": "case-212",
+      "palette": "light",
+      "column": 1,
+      "sha256": "181e2ede85e89165ce719d7c273a156429814cc220df11d1adef3a8905ae6e83"
+    },
+    {
+      "id": "case-212",
+      "palette": "light",
+      "column": 2,
+      "sha256": "a9a82cf6c34ce987341d29123dbb591681cd164e1d605455b0c327033cb99bee"
+    },
+    {
+      "id": "case-213",
+      "palette": "light",
+      "column": 0,
+      "sha256": "84334658e247e12dce4fc0e4c2057a2ba45ba9f868aba48eac173fac2e8da222"
+    },
+    {
+      "id": "case-213",
+      "palette": "light",
+      "column": 1,
+      "sha256": "84334658e247e12dce4fc0e4c2057a2ba45ba9f868aba48eac173fac2e8da222"
+    },
+    {
+      "id": "case-213",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b6a7f90b14a7165e52e3df5bc51d5285863c80c94ca74b2e6b8d64c6e4340061"
+    },
+    {
+      "id": "case-214",
+      "palette": "light",
+      "column": 0,
+      "sha256": "84334658e247e12dce4fc0e4c2057a2ba45ba9f868aba48eac173fac2e8da222"
+    },
+    {
+      "id": "case-214",
+      "palette": "light",
+      "column": 1,
+      "sha256": "84334658e247e12dce4fc0e4c2057a2ba45ba9f868aba48eac173fac2e8da222"
+    },
+    {
+      "id": "case-214",
+      "palette": "light",
+      "column": 2,
+      "sha256": "b6a7f90b14a7165e52e3df5bc51d5285863c80c94ca74b2e6b8d64c6e4340061"
+    },
+    {
+      "id": "case-215",
+      "palette": "light",
+      "column": 0,
+      "sha256": "94f04e818b9766bbb0a8d7fd6f3718afb440ed1e5ff2ab191ee83cf80c1115aa"
+    },
+    {
+      "id": "case-215",
+      "palette": "light",
+      "column": 1,
+      "sha256": "94f04e818b9766bbb0a8d7fd6f3718afb440ed1e5ff2ab191ee83cf80c1115aa"
+    },
+    {
+      "id": "case-215",
+      "palette": "light",
+      "column": 2,
+      "sha256": "eb8cdce2c053ca980c10500b8771b1e89f18bcc58538cd95181b65d16f347e93"
+    },
+    {
+      "id": "case-216",
+      "palette": "light",
+      "column": 0,
+      "sha256": "a55455966d2708776e505f5266722ddd9f671c742117f2c3b28e1e7230020479"
+    },
+    {
+      "id": "case-216",
+      "palette": "light",
+      "column": 1,
+      "sha256": "a55455966d2708776e505f5266722ddd9f671c742117f2c3b28e1e7230020479"
+    },
+    {
+      "id": "case-216",
+      "palette": "light",
+      "column": 2,
+      "sha256": "02ffedf7f7cf993aec031ce80801fe815f43a7da0f7fcfa9bd4889003b101936"
+    },
+    {
+      "id": "case-217",
+      "palette": "light",
+      "column": 0,
+      "sha256": "3fab903a63640561893a45186e2802703aca5edb1b832267dfc0fe2adc8f4f11"
+    },
+    {
+      "id": "case-217",
+      "palette": "light",
+      "column": 1,
+      "sha256": "3fab903a63640561893a45186e2802703aca5edb1b832267dfc0fe2adc8f4f11"
+    },
+    {
+      "id": "case-217",
+      "palette": "light",
+      "column": 2,
+      "sha256": "bff924c0bf2cba425dcdfd7e20899f9824c9362cf88b7fd309af582ef28e5fb7"
+    },
+    {
+      "id": "case-218",
+      "palette": "light",
+      "column": 0,
+      "sha256": "7120e59fbec18de6ab939889a20e469e421299a2de1cb9128867b4799ff03822"
+    },
+    {
+      "id": "case-218",
+      "palette": "light",
+      "column": 1,
+      "sha256": "7120e59fbec18de6ab939889a20e469e421299a2de1cb9128867b4799ff03822"
+    },
+    {
+      "id": "case-218",
+      "palette": "light",
+      "column": 2,
+      "sha256": "a3211a2055d3dee43ff6bdaf3989cd48591f9458c423118e624ecd5c18711cf4"
+    },
+    {
+      "id": "case-219",
+      "palette": "light",
+      "column": 0,
+      "sha256": "57578d898b80d05f643b6ab8d9745c1ba02ff2349d3478f77441c87bbe45d59e"
+    },
+    {
+      "id": "case-219",
+      "palette": "light",
+      "column": 1,
+      "sha256": "34e568961e7d294d0acf6810fc243ac4114f860c4283bfd1542e2ea2e5202536"
+    },
+    {
+      "id": "case-219",
+      "palette": "light",
+      "column": 2,
+      "sha256": "f646078918a5518abfeb7b90436c1b34bf6017bd358ab5fb800f1efbb19da6cc"
+    },
+    {
+      "id": "case-210",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "619e3a4d6b0d8953862f6d35ae1dff816444b460e8ff03e4e082585519199793"
+    },
+    {
+      "id": "case-210",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "619e3a4d6b0d8953862f6d35ae1dff816444b460e8ff03e4e082585519199793"
+    },
+    {
+      "id": "case-210",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "3a6825d38a1a03a6d2beadd13db891fab099efd5b6f7686f16a8780db8d9a18a"
+    },
+    {
+      "id": "case-211",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "e4ea0ae6f9cf5fb269a43c4874fd29ea33908091fe785b1f26c272eca272df10"
+    },
+    {
+      "id": "case-211",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "e4ea0ae6f9cf5fb269a43c4874fd29ea33908091fe785b1f26c272eca272df10"
+    },
+    {
+      "id": "case-211",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "6aed4855c06a1c8fe11fa7d6a30228abb0e411d63e829568f73864dbc1802386"
+    },
+    {
+      "id": "case-212",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "b79bd43e0c67be97dcc7c1e059cd99f36de08953763ffaeda58a56b489e9671b"
+    },
+    {
+      "id": "case-212",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "b79bd43e0c67be97dcc7c1e059cd99f36de08953763ffaeda58a56b489e9671b"
+    },
+    {
+      "id": "case-212",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "81082145984a4a3f4bb74cf31fd8c072a1974e67ef07d8ce03ddb83ce81e8ea9"
+    },
+    {
+      "id": "case-213",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "0dd5f5678e4a22e6d53062d2523aaac7a17d09411b10fd183b1b4d250cba0501"
+    },
+    {
+      "id": "case-213",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "0dd5f5678e4a22e6d53062d2523aaac7a17d09411b10fd183b1b4d250cba0501"
+    },
+    {
+      "id": "case-213",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "2b4bf0af36a77bd1f8666a287a91e601f0811e1c3675f2ffc3d89cefd1ef758a"
+    },
+    {
+      "id": "case-214",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "0dd5f5678e4a22e6d53062d2523aaac7a17d09411b10fd183b1b4d250cba0501"
+    },
+    {
+      "id": "case-214",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "0dd5f5678e4a22e6d53062d2523aaac7a17d09411b10fd183b1b4d250cba0501"
+    },
+    {
+      "id": "case-214",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "2b4bf0af36a77bd1f8666a287a91e601f0811e1c3675f2ffc3d89cefd1ef758a"
+    },
+    {
+      "id": "case-215",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "33e15a2a5b0ce6e8f5773a8fcf567bea2a0839854ba4686e1e0b60bb079a6615"
+    },
+    {
+      "id": "case-215",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "33e15a2a5b0ce6e8f5773a8fcf567bea2a0839854ba4686e1e0b60bb079a6615"
+    },
+    {
+      "id": "case-215",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "08fae964cdff4e541d7143c2290b10e52445b943f8dcb1f9c51f81a366e29480"
+    },
+    {
+      "id": "case-216",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "6da29f78a7d825ce85a1498b165a5faae044cbe7760ebed23720937b4951ac65"
+    },
+    {
+      "id": "case-216",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "6da29f78a7d825ce85a1498b165a5faae044cbe7760ebed23720937b4951ac65"
+    },
+    {
+      "id": "case-216",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "d59e9fbe5919aa2e202a06f3a786de1dfd9f28f998b859687929f1913a370a58"
+    },
+    {
+      "id": "case-217",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "975a8c4de074b8e5992731d0ad40a6914611e525c2f12d4f0c4988c7d23417a2"
+    },
+    {
+      "id": "case-217",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "975a8c4de074b8e5992731d0ad40a6914611e525c2f12d4f0c4988c7d23417a2"
+    },
+    {
+      "id": "case-217",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "950029dea2ffa88df1ded4bb5e3f107c51e716ed1dbcecd148031658ad88c8f2"
+    },
+    {
+      "id": "case-218",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "3ab868008ba125bc9e72504742b228d2ce3e74a7cd296be607396fadb7af116a"
+    },
+    {
+      "id": "case-218",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "3ab868008ba125bc9e72504742b228d2ce3e74a7cd296be607396fadb7af116a"
+    },
+    {
+      "id": "case-218",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "758dcafd69705f436696cd2db51be29500a3497410dee047e860f5a19dc438af"
+    },
+    {
+      "id": "case-219",
+      "palette": "dark",
+      "column": 0,
+      "sha256": "bb86fa1e46804632ddb9192f52ecde3a1c39b3028de59f38bc8208e1d7fcc5d8"
+    },
+    {
+      "id": "case-219",
+      "palette": "dark",
+      "column": 1,
+      "sha256": "d33c86d9fc0c897f2f9d12d35c22504971aa2f52176044477bf11bbc194a9ceb"
+    },
+    {
+      "id": "case-219",
+      "palette": "dark",
+      "column": 2,
+      "sha256": "d568c0199f422ec85845b4a49cc756d40a5854fc5066fc901c13fdd05d77a7d0"
+    }
+  ],
+  "renderer_source_sha256": "3fa7f33d22ae7f389d4219b8cf7c5022c53d4cff726f7697a4e2ac2d64ce21d6",
+  "assembler_sha256": "6f9cef531f7af20436f46731fc5097e7019788390b4f092b2fc1f06812a25eba",
+  "label_font_sha256": "b4c632e3cdf9acc7f28758fb5a323c8524d7fc6660d46904d9b6cbe2809c419c",
+  "limits": [
+    "Stock Qt uses the capture desktop font configuration, not a universal KDE default",
+    "Static Latin fonts, 96 DPI, 100% scale only",
+    "Neither candidate meets the full visual target"
+  ]
+}
