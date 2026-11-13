@@ -21,7 +21,7 @@ The user rejects maintenance of individual website fixes. The first investigatio
 | Override font families, sizes, or weights | Changes poorly chosen typography directly | Changes authored layout and emphasis, with a wider compatibility burden |
 | Develop a new adaptive or learned rasterizer | Can pursue a broader quality objective | Needs evidence, a defined objective, and a new implementation contract |
 
-Investigate the first two approaches before introducing another rendering mechanism. Keep the current deployed preset until the comparison supports a change.
+The contrast-only samples are not an accepted replacement. Use them as controls for stroke-geometry investigation. Keep the current deployed preset until the comparison supports a change.
 
 ## Evidence
 
@@ -59,6 +59,35 @@ Open each PNG at 100% image zoom. The left column is the current mask treatment.
 
 These are native FreeType component images, not browser screenshots. They use shared unhinted advances and unfitted kerning without a shaping engine. They do not establish browser spacing, page-layout equivalence, or Mozilla's output on colored backgrounds. The [capture record](../images/browser-common-ground/captures.json) records fonts, hashes, conditions, and the image checks.
 
+### Weak crowns and inconsistent stroke widths
+
+The user prefers no clipping among the first columns but rejects all of them as a general result. Light faces remain too light. Stroke widths are inconsistent. The crowns of 3 and 5 remain weak. Keep no clipping as the comparison control, not a selected deployed default.
+
+The weak strokes already exist in the hinted outlines. In the 15px Lato Light sample, a vertical H stroke measures 1 pixel. Its horizontal crossbar measures 38/64 pixel. The top bar of 5 measures 45/64 pixel. The extrema of the curved 3 crown differ by 41/64 pixel. Much of the flat top bar of 5 has only 180/255 coverage before blending. Curvature alone cannot explain the flat-bar result.
+
+FreeType fits the two coordinate axes separately. Its Latin hinter leaves stem widths unchanged when an axis is classified as extra light. This classification uses an axis-wide standard width below 5/8 pixel. Otherwise, its strong monochrome Y fitting normally gives a linked horizontal stroke at least 1 pixel. Curves can enter this fitting, but not every contour feature becomes a linked stem. Unlinked features and remaining control points follow other alignment and interpolation paths. See the pinned [Latin hinter](https://github.com/freetype/freetype/blob/VER-2-14-2/src/autofit/aflatin.c) and [point alignment](https://github.com/freetype/freetype/blob/VER-2-14-2/src/autofit/afhints.c).
+
+The observed horizontal/vertical difference is consistent with an axis-specific thin-width bypass. Public outline data does not expose the internal classification, stem links, or blue-zone assignments. An internal trace must establish the exact branch before changing that policy. A blue zone is a font alignment region used for features such as baselines and cap heights.
+
+FreeType's built-in automatic stem darkening runs only with its light hint target. Enabling it with the current monochrome target leaves these masks unchanged. The [loader source](https://github.com/freetype/freetype/blob/VER-2-14-2/src/autofit/afloader.c) establishes this gate. Separate public API checks compare both targets with darkening enabled and disabled.
+
+The next diagnostic sheet uses no contrast clipping in every column:
+
+| Column | Diagnostic control | What changes |
+| --- | --- | --- |
+| A | Existing monochrome hints | Unclipped reference |
+| B | Light hints plus built-in stem darkening | Hint target and outline weight |
+| C | Monochrome hints plus 1/4px Y expansion | Outline expansion after hinting |
+| D | Monochrome hints plus 1/8px X and 1/4px Y expansion | Outline expansion after hinting |
+
+C and D use the existing [outline expansion API](https://freetype.org/freetype2/docs/reference/ft2-outline_processing.html#ft_outline_emboldenxy). They are controls for the effect of geometry, not adaptive stroke rules. Expansion can move edges away from the grid and change ink bounds. Preserving advance widths does not establish layout safety or consistent stroke thickness.
+
+![Stroke geometry diagnostics at 15px on white](../images/browser-common-ground/geometry-15-light.png)
+
+![Stroke geometry diagnostics at 15px on black](../images/browser-common-ground/geometry-15-dark.png)
+
+Small text is native size. Enlarged digits use exact 4x pixel repeats. Nine faces cover regular, bold, italic, bold italic, and light controls. The component sweep uses 12, 15, 18.75, and 22.5 device pixels. Zero-strength calls match the existing public probe. Column A matches the native word masks. Outline expansion preserves the sampled advances. These checks establish faithful diagnostic images, not a new browser preset.
+
 ### Prior art search
 
 Real arXiv API searches covered graphics, human interaction, and image processing. The broad matches mainly addressed generated typography, virtual reality, and unrelated reconstruction. They did not supply a directly usable general browser policy.
@@ -67,7 +96,9 @@ Real arXiv API searches covered graphics, human interaction, and image processin
 
 ## Decision
 
-Use the existing renderer to find the smallest useful correction first. Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy.
+Contrast alone does not meet the user's result. Investigate horizontal-stroke fitting and curve alignment in the existing hinter. First trace the thin-axis classification, crown segments, stem links, and alignment decisions in the observed failures. This distinguishes a policy bypass from a failure to detect the stroke. Then test the smallest geometry change that the trace supports.
+
+Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy. Do not infer a general minimum-thickness policy from blanket outline expansion.
 
 After visual comparison, test the selected condition in real Firefox and Floorp windows. Include downloaded fonts, variable fonts, small labels, larger headings, light/dark colors, and mixed styles. Check actual glyph masks and final pixels separately. Preserve the current preset as the control. A component preference alone does not authorize a new deployed default.
 

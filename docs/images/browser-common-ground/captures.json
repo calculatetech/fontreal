@@ -205,6 +205,34 @@
       "scale": 1,
       "blend": "actual-background linear-light",
       "palette": "white on black"
+    },
+    {
+      "file": "geometry-15-light.png",
+      "sha256": "2936838d5a9e4fecda1502c0cc6a37f4d4b2e12f5d7d9ee2db7c7d15927b5425",
+      "dimensions": [
+        1840,
+        1127
+      ],
+      "metadata_keys": [],
+      "size_px": 15,
+      "scale": 1,
+      "blend": "actual-background linear-light",
+      "palette": "black on white",
+      "enlargement": "digits only: exact 4x nearest-neighbor pixel repeats; native word unchanged"
+    },
+    {
+      "file": "geometry-15-dark.png",
+      "sha256": "896cd6115cc682f4e18e8f93668566f011a9e4bf1e00c1decb8441f52adac7db",
+      "dimensions": [
+        1840,
+        1127
+      ],
+      "metadata_keys": [],
+      "size_px": 15,
+      "scale": 1,
+      "blend": "actual-background linear-light",
+      "palette": "white on black",
+      "enlargement": "digits only: exact 4x nearest-neighbor pixel repeats; native word unchanged"
     }
   ],
   "limits": [
@@ -212,5 +240,112 @@
     "Not browser layout or shaping equivalence",
     "Not a human readability score",
     "Not a selected replacement default"
-  ]
+  ],
+  "geometry_diagnostics": {
+    "text": "Hmnw 035 568 AV",
+    "modes": [
+      {
+        "column": "A: No clipping",
+        "load_flags": "0x20028",
+        "x_expansion_26_6": 0,
+        "y_expansion_26_6": 0,
+        "autofitter_stem_darkening": false
+      },
+      {
+        "column": "B: Light hints + darkening",
+        "load_flags": "0x10028",
+        "x_expansion_26_6": 0,
+        "y_expansion_26_6": 0,
+        "autofitter_stem_darkening": true
+      },
+      {
+        "column": "C: Mono + 1/4px Y",
+        "load_flags": "0x20028",
+        "x_expansion_26_6": 0,
+        "y_expansion_26_6": 16,
+        "autofitter_stem_darkening": false
+      },
+      {
+        "column": "D: Mono + 1/8px X, 1/4px Y",
+        "load_flags": "0x20028",
+        "x_expansion_26_6": 8,
+        "y_expansion_26_6": 16,
+        "autofitter_stem_darkening": false
+      }
+    ],
+    "font_conditions": [
+      {
+        "font": "Noto Sans Regular",
+        "font_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+        "size_px": 15
+      },
+      {
+        "font": "Noto Sans Bold",
+        "font_sha256": "e83493c945848ecd4a9ad0f6d19164541a0d3e23a9c952304a00a46e00272ac5",
+        "size_px": 15
+      },
+      {
+        "font": "Noto Sans Italic",
+        "font_sha256": "5d7618dda819443fd07301c84adcee9fe8960c873ea5e5e1f0f59db384b78082",
+        "size_px": 15
+      },
+      {
+        "font": "Noto Sans BoldItalic",
+        "font_sha256": "4315b26e5afb62f70f5ffe0edaa3363e57765ff2af2beda12b6fef197e3e5f5a",
+        "size_px": 15
+      },
+      {
+        "font": "Lato Light",
+        "font_sha256": "e9d59afb6d9cb9cf6e8d8159d4639d5b577e29efc64a15182f228659cfc1e818",
+        "size_px": 15
+      },
+      {
+        "font": "Lato Regular",
+        "font_sha256": "6f6940be0835c3ddec9199e5fc42be4cbc61ebcfd58c623fdf719366253f1780",
+        "size_px": 15
+      },
+      {
+        "font": "IBM Plex Sans Light",
+        "font_sha256": "45934c7fc2267d3726698a52f37db7477bdc751abad6b5107304ebd7b967f1c6",
+        "size_px": 15
+      },
+      {
+        "font": "IBM Plex Sans Bold",
+        "font_sha256": "b80a71fc5ac0f4d95f55dd97ca6be2c6073bea4ed6296336fe781620df41894b",
+        "size_px": 15
+      },
+      {
+        "font": "Hack Regular",
+        "font_sha256": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085",
+        "size_px": 15
+      }
+    ],
+    "device_sizes_px": [
+      12,
+      15,
+      18.75,
+      22.5
+    ],
+    "conditions": 36,
+    "sheets": 8,
+    "provenance": {
+      "base_probe": "tests/freetype_mask_probe.cpp",
+      "base_probe_sha256": "52da5e83b686e78333aedeadd9bafa21a5110c9830c863764ba5f0d566a59cf4",
+      "change": "Call FT_Outline_EmboldenXY after each glyph load and before snapshot, translation and rasterization; x/y strengths specified above",
+      "freetype_library_sha256": "119762cc898175319d44c39f3ec5d7f1244739248999bfdef6ad2e34f81aaa7a"
+    },
+    "checks": [
+      "Zero-strength probe JSON equals the existing public probe in every sampled case",
+      "Column A word masks exactly equal existing native exports",
+      "Sampled advances unchanged by outline expansion",
+      "Y-only expansion retains all sampled X outline coordinates",
+      "All native and zoomed image rectangles fit within their labelled rows"
+    ],
+    "limits": [
+      "Diagnostic controls only; no selected policy",
+      "B changes hinting and weight together",
+      "C and D can move edges off the pixel grid and change ink bounds",
+      "No browser spacing or final-composition claim"
+    ]
+  }
 }
