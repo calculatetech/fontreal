@@ -84,6 +84,31 @@ On the same 16pt contour metric, the new test improves 12 face averages, leaves 
 
 The [experiment record](../images/browser-common-ground/nearest-y-captures.json) includes the exact parameter change, library hashes, numeric results, image hashes, and checks. The private library retains the original exported API and dependency features. Native raster, floor, overlap, blend, and saved-image checks cover the comparisons. No installed library or application setting changes.
 
+## Smaller points and explicit italic comparisons
+
+The user accepts the 16pt nearest-Y result as the reference and requests more work on smaller sizes. The new sheets preserve that rendering. Each sheet shows actual Qt point sizes from 8 through 16pt, plus the 11.25pt reference. Italic and bold italic now have dedicated sheets.
+
+The left column uses the original 75% horizontal-stroke fitting rule. The middle uses the 50% rule. The right uses normal hinting with the same 242 floor. All three retain the same font, Qt positions, coverage cutoffs, and linear blending. The percentage describes width fitting before rasterization. It does not describe a coverage cutoff.
+
+For Noto Sans Regular, the 75% and 50% columns are pixel-identical at every tested size below 16pt, on both backgrounds. Returning to 75% cannot improve those rows. Other faces enter the affected range at different sizes. Noto Sans Bold Italic changes at 9, 10, 11, 11.25, and 16pt. Noto Serif Italic changes at 14 and 15pt. These differences require visual judgment rather than a single size boundary for all fonts.
+
+Normal hinting provides a separate geometry control for smaller text. It uses the same loading flags as the traced Qt path, then applies the existing floor and blend. This control changes the hinting path and is not a further adjustment to the horizontal-stroke rounding constant. Its visual preference remains open.
+
+| Face | White background | Black background |
+| --- | --- | --- |
+| Noto Sans Regular | [Image](../images/browser-common-ground/smallpt-noto-sans-regular-light.png) | [Image](../images/browser-common-ground/smallpt-noto-sans-regular-dark.png) |
+| Noto Serif Regular | [Image](../images/browser-common-ground/smallpt-noto-serif-regular-light.png) | [Image](../images/browser-common-ground/smallpt-noto-serif-regular-dark.png) |
+| Lato Light | [Image](../images/browser-common-ground/smallpt-lato-light-light.png) | [Image](../images/browser-common-ground/smallpt-lato-light-dark.png) |
+| Hack Regular | [Image](../images/browser-common-ground/smallpt-hack-regular-light.png) | [Image](../images/browser-common-ground/smallpt-hack-regular-dark.png) |
+| Noto Sans Italic | [Image](../images/browser-common-ground/smallpt-noto-sans-italic-light.png) | [Image](../images/browser-common-ground/smallpt-noto-sans-italic-dark.png) |
+| Noto Sans Bold Italic | [Image](../images/browser-common-ground/smallpt-noto-sans-bolditalic-light.png) | [Image](../images/browser-common-ground/smallpt-noto-sans-bolditalic-dark.png) |
+| Noto Serif Italic | [Image](../images/browser-common-ground/smallpt-noto-serif-italic-light.png) | [Image](../images/browser-common-ground/smallpt-noto-serif-italic-dark.png) |
+| Noto Serif Bold Italic | [Image](../images/browser-common-ground/smallpt-noto-serif-bolditalic-light.png) | [Image](../images/browser-common-ground/smallpt-noto-serif-bolditalic-dark.png) |
+| Hack Italic | [Image](../images/browser-common-ground/smallpt-hack-italic-light.png) | [Image](../images/browser-common-ground/smallpt-hack-italic-dark.png) |
+| Hack Bold Italic | [Image](../images/browser-common-ground/smallpt-hack-bolditalic-light.png) | [Image](../images/browser-common-ground/smallpt-hack-bolditalic-dark.png) |
+
+The [capture record](../images/browser-common-ground/smallpt-captures.json) covers 220 verified conditions and 100 displayed conditions across these 20 sheets. Independent native rasterization reproduces all normal-control masks. Separate calculations reproduce the floor, glyph overlap, blending, and saved image pixels. The earlier accepted 16pt image hashes remain unchanged. The charts cover 96 DPI at 100% scale. They do not establish a new application default.
+
 ## Limits and decision
 
 Contour-point displacement is a measure of geometric proximity. It is not a readability, beauty, or optical-quality score. Different placement of control points can affect this metric, so comparisons use matching points from the same font. The reference also excludes the designer's size-specific hinting instructions. It measures fidelity to the outline, rather than every aspect of design intent.
