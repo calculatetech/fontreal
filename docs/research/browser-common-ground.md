@@ -155,29 +155,31 @@ The command checks the actual native width decisions against the formula. It als
 
 The sweep covers nine faces at 12, 15, 18.75, and 22.5 device pixels, with both palettes. These sizes represent different effective densities without proving browser scaling behavior. The [capture record](../images/browser-common-ground/width-captures.json) supplies hashes, conditions, measured profiles, and the selected public images. Native decision logs include the requested glyph and the following probe glyph. They do not identify every feature's stem link or blue-zone classification. Wider browser qualification and a coherent diagonal-core rule remain separate work.
 
-### Balance weak crowns and light-face opacity
+### Full-intensity thin-stroke cores
 
-The user prefers the rounded-width study's third column at 15px. Keep its half-pixel minimum as the component reference. At 12px, crowns remain too light. Light faces also need less than 255 coverage on solid pixels. The user suggests an average across stroke width near 75%.
+The user prefers the half-pixel-minimum control at 15px but rejects the subsequent coverage lift as too strong. The latest target is near-regular intensity for light faces on single-pixel strokes. This replaces the tentative 75% light-face ceiling. Preserve native gray edges while raising the minimum for detected thin strokes.
 
-The next comparison keeps the same native geometry and changes only coverage. A is the exact previous third column. B lifts partial coverage with `1-(1-a)^2`, where `a` is opacity from zero to one. This maps approximately half coverage to three-quarter coverage. Empty and full pixels stay unchanged. The operation affects every partial pixel, including italic stems and diagonals.
+Light weight normally changes stroke thickness and related design details. It does not prescribe an opacity percentage. The official [OpenType weight-axis definition](https://learn.microsoft.com/en-us/typography/opentype/spec/dvaraxistag_wght) describes that distinction. At low density, width rounding can give light and regular strokes the same pixel width. Greater density can expose their geometric differences again. The experiment neither substitutes regular fonts nor forces a difference through opacity.
 
-C caps each light-face glyph pixel at 191, the nearest byte to 75% opacity. D applies B followed by C. Light eligibility comes from the static OpenType `usWeightClass` below 400. The selected light faces have class 300, regular faces have class 400, and bold faces have class 700. The [OpenType weight contract](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass) defines this metadata. The experiment uses no font-name or website selectors. For regular and bold faces, C equals A and D equals B.
+The current sheet compares two exact retained native controls. A uses the previous half-pixel minimum. B uses a one-pixel minimum. Both use automatic monochrome hints with grayscale rasterization and nearest-integer width rounding above the thin threshold. No opacity lift, light-face dimming, or global pixel floor runs after rasterization. The stronger minimum changes detected stroke geometry. Native antialiasing remains active around the fitted shape.
 
-![Coverage balance at 12px on white](../images/browser-common-ground/balance-12-light.png)
+![Half-pixel and one-pixel minima at 12px on white](../images/browser-common-ground/balance-12-light.png)
 
-![Coverage balance at 12px on black](../images/browser-common-ground/balance-12-dark.png)
+![Half-pixel and one-pixel minima at 12px on black](../images/browser-common-ground/balance-12-dark.png)
 
-![Coverage balance at 15px on white](../images/browser-common-ground/balance-15-light.png)
+![Half-pixel and one-pixel minima at 15px on white](../images/browser-common-ground/balance-15-light.png)
 
-![Coverage balance at 15px on black](../images/browser-common-ground/balance-15-dark.png)
+![Half-pixel and one-pixel minima at 15px on black](../images/browser-common-ground/balance-15-dark.png)
 
-Open the images at 100% zoom. Small text uses native pixels. H, l, 3, 5, and V use exact 4x pixel repeats. At 12px, Lato Light's middle l profile changes from `[255]` in A to `[191]` in C and D. Its 3's first nonempty row has a peak of 151 in A and 191 in D. These are measured opacity changes, not a readability score or an accepted new preset.
+Open the images at 100% zoom. Small text uses native pixels. H, l, 3, 5, 8, and V use exact 4x pixel repeats. At 12px, Lato Light's central H crossbar changes from `[128]` in A to `[255]` in B. Lato Regular stays at `[255]`. The l cores already have full coverage in both controls. This is the requested single-pixel intensity comparison without a special light-face opacity cap.
 
-A pixel ceiling differs from a rule for average coverage across a geometric stroke. The [synthetic profiles on white](../images/browser-common-ground/balance-synthetic-light.png) and [on black](../images/browser-common-ground/balance-synthetic-dark.png) declare each measured pixel span. For example, `[191]` has mean 191, but `[191,0]` has mean 95.5 across two declared cells. Real l measurements use the original middle raster row from its first to last nonzero pixel. This horizontal interval is not a perpendicular measurement through every curved or diagonal stroke.
+Lato Light's 12px 8 has a first-row profile of `[72,167,129,162,58]` in A and `[72,212,246,205,58]` in B. Its strongest crown pixel rises while native edge values 72 and 58 remain. IBM Plex Sans Light's 8 crown profile does not change. These observations expose a font-dependent response, not a universal crown fix or a font-quality ranking. Existing native detection, blue zones, edge placement, interpolation, and italic exemptions still limit the result.
 
-The cap applies before glyphs overlap. Two treated pixels of 191 can combine to 239 in the final word. A final-word ceiling is a different operation. The experiment also preserves linear-light blending, so opacity percentages are not encoded display brightness. The [capture record](../images/browser-common-ground/balance-captures.json) supplies the operation definitions, input hashes, weight classes, selected profiles, and unchanged-geometry limits.
+The [synthetic bars on white](../images/browser-common-ground/balance-synthetic-light.png) and [on black](../images/browser-common-ground/balance-synthetic-dark.png) isolate the native width rule. A nonzero input below half a pixel receives either a half-pixel or a one-pixel fitted minimum. An aligned one-pixel bar reaches 255 coverage. Partial pixels elsewhere remain valid antialiasing. A high floor on every nonzero alpha would also brighten fringes and is not this operation. These images preserve linear-light blending, so coverage percentages are not encoded display brightness.
 
-Run `python3 tests/browser_coverage_balance_test.py` after the rounded-width command. It reads the retained native masks without rebuilding FreeType. It writes ten sheets under `results/browser-coverage-balance/` for nine faces at 12, 15, 18.75, and 22.5 device pixels. The command checks all coverage inputs against rational arithmetic and all blend values against high-precision arithmetic. It checks actual exported 12px crowns against independent expected values. A's native word pixels also match the prior third-column PNGs exactly on both palettes. Input hashes, glyph geometry, font files, origins, and zero pixels remain unchanged.
+Run `python3 tests/browser_coverage_balance_test.py` after the rounded-width command. It reuses verified native data without rebuilding FreeType. It writes ten sheets under `results/browser-coverage-balance/` for nine faces at 12, 15, 18.75, and 22.5 device pixels. Both columns match their original native probe records and prior PNG columns exactly on both palettes. The command also checks the numerical width boundaries, actual core/fringe fixtures, high-precision blend values, all text occurrences, and reopened native and enlarged pixels. The [capture record](../images/browser-common-ground/balance-captures.json) identifies both native operations and their measurements. Each glyph's own measurement rows and coordinates are explicit because the stronger minimum can change geometry.
+
+The rejected lift and 191-ceiling comparison remains in [Git commit 979bf92](https://github.com/calculatetech/fontreal/blob/979bf92725f0cfadd612f61424dae71e57fdba74/docs/research/browser-common-ground.md#balance-weak-crowns-and-light-face-opacity). No working application preset changes with the current component comparison.
 
 ### Prior art search
 
@@ -187,7 +189,7 @@ Real arXiv API searches covered graphics, human interaction, and image processin
 
 ## Decision
 
-Contrast alone does not meet the user's result. F was the preferred axis-study compromise. The user now prefers the width study's half-pixel control at 15px. Preserve that control while testing partial-coverage lift and a light-face opacity ceiling. These mask controls do not implement a general average across geometric stroke width. They do not replace the working preset. Before selecting a production fix for weak crowns, trace the thin-axis classification, crown segments, stem links, and alignment decisions. This distinguishes a policy bypass from a failure to detect the stroke.
+Contrast alone does not meet the user's result. F was the preferred axis-study compromise, followed by the half-pixel width control at 15px. The user rejects the broad coverage lift and now wants high, near-regular intensity on single-pixel light strokes. Compare the retained half-pixel and one-pixel native minima with no special opacity cap. Keep the half-pixel reference exact and leave the working preset unchanged. Before selecting a production fix for weak crowns, trace the thin-axis classification, crown segments, stem links, and alignment decisions. This distinguishes a policy bypass from a failure to detect the stroke.
 
 Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy. Do not infer a general minimum-thickness policy from blanket outline expansion.
 
