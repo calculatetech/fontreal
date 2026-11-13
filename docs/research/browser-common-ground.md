@@ -308,7 +308,46 @@ The new diagnostic separates Qt defaults, ordinary auto-mono hinting, experiment
 | Noto Sans Regular/Bold and Lato Light, including i | [Image](../images/browser-common-ground/audit242-width-floor-i15-sans-compact-light.png) | [Image](../images/browser-common-ground/audit242-width-floor-i15-sans-compact-dark.png) |
 | Noto, DejaVu, and Liberation serif faces, including i | [Image](../images/browser-common-ground/audit242-width-floor-i15-serif-compact-light.png) | [Image](../images/browser-common-ground/audit242-width-floor-i15-serif-compact-dark.png) |
 
-The [audit record](../images/browser-common-ground/audit242-captures.json) contains the exact i masks, saved-pixel differences, font identities, and image hashes. Independent native raster, per-glyph floor, overlap, blend, and saved-crop checks cover these images. The tests establish faithful comparisons. Human judgment still determines whether the resulting text is usable. Keep the selected digit reference, but resolve the missing glyph and serif cases before choosing a general rule. No application setting changes.
+The [audit record](../images/browser-common-ground/audit242-captures.json) contains the exact i masks, saved-pixel differences, font identities, and image hashes. Independent native raster, per-glyph floor, overlap, blend, and saved-crop checks cover these images. The tests establish faithful comparisons. The user selects D, Auto mono + 242, as the clear winner across the viewed cases. This becomes the benchmark to beat. No application setting changes.
+
+### Selected benchmark and 8–16pt charts
+
+The benchmark uses ordinary FreeType automatic monochrome hinting with grayscale raster output. It retains FreeType's own stem-width decisions. It applies the 242 floor per glyph, then uses linear blending and whole-device-pixel origins. The cutoff remains 128 for light faces and 160 for regular and heavier faces. Coverage below the cutoff and coverage already above the floor stay unchanged. This is audit column D.
+
+The point charts use Qt's `QFont.setPointSizeF` API. They cover every integer size from 8 through 16pt, plus an 11.25pt reference. The measured desktop uses 96 logical DPI and 100% display scale. At that configuration, 11.25pt corresponds to the earlier 15px reference. Qt also resolves 11pt to a 15px raster here. Each row records the requested points and Qt's resolved pixel size. These are actual point-size requests, not relabeled pixel-size samples.
+
+The set contains 22 faces and 220 conditions. Each face has white and black background sheets. It includes sans, serif, monospace, light, bold, italic, and bold italic examples. The test text includes `ilI1 minimum 0358 VvWw 0123456789`. View the PNGs at 100% image zoom. The left column is Qt defaults with Fontreal disabled. The right column is the selected benchmark.
+
+![Noto Sans Regular at 8–16pt against the selected benchmark](../images/browser-common-ground/point-benchmark242-01-light.png)
+
+![Noto Serif Regular at 8–16pt against the selected benchmark](../images/browser-common-ground/point-benchmark242-08-light.png)
+
+| Face | White background | Black background |
+| --- | --- | --- |
+| Noto Sans Regular | [Image](../images/browser-common-ground/point-benchmark242-01-light.png) | [Image](../images/browser-common-ground/point-benchmark242-01-dark.png) |
+| DejaVu Sans Book | [Image](../images/browser-common-ground/point-benchmark242-02-light.png) | [Image](../images/browser-common-ground/point-benchmark242-02-dark.png) |
+| Lato Light | [Image](../images/browser-common-ground/point-benchmark242-03-light.png) | [Image](../images/browser-common-ground/point-benchmark242-03-dark.png) |
+| Lato Regular | [Image](../images/browser-common-ground/point-benchmark242-04-light.png) | [Image](../images/browser-common-ground/point-benchmark242-04-dark.png) |
+| IBM Plex Sans Light | [Image](../images/browser-common-ground/point-benchmark242-05-light.png) | [Image](../images/browser-common-ground/point-benchmark242-05-dark.png) |
+| IBM Plex Sans Regular | [Image](../images/browser-common-ground/point-benchmark242-06-light.png) | [Image](../images/browser-common-ground/point-benchmark242-06-dark.png) |
+| Liberation Sans Regular | [Image](../images/browser-common-ground/point-benchmark242-07-light.png) | [Image](../images/browser-common-ground/point-benchmark242-07-dark.png) |
+| Noto Serif Regular | [Image](../images/browser-common-ground/point-benchmark242-08-light.png) | [Image](../images/browser-common-ground/point-benchmark242-08-dark.png) |
+| DejaVu Serif Book | [Image](../images/browser-common-ground/point-benchmark242-09-light.png) | [Image](../images/browser-common-ground/point-benchmark242-09-dark.png) |
+| Liberation Serif Regular | [Image](../images/browser-common-ground/point-benchmark242-10-light.png) | [Image](../images/browser-common-ground/point-benchmark242-10-dark.png) |
+| Hack Regular | [Image](../images/browser-common-ground/point-benchmark242-11-light.png) | [Image](../images/browser-common-ground/point-benchmark242-11-dark.png) |
+| DejaVu Sans Mono Book | [Image](../images/browser-common-ground/point-benchmark242-12-light.png) | [Image](../images/browser-common-ground/point-benchmark242-12-dark.png) |
+| Liberation Mono Regular | [Image](../images/browser-common-ground/point-benchmark242-13-light.png) | [Image](../images/browser-common-ground/point-benchmark242-13-dark.png) |
+| Noto Sans Bold | [Image](../images/browser-common-ground/point-benchmark242-14-light.png) | [Image](../images/browser-common-ground/point-benchmark242-14-dark.png) |
+| Noto Sans Italic | [Image](../images/browser-common-ground/point-benchmark242-15-light.png) | [Image](../images/browser-common-ground/point-benchmark242-15-dark.png) |
+| Noto Sans Bold Italic | [Image](../images/browser-common-ground/point-benchmark242-16-light.png) | [Image](../images/browser-common-ground/point-benchmark242-16-dark.png) |
+| Noto Serif Bold | [Image](../images/browser-common-ground/point-benchmark242-17-light.png) | [Image](../images/browser-common-ground/point-benchmark242-17-dark.png) |
+| Noto Serif Italic | [Image](../images/browser-common-ground/point-benchmark242-18-light.png) | [Image](../images/browser-common-ground/point-benchmark242-18-dark.png) |
+| Noto Serif Bold Italic | [Image](../images/browser-common-ground/point-benchmark242-19-light.png) | [Image](../images/browser-common-ground/point-benchmark242-19-dark.png) |
+| Hack Bold | [Image](../images/browser-common-ground/point-benchmark242-20-light.png) | [Image](../images/browser-common-ground/point-benchmark242-20-dark.png) |
+| Hack Italic | [Image](../images/browser-common-ground/point-benchmark242-21-light.png) | [Image](../images/browser-common-ground/point-benchmark242-21-dark.png) |
+| Hack Bold Italic | [Image](../images/browser-common-ground/point-benchmark242-22-light.png) | [Image](../images/browser-common-ground/point-benchmark242-22-dark.png) |
+
+The [point capture record](../images/browser-common-ground/point-benchmark242-captures.json) records point requests, resolved sizes, DPI, scale, fonts, layout hashes, and image hashes. All shared 15px glyphs match the winning audit D source. Independent native raster, per-glyph floor, overlap, blend, and saved-strip checks cover the full set. The font files and caller environment remain unchanged. These images establish a repeatable benchmark for further application testing. They do not change the deployed renderer.
 
 ### Direction for selective core detection
 
@@ -335,7 +374,7 @@ Real arXiv API searches covered graphics, human interaction, and image processin
 
 ## Decision
 
-Contrast alone and a native stem minimum do not address every weak curve pixel. Keep the accepted crisp reference and the exact supplied 5 fixture. Approval of the selected 242 digit strip does not extend to the rejected broader 15px chart. Resolve the i geometry, serif faces, and word-context cases before selecting a general treatment. Compare the 242 floor with cutoff 160 for regular and heavier faces, and 128 for light faces. Retain the 230 control and numbered 5/W grids. Preserve the desired regular/bold V/W appearance while allowing light-face strokes to change. If scalar controls cannot satisfy that visual constraint, investigate geometric context before selecting an automatic core floor. Leave the working preset unchanged. Before changing a native crown policy, trace the relevant classification, stem links, and alignment decisions so a policy bypass is not confused with missing stroke detection.
+Use Auto mono + 242, audit column D, as the benchmark. Retain FreeType's own stem-width decisions, grayscale raster output, whole-pixel origins, and linear blending. Use cutoff 128 for light faces and 160 for regular and heavier faces. Qualify the 8–16pt charts across fonts, styles, and palettes. Keep the exact supplied 5 fixture and the earlier width-fitting samples as comparisons. Any future geometry experiment must improve on this benchmark, including i/l/I/1, serif faces, and full-word context. Leave the working preset unchanged until application tests establish the selected output. Before changing a native crown policy, trace the relevant classification, stem links, and alignment decisions so a policy bypass is not confused with missing stroke detection.
 
 Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy. Do not infer a general minimum-thickness policy from blanket outline expansion.
 

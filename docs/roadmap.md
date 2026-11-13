@@ -17,7 +17,7 @@ The user accepts the current Qt result, including KWin and Qt Quick. Preserve th
 
 ## Active
 
-- **FR-018: Find a general browser rendering policy.** Improve stroke consistency and weak curve pixels across fonts, weights, sizes, scales, and palettes. Resolve the rejected broader 15px result, including serif faces, i/l/I/1, and full-word context. Separate width-fitting geometry from the 242 coverage floor. Keep the selected digit reference with cutoff 160 for regular and heavier faces, and 128 for light faces. Include bold, italic, combined styles, and fractional scales. Retain the 230 control and numbered 5/W grids. Preserve the desired regular/bold V/W appearance; light-face strokes can change. Keep native gray edges and font identity. Test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md) and [native studies](plans/FR-018-axis-study.md).
+- **FR-018: Find a general browser rendering policy.** Qualify the selected Auto mono + 242 benchmark across fonts, weights, sizes, scales, and palettes. Retain FreeType's own stem-width decisions, grayscale output, whole-pixel origins, and linear blending. Use cutoff 160 for regular and heavier faces, and 128 for light faces. Compare actual Qt point sizes from 8 through 16pt, including serif faces, i/l/I/1, bold, italic, combined styles, and full-word context. Any future geometry experiment must beat this benchmark. Keep font identity and the earlier controls. Test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md) and [native studies](plans/FR-018-axis-study.md).
 
 ## Planned next
 
