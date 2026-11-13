@@ -247,6 +247,39 @@ The [242 capture record](../images/browser-common-ground/floor242-captures.json)
 
 These weight choices define the comparison candidate. They do not establish a runtime rule for variable fonts or intermediate weights. The cutoff can still change regular and bold V/W pixels. Keep those glyphs visible while judging the stronger floor. Application settings remain unchanged.
 
+### Broader font chart against Qt defaults
+
+The user accepts the 242 examples: weak areas darken, diagonals retain their shape, and light text stays crisp and legible. This establishes a component reference. The broader chart tests whether that result holds across other fonts, styles, and sizes.
+
+The left column uses Qt's default text renderer with Fontreal disabled and the existing font configuration. The right column uses the approved native half-minimum width fitting, whole-pixel origins, per-glyph 242 floor, and linear blending. Both columns use the same font files and Qt layout. These are controlled text images, not screenshots of KDE windows. The comparison includes the configured Noto Sans face, the resolved DejaVu Sans Mono fallback, Hack, and other common families.
+
+The chart covers 57 conditions across eleven families and 45 font files. It includes regular, bold, italic, bold italic, light, and light italic faces where supplied. Size sheets compare 12px, 15px, and 18px at 100%, plus 15px at 125% and 150%. The latter two rasterize at 18.75 and 22.5 device pixels. Inspect the PNGs at 100% image zoom.
+
+![Qt defaults against the 242 direction across sans faces](../images/browser-common-ground/chart242-01-light.png)
+
+![Qt defaults against the 242 direction across serif and monospace faces](../images/browser-common-ground/chart242-02-light.png)
+
+| Chart | White background | Black background |
+| --- | --- | --- |
+| Broad sans comparison | [Image](../images/browser-common-ground/chart242-01-light.png) | [Image](../images/browser-common-ground/chart242-01-dark.png) |
+| Broad serif and monospace comparison | [Image](../images/browser-common-ground/chart242-02-light.png) | [Image](../images/browser-common-ground/chart242-02-dark.png) |
+| Noto Sans and DejaVu Sans styles | [Image](../images/browser-common-ground/chart242-03-light.png) | [Image](../images/browser-common-ground/chart242-03-dark.png) |
+| Lato styles | [Image](../images/browser-common-ground/chart242-04-light.png) | [Image](../images/browser-common-ground/chart242-04-dark.png) |
+| IBM Plex Sans styles | [Image](../images/browser-common-ground/chart242-05-light.png) | [Image](../images/browser-common-ground/chart242-05-dark.png) |
+| Hack styles | [Image](../images/browser-common-ground/chart242-06-light.png) | [Image](../images/browser-common-ground/chart242-06-dark.png) |
+| DejaVu Sans Mono styles | [Image](../images/browser-common-ground/chart242-07-light.png) | [Image](../images/browser-common-ground/chart242-07-dark.png) |
+| Liberation Mono styles | [Image](../images/browser-common-ground/chart242-08-light.png) | [Image](../images/browser-common-ground/chart242-08-dark.png) |
+| Noto Serif styles | [Image](../images/browser-common-ground/chart242-09-light.png) | [Image](../images/browser-common-ground/chart242-09-dark.png) |
+| DejaVu Serif styles | [Image](../images/browser-common-ground/chart242-10-light.png) | [Image](../images/browser-common-ground/chart242-10-dark.png) |
+| Liberation Serif styles | [Image](../images/browser-common-ground/chart242-11-light.png) | [Image](../images/browser-common-ground/chart242-11-dark.png) |
+| Noto Sans sizes and scales | [Image](../images/browser-common-ground/chart242-12-light.png) | [Image](../images/browser-common-ground/chart242-12-dark.png) |
+| Lato Light sizes and scales | [Image](../images/browser-common-ground/chart242-13-light.png) | [Image](../images/browser-common-ground/chart242-13-dark.png) |
+| Hack sizes and scales | [Image](../images/browser-common-ground/chart242-14-light.png) | [Image](../images/browser-common-ground/chart242-14-dark.png) |
+
+The [capture record](../images/browser-common-ground/chart242-captures.json) identifies fonts, weights, versions, layout hashes, image hashes, and checks. The cutoff uses each file's declared [OpenType weight class](https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass): 128 below regular weight 400, and 160 at regular or heavier weight. These static samples contain weights 300, 400, and 700. This does not select a variable-font policy.
+
+Every candidate glyph matches an independent native outline raster. Independent per-glyph floor, overlap, and blend calculations reproduce the final pixels. Retained source glyphs match the approved 242 fixtures at shared conditions. Both columns preserve their exact native strips in the saved charts. No application setting changes with this comparison.
+
 ### Direction for selective core detection
 
 If the scalar cutoff probes cannot satisfy the visual constraints, the recommended research direction is an outline-assisted stroke-core map with local direction and curvature information. First use the exact 5 fixture and the protected regular/bold V/W as positive and negative checks. Keep light-face behavior separate because those diagonals are allowed to change. Inspect the selection map before applying a coverage floor. Curve-control tags alone are insufficient: the measured Noto V and W outlines also contain curve controls. The unresolved test is whether a general selector can separate weak curve cores from native edge pixels across sizes and fonts.
