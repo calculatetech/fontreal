@@ -17,7 +17,7 @@ The user accepts the current Qt result, including KWin and Qt Quick. Preserve th
 
 ## Active
 
-- **FR-018: Find a general browser rendering policy.** Improve stroke consistency and weak crowns across fonts, weights, sizes, scales, and palettes. Preserve the preferred 15px half-pixel control while testing a one-pixel minimum for full-intensity thin-stroke cores, including enlarged 8. Retain native gray edges and font identity rather than reducing light-face opacity. Test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md) and [native studies](plans/FR-018-axis-study.md).
+- **FR-018: Find a general browser rendering policy.** Improve stroke consistency and weak curve pixels across fonts, weights, sizes, scales, and palettes. Compare 192 and 230 coverage floors with explicit cutoffs using numbered 5/W grids. Preserve the desired regular/bold V/W appearance; light-face strokes can change. Keep native gray edges, font identity, and the accepted crisp references. Test real browser output before changing the working preset. Avoid website-specific rules. See the [common-ground investigation](research/browser-common-ground.md) and [native studies](plans/FR-018-axis-study.md).
 
 ## Planned next
 

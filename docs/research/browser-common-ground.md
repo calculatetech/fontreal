@@ -181,6 +181,62 @@ Run `python3 tests/browser_coverage_balance_test.py` after the rounded-width com
 
 The rejected lift and 191-ceiling comparison remains in [Git commit 979bf92](https://github.com/calculatetech/fontreal/blob/979bf92725f0cfadd612f61424dae71e57fdba74/docs/research/browser-common-ground.md#balance-weak-crowns-and-light-face-opacity). No working application preset changes with the current component comparison.
 
+### Local curve coverage: a 192 floor and an unknown transition
+
+The next user feedback identifies weak pixels within 3 and 5 curves, not only weak fitted stems. The user wants regular and bold V/W preserved, while light-face diagonals can change. A supplied 5 crop matches Noto Sans Regular at 12 device pixels exactly at 4x zoom. Both native minimum controls produce the same mask for this glyph. Raising the detected stem minimum therefore does not address this exact case.
+
+The user rejects a tentative two-pixel edit as too narrow and proposes a main-stroke floor near 192. The transition between the main stroke and its antialiased boundary remains undefined. The next diagrams expose that decision rather than claim an automatic core classifier.
+
+| Column | Diagnostic operation on source coverage |
+| --- | --- |
+| A | Preserve every source value |
+| B | Raise values from 96 through 191 to 192 |
+| C | Raise values from 128 through 191 to 192 |
+| D | Raise values from 160 through 191 to 192 |
+
+Every other value remains unchanged. No ceiling reduces full coverage. The native glyph strip shows 3, 5, 8, w, V, and W. Numbered grids show 5 and W side by side. Orange borders mark every raised cell. These are alpha-cutoff probes, not a new deployed floor or a validated distinction between core and edge.
+
+![192-floor cutoff probes for Noto Sans Regular at 12px on white](../images/browser-common-ground/floor192-noto-12-light.png)
+
+![192-floor cutoff probes for Noto Sans Regular at 15px on white](../images/browser-common-ground/floor192-noto-15-light.png)
+
+![192-floor cutoff probes for Lato Light at 12px on white](../images/browser-common-ground/floor192-lato-light-12-light.png)
+
+![192-floor cutoff probes for Lato Light at 15px on white](../images/browser-common-ground/floor192-lato-light-15-light.png)
+
+The corresponding dark sheets are [Noto 12px](../images/browser-common-ground/floor192-noto-12-dark.png), [Noto 15px](../images/browser-common-ground/floor192-noto-15-dark.png), [Lato Light 12px](../images/browser-common-ground/floor192-lato-light-12-dark.png), and [Lato Light 15px](../images/browser-common-ground/floor192-lato-light-15-dark.png). Native-size and exact 3x strips use explicit linear-light blending. The diagrams use distinct filenames so a cached older comparison cannot silently change its column meaning.
+
+At 12px, Noto Sans Regular's 5 contains two row maxima of 172. Its W also contains a 172-valued pixel. The same coverage, font, weight, and size can therefore require different treatment. A transfer based only on those inputs cannot distinguish the requested pixels. The widest cutoff changes seven pixels in 5 and 26 in W. The 128 cutoff changes six and 17. The 160 cutoff changes four and 11. None establishes the requested regular/bold diagonal preservation. The diagrams make these side effects visible for human judgment.
+
+The [capture record](../images/browser-common-ground/floor192-captures.json) includes the exact masks, numeric cutoffs, change counts, and image hashes. All 256 alpha inputs were checked for each cutoff. Every changed coordinate matches the declared interval, source geometry and input hashes remain unchanged, and saved native and enlarged strips match their input pixels. W was obtained from the same private native provider and checked against an independent outline raster. No working profile or renderer changes with these diagrams.
+
+The user finds 192 insufficient and requests a 230 floor, particularly with D's cutoff. The new sweep retains cutoffs 96, 128, and 160. It raises eligible values below 230 to 230. In D, values from 160 through 229 change, while lower edge values and coverage already at or above 230 stay unchanged. The 192 sheets keep their original filenames for direct comparison.
+
+![230-floor cutoff probes for the exact Noto 12px case](../images/browser-common-ground/floor230-noto-12-light.png)
+
+![230-floor cutoff probes for Noto Sans Regular at 15px](../images/browser-common-ground/floor230-noto-15-light.png)
+
+![230-floor cutoff probes for Lato Light at 15px](../images/browser-common-ground/floor230-lato-light-15-light.png)
+
+Further sheets cover [Noto 12px on black](../images/browser-common-ground/floor230-noto-12-dark.png), [Noto 15px on black](../images/browser-common-ground/floor230-noto-15-dark.png), [Lato Light 12px on white](../images/browser-common-ground/floor230-lato-light-12-light.png), [Lato Light 12px on black](../images/browser-common-ground/floor230-lato-light-12-dark.png), and [Lato Light 15px on black](../images/browser-common-ground/floor230-lato-light-15-dark.png). D changes eight cells in the exact 12px 5 and 20 cells in its W. These counts expose the side effects; visual acceptance remains open. The [230 capture record](../images/browser-common-ground/floor230-captures.json) uses the same source masks and checks.
+
+### Direction for selective core detection
+
+If the scalar cutoff probes cannot satisfy the visual constraints, the recommended research direction is an outline-assisted stroke-core map with local direction and curvature information. First use the exact 5 fixture and the protected regular/bold V/W as positive and negative checks. Keep light-face behavior separate because those diagonals are allowed to change. Inspect the selection map before applying a coverage floor. Curve-control tags alone are insufficient: the measured Noto V and W outlines also contain curve controls. The unresolved test is whether a general selector can separate weak curve cores from native edge pixels across sizes and fonts.
+
+[StrokeStyles](https://research.gold.ac.uk/31944/1/strokestyles-opt.pdf) analyzes glyph outlines and medial axes to recover stroke structure and variable width. It supports investigating geometric context. Its stylization objective does not establish a low-density coverage rule. The older [Herz and Hersch auto-hinting paper](https://lspwww.epfl.ch/publications/typography/tuahsts.pdf) describes geometric stem recognition and grid placement, but explicitly leaves curved-stem extension as further work. [Hobby's author summaries](https://9p.io/who/hobby/pubs.html) describe structure-aware outline tuning and constant-width curve digitization. They do not supply a ready replacement for the missing selector.
+
+A focused arXiv search covered `cs.GR`, `cs.CV`, and `eess.IV`, using font rasterization, medial axes, stroke width, and topology-preserving thinning. The font-graphics query and category-only retry supplied no relevant method. Four related abstracts were read independently. Scores below are relevance, practical fit, and evidence in the abstract, each out of ten. They are research triage, not quality scores for the papers.
+
+| Paper | Scores | Useful idea and limit |
+| --- | --- | --- |
+| [Cosine-Pruned Medial Axis](https://arxiv.org/abs/2012.02910) | 6, 4, 5 | Stabilize geometric core extraction under contour noise. The abstract does not establish font coverage or diagonal preservation. |
+| [Medial Axis Aware SDF Learning](https://arxiv.org/abs/2604.16512) | 3, 1, 4 | Explicitly model medial-axis structure. Neural surface reconstruction is disproportionate for this component. |
+| [Skeleton Recall Loss](https://arxiv.org/abs/2404.03010) | 3, 2, 6 | Check connectivity in thin structures. A segmentation training loss does not select glyph pixels. |
+| [GATS](https://arxiv.org/abs/2311.04116) | 4, 2, 5 | Use geometric thickness to limit excessive thinning. Its evidence concerns 3D axon segmentation. |
+
+The geometric-analysis group is the closest starting point. Neural distance reconstruction and connectivity-focused training are not selected as rendering mechanisms. Blind binary thinning risks unstable branches or loss of weak structure. Global alpha floors change protected diagonals. The actual core selector and its numeric transition remain open. No paper establishes the complete requested rendering behavior.
+
 ### Prior art search
 
 Real arXiv API searches covered graphics, human interaction, and image processing. The broad matches mainly addressed generated typography, virtual reality, and unrelated reconstruction. They did not supply a directly usable general browser policy.
@@ -189,7 +245,7 @@ Real arXiv API searches covered graphics, human interaction, and image processin
 
 ## Decision
 
-Contrast alone does not meet the user's result. F was the preferred axis-study compromise, followed by the half-pixel width control at 15px. The user rejects the broad coverage lift and now wants high, near-regular intensity on single-pixel light strokes. Compare the retained half-pixel and one-pixel native minima with no special opacity cap. Keep the half-pixel reference exact and leave the working preset unchanged. Before selecting a production fix for weak crowns, trace the thin-axis classification, crown segments, stem links, and alignment decisions. This distinguishes a policy bypass from a failure to detect the stroke.
+Contrast alone and a native stem minimum do not address every weak curve pixel. Keep the accepted crisp reference and the exact supplied 5 fixture. Compare the 192 and 230 floors with explicit cutoffs to inspect the unresolved core/edge transition. Preserve the desired regular/bold V/W appearance while allowing light-face strokes to change. If scalar controls cannot satisfy that visual constraint, investigate geometric context before selecting an automatic core floor. Leave the working preset unchanged. Before changing a native crown policy, trace the relevant classification, stem links, and alignment decisions so a policy bypass is not confused with missing stroke detection.
 
 Judge small text, light faces, heavy faces, and larger headings together. Preserve clear distinctions between regular and bold. Reject a gain that makes the previously accepted samples fuzzy. Do not infer a general minimum-thickness policy from blanket outline expansion.
 
