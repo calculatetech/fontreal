@@ -57,4 +57,4 @@ This is a coordinate-mixing diagnostic. It does not select a complete font engin
 
 Monochrome hinting does not guarantee horizontal fitting for italic faces. Their rows remain visible as controls. Do not interpret sharper upright stems as universal snapping.
 
-The user chooses D over the earlier controls and prefers B's line widths. E and F test the next question. Human comparison and actual browser qualification remain necessary before a working preset changes. See the [investigation](../research/browser-common-ground.md) and [study specification](../plans/FR-018-axis-study.md).
+In the earlier comparison, the user chooses D overall and prefers B's line widths. In this axis study, D is preferred for regular text, F for bold text, and B for consistency. F is the preferred overall compromise. Actual browser qualification remains necessary before a working preset changes. See the [investigation](../research/browser-common-ground.md) and [study specification](../plans/FR-018-axis-study.md).

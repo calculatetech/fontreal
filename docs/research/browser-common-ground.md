@@ -98,6 +98,12 @@ The next study combines native outline coordinates before rasterization. E takes
 
 The [reproducible axis study](../experiments/browser-stroke-axis.md) supplies native-size and exact 4x comparisons, independent glyph and word checks, and both polarities. Italic rows remain controls because the original hinter treats their horizontal fitting differently. The [specification](../plans/FR-018-axis-study.md) defines the bounded experiment.
 
+The user prefers D for regular text and F for bold text. B remains the consistency reference. F is the preferred overall compromise. Keep F as the next component reference, without treating the axis-mixing experiment as a deployed solution.
+
+The pixel grid does not inherently require different treatment of horizontal and vertical strokes. The font geometry and fitting rules introduce differences. Before hinting, the measured 15px Lato Light H has vertical strokes 49 to 50 units wide and a horizontal crossbar 37 units wide, in units of 1/64 pixel. In the fitted Noto Sans Regular l at 15px, B distributes coverage as 184 and 220 across two columns. D and F instead produce 255 and 32: a solid core and a faint boundary pixel.
+
+The next research target is a reliable solid core with antialiased boundaries across stems, curves, and diagonals. A curve or diagonal needs a staircase of core pixels, with geometry changes to control local weight and preserve open counters. An opaque path alone does not establish consistent apparent thickness. Investigate coherent stroke fitting before selecting a rule. The current evidence does not choose a new minimum width, a threshold, or an adaptive algorithm.
+
 ### Prior art search
 
 Real arXiv API searches covered graphics, human interaction, and image processing. The broad matches mainly addressed generated typography, virtual reality, and unrelated reconstruction. They did not supply a directly usable general browser policy.
