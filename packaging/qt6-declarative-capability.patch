@@ -8,17 +8,19 @@
  #include <QtGui/private/qrhigles2_p.h>
  #include <QtGui/qopenglcontext.h>
  #include <QtGui/qopenglextrafunctions.h>
-@@ -44,16 +43,18 @@
+@@ -44,16 +43,20 @@
  
  QT_BEGIN_NAMESPACE
  
 +// An official Gui update can remove Fontreal while candidate Quick remains installed.
 +extern "C" bool qt_fontrealFontV1(QFontEngine *) __attribute__((weak, visibility("default")));
++extern "C" bool qt_fontrealReadyV1() __attribute__((weak, visibility("default")));
 +
  bool qsg_fontrealEnabled()
  {
 -    static const bool enabled = qgetenv("FONTREAL_RENDERING") == "1";
-+    static const bool enabled = qgetenv("FONTREAL_RENDERING") == "1" && qt_fontrealFontV1;
++    static const bool enabled = qgetenv("FONTREAL_RENDERING") == "1"
++        && qt_fontrealFontV1 && qt_fontrealReadyV1 && qt_fontrealReadyV1();
      return enabled;
  }
  

@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import select
+import signal
 import shlex
 import signal
 import socket
@@ -38,6 +39,7 @@ def digest(path):
 def protected():
     paths = [Path.home() / name for name in (
         ".config/kdeglobals", ".config/kcmfonts", ".config/fontconfig/fonts.conf",
+        ".config/fontconfig/conf.d/50-helvetica-noto-sans.conf",
         ".config/mozilla/firefox/profiles.ini", ".mozilla/firefox/profiles.ini", ".floorp/profiles.ini")]
     paths += [Path("/usr/lib/x86_64-linux-gnu/libfreetype.so.6").resolve()]
     return {str(p): digest(p) if p.exists() else None for p in paths}
@@ -466,7 +468,7 @@ def nested_display():
                 kwin = subprocess.Popen(["dbus-run-session", "--", "/lib64/ld-linux-x86-64.so.2",
                     "/usr/bin/kwin_wayland", "--x11-display", env["DISPLAY"], "--width", "1400", "--height", "1300",
                     "--socket", "fr-browser-test", "--no-lockscreen", "--no-global-shortcuts", "--no-kactivities"],
-                    env=env, stdout=klog, stderr=klog)
+                    env=env, stdout=klog, stderr=klog, start_new_session=True)
                 for _ in range(100):
                     if (state / "runtime/fr-browser-test").exists():
                         break
@@ -478,6 +480,10 @@ def nested_display():
             finally:
                 os.close(read)
                 if kwin:
+                    try:
+                        os.killpg(kwin.pid, signal.SIGTERM)
+                    except ProcessLookupError:
+                        pass
                     stop(kwin)
                 stop(server)
 
@@ -524,7 +530,7 @@ def main():
     assert (artifact / "FTL.TXT").exists() and (artifact / "NOTICE").exists()
     for v in record["libraries"].values():
         assert digest(Path(v["library"])) == v["sha256"]
-        assert "--with-harfbuzz=dynamic" in v["configure"]
+        assert record["spec"]["harfbuzz"] in v["configure"]
         assert "[libfreetype.so.6]" in run(["readelf", "-d", v["library"]]).stdout
     flags = shlex.split(run(["pkg-config", "--cflags", "--libs", "Qt6Core"]).stdout)
     run(["c++", "-std=c++17", "-fPIC", ROOT / "tests/freetype_mask_probe.cpp",

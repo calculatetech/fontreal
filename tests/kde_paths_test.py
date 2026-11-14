@@ -52,7 +52,7 @@ def stop(child):
 def private_environment(directory):
     env = os.environ.copy()
     for name in ("WAYLAND_DISPLAY", "WAYLAND_SOCKET", "QT_SCALE_FACTOR", "QT_SCREEN_SCALE_FACTORS", "LD_LIBRARY_PATH",
-                 "LD_PRELOAD", "FONTREAL_RENDERING", "FONTREAL_BLEND", "FONTREAL_CONTRAST", "QT_QUICK_DEFAULT_TEXT_RENDER_TYPE"):
+                 "LD_PRELOAD", "FONTREAL_RENDERING", "FONTREAL_BLEND", "FONTREAL_CONTRAST", "FONTREAL_FITTING", "QT_QUICK_DEFAULT_TEXT_RENDER_TYPE"):
         env.pop(name, None)
     for role in ("CONFIG", "CACHE", "DATA", "STATE", "RUNTIME"):
         path = directory/role.lower()
@@ -314,7 +314,9 @@ def gpu_checks(env, font):
 
 def configure_plasma(env, font):
     config = Path(env["XDG_CONFIG_HOME"])
-    descriptor = "Noto Sans,-1,15,5,50,0,0,0,0,0"
+    family = call(["fc-scan", "-f", "%{family[0]}", font], env).stdout.strip()
+    assert family and "," not in family and "\n" not in family
+    descriptor = family + ",-1,15,5,50,0,0,0,0,0"
     colors = "\n".join(f"[Colors:{role}]\nBackgroundNormal=255,255,255\nForegroundNormal=0,0,0\n" for role in ("Window", "View", "Header", "Button"))
     (config/"kdeglobals").write_text(f"[General]\nfont={descriptor}\nmenuFont={descriptor}\n\n[WM]\nactiveFont={descriptor}\ninactiveFont={descriptor}\nactiveBackground=255,255,255\nactiveForeground=0,0,0\ninactiveBackground=255,255,255\ninactiveForeground=0,0,0\n{colors}")
     (config/"kwinrc").write_text("[org.kde.kdecoration2]\nlibrary=org.kde.breeze\n\n[Windows]\nPlacement=ZeroCornered\n\n[Compositing]\nAnimationSpeed=0\n")
@@ -323,6 +325,8 @@ def configure_plasma(env, font):
     (package/"contents/ui").mkdir(parents=True)
     (package/"metadata.json").write_text(json.dumps({"KPlugin": {"Id": "org.fontreal.textprobe", "Name": "l m n o g W V w v", "Version": "1", "Icon": "preferences-desktop-font"}, "KPackageStructure": "Plasma/Applet", "X-Plasma-API-Minimum-Version": "6.0"}))
     shutil.copyfile(ROOT/"tests/KdeTextGrid.qml", package/"contents/ui/KdeTextGrid.qml")
+    grid = package/"contents/ui/KdeTextGrid.qml"
+    grid.write_text(grid.read_text().replace('family: "Noto Sans"', 'family: ' + json.dumps(family)))
     return package
 
 

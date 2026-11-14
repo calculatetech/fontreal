@@ -13,12 +13,14 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from freetype_provider import official_version
 WORK = (ROOT / "build/freetype-native").resolve()
 VERSIONS = {"firefox": "160.0", "floorp": "12.21.1@159.0.1"}
 PREFS = {
     "gfx.text.subpixel-position.force-disabled": True,
     "gfx.webrender.enable-subpixel-aa": False,
-    "gfx.font_rendering.freetype.gamma": 0,
+    "gfx.font_rendering.freetype.gamma": -1,
     "gfx.font_rendering.freetype.enhanced_contrast": 0,
 }
 BEGIN = "// Fontreal browser rendering: begin\n"
@@ -63,8 +65,8 @@ def browser_version(browser):
 
 
 def freetype_version():
-    return subprocess.check_output(
-        ["dpkg-query", "-W", "-f=${Version}", "libfreetype6:amd64"], text=True).strip()
+    return official_version(subprocess.check_output(
+        ["dpkg-query", "-W", "-f=${Version}", "libfreetype6:amd64"], text=True).strip())
 
 
 def process_ids():
@@ -100,14 +102,47 @@ def working_profile(browser):
             if section.startswith("Install") and config.has_option(section, "Default"):
                 path = Path(config[section]["Default"])
                 defaults.add((path if path.is_absolute() else index.parent / path).resolve())
+    parents = running_profiles(browser)
+    if len(defaults) > 1 and browser == "firefox" and parents:
+        observed = set(parents.values())
+        if len(observed) == 1 and observed <= defaults and ordinary_invocations(set(parents)):
+            defaults = observed
     if len(defaults) != 1:
         raise ValueError("Need one unambiguous ordinary Install-default profile; no profile was changed.")
     profile = defaults.pop()
     if not (profile / "prefs.js").is_file():
         raise ValueError("The ordinary profile must already contain prefs.js; no profile was created.")
-    if any(path != profile for path in running_profiles(browser).values()):
+    if any(path != profile for path in parents.values()):
         raise ValueError("A running profile differs from the ordinary default; no profile was changed.")
     return profile
+
+
+def ordinary_invocations(pids):
+    selectors = {"p", "profile", "profilemanager", "createprofile", "no-remote", "new-instance",
+                 "reset-profile", "migration"}
+    environment_selectors = {
+        b"XRE_PROFILE_PATH", b"XRE_PROFILE_LOCAL_PATH", b"SELECTABLE_PROFILE_RESET_PATH",
+        b"SELECTABLE_PROFILE_RESET_STORE_ID", b"XRE_RESTARTED_BY_PROFILE_MANAGER",
+        b"XRE_RESTARTED_BY_PROFILE_SELECTOR", b"MOZ_LEGACY_PROFILES",
+        b"MOZ_RESET_PROFILE_RESTART", b"XRE_RESTART_TO_PROFILE_MANAGER",
+    }
+    observed = set()
+    for process in process_ids():
+        if int(process.name) not in pids:
+            continue
+        try:
+            argv = (process / "cmdline").read_bytes().split(b"\0")
+            environment = (process / "environ").read_bytes().split(b"\0")
+        except (FileNotFoundError, ProcessLookupError, PermissionError):
+            return False
+        if not argv[0] or any(arg.startswith(b"-") and
+                arg.lstrip(b"-").split(b"=", 1)[0].decode("utf-8", "replace").lower() in selectors
+                for arg in argv[1:]):
+            return False
+        if any(entry.split(b"=", 1)[0] in environment_selectors for entry in environment):
+            return False
+        observed.add(int(process.name))
+    return observed == pids
 
 
 def paths(browser):
@@ -156,7 +191,8 @@ def enable(browser):
     library = build["libraries"]["candidate"]
     if sha(Path(library["library"])) != library["sha256"]:
         raise ValueError("The candidate library does not match its build record.")
-    block = (("\n" if content and not content.endswith("\n") else "") + BEGIN + "".join(
+    leading_newline = previous["block"].startswith("\n") if previous else content and not content.endswith("\n")
+    block = (("\n" if leading_newline else "") + BEGIN + "".join(
         f"user_pref({json.dumps(k)}, {json.dumps(v)});\n" for k, v in PREFS.items()) + END)
     record = previous or dict(profile=str(profile), user_js_existed=user_js.exists(), block=block,
         original_prefs=[line for line in (profile / "prefs.js").read_bytes().decode("utf-8").splitlines(keepends=True)
@@ -177,14 +213,16 @@ def enable(browser):
         desktop_text = desktop_text.replace("[Desktop Entry]\n", "[Desktop Entry]\nDBusActivatable=false\n", 1)
     for p in (state.parent, wrapper.parent, desktop.parent):
         p.mkdir(parents=True, exist_ok=True)
-    if not previous:
-        write_profile(user_js, content + record["block"])
-        if not record["user_js_existed"]:
-            user_js.chmod(0o600)
+    updated = content.replace(record["block"], block, 1) if previous else content + block
+    record["block"] = block
+    if updated != content:
+        write_profile(user_js, updated)
+    if not record["user_js_existed"]:
+        user_js.chmod(0o600)
     wrapper.write_text(wrapper_text)
     wrapper.chmod(0o755)
     desktop.write_text(desktop_text)
-    record.update(browser_version=VERSIONS[browser], freetype_version=build["spec"]["source"],
+    record.update(browser_version=VERSIONS[browser], freetype_version=build["spec"]["source"], contrast="raw",
         library=library["library"], library_sha256=library["sha256"], build=str(build_path), scope=scope,
         hooks=[dict(path=str(p), sha256=sha(p)) for p in (wrapper, desktop)])
     state.write_text(json.dumps(record, indent=2) + "\n")
@@ -226,7 +264,11 @@ def disable(browser):
 def compatibility(browser, record):
     if browser_version(browser) != record["browser_version"]:
         return "browser version changed"
-    if freetype_version() != record["freetype_version"]:
+    try:
+        provider = freetype_version()
+    except ValueError:
+        return "installed FreeType provider record is unavailable or changed"
+    if provider != record["freetype_version"]:
         return "installed FreeType revision changed"
     library = Path(record["library"])
     if not library.is_file() or sha(library) != record["library_sha256"]:
@@ -252,7 +294,7 @@ def run(browser, arguments):
         if reason:
             print(f"Fontreal inactive: {reason}; using the installed browser library. Re-enable after rebuilding.", file=sys.stderr)
         else:
-            env.update(FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="mild",
+            env.update(FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST=record.get("contrast", "mild"),
                        FONTREAL_FT_EXECUTABLE=":".join(record["scope"]),
                        LD_LIBRARY_PATH=":".join([directory, *inherited]))
     os.execve(binary(browser), [str(binary(browser)), *arguments], env)
@@ -268,9 +310,14 @@ def status(browser):
     active, pending = [], []
     for pid in parents:
         maps = Path(f"/proc/{pid}/maps").read_text()
-        (active if record["library"] in maps else pending).append(pid)
+        environment = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
+        expected = [b"FONTREAL_FT_RENDERING=1",
+                    ("FONTREAL_FT_CONTRAST=" + record.get("contrast", "mild")).encode(),
+                    ("FONTREAL_FT_EXECUTABLE=" + ":".join(record["scope"])).encode()]
+        (active if record["library"] in maps and all(v in environment for v in expected) else pending).append(pid)
     print(json.dumps(dict(browser=browser, enabled=True, profile=record["profile"],
-        active_pids=active, restart_required_pids=pending, compatibility=compatibility(browser, record))))
+        active_pids=active, restart_required_pids=pending, contrast=record.get("contrast", "mild"),
+        compatibility=compatibility(browser, record))))
 
 
 def main():

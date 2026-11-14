@@ -22,16 +22,28 @@ spec.loader.exec_module(build)
 def fixture(os_name, release, upstream, base, declarative):
     # Source revisions independently observed in official distro source packages.
     original = [dict(name=name, arch="amd64", version=version, source=source, source_version=version)
-                for name, source, version in (("libqt6core6t64", "qt6-base", base),
+                for name, source, version in (("libfreetype6", "freetype", build.FREETYPE[(os_name, release)]),
+                    ("libfreetype-dev", "freetype", build.FREETYPE[(os_name, release)]), ("libqt6core6t64", "qt6-base", base),
                     ("libqt6gui6", "qt6-base", base), ("libqt6qml6", "qt6-declarative", declarative),
                     ("libqt6quick6", "qt6-declarative", declarative))]
+    original.append(dict(original[0], arch="i386"))
+    original.sort(key=lambda p: (p["name"], p["arch"]))
     identity = "20261111190000"
     sources = {source: dict(version=version, build_version=version + "afontreal" + identity,
                            patch_sha256=build.sha(build.patch_file(source, upstream)),
-                           capability_sha256=build.sha(build.capability_patch(source)))
-               for source, version in zip(build.SOURCES, (base, declarative))}
+                           capability_sha256=build.sha(build.capability_patch(source)) if build.capability_patch(source) else None)
+               for source, version in zip(build.SOURCES, (build.FREETYPE[(os_name, release)], base, declarative))}
     return dict(schema=1, os=os_name, release=release, arch="amd64", identity=identity,
                 installed=copy.deepcopy(original), original=original, sources=sources)
+
+
+def retained_plan(plan):
+    # The retained schema-1 producer at 6ae8559 recorded exactly the two Qt families.
+    previous = copy.deepcopy(plan)
+    del previous["sources"]["freetype"]
+    for key in ("installed", "original"):
+        previous[key] = [p for p in previous[key] if p["source"] != "freetype"]
+    return previous
 
 
 def rejected(plan, root, label):
@@ -44,13 +56,13 @@ def rejected(plan, root, label):
     assert not target.exists(), label
 
 
-def deb(directory, name, source, version):
+def deb(directory, name, source, version, arch="amd64"):
     with tempfile.TemporaryDirectory(dir=directory.parent) as temporary:
         root = Path(temporary)
         (root / "DEBIAN").mkdir()
-        (root / "DEBIAN/control").write_text(f"Package: {name}\nVersion: {version}\nArchitecture: amd64\n"
+        (root / "DEBIAN/control").write_text(f"Package: {name}\nVersion: {version}\nArchitecture: {arch}\n"
             f"Source: {source} ({version})\nMaintainer: Test <test@localhost>\nDescription: Synthetic bundle fixture\n")
-        subprocess.run(["dpkg-deb", "--build", "--root-owner-group", root, directory / f"{name}.deb"],
+        subprocess.run(["dpkg-deb", "--build", "--root-owner-group", root, directory / (name + ("_" + arch if arch != "amd64" else "") + ".deb")],
                        check=True, stdout=subprocess.DEVNULL)
 
 
@@ -61,9 +73,9 @@ def bundle(root, plan):
     build.write_json(root / "system.json", plan)
     build.write_json(root / "build.json", {"synthetic": True})
     for package in plan["original"]:
-        deb(root / "original", package["name"], package["source"], package["version"])
-        deb(root / "packages", package["name"], package["source"], plan["sources"][package["source"]]["build_version"])
-    for source in build.SOURCES:
+        deb(root / "original", package["name"], package["source"], package["version"], package["arch"])
+        deb(root / "packages", package["name"], package["source"], plan["sources"][package["source"]]["build_version"], package["arch"])
+    for source in plan["sources"]:
         version = plan["sources"][source]["build_version"]
         archive = root / "source" / f"{source}.tar.xz"
         archive.write_bytes(b"synthetic local archive\n")
@@ -99,7 +111,7 @@ def discovery(originals):
     expected = []
     for line in raw.splitlines():
         name, arch, version, source, source_version, status = line.split("\t")
-        if status == "installed" and source in ("qt6-base", "qt6-declarative") and arch != "all":
+        if status == "installed" and source in ("freetype", "qt6-base", "qt6-declarative") and arch != "all":
             expected.append(dict(name=name.split(":")[0], arch=arch, version=version, source=source, source_version=source_version))
     expected.sort(key=lambda p: (p["name"], p["arch"]))
     assert actual["installed"] == expected, "Public discovery differs from complete independent dpkg records."
@@ -150,6 +162,8 @@ def main():
         for label, change in [
             ("unsupported-os", lambda p: p.update(os="fedora")),
             ("foreign-arch", lambda p: p.update(arch="arm64")),
+            ("foreign-qt", lambda p: p["original"][3].update(arch="i386")),
+            ("foreign-ft", lambda p: p["original"][1].update(arch="arm64")),
             ("empty", lambda p: p.update(original=[])),
             ("duplicate", lambda p: p["original"].append(dict(p["original"][0]))),
             ("late-source-mismatch", lambda p: p["original"][-1].update(source_version="6.8.2+dfsg-8")),
@@ -166,13 +180,38 @@ def main():
         verify(target, True)
         # Retained artifacts remain verifiable after the checkout's patches change.
         previous = copy.deepcopy(cases[0])
-        for entry in previous["sources"].values():
-            entry.update(patch_sha256="1" * 64, capability_sha256="2" * 64)
+        for source, entry in previous["sources"].items():
+            entry.update(patch_sha256="1" * 64, capability_sha256="2" * 64 if source != "freetype" else None)
         rejected(previous, root, "old-build-inputs")
         old = root / "old-bundle"
         old.mkdir()
         bundle(old, previous)
         verify(old, True)
+        for plan in cases:
+            retained = retained_plan(plan)
+            assert build.check_plan(retained, current_patches=False) == build.PROFILES[(plan["os"], plan["release"])]
+            rejected(retained, root, "retained-new-build-" + plan["os"])
+            retained_directory = root / ("retained-" + plan["os"])
+            retained_directory.mkdir()
+            bundle(retained_directory, retained)
+            verify(retained_directory, True)
+            for source in ("qt6-base", "qt6-declarative"):
+                incomplete = copy.deepcopy(retained)
+                del incomplete["sources"][source]
+                try:
+                    build.check_plan(incomplete, current_patches=False)
+                except ValueError:
+                    pass
+                else:
+                    raise AssertionError("Incomplete retained source set accepted")
+            unknown = copy.deepcopy(retained)
+            unknown["sources"]["unknown"] = dict(unknown["sources"]["qt6-base"])
+            try:
+                build.check_plan(unknown, current_patches=False)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("Unknown retained source family accepted")
         descriptor = target / "source" / f"qt6-declarative_{cases[0]['sources']['qt6-declarative']['build_version']}.dsc"
         original = descriptor.read_bytes()
         descriptor.unlink()

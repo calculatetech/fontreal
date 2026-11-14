@@ -8,6 +8,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QPainter>
+#include <QPainterPath>
 #include <QRawFont>
 #include <QWidget>
 #include <QTextLayout>
@@ -20,6 +21,7 @@
 #include <cmath>
 #include <cstdio>
 #include <stdexcept>
+#include "freetype_reference.h"
 
 namespace {
 void require(bool ok, const QString &message)
@@ -66,9 +68,9 @@ struct Glyph {
     int left, top;
 };
 
-Glyph reference(FT_Face face, QChar character, bool mild = false)
+Glyph referenceGlyph(FT_Face face, FT_UInt glyphIndex, bool mild = false)
 {
-    require(!FT_Load_Glyph(face, FT_Get_Char_Index(face, character.unicode()),
+    require(glyphIndex && !FT_Load_Glyph(face, glyphIndex,
         FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO | FT_LOAD_NO_BITMAP), "FT load failed");
     require(!FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL), "FT raster failed");
     const FT_Bitmap &bitmap = face->glyph->bitmap;
@@ -80,6 +82,11 @@ Glyph reference(FT_Face face, QChar character, bool mild = false)
             mask.setPixel(x, y, qRgb(a, a, a));
         }
     return {mask, face->glyph->bitmap_left, face->glyph->bitmap_top};
+}
+
+Glyph reference(FT_Face face, QChar character, bool mild = false)
+{
+    return referenceGlyph(face, FT_Get_Char_Index(face, character.unicode()), mild);
 }
 
 double decode(double x) { return x <= 0.04045 ? x/12.92 : std::pow((x+0.055)/1.055, 2.4); }
@@ -138,13 +145,15 @@ QImage expected(TextWidget &widget, FT_Face face, const QSize &size, bool linear
       const auto positions = run.positions();
       const auto indexes = run.glyphIndexes();
       require(positions.size() == indexes.size(), "Missing Qt layout positions");
+      require(run.rawFont().fontTable("head") == QRawFont::fromFont(widget.paintedFont).fontTable("head"), "Unexpected layout fallback");
       for (int i = 0; i < indexes.size(); ++i) {
         require(characterIndex < widget.text.size(), "Unexpected Qt glyph");
-        const QChar character = widget.text.at(characterIndex++);
-        require(indexes[i] == FT_Get_Char_Index(face, character.unicode()), "Qt glyph identity changed");
-        const Glyph glyph = reference(face, character, mild);
+        ++characterIndex;
+        const Glyph glyph = referenceGlyph(face, indexes[i], mild);
         const int left = int(std::floor(origin + positions[i].x()*scale)) + glyph.left;
         const int top = int(std::lround(48 + (positions[i].y()-line.ascent())*scale)) - glyph.top;
+        require(left >= 0 && top >= 0 && left+glyph.mask.width() <= size.width()
+                && top+glyph.mask.height() <= size.height(), "Oracle glyph outside capture");
         for (int y = 0; y < glyph.mask.height(); ++y)
             for (int x = 0; x < glyph.mask.width(); ++x) {
                 int a = qRed(glyph.mask.pixel(x, y));
@@ -246,12 +255,17 @@ int main(int argc, char **argv)
         }
         require(argc == 9, "Usage: qt-native-probe expected-mode contrast pixels scale font1 font2 font3 diagnostic-directory");
         const QString mode = QString::fromLocal8Bit(argv[1]);
-        const bool enabled = mode == "linear" || mode == "encoded";
+        const bool pointRequest = mode == "raw" || mode == "raw-stock";
+        const bool enabled = mode == "linear" || mode == "encoded" || mode == "raw";
         const QString contrast = QString::fromLocal8Bit(argv[2]);
         require(contrast == "none" || contrast == "mild", "Invalid expected contrast");
         const bool mild = contrast == "mild";
-        const int pixels = QString::fromLocal8Bit(argv[3]).toInt();
+        const int requestedSize = QString::fromLocal8Bit(argv[3]).toInt();
+        require(!pointRequest || (requestedSize >= 8 && requestedSize <= 16), "Expected integer 8–16pt");
         const double scale = QString::fromLocal8Bit(argv[4]).toDouble();
+        const auto requestedWeights = qgetenv("FONTREAL_TEST_WEIGHTS").split(',');
+        const bool variable = !qgetenv("FONTREAL_TEST_WEIGHTS").isEmpty();
+        require(!variable || (pointRequest && scale == 1 && requestedWeights.size() == 3), "Variable fixture needs three weights at native scale");
         const QString diagnostic = QString::fromLocal8Bit(argv[8]);
         TextWidget widget;
         widget.resize(160, 96);
@@ -265,35 +279,102 @@ int main(int argc, char **argv)
         QJsonArray cases;
         QJsonArray masks;
         QJsonArray fonts;
+        QJsonArray exclusions;
         int maximumError = 0, checked = 0, metricChecks = 0;
         for (int fontIndex = 5; fontIndex <= 7; ++fontIndex) {
             const QString path = QString::fromLocal8Bit(argv[fontIndex]);
             const int fontId = QFontDatabase::addApplicationFont(path);
             require(fontId >= 0, "Qt font registration failed");
-            QRawFont raw(path, pixels*scale);
+            QRawFont raw(path, requestedSize*scale);
             require(raw.isValid(), "Invalid QRawFont");
             QFont font(raw.familyName());
             font.setStyleName(raw.styleName());
-            font.setPixelSize(pixels);
+            font.setWeight(QFont::Weight(raw.weight()));
+            font.setStyle(raw.style());
+            if (pointRequest) font.setPointSize(requestedSize);
+            else font.setPixelSize(requestedSize);
+            const double pixels = pointRequest ? QRawFont::fromFont(font).pixelSize() : requestedSize;
+            raw = QRawFont(path, pixels*scale);
+            const float requestedWeight = variable ? requestedWeights[fontIndex-5].toFloat() : 0;
+            if (variable) {
+                font.setVariableAxis("wght", requestedWeight);
+                raw = QRawFont::fromFont(font);
+            }
             require(QRawFont::fromFont(font).fontTable("head") == raw.fontTable("head"), "Qt selected a different font face");
+            if (qEnvironmentVariableIsSet("FONTREAL_TEST_EXCLUSIONS")) {
+                const auto indexes = raw.glyphIndexesForString(QStringLiteral("mWv8352"));
+                const auto design = raw.advancesForGlyphIndexes(indexes, QRawFont::UseDesignMetrics);
+                const auto hinted = raw.advancesForGlyphIndexes(indexes);
+                QJsonArray outlines, designAdvances, hintedAdvances;
+                for (int i = 0; i < indexes.size(); ++i) {
+                    const auto outline = raw.pathForGlyph(indexes[i]);
+                    QJsonArray elements;
+                    for (int j = 0; j < outline.elementCount(); ++j) {
+                        const auto element = outline.elementAt(j);
+                        elements.append(QJsonArray{int(element.type), element.x, element.y});
+                    }
+                    require(!elements.isEmpty(), "Missing outline exclusion fixture");
+                    outlines.append(elements);
+                    designAdvances.append(design[i].x());
+                    hintedAdvances.append(hinted[i].x());
+                }
+                QTextLayout layout(QStringLiteral("mWv8352"), font);
+                QTextOption option; option.setUseDesignMetrics(true); layout.setTextOption(option);
+                layout.beginLayout(); auto line = layout.createLine(); line.setLineWidth(10000); layout.endLayout();
+                QJsonArray positions;
+                for (const auto &run : layout.glyphRuns())
+                    for (const auto &position : run.positions()) positions.append(QJsonArray{position.x(),position.y()});
+                exclusions.append(QJsonObject{{"path",path}, {"outlines",outlines},
+                    {"designAdvances",designAdvances}, {"hintedAdvances",hintedAdvances}, {"designPositions",positions}});
+            }
             QFile fontFile(path);
             require(fontFile.open(QIODevice::ReadOnly), "Cannot read font identity");
             fonts.append(QJsonObject{{"path",path}, {"family",raw.familyName()},
+                {"pixels",pixels}, {"devicePixels",pixels*scale}, {"requestedWeight",requestedWeight},
                 {"sha256",QString::fromLatin1(QCryptographicHash::hash(fontFile.readAll(), QCryptographicHash::Sha256).toHex())}});
             widget.textFont = font;
             FT_Face face = nullptr;
             require(!FT_New_Face(library, QFile::encodeName(path).constData(), 0, &face), "FT face failed");
+            if (variable) {
+                FT_MM_Var *axes = nullptr;
+                require(!FT_Get_MM_Var(face, &axes), "Variable reference axes missing");
+                QVector<FT_Fixed> coordinates(axes->num_axis);
+                bool found = false;
+                for (FT_UInt i = 0; i < axes->num_axis; ++i) {
+                    coordinates[i] = axes->axis[i].def;
+                    if (axes->axis[i].tag == FT_MAKE_TAG('w','g','h','t')) {
+                        coordinates[i] = std::lround(requestedWeight*65536.0);
+                        found = true;
+                    }
+                }
+                require(found && !FT_Set_Var_Design_Coordinates(face, axes->num_axis, coordinates.data()), "Cannot set variable reference weight");
+                FT_Done_MM_Var(library, axes);
+            }
             require(!FT_Set_Char_Size(face, 0, FT_F26Dot6(std::lround(pixels*scale*64)), 72, 72), "FT size failed");
             bool coldMetricChecked = false;
-            for (QChar character : QStringLiteral("lmnogVwv")) {
+            const bool cjk = pointRequest && FT_Get_Char_Index(face, u'漢')
+                && FT_Get_Char_Index(face, u'国') && FT_Get_Char_Index(face, u'文');
+            widget.resize(cjk ? 320 : 160, 96);
+            app.processEvents();
+            QString characters = pointRequest ? QStringLiteral("lmnogVwv8352") : QStringLiteral("lmnogVwv");
+            if (cjk) characters += QStringLiteral("漢国文");
+            for (QChar character : characters) {
                 const QImage mask = rawMask(raw, character);
                 const QImage oracle = cropMask(reference(face, character, mild).mask);
                 if (enabled) require(mask == oracle, "QRawFont mask differs: " + path + " " + character);
                 masks.append(QString::fromLatin1(hash(mask)));
             }
             struct TextCase { QString text; int repeats = 1; };
-            for (const TextCase &test : QVector<TextCase>{{"l"},{"W"},{"V"},{"w"},{"v"},{"m"},{"n"},{"o"},
-                                                       {"g"},{"lllm"},{"WWWV"},{"()"},{" "},{""},{"W",2}}) {
+            auto texts = QVector<TextCase>{{"l"},{"W"},{"V"},{"w"},{"v"},{"m"},{"n"},{"o"},
+                                          {"g"},{"lllm"},{"WWWV"},{"()"},{" "},{""},{"W",2}};
+            if (pointRequest) texts += QVector<TextCase>{{"8"},{"3"},{"5"},{"2"},{"8352vW"}};
+            if (cjk) texts += QVector<TextCase>{{QStringLiteral("漢国文 漢国文")}};
+            auto fontRecord = fonts.last().toObject();
+            fontRecord["testGlyphs"] = characters;
+            fontRecord["textCases"] = texts.size();
+            fontRecord["faceIndex"] = double(face->face_index);
+            fonts.replace(fonts.size()-1, fontRecord);
+            for (const TextCase &test : texts) {
                 const QString text = test.text;
                 widget.text = text;
                 widget.repeats = test.repeats;
@@ -325,7 +406,7 @@ int main(int argc, char **argv)
                         const QImage actual = widget.grab().toImage().convertToFormat(QImage::Format_RGB32);
                         if (enabled && !coldMetricChecked) {
                             const double advance = QFontMetricsF(widget.paintedFont, &widget).horizontalAdvance(u'W');
-                            require(!FT_Set_Char_Size(face, 0, pixels*64, 72, 72), "FT logical size failed");
+                            require(!FT_Set_Char_Size(face, 0, FT_F26Dot6(std::lround(pixels*64)), 72, 72), "FT logical size failed");
                             reference(face, u'W');
                             const double hinted = face->glyph->advance.x/64.;
                             const double design = (face->glyph->linearHoriAdvance >> 10)/64.;
@@ -373,11 +454,21 @@ int main(int argc, char **argv)
         QFile maps("/proc/self/maps");
         require(maps.open(QIODevice::ReadOnly), "Cannot inspect Qt mapping");
         QString guiPath;
+        QStringList freetypeLibraries;
         for (const QByteArray &line : maps.readAll().split('\n'))
-            if (line.contains("/libQt6Gui.so.")) { guiPath = QString::fromUtf8(line.mid(line.indexOf('/'))); break; }
-        QJsonObject result{{"mode",mode}, {"contrast",contrast}, {"pixels",pixels}, {"scale",scale}, {"devicePixels",pixels*scale},
-            {"qtGui",guiPath}, {"fonts",fonts}, {"masks",masks}, {"images",cases}, {"checkedImages",checked},
+            if (line.contains("/libQt6Gui.so.")) guiPath = QString::fromUtf8(line.mid(line.indexOf('/')));
+            else if (line.contains("/libfreetype.so.")) freetypeLibraries.append(QString::fromUtf8(line.mid(line.indexOf('/'))).trimmed());
+        freetypeLibraries.removeDuplicates();
+        QJsonObject result{{"mode",mode}, {"contrast",contrast}, {"requestedSize",requestedSize},
+            {"sizeUnit",pointRequest ? "pt" : "px"}, {"scale",scale},
+            {"qtGui",guiPath}, {"freetypeLibraries",QJsonArray::fromStringList(freetypeLibraries)},
+            {"fonts",fonts}, {"masks",masks}, {"images",cases}, {"checkedImages",checked},
+            {"exclusions",exclusions},
             {"maxChannelError",maximumError}, {"paintEvents",widget.paints}, {"coldLogicalMetricsChecks",metricChecks}};
+        if (!pointRequest) {
+            result["pixels"] = requestedSize;
+            result["devicePixels"] = requestedSize*scale;
+        }
         std::puts(QJsonDocument(result).toJson(QJsonDocument::Compact).constData());
         return 0;
     } catch (const std::exception &error) {

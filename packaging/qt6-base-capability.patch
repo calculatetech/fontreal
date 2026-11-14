@@ -1,9 +1,18 @@
 --- a/src/gui/text/freetype/qfontengine_ft.cpp
 +++ b/src/gui/text/freetype/qfontengine_ft.cpp
-@@ -1139,6 +1139,12 @@
-         return false;
+@@ -1054,6 +1054,21 @@
      const char *format = FT_Get_Font_Format(freetype->face);
-     return format && qstrcmp(format, "TrueType") == 0;
+     return format && (qstrcmp(format, "TrueType") == 0
+         || (nearest && qstrcmp(format, "CFF") == 0));
++}
++
++extern "C" Q_GUI_EXPORT bool qt_fontrealReadyV1()
++{
++    if (qgetenv("FONTREAL_FITTING") != "nearest")
++        return true;
++    FT_Bool active = false;
++    return !FT_Property_Get(qt_getFreetype(), "autofitter", "fontreal-nearest-y-v2", &active)
++        && active;
 +}
 +
 +extern "C" Q_GUI_EXPORT bool qt_fontrealFontV1(QFontEngine *engine)

@@ -19,8 +19,8 @@ case ${1:-status} in
         else
             printf '%s\n' 'Next-login preference: disabled'
         fi
-        printf 'Current process: rendering=%s blend=%s contrast=%s\n' \
-            "${FONTREAL_RENDERING:-0}" "${FONTREAL_BLEND:-}" "${FONTREAL_CONTRAST:-}"
+        printf 'Current process: rendering=%s blend=%s contrast=%s fitting=%s\n' \
+            "${FONTREAL_RENDERING:-0}" "${FONTREAL_BLEND:-}" "${FONTREAL_CONTRAST:-}" "${FONTREAL_FITTING:-}"
         ;;
     *)
         printf '%s\n' 'Usage: fontreal-session enable|disable|status' >&2

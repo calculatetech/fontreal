@@ -24,6 +24,7 @@ def main():
     env.pop("FONTREAL_RENDERING", None)
     env.pop("FONTREAL_BLEND", None)
     env.pop("FONTREAL_CONTRAST", None)
+    env.pop("FONTREAL_FITTING", None)
     paths = [p for p in env.get("LD_LIBRARY_PATH", "").split(":")
              if p and Path(p).resolve() not in (LIB, QUICK_LIB)]
     if args.mode != "stock":

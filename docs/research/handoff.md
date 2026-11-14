@@ -1,14 +1,105 @@
 # Fontreal rendering handoff
 
-Resume on branch `feature/gtk-rendering` in `calculatetech/fontreal`. Read this document, the [roadmap](../roadmap.md), and the [geometry analysis](16pt-geometry.md) before changing the renderer. FR-018 remains the active task. This document describes research inputs and resumption steps. The roadmap owns task state.
+Resume from updated `main` in `calculatetech/fontreal`. Read this document, the [roadmap](../roadmap.md), and the [geometry analysis](16pt-geometry.md) before changing the renderer. Use an isolated task branch for new work. This document describes research inputs and resumption steps. The roadmap owns task state.
 
 ## Current direction
 
-The latest user judgment is: “50% is more accurate in more cases,” but nothing meets the full visual target. Every comparison needs stock Qt as its control. Normal hinting with a 242 floor is a different treatment and cannot serve as that control.
+The user now selects fully raw coverage for every tested font and condition. Arial at 12pt exposed overly thick crowns and diagonals in the contrast boost. After comparing all 19 faces across 8–16pt, the user prefers raw coverage over both the ramp and raw coverage with native support. Keep exact 50% geometry and encoded composition, with no coverage ramp or dropout floor in the normal browser preset. Earlier `ramp217`, `none`, and `mild` modes remain explicit diagnostics. Real-application qualification remains necessary. The inner-hole contraction trials remain ineffective negative evidence. New comparisons use only actual integer point requests from 8pt through 16pt. Do not use fractional point rows or label font-size comparisons in device pixels. Keep resolved device units in diagnostic metadata. Every comparison still needs actual stock Qt as its control.
 
-The earlier 16pt result remains a useful geometry reference. The later judgment supersedes any claim that the rendering is generally accepted. Continue toward crisp strokes with source-based proportions and predictable pixel rounding. Preserve the working Qt and browser presets while this research continues.
+The earlier 16pt result remains a useful geometry reference. The user authorizes the selected recipe for ordinary live Firefox and Floorp and now requests the same complete profile for KDE. KDE must override rendering preferences with nearest-50% fitting, raw grayscale coverage, whole-pixel placement and encoded blending while preserving chosen fonts and sizes. The native KDE capability and package deployment are specified in S13 of the [native study](../plans/FR-018-axis-study.md). Continue toward crisp strokes with source-based proportions and predictable pixel rounding. The browser activation guide owns the browser preset and its reversal.
 
-The target favors pixel alignment over exact low-density geometry. A detected width of 1.5 pixels must round to two, while 1.4 rounds to one. Curves and diagonals still need softened edges. Avoid weak crowns, inconsistent stroke intensity, and excessive diagonal weight. Test font choice, point size, scale, weight, italic, and background together. Do not add website-specific rules or substitute every light face with regular.
+Messenger exposed a separate font-selection gap. On the capture system, Helvetica resolves to Nimbus Sans CFF, which the earlier browser predicate excludes. Twelve distinct supplied glyphs exactly match its untouched native masks. The user prefers the local 50% raw CFF comparison and requests Helvetica → Noto Sans. Keep the native per-user alias specified in S15 of the [native study](../plans/FR-018-axis-study.md). The user explicitly requires CFF support as well; the alias is additional. S16 defines the CFF-capable browser and KDE profile, including truthful native capability checks and actual consumer validation. Preserve Arial-first requests and all other chosen families.
+
+The normal raw profile includes CFF, variable CFF2, and CID collections. It uses the existing nearest Latin Y rule and preserves other native script rules, including CJK fitting. KDE requires the actual per-library `fontreal-nearest-y-v2` capability. A stock or older TrueType-only provider cannot satisfy it. Keep the older diagnostics unchanged. Use the [native package guide](../build-system.md) on each machine. Rebuild for that machine's exact provider and package snapshot. Build outputs, virtual machines, ignored results, user profiles, and installed Fontconfig rules do not transfer with Git.
+
+The next deployment must activate the CFF-capable private browser build in each destination profile and verify its loaded libraries after a normal browser restart. Native KDE installation needs the matching three-family bundle, its package and full-session proof, native authorization, and a fresh normal login. Source publication does not perform either deployment. Preserve the destination machine's accounts, fonts and other preferences.
+
+For the requested Helvetica preference, keep this rule in the user's `fontconfig/conf.d/50-helvetica-noto-sans.conf` under their configuration directory. If that file exists, preserve its other rules. Noto Sans must be installed. Explicit Nimbus requests keep their family choice. Check the actual selected face: a Type 1 counterpart can share a CFF family's name. The raw profile applies to eligible CFF faces; Type 1 retains its native path.
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <alias binding="strong">
+    <family>Helvetica</family>
+    <prefer><family>Noto Sans</family></prefer>
+  </alias>
+</fontconfig>
+```
+
+The target favors pixel alignment over exact low-density geometry. A detected width of 1.5 device pixels must round to two, while 1.4 rounds to one. These are stroke-width measurements, not font-size requests. Curves and diagonals still need softened edges. Avoid weak crowns, weak middle strokes, inconsistent intensity, and excessive diagonal weight. Test font choice, point size, scale, weight, italic, and background together. Do not add website-specific rules or substitute every light face with regular.
+
+## Current integer-point diagnostics
+
+The latest raw comparison uses current-provider captures under `results/raw-coverage-review`. Its 12pt overview contains all 19 faces on both backgrounds. Separate sheets cover every integer size 8–16pt, with stock Qt, the old ramp, raw coverage, and raw coverage with support. The user chooses fully raw coverage. Use `tests/raw_coverage_test.py` for the selected raw recipe.
+
+`tests/dropout_continuity_test.py` preserves the earlier comparison. The [white-background preview](../images/browser-common-ground/dropout-preview-light.png) and [black-background preview](../images/browser-common-ground/dropout-preview-dark.png) show the earlier ramp, two native-guided opacity floors, and stock Qt. Their enlarged excerpts explicitly show 2, v, and W. Noto Serif Regular at 11pt is the fifth main row. Light rows retain raw coverage exactly.
+
+FreeType's black-and-white rasterizer has [dropout correction](https://freetype.org/freetype2/docs/reference/ft2-outline_processing.html#ft_outline_xxx) to preserve narrow lines. Grayscale rendering does not use it. The trial compares native one-bit rasters with correction enabled and disabled for the same hinted outline. It applies an opacity floor of 192 or 217 only at added pixels, after the accepted ramp and before per-glyph composition. The user prefers 217, the third column. All other glyph-local pixels retain their accepted opacity. This is a line-continuity signal, not a guarantee of one pixel of perpendicular geometric width.
+
+For the reported Serif 2 at 11pt, the native signal adds exactly four pixels along the weak diagonal. The trial changes those four; it also changes sparse dropout pixels in other strokes. Noto Sans Regular at 11pt keeps 2, v, and W unchanged but changes one pixel in 6. Keep full-word context, v/V/W, and the accepted light controls visible when judging the correction. The [analysis](16pt-geometry.md#native-dropout-continuity) includes all nine integer sizes and the measured limits.
+
+For the selected raw recipe, preserve every eligible glyph's native grayscale coverage at every weight. Compose glyphs with alpha-over and encoded blending. Keep the existing 50% geometry. The following ramp and support sections retain historical evidence and their explicit diagnostic modes.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/dropout_continuity_test.py \
+  --source-study results/encoded-refinement --ramp-study results/coverage-shoulder \
+  --native-build build/radius-trace --output results/dropout-continuity \
+  --label-font "$(fc-match -f '%{file}' 'DejaVu Sans')"
+```
+
+The [capture record](../images/browser-common-ground/dropout-captures.json) retains all 171 condition identities, native flag choices, registered profiles, occurrence changes, two ownership observations, and eight image hashes. The checker verifies 16,929 native rasters: gray and two one-bit variants for all 5,643 occurrences. Independent native bitmaps and scalar composition predict every actual exported RGB canvas and saved target crop. A private [chart patch](../../tests/point_dropout_continuity.patch) captures one-bit data from outline copies; it preserves the original chart, native libraries, existing helpers, and working presets. Main desktop delivery requires actual 100% zoom and exact saved-PNG/window-capture equality; a mapped but fitted or hidden window is insufficient.
+
+### Accepted continuous ramp
+
+`tests/coverage_shoulder_test.py` preserves the preceding comparison. The user suggested raising 128 to about 192 below the existing 160-to-242 treatment. The [white-background preview](../images/browser-common-ground/shoulder-preview-light.png) and [black-background preview](../images/browser-common-ground/shoulder-preview-dark.png) compare the earlier reference, a 128-to-192 shoulder, the now-accepted continuous ramp, and stock Qt. All light rows retain the accepted no-floor result exactly.
+
+The shoulder maps raw 128–159 to 192. The earlier accepted ramp leaves values through 96 unchanged, then interpolates to 128→192 and 160→242. Both retain the old treatment at and above 160. The ramp's largest adjacent step is three, compared with jumps of 65 and 50 for the shoulder. These are per-glyph coverage tables applied once before composition. Do not apply another hard floor afterward. Geometry, layout, and blending stay fixed in this comparison. The normal browser preset now uses fully raw coverage. The Qt preset stays unchanged.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/coverage_shoulder_test.py \
+  --source-study results/encoded-refinement --native-build build/radius-trace \
+  --output results/coverage-shoulder \
+  --label-font "$(fc-match -f '%{file}' 'DejaVu Sans')"
+```
+
+The [capture record](../images/browser-common-ground/shoulder-captures.json) binds all nineteen faces and nine actual integer point requests, original stock images, tables, registered profiles, and eight comparison images. The checker independently verifies all 5,643 original native masks and every actual candidate canvas through Decimal tables, scalar alpha-over, and final encoded RGB. Two overlapping raw-128 samples distinguish per-glyph treatment (239) from an incorrect post-composition treatment (242). Saved native and exact 6x crops are reopened and compared. All nine sizes, including 16pt, are linked in the [coverage analysis](16pt-geometry.md#regular-weight-coverage-shoulder). Main desktop delivery still requires mapped files at 100% and exact PNG/window-capture equality on both palettes.
+
+### Accepted light treatment and rejected geometry trial
+
+`tests/encoded_refinement_test.py` preserves the preceding comparison. It captures nineteen faces at nine actual integer point requests, for 171 conditions. Six light faces cover Noto Sans, Noto Serif, and Lato in upright and italic styles. Same-family regular rows show that the light coverage trials preserve the preferred regular result.
+
+The four columns are encoded reference, light with no floor, light with a smooth coverage lift, and stock Qt. The [Lato light-background panel](../images/browser-common-ground/encoded-light-lato-light.png) and [dark-background panel](../images/browser-common-ground/encoded-light-lato-dark.png) show 8pt and 11pt. Equivalent panels cover [Noto Sans on white](../images/browser-common-ground/encoded-light-noto-sans-light.png), [Noto Sans on black](../images/browser-common-ground/encoded-light-noto-sans-dark.png), [Noto Serif on white](../images/browser-common-ground/encoded-light-noto-serif-light.png), and [Noto Serif on black](../images/browser-common-ground/encoded-light-noto-serif-dark.png). All nine sizes and the separate geometry panels are linked in the [refinement analysis](16pt-geometry.md#encoded-light-weights-and-counter-bridges).
+
+The rejected [waist panel on white](../images/browser-common-ground/encoded-waist-light.png) and [on black](../images/browser-common-ground/encoded-waist-dark.png) retain the old coverage. They shorten only the inner holes of outlines with at least two opposite-winding contours. All X coordinates and outer contour points stay fixed. The user found neither strength useful. Keep these panels as negative evidence; the next trial must address the weak pixels by a different mechanism.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/encoded_refinement_test.py \
+  --source-study results/segment-curve --native-build build/radius-trace \
+  --output results/encoded-refinement \
+  --label-font "$(fc-match -f '%{file}' 'DejaVu Sans')"
+```
+
+The [capture record](../images/browser-common-ground/encoded-refinement-captures.json) preserves all 171 font identities, coverage tables, profiles, native library hashes, and eighteen image hashes. The checker verifies 17,034 independent native masks. It independently assembles every real light-trial canvas from original glyph masks through Decimal coverage tables, scalar alpha-over, and final encoded RGB. Actual Qt `B g O` micro-layouts distinguish the contour selector from a character-specific rule. View the main panels at 100% zoom and verify exact saved-PNG/window-capture equality; an opener result alone is insufficient.
+
+### Earlier stage-isolation controls
+
+`tests/core_contrast_test.py` retains the preceding comparison. It consumes the retained Qt point layouts and selects exactly 117 conditions: thirteen faces at each integer point from 8 through 16. It rejects incomplete, duplicate, fractional, and direct-pixel comparison inputs. The earlier fractional-point previews below are historical studies, not the active comparison format.
+
+The new [middle-stroke investigation](16pt-geometry.md#integer-point-middle-stroke-diagnostics) separates two mechanisms. The primary diagnostic uses unchanged 50% fitting, then applies the public `FT_Outline_EmboldenXY(8,16)` operation after hinting. The [small chart patch](../../tests/point_outline_expansion.patch) applies to a private copy of the point chart. It changes neither the source chart nor the FreeType libraries. The independent `Oracle.expand` supplies expected coordinates from original 50% outlines. The second diagnostic retains the exact 50% masks and changes blending alone. Do not combine these operations or select a working preset from their numerical checks.
+
+The [native-expansion light preview](../images/browser-common-ground/core-expanded-preview-light.png) and [dark preview](../images/browser-common-ground/core-expanded-preview-dark.png) show the primary third column. The [encoded-blend light preview](../images/browser-common-ground/core-encoded-preview-light.png) and [dark preview](../images/browser-common-ground/core-encoded-preview-dark.png) show the separate composition control. Each retains 75%, 50%, and stock Qt. Their narrow panels show 8pt and 11pt. The linked analysis provides all nine integer sizes and the fixed 16pt reference.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/core_contrast_test.py results/segment-curve \
+  --native-build build/radius-trace \
+  --output results/core-contrast \
+  --label-font "$(fc-match -f '%{file}' 'DejaVu Sans')"
+```
+
+Prepare the existing stock/nearest libraries, native probe, and nearest/segment ownership builds before this command. The previous sections preserve the source, trace-header, and instrumentation-patch recipe. The checker builds only a private chart copy. It captures the six rejected/control rows at integer 8pt and 11pt for 8/3/5/v through both ownership libraries. It verifies the loader's uniform horizontal translation after hint-save before matching public outlines. The [capture record](../images/browser-common-ground/core-contrast-captures.json) retains the native identities, middle-row profiles, 24 paired ownership observations, and twelve image hashes.
+
+The checker independently verifies 11,583 native glyph masks, expanded coordinates, floors, overlap, and high-precision blending. It reopens every saved native and enlarged crop. For desktop delivery, open both main panels at 100% zoom. Verify the intended filename, mapped window, and exact saved-PNG/window-capture equality. A successful image opener or fit-to-window view is insufficient. Keep application presets unchanged and obtain visual judgment before selecting another treatment.
 
 ## Exact experiment
 
@@ -31,6 +122,53 @@ All 22 faces and ten sizes form 220 conditions. The corrected sheets display ten
 For Noto Sans Regular, 75% and 50% produce identical pixels at all tested points below 16pt. Changing this constant alone cannot improve those rows. At 16pt, the n crown grows from about 0.981px to 1.953px, while its upright stays near 2px. Raw crown-column coverage changes from `[250, 9, 0, 0]` to `[246, 255, 8, 0]`. This fixes that particular two-pixel crown. It does not establish a general solution.
 
 The [16pt geometry analysis](16pt-geometry.md) compares original outlines, traced Qt outlines, and candidate outlines. Original Qt is closer to source geometry than the original 75% benchmark under the recorded contour metric. The 50% change improves twelve face averages, leaves nine unchanged, and slightly worsens Noto Sans Bold Italic. Geometric error is not a readability score. The [nearest-Y record](../images/browser-common-ground/nearest-y-captures.json) retains the measurements and build identity.
+
+## Rounded-edge trial
+
+The [rounded-edge analysis](16pt-geometry.md#rounded-edge-optical-expansion) adds one diagnostic after the 50% rule. It expands a horizontal stroke by 1/8px only when both linked edges carry FreeType's round flag. The [separate patch](../../patches/freetype-2.14.2-round-y-experiment.patch) includes the 50% change and applies to clean pinned source. Do not stack the two patches. Native traces expose the original width, standard-matched width, rounded width, flags, and expanded width.
+
+This trial uses Qt 6.8.2 and an offscreen 96-DPI baseline. All four Hack font hashes differ from the earlier captures. The other nine faces match. It measures 130 conditions across thirteen faces and the same ten point sizes. Stock Qt, 75%, and 50% remain visible beside the trial. The [capture record](../images/browser-common-ground/round-y-captures.json) includes build identity, paired native traces, raw profiles, and six sheet hashes.
+
+The trial changes 488 n/3/5/8 conditions and preserves all X coordinates. V, W, and w remain identical to 50%. Lowercase v changes in nineteen Noto Serif italic conditions. Its rounded terminal fitting moves other points through interpolation. Lato Light at 15px follows another path: its Y axis is extra-light, so width fitting returns before either rounding or this expansion. Neither result supports a general deployment.
+
+The checker is `tests/curve_contrast_test.py`. It consumes four folders from the unchanged point chart: `75/`, `50/`, `round/`, and `qt/`. It also consumes `build.json`, `round.trace`, and `trace-samples.json` beside those folders. The capture record preserves the schema and exact trace samples. `build.json` records the source hashes, compiler flags, Qt version, renderer hash, patch hashes, and three private library hashes. Build all three with `CFLAGS='-O2 -DFT_DEBUG_LEVEL_TRACE'` and the same configuration. Capture the round chart's complete standard error with `FT2_DEBUG=aflatin:5` into `round.trace`.
+
+Use the same font basenames as the point-size record. Select the twelve Noto Sans/Noto Serif/Hack style combinations and Lato Light. For a fresh baseline, explicitly record changed hashes rather than claiming an earlier capture. The stock chart still determines actual point sizes, glyphs, and positions. The paired trace samples use the unchanged native probe with flags `0x20028`, render mode `0`, no translation, two repeats, transform `none`, and no removed auto-hinter. Capture both nearest and round libraries for Noto Sans n at 15px and 21px, Lato Light n at 15px, and Noto Serif Italic v at 15px. Their corresponding point labels are 11.25pt and 16pt.
+
+With these inputs under `results/radius-trace`, run the checker against the three private libraries:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/curve_contrast_test.py results/radius-trace \
+  --libraries build/radius-trace/stock/.libs/libfreetype.so \
+              build/radius-trace/nearest/.libs/libfreetype.so \
+              build/radius-trace/round/.libs/libfreetype.so \
+  --label-font "$(fc-match -f '%{file}' 'DejaVu Sans')" \
+  --output results/radius-trace/verified
+```
+
+The checker verifies 12,870 independent native rasters, fixed coverage and blend, complete keys, native trace contrasts, and saved pixels. Its assertions establish faithful component evidence. They do not require a visual winner or conceal diagonal changes. The recorded six sheets display 8pt, 11.25pt, and 16pt on both backgrounds. No application preset changes.
+
+## Segment-pair preview
+
+The [next trial](16pt-geometry.md#mutual-segment-pairs-preserve-the-tested-diagonals) narrows the gate to actual mutually linked round segments. It uses the [standalone segment-pair patch](../../patches/freetype-2.14.2-segment-y-experiment.patch) on clean pinned source. This patch includes nearest-Y fitting. Do not stack it with either earlier patch. A wrapper preserves the original width result, then adds signed eight units once for an eligible strong-Y pair. Extra-light curves retain their fractional width plus that expansion.
+
+This preview changes all 520 measured n/3/5/8 cases. All 520 V/v/W/w cases remain identical to 50%, including the earlier nineteen serif italic v changes. All X coordinates remain unchanged. The 130-condition environment, coverage, fonts, and stock Qt control match the rounded-edge trial. The third column in the [compact light preview](../images/browser-common-ground/segment-y-preview-light.png) and [compact dark preview](../images/browser-common-ground/segment-y-preview-dark.png) is the new candidate. These are concrete visual comparisons, not an accepted application preset.
+
+The new study uses `results/segment-curve`. Its `75/`, `50/`, and `qt/` folders retain the prior controls. Its `round/` folder contains the new candidate. Its `prior-round/` folder retains S5's old candidate for ownership comparisons. Update `build.json` and capture the new `round.trace` with `FT2_DEBUG=aflatin:5`. Pair the unchanged probe under nearest and segment-pair libraries for the earlier four cases plus Lato Light n at 21px. Preserve all ten records in `trace-samples.json`.
+
+For ownership traces, copy the nearest and S5-round sources privately. Apply the [trace patch](../../tests/freetype_curve_trace.patch) and force-include the [trace header](../../tests/freetype_curve_trace.h). Build with `-O2 -DFT_DEBUG_LEVEL_TRACE -DFT_DEBUG_AUTOFIT`. Use `FT2_DEBUG=aflatin:6,afhints:7,afmodule:7`. The native tables record segment/edge ownership and strong-point references. The header adds snapshots after edge, strong, weak, final-separation, and save stages. Capture nearest and S5-round for Noto n at 15px, serif italic v at 15px, and Lato n at 15px and 21px. The new record's `ownership` object preserves the `ownership.json` input schema, header/patch hashes, all eight cases, and native tables.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/curve_contrast_test.py results/segment-curve \
+  --segment-pairs \
+  --libraries build/radius-trace/stock/.libs/libfreetype.so \
+              build/radius-trace/nearest/.libs/libfreetype.so \
+              build/radius-trace/segment/.libs/libfreetype.so \
+  --label-font "$(fc-match -f '%{file}' 'DejaVu Sans')" \
+  --output results/segment-curve/verified
+```
+
+The [capture record](../images/browser-common-ground/segment-y-captures.json) includes 6,977 independently checked width decisions, 12,870 independent native masks, and eight verified images. The default checker mode still reproduces the earlier edge-level trial. Human judgment of the third column is the next input, especially whether the small-size curve weight is useful. Continue through findings until there is a concrete preview, blocker, or actionable handoff.
 
 ## Resume on another machine
 
@@ -108,10 +246,10 @@ The corrected images and native fixture were checked against all earlier 220 sto
 
 ## Next investigation
 
-Trace the smaller-size horizontal-stroke path before selecting another filter. Inspect segment classification, stem links, standard-width matching, the strong Y-width branch, blue-zone alignment, and final edge placement. Measure source widths, fitted widths, and raw coverage on the same glyphs. Distinguish a missing link from a width rule that does not apply, or later alignment that changes the crown.
+Continue real-world qualification of fully raw coverage with nearest-50% geometry and encoded blending. The latest user selection supersedes the continuous ramp and native support floor in the normal preset. Native outline expansion, inner-hole adjustments, adaptive coverage rules, and an Arial-specific exception are not selected. Preserve earlier modes for research replay while collecting actual browser defects.
 
-Use stock Qt, the original 75% benchmark, and the 50% candidate in every chart. Include Noto Sans, Noto Serif, Hack, and a light face. Keep i/l/I/1, 3/5/8, V/W, full words, italic, and bold italic visible. Preserve a fixed 16pt reference while investigating 8–15pt. Do not vary coverage thresholds while testing fitting geometry. Define a bounded experiment before changing further native rules.
+Use stock Qt, the original 75% benchmark, and the 50% reference in every chart. Include Noto Sans, Noto Serif, Hack, and a light face. Keep i/l/I/1, 3/5/8, V/W, full words, italic, and bold italic visible. Use actual integer points 8–16 and retain the fixed 16pt reference. Do not vary coverage thresholds while testing fitting geometry. Keep the encoded-blend diagnostic separate. Define a bounded experiment before changing further native rules.
 
-After a component result wins, qualify actual Firefox and Floorp output with downloaded and variable fonts, both backgrounds, small labels, headings, and mixed styles. Keep the user's working browser data. Further coverage includes Electron/Teams and Flatpak, GTK/GNOME, Wine, and a feasibility study for Windows 11. Their order and remaining requirements belong to the roadmap.
+The user authorizes building and applying this recipe to ordinary live Firefox and Floorp. Qualify downloaded and variable fonts, both backgrounds, small labels, headings, and mixed styles. Keep the user's working browser data and normal sandbox. Further coverage includes Electron/Teams and Flatpak, GTK/GNOME, Wine, and a feasibility study for Windows 11. Their order and remaining requirements belong to the roadmap.
 
-The existing [Qt package workflow](../build-system.md) targets the running Debian 13 or Ubuntu system. The [browser activation guide](../experiments/browser-masks.md) describes the earlier deployed browser preset. Neither workflow deploys this new fitting experiment. This handoff makes no system, profile, repository-visibility, or release change.
+The existing [Qt package workflow](../build-system.md) targets the running Debian 13 or Ubuntu system. The [browser activation guide](../experiments/browser-masks.md) owns deployment and reversal of this browser recipe. It supports exact matching Debian 2.13.3 and Ubuntu 2.14.2 providers. This browser change does not deploy a new Qt build or replace host packages.

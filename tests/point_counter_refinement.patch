@@ -1,0 +1,54 @@
+--- a/tests/point_benchmark_chart.cpp
++++ b/tests/point_benchmark_chart.cpp
+@@ -14,6 +14,8 @@
+ #include <QCryptographicHash>
+ #include <ft2build.h>
+ #include FT_FREETYPE_H
++#include FT_OUTLINE_H
++#include <vector>
+ #include <cmath>
+ #include <stdexcept>
+ #include <iostream>
+@@ -21,6 +23,33 @@
+ QJsonDocument read(const QString&p){QFile f(p);check(f.open(QIODevice::ReadOnly),"read failed");QJsonParseError e;auto d=QJsonDocument::fromJson(f.readAll(),&e);check(e.error==QJsonParseError::NoError,"JSON failed");return d;}
+ void save(const QString&p,const QJsonDocument&d){QFile f(p);check(f.open(QIODevice::WriteOnly),"write failed");auto b=d.toJson();check(f.write(b)==b.size(),"short write");}
+ QString hash(const QByteArray&b){return QCryptographicHash::hash(b,QCryptographicHash::Sha256).toHex();}
++static void shrinkCounters(FT_Outline &outline) {
++ if (!outline.n_points) return;
++ auto orientation=FT_Outline_Get_Orientation(&outline);
++ if (orientation==FT_ORIENTATION_NONE) return;
++ std::vector<bool> inner(outline.n_contours,false);
++ int first=0,count=0;
++ for(int c=0;c<outline.n_contours;++c){
++  auto part=outline;auto end=outline.contours[c];end-=first;
++  part.n_contours=1;part.n_points=end+1;part.contours=&end;
++  part.points=outline.points+first;part.tags=outline.tags+first;
++  auto direction=FT_Outline_Get_Orientation(&part);
++  inner[c]=direction!=FT_ORIENTATION_NONE&&direction!=orientation;
++  count+=inner[c];first=outline.contours[c]+1;
++ }
++ if(count<2)return;
++ std::vector<FT_Vector> original(outline.points,outline.points+outline.n_points);
++ check(!FT_Outline_EmboldenXY(&outline,0,FONTREAL_COUNTER_STRENGTH),"counter expansion failed");
++ first=0;
++ for(int c=0;c<outline.n_contours;++c){
++  for(int i=first;i<=outline.contours[c];++i){
++   outline.points[i].x=original[i].x;
++   if(inner[c])outline.points[i].y-=FONTREAL_COUNTER_STRENGTH/2;
++   else outline.points[i].y=original[i].y;
++  }
++  first=outline.contours[c]+1;
++ }
++}
+ int main(int argc,char**argv){try{
+  QGuiApplication app(argc,argv);check(argc==4,"mode input output required");QString mode=argv[1],out=argv[3];QDir().mkpath(out);QJsonArray rows=read(argv[2]).array(),results;FT_Library lib=nullptr;if(mode=="candidate")check(!FT_Init_FreeType(&lib),"FT init failed");
+  for(auto value:rows){auto r=value.toObject();QString file=r["font_path"].toString(),id=r["id"].toString();double dpi=r.contains("logical_dpi")?r["logical_dpi"].toDouble():app.primaryScreen()->logicalDotsPerInchY();double scale=r.contains("scale")?r["scale"].toDouble():app.primaryScreen()->devicePixelRatio();double size=r["base_px"].toDouble();bool points=r.contains("point_size");if(mode=="stock"&&points)size=r["point_size"].toDouble()*dpi/72.;double px=size*scale;int cutoff=r["cutoff"].toInt();r["scale"]=scale;r["nominal_base_px"]=points?r["point_size"].toDouble()*dpi/72.:size;
+@@ -41,7 +70,7 @@
+   QFontDatabase::removeApplicationFont(registered);
+  }else{
+   check(mode=="candidate","invalid mode");FT_Face face;check(!FT_New_Face(lib,QFile::encodeName(file).constData(),0,&face),"FT face failed");check(!FT_Set_Char_Size(face,std::lround(px*64),std::lround(px*64),0,0),"FT size failed");int height=r["height"].toInt();QByteArray mask(620*height,0);QJsonArray glyphs;
+-  for(auto rv:r["runs"].toArray()){auto run=rv.toObject();int index=run["glyph"].toInt();check(!FT_Load_Glyph(face,index,FT_LOAD_FORCE_AUTOHINT|FT_LOAD_TARGET_MONO|FT_LOAD_NO_BITMAP),"FT load failed");QJsonArray points,ends;for(int i=0;i<face->glyph->outline.n_points;++i)points.append(QJsonArray{double(face->glyph->outline.points[i].x),double(face->glyph->outline.points[i].y),int(face->glyph->outline.tags[i])});for(int i=0;i<face->glyph->outline.n_contours;++i)ends.append(int(face->glyph->outline.contours[i]));QJsonObject loaded{{"outline",points},{"contours",ends}};check(!FT_Render_Glyph(face->glyph,FT_RENDER_MODE_NORMAL),"FT render failed");auto &b=face->glyph->bitmap;check(b.pixel_mode==FT_PIXEL_MODE_GRAY,"not grayscale");int x=int(std::floor(run["x"].toDouble()))+face->glyph->bitmap_left,y=int(std::lround(run["y"].toDouble()))-face->glyph->bitmap_top;check(x>=0&&y>=0&&x+int(b.width)<=620&&y+int(b.rows)<=height,"candidate clipped");QByteArray raw;
++  for(auto rv:r["runs"].toArray()){auto run=rv.toObject();int index=run["glyph"].toInt();check(!FT_Load_Glyph(face,index,FT_LOAD_FORCE_AUTOHINT|FT_LOAD_TARGET_MONO|FT_LOAD_NO_BITMAP),"FT load failed");shrinkCounters(face->glyph->outline);QJsonArray points,ends;for(int i=0;i<face->glyph->outline.n_points;++i)points.append(QJsonArray{double(face->glyph->outline.points[i].x),double(face->glyph->outline.points[i].y),int(face->glyph->outline.tags[i])});for(int i=0;i<face->glyph->outline.n_contours;++i)ends.append(int(face->glyph->outline.contours[i]));QJsonObject loaded{{"outline",points},{"contours",ends}};check(!FT_Render_Glyph(face->glyph,FT_RENDER_MODE_NORMAL),"FT render failed");auto &b=face->glyph->bitmap;check(b.pixel_mode==FT_PIXEL_MODE_GRAY,"not grayscale");int x=int(std::floor(run["x"].toDouble()))+face->glyph->bitmap_left,y=int(std::lround(run["y"].toDouble()))-face->glyph->bitmap_top;check(x>=0&&y>=0&&x+int(b.width)<=620&&y+int(b.rows)<=height,"candidate clipped");QByteArray raw;
+    for(unsigned yy=0;yy<b.rows;++yy)for(unsigned xx=0;xx<b.width;++xx){int a=b.buffer[yy*b.pitch+xx];raw.append(char(a));int v=(a>=cutoff&&a<242)?242:a;int at=(y+yy)*620+x+xx;mask[at]=char(v+(int((unsigned char)mask[at])*(255-v)+127)/255);}
+    glyphs.append(QJsonObject{{"glyph",index},{"loaded",loaded},{"x",x},{"y",y},{"left",face->glyph->bitmap_left},{"top",face->glyph->bitmap_top},{"width",int(b.width)},{"height",int(b.rows)},{"mask",QString::fromLatin1(raw.toHex())}});
+   }

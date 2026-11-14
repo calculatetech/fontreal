@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, verify, and apply matching distro Qt packages for this system."""
+"""Build, verify, and apply matching distro FreeType and Qt packages."""
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -18,7 +18,9 @@ PROFILES = {
     ("debian", "13"): ("debian:13-slim", "6.8.2"),
     ("ubuntu", "26.04"): ("ubuntu:26.04", "6.10.2"),
 }
-SOURCES = ("qt6-base", "qt6-declarative")
+SOURCES = ("freetype", "qt6-base", "qt6-declarative")
+FREETYPE = {("debian", "13"): "2.13.3+dfsg-1+deb13u1",
+            ("ubuntu", "26.04"): "2.14.2+dfsg-1ubuntu0.2"}
 FIELDS = "${Package}\t${Architecture}\t${Version}\t${source:Package}\t${source:Version}\t${db:Status-Status}\n"
 
 
@@ -50,11 +52,15 @@ def installed():
 
 
 def patch_file(source, upstream):
+    if source == "freetype":
+        return ROOT / "patches/freetype-nearest-property.patch"
     name = "qt" if source == "qt6-base" else "qtdeclarative"
     return ROOT / "patches" / f"{name}-{upstream}-fontreal.patch"
 
 
 def capability_patch(source):
+    if source == "freetype":
+        return None
     return ROOT / "packaging" / f"{source}-capability.patch"
 
 
@@ -77,8 +83,10 @@ def check_plan(plan, current_patches=True):
     profile = PROFILES.get((plan["os"], plan["release"]))
     if plan["schema"] != 1 or not profile or plan["arch"] != "amd64":
         raise ValueError("Supported systems: Debian 13 and Ubuntu 26.04, native amd64.")
-    if set(plan["sources"]) != set(SOURCES) or not plan["installed"] or not plan["original"]:
-        raise ValueError("The plan needs both Qt source families and their installed package sets.")
+    sources = set(plan["sources"])
+    if ((sources != set(SOURCES) and (current_patches or sources != {"qt6-base", "qt6-declarative"}))
+            or not plan["installed"] or not plan["original"]):
+        raise ValueError("The plan needs FreeType and both Qt source families with their installed package sets.")
     if not re.fullmatch(r"[0-9]{14}", plan["identity"]):
         raise ValueError("Invalid numeric build identity.")
     for key in ("installed", "original"):
@@ -86,18 +94,23 @@ def check_plan(plan, current_patches=True):
         identities = [(p["name"], p["arch"]) for p in records]
         if len(set(identities)) != len(identities):
             raise ValueError("Duplicate package identity in the system plan.")
-        if {p["source"] for p in records} != set(SOURCES):
-            raise ValueError("The package set must include both Qt source families.")
+        if {p["source"] for p in records} != sources:
+            raise ValueError("The package set must include FreeType and both Qt source families.")
         for p in records:
-            if p["arch"] != plan["arch"] or not re.fullmatch(r"[a-z0-9][a-z0-9+.-]+", p["name"]):
-                raise ValueError("Foreign-architecture or invalid Qt package in the plan.")
+            if (p["arch"] != plan["arch"] and not (p["source"] == "freetype" and p["arch"] == "i386")) or not re.fullmatch(r"[a-z0-9][a-z0-9+.-]+", p["name"]):
+                raise ValueError("Foreign-architecture or invalid native package in the plan.")
     if {(p["name"], p["arch"]) for p in plan["installed"]} != {(p["name"], p["arch"]) for p in plan["original"]}:
         raise ValueError("Original and installed package identities differ.")
-    if not {"libqt6gui6", "libqt6quick6"} <= {p["name"] for p in plan["installed"]}:
-        raise ValueError("Install the native QtGui and QtQuick runtimes before making a system plan.")
-    for source in SOURCES:
+    runtimes = {("libqt6gui6", "amd64"), ("libqt6quick6", "amd64")}
+    if "freetype" in sources:
+        runtimes.add(("libfreetype6", "amd64"))
+    if not runtimes <= {(p["name"], p["arch"]) for p in plan["installed"]}:
+        raise ValueError("Install native FreeType, QtGui and QtQuick before making a system plan.")
+    for source in plan["sources"]:
         entry = plan["sources"][source]
-        if not re.fullmatch(re.escape(profile[1]) + r"\+dfsg-[A-Za-z0-9.+~]+", entry["version"]):
+        valid_version = (entry["version"] == FREETYPE[(plan["os"], plan["release"])]) if source == "freetype" else re.fullmatch(
+            re.escape(profile[1]) + r"\+dfsg-[A-Za-z0-9.+~]+", entry["version"])
+        if not valid_version:
             raise ValueError(f"Unsupported {source} source version: {entry['version']}")
         originals = [p for p in plan["original"] if p["source"] == source]
         if {p["source_version"] for p in originals} != {entry["version"]}:
@@ -108,11 +121,14 @@ def check_plan(plan, current_patches=True):
                 base = p["version"]
         if entry["build_version"] != local_version(base, plan["identity"]):
             raise ValueError("The build version does not match the installed source/binary revisions.")
-        if not all(re.fullmatch(r"[0-9a-f]{64}", entry[key]) for key in ("patch_sha256", "capability_sha256")):
+        capability = capability_patch(source)
+        valid_capability = entry["capability_sha256"] is None if capability is None else re.fullmatch(
+            r"[0-9a-f]{64}", entry["capability_sha256"])
+        if not re.fullmatch(r"[0-9a-f]{64}", entry["patch_sha256"]) or not valid_capability:
             raise ValueError("Invalid patch checksum in the system plan.")
         if current_patches and entry["patch_sha256"] != sha(patch_file(source, profile[1])):
             raise ValueError("The plan patch changed. Make a new plan before building.")
-        if current_patches and entry["capability_sha256"] != sha(capability_patch(source)):
+        if current_patches and entry["capability_sha256"] != (sha(capability) if capability else None):
             raise ValueError("The package capability patch changed. Make a new plan before building.")
     return profile
 
@@ -151,7 +167,7 @@ def system_plan():
                 base = p["version"]
         plan["sources"][source] = dict(version=version, build_version=local_version(base, identity),
                                           patch_sha256=sha(patch_file(source, PROFILES[key][1])),
-                                          capability_sha256=sha(capability_patch(source)))
+                                          capability_sha256=sha(capability_patch(source)) if capability_patch(source) else None)
     check_plan(plan)
     return plan
 
@@ -209,7 +225,7 @@ def verify_artifacts(directory, manifest):
         if (not candidate or candidate["version"] != plan["sources"][p["source"]]["build_version"]
                 or candidate["source"].split()[0] != p["source"]):
             raise ValueError(f"Missing rebuilt counterpart for {p['name']}.")
-    for source in SOURCES:
+    for source in plan["sources"]:
         descriptor = source_descriptor(directory / "source", source, plan["sources"][source]["build_version"]).read_text()
         checksums = re.search(r"^Checksums-Sha256:\n((?: [^\n]+\n)+)", descriptor, re.M)
         if not checksums:
@@ -273,6 +289,9 @@ def worker(jobs):
     _, upstream = check_plan(plan)
     for path in Path("/etc/apt/sources.list.d").glob("*.sources"):
         path.write_text(re.sub(r"^Types: deb$", "Types: deb deb-src", path.read_text(), flags=re.M))
+    foreign_freetype = any(p["source"] == "freetype" and p["arch"] == "i386" for p in plan["original"])
+    if foreign_freetype:
+        run(["dpkg", "--add-architecture", "i386"])
     run(["apt-get", "update"])
     run(["apt-get", "install", "-y", "--no-install-recommends", "build-essential", "devscripts",
          "equivs", "ninja-build", "quilt", "pkg-kde-tools"])
@@ -293,6 +312,8 @@ def worker(jobs):
         (tree / "debian/patches").mkdir(exist_ok=True)
         for patch_name, patch in (("fontreal.patch", patch_file(source, upstream)),
                                   ("fontreal-capability.patch", capability_patch(source))):
+            if patch is None:
+                continue
             run(["patch", "--batch", "--fuzz=0", "--dry-run", "-p1", "-i", patch], cwd=tree)
             shutil.copyfile(patch, tree / "debian/patches" / patch_name)
             with (tree / "debian/patches/series").open("a") as queue:
@@ -312,8 +333,25 @@ def worker(jobs):
         for path in parent.iterdir():
             if path.is_file():
                 shutil.copyfile(path, target / ("packages" if path.suffix == ".deb" else "source") / path.name)
-        if source == "qt6-base":
+        if source in ("freetype", "qt6-base"):
             run(["apt-get", "install", "-y", "--no-install-recommends", *binaries])
+        shutil.rmtree(parent)
+    if foreign_freetype:
+        # Debian 13 has no i386 container image; use the distro's native cross toolchain.
+        parent = Path("/tmp/fontreal/freetype-i386")
+        parent.mkdir(parents=True)
+        entry = plan["sources"]["freetype"]
+        tree = parent / "source"
+        descriptor = source_descriptor(target / "source", "freetype", entry["build_version"])
+        run(["dpkg-source", "--no-check", "-x", descriptor, tree])
+        run(["apt-get", "install", "-y", "--no-install-recommends", "crossbuild-essential-i386"])
+        run(["apt-get", "build-dep", "-y", "--no-install-recommends", "--arch-only", "-a", "i386",
+             f"freetype={entry['version']}"])
+        metadata["dependencies"]["freetype:i386"] = output(["dpkg-query", "-W", "-f=${binary:Package}\t${Version}\n"])
+        run(["dpkg-buildpackage", "--build=any", "-ai386", "-us", "-uc", "-tc", f"-j{jobs}"], cwd=tree, env=env)
+        for path in parent.iterdir():
+            if path.is_file():
+                shutil.copyfile(path, target / ("packages" if path.suffix == ".deb" else "source") / path.name)
         shutil.rmtree(parent)
     produced = package_inventory(target / "packages")
     for p in plan["original"]:

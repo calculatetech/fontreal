@@ -36,7 +36,7 @@ Rectangle {
             width: grid.width
             height: 56
             y: 16 + index * 56
-            Text { x: 4; y: 17; text: grid.names[line.index]; color: grid.ink; font.family: grid.testFont.family; font.styleName: grid.testFont.styleName; font.pixelSize: 12 }
+            Text { x: 4; y: 17; text: grid.names[line.index]; color: grid.ink; renderType: Text.NativeRendering; font.family: grid.testFont.family; font.styleName: grid.testFont.styleName; font.pixelSize: 12 }
             Repeater {
                 model: grid.letters
                 delegate: Rectangle {
@@ -59,7 +59,7 @@ Rectangle {
                         sourceComponent: [nativeText, qtText, defaultText, breezeLabel, plasmaLabel, breezeButton][line.index]
                         onLoaded: {
                             item.text = cell.character
-                            item.font = grid.testFont
+                            item.font = Qt.binding(function() { return grid.testFont })
                             item.objectName = "glyph"
                         }
                     }

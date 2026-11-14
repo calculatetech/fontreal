@@ -70,13 +70,13 @@ The full gallery contains 864 paired font conditions. The [capture metadata](doc
 
 ## What the repository does
 
-Fontreal contains an interactive FreeType comparison viewer, Qt rendering patches, and tools that build matching distro packages on demand. The desktop preset aligns eligible TrueType text to the pixel grid and changes how its edges blend with the background.
+Fontreal contains an interactive FreeType comparison viewer, Qt rendering patches, and tools that build matching distro packages on demand. The desktop preset applies native fitting, raw grayscale coverage, whole-pixel placement, and encoded blending to eligible TrueType and CFF text.
 
 The current pilot supports **Debian 13 with Qt 6.8.2** and **Ubuntu 26.04 with Qt 6.10.2**, on amd64. It covers tested system-Qt paths in widgets, Konsole, KWin, Plasma, and OpenGL Qt Quick. The builder detects exact installed source revisions and keeps the original packages for rollback. Activation is separate and starts disabled.
 
 GTK/GNOME application integration, Wine, Windows 11, Qt 5, and applications with bundled rendering libraries remain separate work. See the [roadmap](docs/roadmap.md).
 
-[Firefox and Floorp activation](docs/experiments/browser-masks.md) applies the approved masks and Mozilla sRGB preblend to existing working profiles on the supported Ubuntu build. Accounts and unrelated settings stay in place. Enable the per-user launch integration, then fully quit and reopen the browser. Disable restores the original rendering settings. Mozilla's preblend estimates the background; full background-aware browser blending, Electron, and Flatpak remain separate work.
+[Firefox and Floorp activation](docs/experiments/browser-masks.md) applies nearest Y fitting, fully raw grayscale coverage, and encoded blending. Every eligible face and weight keeps its native coverage without a contrast ramp or dropout floor. Exact Debian 13 and Ubuntu 26.04 source revisions are supported. Accounts and unrelated settings stay in place. Enable the per-user launch integration, then fully quit and reopen the browser. Disable restores the original rendering settings. Full background-aware browser blending, Electron, and Flatpak remain separate work.
 
 ## Try it
 

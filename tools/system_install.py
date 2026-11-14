@@ -8,6 +8,8 @@ import tempfile
 
 
 def activation(builder, directory, plan):
+    if set(plan["sources"]) != set(builder.SOURCES):
+        raise ValueError("New activation requires FreeType and both Qt source families.")
     destination = directory / "activation"
     destination.mkdir()
     with tempfile.TemporaryDirectory(prefix=".fontreal-session-", dir=directory) as temporary:
@@ -27,15 +29,18 @@ def activation(builder, directory, plan):
         builder.write_json(share / "system.json", plan)
         (share / "runtime-versions").write_text("".join(
             f"{name}\t{plan['sources'][source]['build_version']}\n"
-            for name, source in (("libqt6gui6", "qt6-base"), ("libqt6quick6", "qt6-declarative"))))
+            for name, source in (("libfreetype6", "freetype"), ("libqt6gui6", "qt6-base"), ("libqt6quick6", "qt6-declarative"))))
         control = root / "DEBIAN/control"
         control.parent.mkdir()
         control.write_text(
             f"Package: fontreal-session\nVersion: 0~local{plan['identity']}\nArchitecture: all\n"
             "Maintainer: Fontreal local build <fontreal@localhost>\n"
-            "Depends: libqt6gui6, libqt6quick6, coreutils\n"
+            "Depends: libfreetype6, libqt6gui6, libqt6quick6, coreutils\n"
             "Description: Explicit per-user Fontreal activation for Plasma\n"
             " Starts disabled and preserves installed fonts.\n")
+        root.chmod(0o755)
+        for path in root.rglob("*"):
+            path.chmod(0o755 if path.is_dir() or path == root / "usr/bin/fontreal-session" else 0o644)
         builder.run(["dpkg-deb", "--build", "--root-owner-group", root,
                      destination / "fontreal-session.deb"])
     for name in ("fontreal-session", "fontreal.sh", "NOTICE"):
@@ -80,7 +85,8 @@ def verify_activation(builder, directory, manifest, plan):
         if json.loads((root / "usr/share/fontreal/system.json").read_text()) != plan:
             raise ValueError("The session package has a different original-system record.")
         expected_versions = "".join(f"{name}\t{plan['sources'][source]['build_version']}\n" for name, source in (
-            ("libqt6gui6", "qt6-base"), ("libqt6quick6", "qt6-declarative")))
+            ("libfreetype6", "freetype"), ("libqt6gui6", "qt6-base"), ("libqt6quick6", "qt6-declarative"))
+            if source in plan["sources"])
         if (root / "usr/share/fontreal/runtime-versions").read_text() != expected_versions:
             raise ValueError("The session package selects different runtime versions.")
         for name, relative in (("fontreal-session", "usr/bin/fontreal-session"),
@@ -97,12 +103,14 @@ def transaction(builder, directory, rollback=False, simulate=False):
     if (system["ID"], system["VERSION_ID"], builder.output(["dpkg", "--print-architecture"])) != (
             plan["os"], plan["release"], plan["arch"]):
         raise ValueError("The bundle does not match this distribution and architecture.")
-    current = builder.installed()
+    if not rollback and set(plan["sources"]) != set(builder.SOURCES):
+        raise ValueError("Installation requires FreeType and both Qt source families. Make a new complete bundle.")
+    current = [p for p in builder.installed() if not rollback or p["source"] in plan["sources"]]
     identities = lambda records: {(p["name"], p["arch"]) for p in records}
     if identities(current) != identities(plan["installed"]):
-        raise ValueError("The installed Qt package set changed. Make a new system plan.")
+        raise ValueError("The installed native package set changed. Make a new system plan.")
     if not rollback and current != plan["installed"]:
-        raise ValueError("The installed Qt versions changed. Make a new system plan.")
+        raise ValueError("The installed native versions changed. Make a new system plan.")
     if rollback:
         for p in current:
             if ("afontreal" in p["source_version"] and
@@ -145,6 +153,6 @@ def transaction(builder, directory, rollback=False, simulate=False):
         expected = plan["original"] if rollback else [dict(p, version=plan["sources"][p["source"]]["build_version"],
                                                           source_version=plan["sources"][p["source"]]["build_version"])
                                                         for p in plan["installed"]]
-        if builder.installed() != expected:
-            raise ValueError("The final Qt package identities differ from the requested complete set.")
+        if [p for p in builder.installed() if not rollback or p["source"] in plan["sources"]] != expected:
+            raise ValueError("The final native package identities differ from the requested complete set.")
         print("Packages applied. Log out and back in to start a fresh Plasma session.")

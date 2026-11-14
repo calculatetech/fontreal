@@ -14,6 +14,16 @@
      }
 --- a/src/gui/text/freetype/qfontengine_ft.cpp
 +++ b/src/gui/text/freetype/qfontengine_ft.cpp
+@@ -149,4 +149,9 @@
+     if (!freetypeData->library) {
+         FT_Init_FreeType(&freetypeData->library);
++        if (qgetenv("FONTREAL_RENDERING") == "1"
++            && qgetenv("FONTREAL_FITTING") == "nearest") {
++            FT_Bool nearest = true;
++            FT_Property_Set(freetypeData->library, "autofitter", "fontreal-nearest-y-v2", &nearest);
++        }
+ #if defined(FT_FONT_FORMATS_H)
+         // Freetype defaults to disabling stem-darkening on CFF, we re-enable it.
 @@ -881,6 +881,10 @@
          ysize = 0;
          return false;
@@ -25,7 +35,7 @@
      defaultFormat = format;
      this->antialias = antialias;
  
-@@ -1029,8 +1033,22 @@
+@@ -1029,8 +1033,30 @@
      default_hint_style = style;
  }
  
@@ -35,8 +45,16 @@
 +    if (!enabled || !freetype || !FT_IS_SCALABLE(freetype->face)
 +        || FT_HAS_COLOR(freetype->face))
 +        return false;
++    static const bool nearest = qgetenv("FONTREAL_FITTING") == "nearest";
++    if (nearest) {
++        FT_Bool active = false;
++        if (FT_Property_Get(freetype->face->glyph->library, "autofitter",
++                            "fontreal-nearest-y-v2", &active) || !active)
++            return false;
++    }
 +    const char *format = FT_Get_Font_Format(freetype->face);
-+    return format && qstrcmp(format, "TrueType") == 0;
++    return format && (qstrcmp(format, "TrueType") == 0
++        || (nearest && qstrcmp(format, "CFF") == 0));
 +}
 +
  bool QFontEngineFT::expectsGammaCorrectedBlending() const

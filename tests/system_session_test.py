@@ -45,7 +45,7 @@ def pid(name):
 
 def session_environment():
     values = dict(line.split("=", 1) for line in call(["systemctl", "--user", "show-environment"]).stdout.splitlines())
-    return {key: values.get(key, "") for key in ("FONTREAL_RENDERING", "FONTREAL_BLEND", "FONTREAL_CONTRAST")}
+    return {key: values.get(key, "") for key in ("FONTREAL_RENDERING", "FONTREAL_BLEND", "FONTREAL_CONTRAST", "FONTREAL_FITTING")}
 
 
 def tools_environment():
@@ -59,7 +59,10 @@ def qdbus(*args):
 
 def font_state(fonts):
     state = {str(path): build.sha(path) for path in fonts}
-    for path in (Path.home() / ".config/kdeglobals", Path.home() / ".local/share/konsole/FontrealTest.profile"):
+    fragment = Path.home() / ".config/fontconfig/conf.d/99-fontreal-test.conf"
+    state[str(fragment)] = build.sha(fragment)
+    for path in (Path.home() / ".config/kdeglobals", Path.home() / ".local/share/konsole/FontrealTest.profile",
+                 Path.home() / ".local/share/konsole/FontrealCff.profile"):
         parser = configparser.ConfigParser(strict=False, interpolation=None)
         parser.optionxform = str
         parser.read(path)
@@ -72,13 +75,18 @@ def process_record(process):
     code = ("import json;from pathlib import Path;"
             f"p=Path('/proc/{process}');"
             "print(json.dumps(dict(environment=[v.decode() for v in (p/'environ').read_bytes().split(b'\\0') "
-            "if v.split(b'=',1)[0] in (b'FONTREAL_RENDERING',b'FONTREAL_BLEND',b'FONTREAL_CONTRAST',"
+            "if v.split(b'=',1)[0] in (b'FONTREAL_RENDERING',b'FONTREAL_BLEND',b'FONTREAL_CONTRAST',b'FONTREAL_FITTING',"
             "b'LD_LIBRARY_PATH',b'LD_PRELOAD',b'QT_QUICK_DEFAULT_TEXT_RENDER_TYPE')],"
             "softwareForced=b'LIBGL_ALWAYS_SOFTWARE=1' in (p/'environ').read_bytes().split(b'\\0'),"
             "libraries=sorted(set(line[line.index('/'):] for line in (p/'maps').read_text().splitlines() "
-            "if '/libQt6Gui.so.' in line or '/libQt6Quick.so.' in line)))))")
+            "if '/libQt6Gui.so.' in line or '/libQt6Quick.so.' in line)),"
+            "freetypeLibraries=sorted(set(line[line.index('/'):] for line in (p/'maps').read_text().splitlines() "
+            "if '/libfreetype.so.' in line)))))")
     record = json.loads(call(["sudo", "python3", "-c", code]).stdout)
     assert record["libraries"] and all(path.startswith("/usr/lib/") for path in record["libraries"]), record
+    reference = str(Path(os.environ["FONTREAL_TEST_REFERENCE_FREETYPE"]).resolve())
+    actual_freetype = [path for path in record["freetypeLibraries"] if path != reference]
+    assert actual_freetype and all(path.startswith("/usr/lib/") for path in actual_freetype), record
     assert not any(value.startswith(("LD_LIBRARY_PATH=", "LD_PRELOAD=", "QT_QUICK_DEFAULT_TEXT_RENDER_TYPE="))
                    for value in record["environment"]), record
     return record
@@ -125,12 +133,31 @@ def fixture(reports, font, terminal_font):
     (config / "kscreenlockerrc").write_text("[Daemon]\nAutolock=false\n")
     test_hook = config / "plasma-workspace/env/fontreal-test.sh"
     test_hook.parent.mkdir(parents=True, exist_ok=True)
-    test_hook.write_text("export QT_LOGGING_RULES='kwin_scripting.debug=true'\n")
+    reference = Path(os.environ["FONTREAL_TEST_REFERENCE_FREETYPE"]).resolve()
+    assert reference.is_file()
+    test_hook.write_text("export QT_LOGGING_RULES='kwin_scripting.debug=true'\n" +
+                         "export FONTREAL_TEST_REFERENCE_FREETYPE=" + shlex.quote(str(reference)) + "\n")
+    fc = config / "fontconfig/conf.d/99-fontreal-test.conf"
+    fc.parent.mkdir(parents=True, exist_ok=True)
+    fc.write_text('''<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig><selectfont><rejectfont><pattern>
+<patelt name="family"><string>Nimbus Mono PS</string></patelt>
+<patelt name="fontformat"><string>Type 1</string></patelt>
+</pattern></rejectfont></selectfont><match target="font">
+<edit name="antialias" mode="assign"><bool>false</bool></edit>
+<edit name="hinting" mode="assign"><bool>false</bool></edit>
+<edit name="hintstyle" mode="assign"><const>hintnone</const></edit>
+<edit name="rgba" mode="assign"><const>rgb</const></edit>
+</match></fontconfig>''')
     profiles = data / "konsole"
     profiles.mkdir(parents=True, exist_ok=True)
     (profiles / "FontrealTest.profile").write_text(
         "[General]\nName=FontrealTest\nParent=FALLBACK/\n"
         "[Appearance]\nFont=Inconsolata Nerd Font,-1,15,5,50,0,0,0,0,0\n"
+        "[Terminal Features]\nBlinkingCursorEnabled=false\n")
+    (profiles / "FontrealCff.profile").write_text(
+        "[General]\nName=FontrealCff\nParent=FALLBACK/\n"
+        "[Appearance]\nFont=Nimbus Mono PS,-1,15,5,50,0,0,0,0,0\n"
         "[Terminal Features]\nBlinkingCursorEnabled=false\n")
     assert Path(call(["fc-match", "-f", "%{file}", "Inconsolata Nerd Font"]).stdout).resolve() == terminal_font.resolve()
     autostart = config / "autostart"
@@ -298,8 +325,9 @@ def actors(directory, current, font, factor, enabled, launch=True, expected_envi
             group[kind] = dict(pixels=record, process=process_record(record["pid"]))
             expected_env = expected_environment if expected_environment is not None else [{
                 "FONTREAL_RENDERING=" + ("1" if enabled else "0"),
-                "FONTREAL_BLEND=" + ("linear" if enabled else ""),
-                "FONTREAL_CONTRAST=" + ("mild" if enabled else "")}]
+                "FONTREAL_BLEND=" + ("encoded" if enabled else ""),
+                "FONTREAL_CONTRAST=" + ("none" if enabled else ""),
+                "FONTREAL_FITTING=" + ("nearest" if enabled else "")}]
             assert set(group[kind]["process"]["environment"]) in expected_env, group[kind]
             destination = directory / (entry + "-" + kind)
             destination.mkdir()
@@ -309,8 +337,8 @@ def actors(directory, current, font, factor, enabled, launch=True, expected_envi
                     assert frame["scale"] == factor and abs(frame["imageWidth"] - 760 * factor) <= 1 and abs(frame["imageHeight"] - 370 * factor) <= 1, frame
                     assert {c["cell"] for c in frame["cells"]} == {f"cell/{r}/{c}" for r in range(6) for c in range(9)}
                     if enabled:
-                        assert all(c["hypotheses"]["mild/linear"]["matches"] for c in frame["cells"]), frame
-                        assert any(not c["hypotheses"]["mild/encoded"]["matches"] for c in frame["cells"])
+                        assert all(c["hypotheses"]["none/encoded"]["matches"] for c in frame["cells"]), frame
+                        assert any(not c["hypotheses"]["none/linear"]["matches"] for c in frame["cells"])
                 for image in source.glob("frame-*.png"):
                     shutil.copyfile(image, destination / image.name)
                 buffer = destination / "frame-1.png"
@@ -322,12 +350,12 @@ def actors(directory, current, font, factor, enabled, launch=True, expected_envi
                      env=dict(tools_environment(), QT_QPA_PLATFORM="offscreen"))
                 group[kind]["glyphs"] = json.loads((destination / "glyphs.json").read_text())
                 if enabled:
-                    assert all(g["mild/linear"]["matches"] for g in group[kind]["glyphs"].values())
+                    assert all(g["none/encoded"]["matches"] for g in group[kind]["glyphs"].values())
             group[kind]["presented"] = window_capture(destination, record["pid"], buffer, font, factor,
                                                      title=entry == "normal" and kind == "widget")
             if enabled and "title" in group[kind]["presented"]:
                 assert set(group[kind]["presented"]["title"]) == set("lmnogWVwv")
-                assert all(g["mild/linear"]["matches"] for g in group[kind]["presented"]["title"].values())
+                assert all(g["none/encoded"]["matches"] for g in group[kind]["presented"]["title"].values())
         records[entry] = group
     return records
 
@@ -339,7 +367,7 @@ def font_checks(directory, fonts, factor, enabled):
             ("italic", fonts["italic"], "lmnogWVwv", "lmnogWVwv", True),
             ("symbols", fonts["terminal"], "mnogWV\uf120", "mnogWV\uf120", True),
             ("fallback", fonts["regular"], "mnogWV😀", "mnogWV", True),
-            ("cff", fonts["cff"], "lmnogWVwv", "lmnogWVwv", False)):
+            ("cff", fonts["cff"], "lmnogWVwv", "lmnogWVwv", True)):
         target = directory / name
         target.mkdir()
         prefix = target / "widget"
@@ -354,7 +382,7 @@ def font_checks(directory, fonts, factor, enabled):
                  env=dict(tools_environment(), QT_QPA_PLATFORM="offscreen"))
             record["glyphs"] = json.loads((target / "glyphs.json").read_text())
             if enabled:
-                assert all(g["mild/linear"]["matches"] for g in record["glyphs"].values()), (name, record)
+                assert all(g["none/encoded"]["matches"] for g in record["glyphs"].values()), (name, record)
         if name == "symbols":
             assert record["missingPrimaryGlyphs"] == 0, "The Nerd Font must supply the symbol itself."
         if name == "fallback":
@@ -365,11 +393,11 @@ def font_checks(directory, fonts, factor, enabled):
     return records
 
 
-def konsole_check(directory, fonts, factor, enabled):
+def konsole_check(directory, fonts, factor, enabled, profile="FontrealTest"):
     call(["systemd-run", "--user", "--collect", "--unit=fontreal-konsole", "konsole", "--separate",
-          "--profile", "FontrealTest", "--notransparency", "--show-menubar", "--hold",
+          "--profile", profile, "--notransparency", "--show-menubar", "--hold",
           "-p", "LocalTabTitleFormat=Fontreal test", "-e", "/bin/sh", ROOT / "tools/konsole-sample.sh",
-          "Inconsolata Nerd Font 15px"])
+          "Fontreal session sample"])
     process = wait_for(lambda: int(call(["systemctl", "--user", "show", "-p", "MainPID", "--value",
                                        "fontreal-konsole.service"]).stdout), "Konsole process")
     service = wait_for(lambda: next((line.strip() for line in qdbus().splitlines()
@@ -381,9 +409,12 @@ def konsole_check(directory, fonts, factor, enabled):
         assert qdbus(service, window, "org.kde.KMainWindow.activateAction", "options_show_menubar") == "true"
     time.sleep(2)
     record = dict(process=process_record(process), pixels=window_capture(directory, process, None, fonts["regular"], factor))
+    if profile == "FontrealCff":
+        mapped = Path(f"/proc/{process}/maps").read_text()
+        assert str(fonts["cff_terminal"]) in mapped and "NimbusMonoPS-Regular.pfb" not in mapped
     if enabled:
         record["oracle"] = call([ROOT / "build/qt-native-probe", "--capture", directory / "client.png",
-                                  fonts["regular"], fonts["terminal"], "linear", "mild", factor],
+                                  fonts["regular"], fonts["cff_terminal"] if profile == "FontrealCff" else fonts["terminal"], "encoded", "none", factor],
                                  env=dict(tools_environment(), QT_QPA_PLATFORM="offscreen")).stdout
     action = "file_quit" if "file_quit" in actions else "close-window"
     assert qdbus(service, window, "org.kde.KMainWindow.activateAction", action) == "true"
@@ -414,7 +445,7 @@ def clear_actors(current):
         if qdbus("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus.NameHasOwner", service) == "true":
             processes.add(int(qdbus("org.freedesktop.DBus", "/org/freedesktop/DBus",
                                     "org.freedesktop.DBus.GetConnectionUnixProcessID", service)))
-    for unit in ("fontreal-widget", "fontreal-quick", "fontreal-inherited",
+    for unit in ("fontreal-widget", "fontreal-quick", "fontreal-inherited", "fontreal-inherited-widget",
                  *["fontreal-font-" + name for name in ("bold", "italic", "symbols", "fallback", "cff")]):
         value = subprocess.run(["systemctl", "--user", "show", "-p", "MainPID", "--value", unit],
                                capture_output=True, text=True).stdout.strip()
@@ -458,8 +489,8 @@ def live_scale(directory, current, font, before):
           round(rect["x"] * 1.25), round(rect["y"] * 1.25)], env=env)
     record = json.loads((directory / "live-grid.json").read_text())
     assert {(c["path"], c["glyph"]) for c in record["cells"]} == {(r, c) for r in range(6) for c in "lmnogWVwv"}
-    assert all(c["hypotheses"]["mild/linear"]["matches"] for c in record["cells"]), record
-    assert any(not c["hypotheses"]["mild/encoded"]["matches"] for c in record["cells"])
+    assert all(c["hypotheses"]["none/encoded"]["matches"] for c in record["cells"]), record
+    assert any(not c["hypotheses"]["none/linear"]["matches"] for c in record["cells"])
     assert Path(f"/proc/{process}").exists()
     # Only after the presentation oracle do we refresh the static capture matrix.
     recapture(directory, current, 1.25)
@@ -533,8 +564,8 @@ def session_case(directory, current, fonts, enabled, reference=None, live=False,
     scale(1)
     login = new_login(preference)
     expected = {
-        "FONTREAL_RENDERING": "1" if enabled else "0", "FONTREAL_BLEND": "linear" if enabled else "",
-        "FONTREAL_CONTRAST": "mild" if enabled else ""}
+        "FONTREAL_RENDERING": "1" if enabled else "0", "FONTREAL_BLEND": "encoded" if enabled else "",
+        "FONTREAL_CONTRAST": "none" if enabled else "", "FONTREAL_FITTING": "nearest" if enabled else ""}
     allowed = [expected]
     if inherited is not None:
         # After removal, launch paths can retain or clear their old values independently.
@@ -559,15 +590,17 @@ def session_case(directory, current, fonts, enabled, reference=None, live=False,
         group["plasma"]["image_sha256"] = build.sha(target / "plasma.png")
         if enabled:
             for record in group["plasma"]["buffers"]:
-                assert all(c["hypotheses"]["mild/linear"]["matches"] for c in record["cells"]), record
+                assert all(c["hypotheses"]["none/encoded"]["matches"] for c in record["cells"]), record
         group["fonts"] = font_checks(target, fonts, factor, enabled)
         group["konsole"] = konsole_check(target, fonts, factor, enabled)
+        cff_terminal = target / "konsole-cff"
+        cff_terminal.mkdir()
+        group["konsole_cff"] = konsole_check(cff_terminal, fonts, factor, enabled, "FontrealCff")
         if reference is not None:
             if not enabled:
                 same_stock(group, reference["scales"][str(factor)])
             else:
                 original = reference["scales"][str(factor)]["fonts"]
-                assert group["fonts"]["cff"]["image_sha256"] == original["cff"]["image_sha256"]
                 assert group["fonts"]["fallback"]["fallbackColors"] == original["fallback"]["fallbackColors"]
         result["scales"][str(factor)] = group
     build.write_json(directory / "result.json", result)
@@ -582,6 +615,9 @@ def main():
     assert Path("/var/lib/fontreal-test-ready").is_file(), "Use an explicitly prepared disposable full Plasma VM."
     call(["systemd-detect-virt", "--vm"])
     directory = args.bundle.resolve()
+    reference = Path(os.environ["FONTREAL_TEST_REFERENCE_FREETYPE"]).resolve()
+    reference_record = json.loads((ROOT / "build/browser-live-recipe/reference.json").read_text())
+    assert reference.is_file() and build.sha(reference) == reference_record["sha256"], "Use the independent nearest-only reference."
     manifest = json.loads((directory / "bundle.json").read_text())
     plan = build.verify_artifacts(directory, manifest)
     system = platform.freedesktop_os_release()
@@ -595,7 +631,7 @@ def main():
     assert report["passed"] is True and report["schema"] == 1
     assert report["bundle_sha256"] == build.sha(directory / "bundle.json")
     assert report["deployment_sha256"] == build.sha(directory / "deployment.json")
-    assert len(report["updates"]) == 2 and {r["source"] for r in report["updates"]} == set(build.SOURCES)
+    assert len(report["updates"]) == len(build.SOURCES) and {r["source"] for r in report["updates"]} == set(build.SOURCES)
     assert build.installed() == plan["installed"], "Start with the real captured package snapshot."
     predecessor = None
     predecessor_files = None
@@ -623,8 +659,8 @@ def main():
     reports = directory / "session-checks"
     reports.mkdir()
     fonts = {key: Path(call(["fc-match", "-f", "%{file}", family]).stdout) for key, family in (
-        ("regular", "Noto Sans:style=Regular"), ("bold", "Noto Sans:style=Bold"), ("italic", "Noto Sans:style=Italic"),
-        ("terminal", "Inconsolata Nerd Font"), ("cff", "Nimbus Sans"), ("emoji", "Noto Color Emoji"))}
+        ("regular", "Nimbus Sans:style=Regular"), ("bold", "Noto Sans:style=Bold"), ("italic", "Noto Sans:style=Italic"),
+        ("terminal", "Inconsolata Nerd Font"), ("cff", "Nimbus Sans"), ("cff_terminal", "Nimbus Mono PS"), ("emoji", "Noto Color Emoji"))}
     fixture(reports, fonts["regular"], fonts["terminal"])
     originals = sorted((directory / "original").glob("*.deb"))
     candidate = selected(directory, plan)
@@ -679,20 +715,34 @@ def main():
               PROBE, "quick", fonts["regular"], prefix, "0"])
         record = read_capture(prefix / "result.json", 1)
         record["process"] = process_record(record["pid"])
-        assert set(record["process"]["environment"]) == {"FONTREAL_RENDERING=1", "FONTREAL_BLEND=linear", "FONTREAL_CONTRAST=mild"}
+        assert set(record["process"]["environment"]) == {"FONTREAL_RENDERING=1", "FONTREAL_BLEND=encoded", "FONTREAL_CONTRAST=none", "FONTREAL_FITTING=nearest"}
         stock = baseline["scales"]["1"]["actors"]["normal"]["quick"]["pixels"]
-        if source == "qt6-base":
+        widget_prefix = target / "inherited-widget"
+        call(["systemd-run", "--user", "--collect", "--unit=fontreal-inherited-widget", "env", "LD_BIND_NOW=1",
+              PROBE, "client", fonts["regular"], widget_prefix])
+        widget = read_capture(widget_prefix.with_suffix(".json"), 1)
+        widget["process"] = process_record(widget["pid"])
+        assert set(widget["process"]["environment"]) == set(record["process"]["environment"])
+        if source in ("freetype", "qt6-base"):
             same_frames(record, stock, prefix, reports / "official/1/normal-quick", record["process"]["softwareForced"])
+            assert build.sha(widget_prefix.with_suffix(".png")) == build.sha(reports / "official/1/normal-widget/widget.png")
         else:
             # Gui remains patched in this inherited enabled session. Native
             # runs can retain its treatment until the version hook runs again.
             assert len(record["frames"]) == 5 and all(len(f["cells"]) == 54 for f in record["frames"])
+            for frame in record["frames"]:
+                native_cells = [cell for cell in frame["cells"] if cell["path"] == 0]
+                assert len(native_cells) == 9 and all(cell["hypotheses"]["none/encoded"]["matches"] for cell in native_cells)
+            call([PROBE, "match", widget_prefix.with_suffix(".png"), fonts["regular"], 1, 0, 0, 760, 70,
+                  "lmnogWVwv", "#000000", "#ffffff", target / "widget-glyphs.json"],
+                 env=dict(tools_environment(), QT_QPA_PLATFORM="offscreen"))
+            assert all(g["none/encoded"]["matches"] for g in json.loads((target / "widget-glyphs.json").read_text()).values())
         assert session_environment()["FONTREAL_RENDERING"] == "1" and marker.exists()
         fallback = session_case(target / "next-login", current, fonts, False, baseline)
         assert marker.exists(), "An unsupported pair must preserve the user's preference."
         call(["sudo", "rm", repository])
         call(["sudo", "apt-get", "update"])
-        results["updates"].append(dict(source=source, inherited=record, fallback=fallback,
+        results["updates"].append(dict(source=source, inherited=record, widget=widget, fallback=fallback,
                                        payload="Retained official payload with synthetic higher control version"))
     command = [sys.executable, ROOT / "tools/system-build.py"]
     call(["sudo", "unshare", "--net", *command, "rollback", directory])

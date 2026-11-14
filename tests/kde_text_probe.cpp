@@ -35,6 +35,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <memory>
+#include "freetype_reference.h"
 
 namespace {
 void require(bool ok, const char *message) { if (!ok) throw std::runtime_error(message); }
@@ -72,17 +73,23 @@ public:
 };
 QJsonObject identity() {
     QFile maps("/proc/self/maps"); require(maps.open(QIODevice::ReadOnly),"Cannot read maps");
-    QString gui,quick;
+    QString gui,quick; QStringList freetype;
     for (const auto &line: maps.readAll().split('\n')) {
         if (line.contains("/libQt6Gui.so.")) gui=QString::fromUtf8(line.mid(line.indexOf('/')));
         if (line.contains("/libQt6Quick.so.")) quick=QString::fromUtf8(line.mid(line.indexOf('/')));
+        if (line.contains("/libfreetype.so.")) freetype.append(QString::fromUtf8(line.mid(line.indexOf('/'))));
     }
-    return {{"pid",QCoreApplication::applicationPid()},{"qtGui",gui},{"qtQuick",quick},{"qtVersion",qVersion()}};
+    freetype.removeDuplicates();
+    return {{"pid",QCoreApplication::applicationPid()},{"qtGui",gui},{"qtQuick",quick},{"qtVersion",qVersion()},
+            {"freetypeLibraries",QJsonArray::fromStringList(freetype)}};
 }
 QFont loadFont(const QString &path) {
     require(QFontDatabase::addApplicationFont(path)>=0,"Cannot register font");
     QRawFont raw(path,15); require(raw.isValid(),"Cannot load font");
     QFont font(raw.familyName()); font.setStyleName(raw.styleName()); font.setPixelSize(15);
+    font.setWeight(QFont::Weight(raw.weight())); font.setStyle(raw.style());
+    if(!qgetenv("FONTREAL_TEST_WEIGHT").isEmpty())
+        font.setVariableAxis("wght",qgetenv("FONTREAL_TEST_WEIGHT").toFloat());
     require(QRawFont::fromFont(font).fontTable("head")==raw.fontTable("head"),"Wrong font selected");
     return font;
 }
@@ -92,10 +99,21 @@ struct Face {
     Face(const QString &path, double pixels) {
         require(!FT_Init_FreeType(&library),"FT init failed");
         require(!FT_New_Face(library,QFile::encodeName(path).constData(),0,&face),"FT face failed");
+        if(FT_HAS_MULTIPLE_MASTERS(face) && !qgetenv("FONTREAL_TEST_WEIGHT").isEmpty()) {
+            FT_MM_Var *axes=nullptr;
+            require(!FT_Get_MM_Var(face,&axes),"Variable axes missing");
+            QVector<FT_Fixed> coordinates(axes->num_axis);
+            for(FT_UInt i=0;i<axes->num_axis;++i)
+                coordinates[i]=axes->axis[i].tag==FT_MAKE_TAG('w','g','h','t')
+                    ? std::lround(qgetenv("FONTREAL_TEST_WEIGHT").toDouble()*65536) : axes->axis[i].def;
+            require(!FT_Set_Var_Design_Coordinates(face,axes->num_axis,coordinates.data()),"Variable weight failed");
+            FT_Done_MM_Var(library,axes);
+        }
         require(!FT_Set_Char_Size(face,0,FT_F26Dot6(std::lround(pixels*64)),72,72),"FT size failed");
     }
     ~Face() { FT_Done_Face(face); FT_Done_FreeType(library); }
     QImage mask(QChar c) {
+        require(FT_Get_Char_Index(face,c.unicode())!=0,"Missing primary reference glyph");
         require(!FT_Load_Char(face,c.unicode(),FT_LOAD_FORCE_AUTOHINT|FT_LOAD_TARGET_MONO|FT_LOAD_NO_BITMAP),"FT glyph failed");
         require(!FT_Render_Glyph(face->glyph,FT_RENDER_MODE_NORMAL),"FT raster failed");
         const auto &b=face->glyph->bitmap;
@@ -145,16 +163,17 @@ QJsonObject classify(const QImage &image,const QRect &region,Face &face,QChar c,
 QJsonObject classifySunken(const QImage &image,Face &face,QChar c) {
     const auto mask=face.mask(c);
     const QColor foreground(73,121,167,128),style(161,75,63,181),background(219,197,181);
-    const auto coverage=[&](int x,int y) {
+    const auto coverage=[&](int x,int y,bool mild) {
         if(x<0 || y<0 || x>=mask.width() || y>=mask.height()) return 0.;
-        return std::lround(255*std::clamp((mask.constScanLine(y)[x]-32)/191.,0.,1.))/255.;
+        return mild ? std::lround(255*std::clamp((mask.constScanLine(y)[x]-32)/191.,0.,1.))/255.
+                    : mask.constScanLine(y)[x]/255.;
     };
     QJsonObject result;
-    for(bool linear:{false,true}) {
+    for(bool mild:{false,true}) for(bool linear:{false,true}) {
         QImage wanted(mask.size()+QSize(4,4),QImage::Format_RGB32); wanted.fill(background);
         for(int y=0;y<wanted.height();++y) for(int x=0;x<wanted.width();++x) {
-            const double glyph=coverage(x-2,y-2);
-            const double shifted=std::max(0.,coverage(x-2,y-1)-glyph);
+            const double glyph=coverage(x-2,y-2,mild);
+            const double shifted=std::max(0.,coverage(x-2,y-1,mild)-glyph);
             const double a=glyph*foreground.alphaF()*.75,b=shifted*style.alphaF()*.75;
             int channels[3];
             for(int channelIndex=0;channelIndex<3;++channelIndex) {
@@ -166,7 +185,7 @@ QJsonObject classifySunken(const QImage &image,Face &face,QChar c) {
             }
             wanted.setPixel(x,y,qRgb(channels[0],channels[1],channels[2]));
         }
-        result[linear ? "mild/linear" : "mild/encoded"]=locate(image,image.rect(),wanted);
+        result[QString(mild ? "mild/" : "none/")+(linear ? "linear" : "encoded")]=locate(image,image.rect(),wanted);
     }
     return result;
 }
@@ -419,17 +438,17 @@ int main(int argc,char **argv) {
                 require(image==widget.grab().toImage(),"Mixed cached repaint changed output");
                 require(image.save(args[5]+".png"),"Mixed capture failed");
                 QJsonArray regions;
-                Face face(args[2],15);
+                Face face(args[2],15),cffFace(args[3],15);
                 bool colorGlyph=false;
                 for(int row=0;row<3;++row) for(int column=0;column<widget.order.size();++column) {
                     const int role=widget.order[column];
                     const QRect region(column*192,row*70,192,70);
                     QJsonObject entry{{"row",row},{"column",column},{"role",role},{"hash",imageHash(image.copy(region))}};
-                    if(role==0) {
+                    if(role==0 || role==1) {
                         QJsonObject glyphs;
                         const QColor foreground=row==0 ? QColor(Qt::black) : row==1 ? QColor(Qt::white) : QColor(73,121,167);
                         const QColor background=row==0 ? QColor(Qt::white) : row==1 ? QColor(Qt::black) : QColor(219,197,181);
-                        for(const auto c:QStringLiteral("mnogWV")) glyphs[QString(c)]=classify(image,region,face,c,foreground,background);
+                        for(const auto c:QStringLiteral("mnogWV")) glyphs[QString(c)]=classify(image,region,role==0 ? face : cffFace,c,foreground,background);
                         entry["glyphs"]=glyphs;
                     } else if(role==2 && row==0) {
                         QSet<QRgb> colors;
@@ -557,8 +576,8 @@ int main(int argc,char **argv) {
                         require(windowPart.copy(0,0,128,42).save(args[5]+"/"+stem+"-window.png"),"Cannot save CFF Qt window control");
                         region["textImage"]=stem+".png"; region["windowTextImage"]=stem+"-window.png";
                     }
-                    if(role==0) {
-                        Face face(args[2],15); QJsonObject glyphs,windowGlyphs;
+                    if(role!=2) {
+                        Face face(role==0 ? args[2] : args[3],15); QJsonObject glyphs,windowGlyphs;
                         for(const auto c:QStringLiteral("mnogWV")) {
                             glyphs[QString(c)]=classify(image,QRect(rect.topLeft(),QSize(128,42)),face,c,
                                 root->property("ink").value<QColor>(),root->property("color").value<QColor>(),.75);
@@ -640,10 +659,20 @@ int main(int argc,char **argv) {
             return app.exec();
         }
         require((mode=="quick" || mode=="quick-hidden") && args.size()==5,"quick|quick-hidden font output-directory phase");
+        const auto weightSequence=qgetenv("FONTREAL_TEST_WEIGHT_SEQUENCE").split(',');
+        const bool changingWeight=!qgetenv("FONTREAL_TEST_WEIGHT_SEQUENCE").isEmpty();
+        require(!changingWeight || weightSequence.size()==3,"Expected three weight states");
+        if(changingWeight) require(qgetenv("FONTREAL_TEST_WEIGHT")==weightSequence[0],"Set the initial weight explicitly");
         QQuickView view; view.setResizeMode(QQuickView::SizeRootObjectToView);
         view.setSource(QUrl::fromLocalFile(QStringLiteral(FONTREAL_SOURCE_DIR "/tests/KdeTextGrid.qml")));
         require(view.status()==QQuickView::Ready,"QML fixture failed");
         view.rootObject()->setProperty("testFont",font); view.rootObject()->setProperty("phase",args[4].toDouble());
+        if(!qgetenv("FONTREAL_TEST_LETTERS").isEmpty()) {
+            const auto letters=QString::fromUtf8(qgetenv("FONTREAL_TEST_LETTERS"));
+            require(letters.size()==9,"Expected nine grid letters");
+            QStringList values; for(const auto c:letters) values.append(QString(c));
+            view.rootObject()->setProperty("letters",values);
+        }
         view.resize(760,370);
         if(mode=="quick") view.show();
         new SurfaceObserver(&view,args[3]+"/surface.json");
@@ -681,6 +710,7 @@ int main(int argc,char **argv) {
             require(image.save(args[3]+QString("/frame-%1.png").arg(frame)),"Cannot save Quick frame");
             const int controlledLeft=qRound(122*view.devicePixelRatio());
             frames.append(QJsonObject{{"frame",frame},{"hash",imageHash(image)},
+                {"weight",QString::fromLatin1(qgetenv("FONTREAL_TEST_WEIGHT"))},
                 {"scale",view.devicePixelRatio()},{"imageWidth",image.width()},{"imageHeight",image.height()},
                 {"cellHash",imageHash(image.copy(controlledLeft,0,image.width()-controlledLeft,image.height()))},{"cells",cells}});
             if(++frame==5) { auto result=identity(); result["frames"]=frames; result["scale"]=view.devicePixelRatio();
@@ -695,6 +725,12 @@ int main(int argc,char **argv) {
             } else if(frame==2) { view.rootObject()->setProperty("ink",QColor(Qt::white)); view.rootObject()->setProperty("paper",QColor(Qt::black)); }
             else if(frame==3) { view.rootObject()->setProperty("ink",QColor(73,121,167)); view.rootObject()->setProperty("paper",QColor(219,197,181)); }
             else if(frame==4) { view.rootObject()->setProperty("ink",QColor(73,121,167,128)); view.rootObject()->setProperty("glyphOpacity",.75); }
+            if(changingWeight && (frame==2 || frame==3)) {
+                const auto weight=weightSequence[frame==2 ? 1 : 2];
+                auto next=font; next.setVariableAxis("wght",weight.toFloat());
+                qputenv("FONTREAL_TEST_WEIGHT",weight);
+                view.rootObject()->setProperty("testFont",next);
+            }
             view.update();
           } catch(const std::exception &error) { std::fprintf(stderr,"%s\n",error.what()); app.exit(2); }
         });
@@ -705,6 +741,9 @@ int main(int argc,char **argv) {
             }
         });
         if(qgetenv("FONTREAL_TEST_HOLD")=="1") requests.start();
+        // Stock distance-field text can finish its atlas after the first hidden grab.
+        if(mode=="quick-hidden" && (qgetenv("FONTREAL_RENDERING")!="1"
+            || qEnvironmentVariableIsSet("FONTREAL_TEST_STOCK_FALLBACK"))) view.grabWindow();
         timer.start(); return app.exec();
     } catch(const std::exception &error) { std::fprintf(stderr,"%s\n",error.what()); return 2; }
 }
