@@ -336,3 +336,25 @@ A controlled page in the working Firefox profile separates an embedded Nimbus Sa
 Two disposable Firefox profiles use the same raw library and rendering preferences. The default font list reproduces the bypass. A Fontconfig rule that excludes the Type 1 Nimbus Sans copies makes all three routes match the treated CFF masks exactly. All four CFF styles remain available. The tested selections for Inconsolata Nerd Font, Noto Sans, Noto Serif, Arial, and Nimbus Roman remain unchanged.
 
 The CFF patch therefore works on this system. Duplicate legacy font selection can hide its effect during ordinary browsing. The [narrow Fontconfig rule](../experiments/browser-masks.md#when-nimbus-sans-looks-untreated) preserves the requested family and keeps Type 1 outside the raw profile. Resolve this selection difference before judging a stronger curve rule. The controlled test does not establish the result on the user's Facebook page after a normal browser restart.
+
+## Numbered raw coverage grids
+
+After restart, the new supplied Nimbus Sans crop matches the current raw masks for o, s, e, a, f and t exactly. The Type 1 bypass no longer explains those weak crowns. The user finds no reliable difference between raw and the 1/8-pixel curve trial in a same-position comparison. The earlier side-by-side preference also favored identical controls, so it does not establish a treatment preference.
+
+Here, raw means unchanged native coverage after the current hinting. Coverage is the fraction of a pixel filled by the glyph. It occupies the alpha channel, from 0 for empty to 255 for fully covered. The raw preset bypasses the earlier contrast ramp and dropout floor. It retains the selected hinting and whole-pixel placement. Coverage is not physical display brightness.
+
+The user requests exact pixel values before choosing a limited range to darken. These grids expose every native pixel for the measured Nimbus Sans condition. Row 1 is the top bitmap row. Column 1 is the left bitmap column. Each cell prints its unchanged coverage. Tiny native glyphs above the grids show white on black and on the measured teal background.
+
+![Numbered native coverage for o, s, e and a](../images/browser-common-ground/raw-coverage-curves.png)
+
+The top row of o reads `0, 91, 208, 243, 208, 90, 0`. Its second row reads `81, 225, 65, 12, 65, 225, 80`. The crown center is already close to full coverage. The shoulders and neighboring pixels span several lower ranges. A cutoff changes some of these values and leaves others untouched.
+
+![Numbered native coverage for f and t](../images/browser-common-ground/raw-coverage-stems.png)
+
+![Numbered native coverage for V and W](../images/browser-common-ground/raw-coverage-diagonals.png)
+
+The f/t stems reach 255, while their curved terminals retain gray pixels. V/W also contain many values between 160 and 241. A table that changes only that numerical range cannot identify curves separately from diagonals. No range, floor or curve selector is selected by these images.
+
+Run `tests/raw_coverage_grid_test.py --probe PROBE --library RAW --stock-library STOCK --font FONT --label-font LABELFONT`. Use the existing native probe, matching raw and stock FreeType libraries, and installed Nimbus Sans Regular CFF font. The checker independently rasterizes each loaded outline, checks repeat renders and saves every value. It reopens the PNGs to compare all cell intensities and native crops. Results stay under `results/raw-coverage-grids`, with temporary native probe records under `build/raw-coverage-grids`.
+
+The [capture record](../images/browser-common-ground/raw-coverage-grid-captures.json) binds the eight masks, complete coverage arrays, input hashes, checker and three images. All six source-matched glyph hashes agree with the current grids. These are raw diagnostic values for one measured font and size. The experiment does not change the working browser preset.
