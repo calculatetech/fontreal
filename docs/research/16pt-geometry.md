@@ -485,3 +485,33 @@ gwenview results/bridge-case-studies/gallery/00_1_Hack_11-12pt_native.png
 Use Left/Right at 100% to browse the 25 pages. Each family starts with native text, followed by its two grid pages per point size. The [portable record](../images/browser-common-ground/bridge-case-captures.json) contains all 36 font/point/style sources, 40 complete original/current glyph arrays, row/column sums and 25 image hashes. Seven representative images are published here. Source hashes bind the exact broad-gallery cases and unchanged filter. Independent rasterization, two alpha compositors, saved grid fills and exact native-crop comparisons cover the output. The displayed first native sheet also matches the saved PNG pixel for pixel.
 
 The next correction must distinguish weak curved stroke structure from partially covered diagonal edges. A cutoff alone lacks that information. These case studies supply held-out constraints for that investigation. They do not select a new classifier, font substitution or per-font exception. Coverage sums describe pixel values rather than perceived weight or outline accuracy.
+
+## Hack Regular 8 at 11pt: shape versus coverage
+
+The user selects this 8 as the next target. Its upper corners and waist contain dim intermediate pixels. They reject full coverage if that adds jaggies. They also identify deformation in the hinted shape. This study separates those two issues before designing a general correction.
+
+![Hack 11pt hinting controls and partial-coverage trials](../images/browser-common-ground/hack-eight-00_Hack_11pt_shape-and-coverage.png)
+
+The top row uses the matching stock FreeType library. From left, it shows the scaled unhinted outline, default font-native normal hints, auto-normal hints and auto-mono hints. Every mode uses grayscale rasterization and disables embedded bitmaps. The bottom row shows Fontreal auto-mono raw, current 170 + guarded bridge, and two local partial-coverage previews. The requested size remains 11pt at 96 DPI. The original Qt request resolves to 15 device units, which all controls retain.
+
+Each panel places the enlarged outline on the left and exact enlarged pixels on the right. The outline is separately rasterized at ten times its captured coordinates. Pixel blocks use exact repetition of the native bitmap. They share an origin and baseline. The native repetitions below use both backgrounds, identical whole-pixel spacing and encoded composition. Judge crispness in those native strips. The larger images expose shape and coverage separately.
+
+Stock auto-mono and Fontreal auto-mono raw have identical loaded outlines and grayscale masks for this glyph. The nearest-Y change does not alter this condition. The unhinted raster spans nine columns, with left bearing zero. Auto-mono spans seven, with left bearing one. Native normal spans nine and auto-normal spans eight. These are raster bounds, not stroke-width measurements. The geometry differences precede the coverage pass.
+
+[FreeType documents separate hinting and raster choices](https://freetype.org/freetype2/docs/reference/ft2-glyph_retrieval.html#ft_load_target_xxx). It warns that the strong monochrome-target geometry can look unpleasant with grayscale output. That warning motivates this comparison. It does not establish an optical winner or invalidate the accepted mono treatment in other conditions.
+
+![Hack upper-corner and waist values with partial and full-cell controls](../images/browser-common-ground/hack-eight-01_Hack_11pt_numbered-local-trials.png)
+
+The local previews annotate ten cells in this one mask. Six cover the upper corners. Four cover the waist. Their original values range from 141 to 164 and remain unchanged in the current treatment. Multiplying them by 1.25 gives 176–205. Multiplying by 1.375 gives 194–226. Half-up rounding preserves their order, and every trial value stays below 230. Every other current-mask pixel stays identical. The full-cell control changes the same ten values to 255 to expose the unwanted extreme.
+
+These coordinates are explicit diagnostic annotations. They are not a connection detector, a font-specific production rule or a proposed general classifier. The previews leave outlines, origins, existing strong pixels and all other edge pixels unchanged. They cannot repair the hinted geometry. Improvement in this 8 would still require checks against the other four families, punctuation and diagonals before generalization.
+
+Reproduce the two pages with the same Hack font and matching stock library:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/hack_eight_test.py \
+  --font HACK_REGULAR_FONT --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/hack-eight/gallery/00_Hack_11pt_shape-and-coverage.png
+```
+
+The checker compiles the existing single-glyph probe with Qt6Core and FreeType development files. Its [portable record](../images/browser-common-ground/hack-eight-captures.json) binds font, source case, libraries, flags, native captures, outlines, masks, annotated coordinates, checker and figures. Independent rasterization reproduces all original masks. Repeated renders agree. Explicit checks require ten changed cells, preserved support and ordering, unchanged other pixels, complete native/enlarged bounds and exact saved crops and grid fills. The complete first page also matches Gwenview at 100% pixel for pixel. No installed profile or general filter changes in this study.
