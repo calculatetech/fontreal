@@ -18,9 +18,12 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def boost(data, width):
+def boost(data, width, minimum=173, bridges=()):
     assert isinstance(data, bytes) and width >= 0
     assert not data or width > 0 and len(data) % width == 0
+    assert 0 < minimum < 230
+    bridges = set(bridges)
+    assert all(0 <= i < len(data) and 140 <= data[i] < minimum for i in bridges)
     height = len(data) // width if width else 0
 
     def neighbors(index):
@@ -31,7 +34,7 @@ def boost(data, width):
     def mean(anchors):
         return (2*sum(data[i] for i in anchors)+len(anchors)) // (2*len(anchors))
 
-    weak = {i for i, value in enumerate(data) if 173 <= value < 230}
+    weak = {i for i, value in enumerate(data) if minimum <= value < 230} | bridges
     nearby, connected, components = bytearray(data), bytearray(data), []
     while weak:
         start = min(weak)
@@ -56,8 +59,8 @@ def boost(data, width):
     result = dict(raw=data, nearby=bytes(nearby), connected=bytes(connected))
     for mode in MODES:
         assert len(result[mode]) == len(data)
-        for before, after in zip(data, result[mode], strict=True):
-            assert before == after or 173 <= before < 230 <= after <= 255
+        for index, (before, after) in enumerate(zip(data, result[mode], strict=True)):
+            assert before == after or (index in bridges or minimum <= before < 230) and 230 <= after <= 255
     return result, components
 
 

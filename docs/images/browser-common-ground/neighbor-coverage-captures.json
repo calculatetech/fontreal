@@ -2,7 +2,7 @@
   "kind": "Scientific strong-neighbor coverage comparison, not an installed profile",
   "source_file": "raw-coverage-grid-captures.json",
   "source_sha256": "d0b65b8eb95dad05da7b897973bc5abcc07db46e9b3aeae0a0f22d15d72f9cf3",
-  "checker_sha256": "9a3819a78a5b2c4f370a7eef0122f5bea2c4a4cd296d903835102c24aa40769f",
+  "checker_sha256": "a7dd4857df05cb51fe3f73594bf1ae6463f5085ee8d57b8995c4a7505122246a",
   "eligible_minimum": 173,
   "original_anchor_minimum": 230,
   "connectivity": 8,

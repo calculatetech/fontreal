@@ -393,3 +393,29 @@ Run `tests/neighbor_coverage_test.py --label-font FONT` after generating the raw
 The bounded choice is a shared mean for a weak connected group. [ImageJ's reconstruction documentation](https://imagej.github.io/plugins/morpholibj) supplies background on propagation constrained by a mask. This experiment uses an average instead of maximum-based dilation. It imports no ImageJ code. Harmonic interpolation can supply a varying reference along longer runs, but adds a solver before the simpler mean is judged.
 
 This preview covers eight glyphs from one font at one measured size. The user requires a broad check after Nimbus visual acceptance. That check must include more characters, font families, integer 8–16pt sizes, weights, italic styles and backgrounds. Keep V/v/W/w, digits and straight-stroke controls visible. Neither synthetic correctness nor the local reference bound establishes acceptable optical weight. No new treatment is installed.
+
+## Cutoff 170 and guarded bridges
+
+The user selects the connected-run method. They lower the main cutoff to 170 for s's 172 pixel and identify a's skipped 140 pixel. They require W to retain its accepted balance and explicitly request colon and exclamation tests. The new comparison retains the 173 connected result as its first column. Cutoff 170 is second. Cutoff 170 with a proposed bridge rule is third.
+
+![Connected 173, connected 170 and 170 with guarded bridges](../images/browser-common-ground/bridge-coverage-preview.png)
+
+A bridge candidate has original coverage 140–169. Remove its center from the surrounding eight-neighbor ring. Require exactly two disconnected groups of original 170+ neighbors. Those groups must already connect elsewhere in the original 170+ mask. This last condition rejects a faint pixel between separate colon dots or between an exclamation stem and dot. It permits a shortcut inside a's existing bowl component.
+
+Adjacent bridge candidates also need a collective check. Reject a candidate cluster when its members refer to different original components. Otherwise two individually permitted bridges can join separate marks through each other. Classification uses only original pixels. Add accepted candidates to the connected weak-run mask and keep the unique original 230+ reference mean. No letter names or font-specific exceptions select pixels.
+
+![The guarded bridge changes only a's missing 140 pixel beyond cutoff 170](../images/browser-common-ground/bridge-coverage-a.png)
+
+In the matched a, row 4/column 3 changes from 140 to 234. The rest of that a stays identical to the 170 result. In s, row 8/column 5 changes from 172 to 240. Lowering the cutoff changes two s pixels and four W pixels relative to 173. Joining weak runs can change the shared reference for existing eligible pixels too. The bridge adds no further W changes beyond cutoff 170 alone. See the [s grid](../images/browser-common-ground/bridge-coverage-s.png) and [W grid](../images/browser-common-ground/bridge-coverage-W.png).
+
+![Exclamation remains unchanged in all three displayed treatments](../images/browser-common-ground/bridge-coverage-u0021.png)
+
+At the displayed size, ! keeps its 141-valued stem tip, two zero rows and 255-valued dot. The [colon](../images/browser-common-ground/bridge-coverage-u003a.png) and [semicolon](../images/browser-common-ground/bridge-coverage-u003b.png) also receive no extra bridge treatment. Actual native checks cover `:;ij!.…` at every integer 8–16pt size, at 96 DPI and 100% scale. All 63 cases produce no bridge selections. Requested points resolve to whole device-unit sizes as in the earlier native comparison.
+
+Another 117 native cases cover `CcGgQO0(){}[]` over those sizes. C and c produce no bridge selections in this font. Two O pixels at 14pt are selected. Those selections need optical judgment in the broader check. The 180 native cases all reproduce independent rasterization and repeat renders. Original 170+ component identities and zero pixels remain unchanged after treatment. These are bounded results for Nimbus, not proof for other fonts.
+
+Synthetic cases include a permitted loop gap, a colon-like gray gap, an exclamation-like gray gap, horizontal separated dots and two adjacent bridges assigned to different components. The latter cases reject the proposed joins. Mirroring and transposing actual masks preserves the spatial result. Each updated run stays within its original strong reference range. Separate alpha compositors and saved-pixel comparisons verify native text, full enlarged glyphs and numbered grids.
+
+Run `tests/bridge_coverage_test.py --probe PROBE --library RAW --stock-library STOCK --font FONT --label-font FONT`. The [capture record](../images/browser-common-ground/bridge-coverage-captures.json) binds the source masks, native libraries, font, two checkers, 180 native control cases and seven images. Default S21 output still reproduces all original masks and nine image hashes exactly. Its capture record refreshes only the checker identity after the helper gains explicit experimental inputs.
+
+This guard deliberately leaves a disconnected main-stroke break alone when its shape cannot be separated from independent marks. It preserves component identity, not every counter shape or optical weight. Broad family, weight, italic and character coverage remains open after the local visual decision. The installed raw preset stays unchanged.
