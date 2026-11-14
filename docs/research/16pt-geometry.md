@@ -576,4 +576,34 @@ gwenview results/inconsolata-gain/gallery/0000_Inconsolata_Regular_11pt_gain.png
 
 Arrow browsing covers the 11pt sheet, six numbered H/K/M/V/W/u grids, and the 12pt sheet. The [portable record](../images/browser-common-ground/inconsolata-gain-captures.json) binds all 192 native glyph captures, original outlines, raw/baseline/trial masks, counts and eight image hashes. Four examples are published here. Checks cover all 256 transfer inputs, boundaries, rounding, the partial variant's monotonicity and the saturation control's inversion. Capture hashes, repeated renders, independent rasterization and baseline recomputation must agree. Both compositors, complete native crops and every reopened grid fill retain exact pixels. The complete 11pt page also matches its actual 100% Gwenview presentation pixel for pixel.
 
-No gain is installed or selected for general use. Other fonts and weights require held-out checks after optical judgment. The experiment isolates the gain request while keeping the accepted native geometry and strong pixels intact.
+The user prefers the 226-limited trial as subtly better at reducing jaggies. The u right stem still needs a defined core. No gain is installed or selected for general use. Other fonts and weights require held-out checks. The next study separates additional coverage from concentration of the existing coverage.
+
+## Inconsolata u: a defined core at fixed stem coverage
+
+After the selected gain, the upper four rows of u's right stem remain split into 198 + 124. The lower stem already includes a native reference at 240. The user proposes that clearly defined strokes can mask remaining fuzziness. These local trials test that idea on the exact 11pt glyph before choosing a general mechanism.
+
+![Defined-core trials in native text and exact enlarged pixels](../images/browser-common-ground/inconsolata-u-00_Inconsolata_u_11pt_stem.png)
+
+From left, the columns show the chosen gain, a core floor of 226, a 240 core preserving the gained stem area, and a 240 core preserving the original native stem area. Only four annotated upper-stem pairs change. The bowl, lower join and every other pixel retain the chosen gain. The existing 240 reference comes from the original native mask at zero-based row 5/column 5. No new pixel reaches 255.
+
+The floor trial changes each 198 + 124 pair to 226 + 124. It adds coverage and leaves the fringe unchanged. The next trial changes the pair to 240 + 82. Its sum stays at the chosen value, 322. The final trial gives 240 + 28, with sum 268. That restores the original native total within each annotated pair. It keeps the selected gain everywhere else. Neither concentrated version is a general detector or a font-specific production rule.
+
+![Numbered values show added coverage and redistribution separately](../images/browser-common-ground/inconsolata-u-01_Inconsolata_u_11pt_grid.png)
+
+The complete glyph totals are 4,990 for the chosen gain, 5,102 for the floor, 4,990 for gained-area concentration, and 4,774 for native-area concentration. The original full native glyph totals 4,403. Thus the last column restores native area only in the marked pairs. Equal coverage sums do not guarantee equal perceived brightness or weight.
+
+Concentration also moves the ink centroid, the center weighted by coverage. Within a pair, its fractional position from the core toward the outer pixel changes from 0.385 to 0.255 or 0.104. This is a deliberate pixel-alignment tradeoff. The source outline, bitmap bounds and nonzero support remain unchanged, but apparent geometry can change. The core-floor trial supplies a simpler control for added strength.
+
+All pre-existing strong pixels and the baseline 170+ membership remain identical. The floor changes four cells. Each concentrated trial changes eight. All other 95 glyphs at 11pt retain their exact chosen masks. All 96 masks at 12pt remain unchanged. The [12pt identity page](../images/browser-common-ground/inconsolata-u-02_Inconsolata_u_12pt_stem.png) labels this restriction explicitly. Context text uses the captured uniform native advance of eight pixels, identically across columns. The simple Latin controls do not qualify general shaping, kerning or a real application.
+
+Generate the three-page folder after the gain study exists:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/inconsolata_u_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/inconsolata-u/gallery/00_Inconsolata_u_11pt_stem.png
+```
+
+The [portable record](../images/browser-common-ground/inconsolata-u-captures.json) binds 192 native sources, all context-mask hashes, original/chosen/trial u masks, pair sums and centroids. It also binds the source font, library and composing helpers. Every native capture must reproduce its loaded outline and repeated raster. The chosen baseline must reproduce the selected gain. Direct checks cover exact changed-cell sets, conserved pair totals, glyph totals, centroid movement, protected pixels and held-out identity. Two compositors, reopened native crops, exact 12× pixel repetitions and numbered fills cover the figures. The complete native 11pt page also matches its actual 100% Gwenview presentation pixel for pixel.
+
+These are manual annotations for one glyph and size. The concentrated trials test whether a stronger core helps without requiring additional stem coverage. They do not choose an automatic stroke selector or alter the installed profile. A useful result must transfer to other stems, curves, diagonals, fonts and weights before generalization.
