@@ -606,4 +606,52 @@ gwenview results/inconsolata-u/gallery/00_Inconsolata_u_11pt_stem.png
 
 The [portable record](../images/browser-common-ground/inconsolata-u-captures.json) binds 192 native sources, all context-mask hashes, original/chosen/trial u masks, pair sums and centroids. It also binds the source font, library and composing helpers. Every native capture must reproduce its loaded outline and repeated raster. The chosen baseline must reproduce the selected gain. Direct checks cover exact changed-cell sets, conserved pair totals, glyph totals, centroid movement, protected pixels and held-out identity. Two compositors, reopened native crops, exact 12× pixel repetitions and numbered fills cover the figures. The complete native 11pt page also matches its actual 100% Gwenview presentation pixel for pixel.
 
-These are manual annotations for one glyph and size. The concentrated trials test whether a stronger core helps without requiring additional stem coverage. They do not choose an automatic stroke selector or alter the installed profile. A useful result must transfer to other stems, curves, diagonals, fonts and weights before generalization.
+These are manual annotations for one glyph and size. The user prefers core 240 with native stem area, with gained area close behind. This selection does not alter the installed profile. The next diagnostic tests whether a conservative straight-stem selector can transfer the arithmetic without letter-specific coordinates.
+
+## Broader core study and actual stock Qt
+
+The broader comparison covers seventeen installed Latin families at 11pt and 12pt. It contains 54 actual faces and 108 font/style/point conditions. The styles are regular, bold, italic and light. Light is available for DejaVu Sans, Calibri, Segoe UI and Lato. DejaVu Sans uses its actual ExtraLight face. Inconsolata has no installed italic or light face. The generator lists all missing styles and never synthesizes a face. Wingdings and Webdings remain in the earlier symbol study.
+
+![Noto Sans Regular 11pt against actual stock Qt](../images/browser-common-ground/stem-core-noto-11.png)
+
+The Noto Sans control places actual stock Qt on the left, core 240 with native area in the middle, and core 240 with gained area on the right. Both backgrounds use the same source font and requested point size. The control uses unmodified QtGui and QtCore from saved distribution packages, with the matching unmodified FreeType provider. It uses QPainter and QTextLayout, not a reconstruction from FreeType masks. The generator checks the loaded library identities and exact source font tables. It repeats each Qt paint and requires identical pixels. The offscreen Qt platform retains the current Fontconfig configuration.
+
+The candidate uses native-normal hints, the existing 170 + guarded bridge pass, and the selected ×1.375 gain limited to 226. It then concentrates only eligible straight profiles. Candidate glyphs share whole-pixel origins and encoded coverage composition. Stock Qt retains its own fractional positions and blending. Differences from stock therefore include the complete candidate recipe. They do not isolate the new selector. The other sheets replace stock Qt with the unchanged gain baseline to isolate that last step.
+
+![Noto Sans Regular 12pt against actual stock Qt](../images/browser-common-ground/stem-core-noto-12.png)
+
+The selector reads the original native mask. It looks for adjacent positive pixels with combined coverage 192–384, a stronger side at least 16 above the other, and outer neighbors at most 32. It requires at least three successive profiles along one axis. Each channel must stay within eight of the first profile. Intersecting proposals are rejected. A pair stays unchanged if either current pixel already reaches 230. All decisions use immutable input rather than newly modified pixels.
+
+The stronger side receives at most 240. The other side retains the remaining coverage. The native-area column preserves the original native pair sum. The gained-area column preserves its gained pair sum. If less than 241 is available, the core stays below 240 to retain positive coverage in both cells. If the operation cannot strengthen the current core, that pair stays unchanged. The exact Inconsolata 11pt u reproduces the preferred four 240 + 28 pairs. Its gained-area alternative reproduces four 240 + 82 pairs. The bowl stays identical to the chosen baseline.
+
+![Inconsolata Regular 11pt with a detected stem instead of manual coordinates](../images/browser-common-ground/stem-core-inconsolata.png)
+
+The rule deliberately leaves many strokes alone. Noto Sans Regular changes i, l, r and the vertical bar at 11pt. At 12pt, it changes i and l. Noto Sans Bold has no eligible changed pair at either size. Italic has none at 11pt and only the vertical bar at 12pt. The two core columns are identical where neither has a qualifying pair. Any difference from stock in those rows comes from the preceding recipe. These limits prevent the chart from claiming a general crown or diagonal correction.
+
+![Noto Sans Bold 11pt, with no eligible new core correction](../images/browser-common-ground/stem-core-noto-bold.png)
+
+![Noto Sans Italic 11pt, with no eligible new core correction](../images/browser-common-ground/stem-core-noto-italic.png)
+
+The held-out families include Hack, Arial, DejaVu, Liberation, Calibri, Segoe UI and the Nimbus CFF faces. Each page contains the full pangram, both alphabets, digits, common punctuation, separated marks and the H/K/M/V/W/u controls. Both backgrounds appear at native size. The pages show the number of glyphs with eligible changes. This remains an optical trial, including cases where the limited selector does nothing.
+
+![Hack Regular 11pt](../images/browser-common-ground/stem-core-hack.png)
+
+![Nimbus Roman CFF Regular 11pt](../images/browser-common-ground/stem-core-nimbus-roman.png)
+
+![Lato Light 11pt](../images/browser-common-ground/stem-core-lato-light.png)
+
+Generate the complete folder with original Qt packages that match the build headers:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/stem_core_test.py --self-test
+PYTHONDONTWRITEBYTECODE=1 python3 tests/stem_core_test.py \
+  --stock-library STOCK_LIBRARY \
+  --stock-qt-directory ORIGINAL_PACKAGE_DIRECTORY --label-font LABEL_FONT
+gwenview results/stem-core-study/gallery/000_Noto-Sans_Regular_11pt_stock-Qt.png
+```
+
+`ORIGINAL_PACKAGE_DIRECTORY` contains the unmodified Qt Core, Gui, D-Bus and platform-plugin Debian packages. The generator extracts these into its storage-backed build directory. It does not install them. The flat folder contains 114 pages, including six extra Noto Sans stock controls. One Gwenview window supports arrow browsing at 100%.
+
+The [portable record](../images/browser-common-ground/stem-core-captures.json) binds all 10,260 glyphs through source-outline and mask digests. It includes full masks and selected pairs for all 348 glyph conditions with changes. The digest order and dimensions define the concatenated arrays. The generated full manifest retains every original and trial array plus layout coordinates. Library, package, font, helper, native capture and image hashes bind the inputs and outputs. Independent rasterization checks each loaded outline. Two compositors check each native text row. Reopened PNG crops check the complete saved strips, and direct fixtures cover the accepted u, axis transposition, reflection, short marks and low available area.
+
+The new selector preserves nonzero support, existing strong pixels, source outlines and bitmap bounds. It can shift the ink centroid and perceived geometry. Native-area conservation applies only to selected pairs, not the whole original glyph. The broader treatment still needs human judgment and real-application testing. It changes no installed library, profile, font or preference.
