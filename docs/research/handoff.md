@@ -29,6 +29,14 @@ For the requested Helvetica preference, keep this rule in the user's `fontconfig
 
 The target favors pixel alignment over exact low-density geometry. A detected width of 1.5 device pixels must round to two, while 1.4 rounds to one. These are stroke-width measurements, not font-size requests. Curves and diagonals still need softened edges. Avoid weak crowns, weak middle strokes, inconsistent intensity, and excessive diagonal weight. Test font choice, point size, scale, weight, italic, and background together. Do not add website-specific rules or substitute every light face with regular.
 
+## Curve-weight follow-up
+
+The latest user reports weak curved strokes and crowns in real use, while explicitly retaining raw processing's softer jaggies. The selected raw profile remains the control. The [new curve-weight study](16pt-geometry.md#curve-weight-with-raw-coverage) replays S6 at zero, 1/16, and 1/8 device pixel of Y expansion, with no coverage boost and with actual stock Qt beside it. It covers nine faces at integer 8–16pt, including light, bold, italic, monospace, serif, and static CFF. No trial strength is selected for deployment.
+
+The reproducible checker is `tests/raw_curve_darkening_test.py`. Supply `--stock-build RECORD`, `--nearest-library LIBRARY`, and `--label-font FONT`. The stock record must identify the retained pinned FreeType 2.14.2 source, headers, and stock library. Output goes to `build/raw-curve-darkening` and `results/raw-curve-darkening`. The checker reuses the committed segment-pair patch and a private copy of the point chart. Original helpers, libraries, and profiles stay unchanged.
+
+Judge crown readability and preserved edge softening together. Both strengths keep all tested V/v/W/w pixels unchanged, but rounded i dots and one serif italic l terminal also change. The rule operates on linked native segments, not character exclusions. The current study does not qualify a new application default.
+
 ## Current integer-point diagnostics
 
 The latest raw comparison uses current-provider captures under `results/raw-coverage-review`. Its 12pt overview contains all 19 faces on both backgrounds. Separate sheets cover every integer size 8–16pt, with stock Qt, the old ramp, raw coverage, and raw coverage with support. The user chooses fully raw coverage. Use `tests/raw_coverage_test.py` for the selected raw recipe.

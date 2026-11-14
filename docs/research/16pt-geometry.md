@@ -1,5 +1,7 @@
 # Geometry and stroke contrast at 16pt
 
+The latest [raw curve-weight comparison](#curve-weight-with-raw-coverage) tests weak crowns without restoring the earlier coverage boosts.
+
 Qt defaults are closer to the source outlines than the original Auto mono + 242 benchmark in this test. That benchmark gives stronger stroke contrast and crisp pixel placement. The current goal retains clarity while making pixel rounding respect the source proportions.
 
 Current comparison sizes are integer requests from 8pt through 16pt. Earlier fractional-point studies below are historical evidence. Device-pixel values describe internal measurements, not current font-size selections. The user now selects fully raw coverage for every tested face and condition, with nearest-50% geometry and encoded blending. This supersedes the earlier continuous ramp and native support floor in the normal browser preset. The earlier trials below remain evidence for explicit diagnostic modes. The inner-hole geometry trials offered no useful improvement.
@@ -276,3 +278,31 @@ The stroke ratios describe one cross-section of one letter. They are not a contr
 Keep Auto mono + 242 as the visual comparison control. The current target is crisp text with source-based stroke proportions and predictable nearest-pixel rounding. Judge the nearest-Y test against both that control and the original design. The remaining FreeType width matching and alignment stages still need qualification. This analysis does not change application settings.
 
 The [capture record](../images/browser-common-ground/geometry16-captures.json) contains font hashes, versions, measured values, method limits, and the figure hash. The traced Qt run reproduces all 44 original stock strips exactly. Native and benchmark outlines match their respective captures. Contour topology matches throughout. The n measurements converge within 0.001px when curve sampling doubles.
+
+## Curve weight with raw coverage
+
+The user reports that the raw profile softens jaggies but leaves curved strokes and crowns too light in real use. Preserve raw coverage and encoded blending while testing a small change to curve thickness. This experiment reuses the mutual round-segment mechanism from S6. It adds zero, 1/16, or 1/8 device pixel to the fitted Y width. It does not add a coverage floor, ramp, clipping, or a new curve classifier.
+
+The four columns are current raw, raw with 1/16-pixel curve expansion, raw with 1/8-pixel expansion, and actual stock Qt. Every outline still uses the native grayscale rasterizer. A geometry change can move an edge or change its coverage. Unchanged rasterization does not prove that edge appearance remains equally good. Visual judgment must include the soft edges as well as the stronger crowns.
+
+![Nine faces at 12pt, raw curve-weight trials and stock Qt on white](../images/browser-common-ground/raw-curves-overview-12pt-light.png)
+
+[The same overview on black](../images/browser-common-ground/raw-curves-overview-12pt-dark.png) retains all four columns. The complete matrix covers nine faces at every actual integer size from 8 through 16pt, at 96 DPI and 100% scale. Requested sizes remain point labels. The expansion strengths describe device-space stroke width, not font sizes.
+
+| Face | White background | Black background |
+| --- | --- | --- |
+| Noto Sans Regular | [Image](../images/browser-common-ground/raw-curves-noto-sans-regular-light.png) | [Image](../images/browser-common-ground/raw-curves-noto-sans-regular-dark.png) |
+| Noto Sans Bold | [Image](../images/browser-common-ground/raw-curves-noto-sans-bold-light.png) | [Image](../images/browser-common-ground/raw-curves-noto-sans-bold-dark.png) |
+| Noto Sans Italic | [Image](../images/browser-common-ground/raw-curves-noto-sans-italic-light.png) | [Image](../images/browser-common-ground/raw-curves-noto-sans-italic-dark.png) |
+| Noto Serif Regular | [Image](../images/browser-common-ground/raw-curves-noto-serif-regular-light.png) | [Image](../images/browser-common-ground/raw-curves-noto-serif-regular-dark.png) |
+| Noto Serif Italic | [Image](../images/browser-common-ground/raw-curves-noto-serif-italic-light.png) | [Image](../images/browser-common-ground/raw-curves-noto-serif-italic-dark.png) |
+| Lato Light | [Image](../images/browser-common-ground/raw-curves-lato-light-light.png) | [Image](../images/browser-common-ground/raw-curves-lato-light-dark.png) |
+| Hack Regular | [Image](../images/browser-common-ground/raw-curves-hack-regular-light.png) | [Image](../images/browser-common-ground/raw-curves-hack-regular-dark.png) |
+| Hack BoldItalic | [Image](../images/browser-common-ground/raw-curves-hack-bolditalic-light.png) | [Image](../images/browser-common-ground/raw-curves-hack-bolditalic-dark.png) |
+| Nimbus Sans Regular | [Image](../images/browser-common-ground/raw-curves-nimbus-sans-regular-light.png) | [Image](../images/browser-common-ground/raw-curves-nimbus-sans-regular-dark.png) |
+
+Both strengths preserve every tested V/v/W/w occurrence and every X contour coordinate. The rule also changes i in seven faces at all nine sizes, and l in Noto Serif Italic. Those 72 occurrences include rounded dots or terminals. H, I, and 1 remain unchanged throughout this matrix. The selector follows native rounded segments, rather than letter names. Do not describe it as changing only crowns.
+
+The [capture record](../images/browser-common-ground/raw-curves-captures.json) includes font and library hashes, all 81 conditions, native pair decisions, changed-occurrence counts, and twenty image hashes. Zero expansion reproduces the earlier nearest reference exactly. For each strength, 1,883 traced decisions include 1,223 eligible round pairs. Independent rasterization reproduces every glyph. Scalar identity-coverage composition predicts each raw mask and encoded final canvas. Saved crops reproduce the source pixels. These checks establish faithful evidence, not a visual winner.
+
+Run `tests/raw_curve_darkening_test.py --stock-build RECORD --nearest-library LIBRARY --label-font FONT` from the repository root. The stock record must identify the existing pinned FreeType 2.14.2 source and private headers. The script keeps build output and images under their configured storage roots. It records and checks cached source/library identities. The experiment has no installed-library or application-profile writes. CFF coverage includes static Nimbus Sans here. Variable CFF2, other scripts, fractional display scales, and real-application curve treatment need later qualification.

@@ -13,7 +13,7 @@ Status legend:
 
 Preserve the accepted Qt baseline for Noto Sans and Inconsolata Nerd Font. New comparisons use requested integer point sizes from 8pt through 16pt. Font, point size, style, blend, and polarity form one comparison condition. Resolved device units belong in diagnostic metadata, not comparison size labels. Human judgment at native display resolution remains the acceptance criterion.
 
-The user now requests the validated raw browser profile for KDE too. Force nearest-50% fitting, raw grayscale coverage, whole-pixel placement and encoded blending while preserving chosen fonts and sizes. Earlier Qt diagnostics remain available. Teams for Linux and other Flatpak applications also need support.
+The user now requests the validated raw browser profile for KDE too. Force nearest-50% fitting, raw grayscale coverage, whole-pixel placement and encoded blending while preserving chosen fonts and sizes. The next optical comparison addresses weak curved strokes and crowns while retaining raw edge softening. Keep it isolated from the selected working preset until judged. Earlier Qt diagnostics remain available. Teams for Linux and other Flatpak applications also need support.
 
 ## Active
 
