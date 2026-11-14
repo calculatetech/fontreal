@@ -419,3 +419,69 @@ Synthetic cases include a permitted loop gap, a colon-like gray gap, an exclamat
 Run `tests/bridge_coverage_test.py --probe PROBE --library RAW --stock-library STOCK --font FONT --label-font FONT`. The [capture record](../images/browser-common-ground/bridge-coverage-captures.json) binds the source masks, native libraries, font, two checkers, 180 native control cases and seven images. Default S21 output still reproduces all original masks and nine image hashes exactly. Its capture record refreshes only the checker identity after the helper gains explicit experimental inputs.
 
 This guard deliberately leaves a disconnected main-stroke break alone when its shape cannot be separated from independent marks. It preserves component identity, not every counter shape or optical weight. Broad family, weight, italic and character coverage remains open after the local visual decision. The installed raw preset stays unchanged.
+
+## Broad font gallery with cutoff 170 and guarded bridges
+
+The user requests this candidate alone across common fonts and weights. This gallery therefore omits comparison columns. The earlier stock Qt requirement still applies to other comparison studies. The installed raw preset remains unchanged.
+
+![Regular faces at 11pt on black](../images/browser-common-ground/bridge-matrix-0000_Overview_Dark.png)
+
+![Regular faces at 11pt on white](../images/browser-common-ground/bridge-matrix-0000_Overview_Light.png)
+
+The matrix contains 19 families and 94 actual faces. Each face has all nine integer sizes from 8pt through 16pt, at 96 DPI and 100% scale. Dark and light pages contain identical coverage with opposite foreground and background colors. The full gallery has 764 native-size PNG pages in one folder.
+
+Families include Noto Sans/Serif, DejaVu Sans/Serif/Mono, Arial, Calibri, Segoe UI, Liberation Sans/Serif/Mono, Lato and Hack. Inconsolata Nerd Font, Nimbus Sans/Roman/Mono PS CFF, Wingdings and Webdings complete the matrix. All available weights and italic styles are actual installed faces. Width variants and duplicate copies are excluded. Inconsolata supplies regular and bold only. Wingdings and Webdings supply regular only. No synthetic styles or font files are distributed.
+
+Every size includes the complete quick-brown-fox phrase in both cases, the alphabet, digits, common punctuation, currency and mathematical symbols. Further rows cover accented Latin, combining marks, ligatures, kerning pairs, Greek and Cyrillic. Controls include `:;!ij.…`, `0358`, `a/e/o/s`, and `V/v/W/w`. Inconsolata includes five Nerd Font icons. The symbol fonts also include their U+F020–F0FF bank. Their letters naturally display pictures.
+
+Red boxes identify glyphs absent from the exact selected face. Font fallback is disabled. Qt shapes the text and provides glyph indexes and positions. Exact font-table checks prevent substitution, including Arial Black's different family naming. The probe then captures raw native masks and applies the unchanged 170 + guarded bridge treatment before composition. No new letter-specific rule or coverage threshold enters this study.
+
+Representative full pages cover [Arial regular](../images/browser-common-ground/bridge-matrix-0141_Arial_Regular_11-12pt_Light.png), [Inconsolata bold](../images/browser-common-ground/bridge-matrix-0572_Inconsolata-Nerd-Font_Bold_11-12pt_Dark.png), [Nimbus regular](../images/browser-common-ground/bridge-matrix-0644_Nimbus-Sans_Regular_11-12pt_Dark.png), [Nimbus bold italic](../images/browser-common-ground/bridge-matrix-0669_Nimbus-Sans_Bold-Italic_11-12pt_Light.png), [Lato light](../images/browser-common-ground/bridge-matrix-0452_Lato_Light_11-12pt_Dark.png), and [Wingdings](../images/browser-common-ground/bridge-matrix-0740_Wingdings_Regular_10-11pt_Dark.png). View the original PNG files at 100% for pixel judgment.
+
+Generate the complete folder with the existing CFF-capable raw FreeType library, its matching stock library and an installed label font:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/bridge_font_matrix_test.py \
+  --library RAW_LIBRARY --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/bridge-font-matrix/gallery/0000_Overview_Dark.png
+```
+
+The generator needs Qt6Gui and FreeType development files, a C++17 compiler, Fontconfig and Pillow. It captures the selected families available on the running system. Missing families appear in the unavailable-style record. Other machines can produce different face counts. Keep the viewer at 100% and use Left/Right to browse the single folder. The default 1440-pixel page width requires enough screen space at native size.
+
+The [capture record](../images/browser-common-ground/bridge-matrix-captures.json) binds all 846 font/point conditions, font basenames and hashes, source identities and 764 image hashes. Eight representative images are published here. The full generated folder stays in `results/bridge-font-matrix/gallery`. Native raw masks remain internal controls. All 126,225 captured glyph masks reproduce independent outline rasterization and repeat rendering. Two compositors agree across 357,687 placed occurrences. Every saved body crop preserves its exact source pixels. The first overview also matches the actual Gwenview image at 100% pixel for pixel.
+
+These checks establish faithful component output, complete placement and the existing bridge invariants. They do not establish acceptable optical weight across the matrix. The gallery is scientific output rather than installed application output. Complex scripts beyond the displayed corpus, other scales and runtime integration remain outside this gallery.
+
+## Focused crown and diagonal cases at 11–12pt
+
+The user reports weak crowns in Hack, Inconsolata Nerd Font and Nimbus Roman at 11pt. DejaVu Sans has poor S/A/Y and diagonal balance on black at 11pt. Arial diagonals are too thick on black at 11–12pt. Most other tested sizes look good. These findings narrow the next studies to 11–12pt without retuning the remaining sizes.
+
+The focused gallery preserves the current treatment. It contains five native sheets and twenty numbered pixel sheets in one folder. Native sheets show both backgrounds and all available regular, italic, bold and bold italic faces. Inconsolata has only regular and bold. Every native strip reproduces its corresponding broad-gallery pixels exactly. Numerical details cover four regular glyphs per family at each point size. No new treatment is installed or selected.
+
+![Hack at 11–12pt, with actual styles and both backgrounds](../images/browser-common-ground/bridge-case-00_1_Hack_11-12pt_native.png)
+
+The other native sheets cover [Inconsolata](../images/browser-common-ground/bridge-case-01_1_Inconsolata-Nerd-Font_11-12pt_native.png), [Nimbus Roman](../images/browser-common-ground/bridge-case-02_1_Nimbus-Roman_11-12pt_native.png), [DejaVu Sans](../images/browser-common-ground/bridge-case-03_1_DejaVu-Sans_11-12pt_native.png), and [Arial](../images/browser-common-ground/bridge-case-04_1_Arial_11-12pt_native.png). The grids show original coverage above current coverage in each cell. Cell fill represents current white-on-black coverage. Orange borders mark changes. Blue borders mark unchanged nonzero values below 170, including normal edge softening. A blue cell is not automatically a defective pixel.
+
+![Nimbus Roman o and e at 11pt](../images/browser-common-ground/bridge-case-02_2_Nimbus-Roman_11pt_pixels_1.png)
+
+Nimbus Roman's 11pt o has top-row values `3, 113, 105, 144, 133, 4`. All remain unchanged. Its s starts with `100, 136, 126, 114`. Its 8 starts with `24, 135, 120, 138, 166, 44`. Those crowns fall below the main 170 cutoff. They also fail the conservative bridge predicate. This explains why the current pass cannot strengthen them. It does not establish which source pixels require stronger coverage.
+
+Hack's 11pt 8 retains top-row values 162 and 161 beside strong pixels at 234 and 235. Its next row also retains 161–164 values. Inconsolata's 11pt m receives no changes. Its top-row values include 125, 115, 141 and 138 between or beside strong pixels. These are further examples of curve details outside the current rule.
+
+![Arial A and V at 11pt](../images/browser-common-ground/bridge-case-04_2_Arial_11pt_pixels_1.png)
+
+Arial's 11pt V changes its first two pixels from 192 and 199 to 255 and 255. Their combined coverage rises from 391 to 510. The opposite arm changes 191 and 178 to 254 and 254. The current rule strengthens adjacent pixels independently of their combined stroke width. Arial's W and Y also contain adjacent boosted pairs. These measurements explain added diagonal weight without attributing every observed defect to the pass.
+
+DejaVu Sans combines unchanged partial edge pixels with boosted core pixels. Its 11pt A starts with adjacent values 223 and 255, which become 255 and 255. Its Y retains edge values near 140–146 while neighboring pixels rise toward their strong references. The S grid similarly shows retained low values next to boosted pixels. The study records both source geometry and the pass's contribution. Neither a larger global floor nor a lower global cutoff distinguishes these roles by itself.
+
+Run the case-study checker after the broad gallery exists:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/bridge_case_study_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/bridge-case-studies/gallery/00_1_Hack_11-12pt_native.png
+```
+
+Use Left/Right at 100% to browse the 25 pages. Each family starts with native text, followed by its two grid pages per point size. The [portable record](../images/browser-common-ground/bridge-case-captures.json) contains all 36 font/point/style sources, 40 complete original/current glyph arrays, row/column sums and 25 image hashes. Seven representative images are published here. Source hashes bind the exact broad-gallery cases and unchanged filter. Independent rasterization, two alpha compositors, saved grid fills and exact native-crop comparisons cover the output. The displayed first native sheet also matches the saved PNG pixel for pixel.
+
+The next correction must distinguish weak curved stroke structure from partially covered diagonal edges. A cutoff alone lacks that information. These case studies supply held-out constraints for that investigation. They do not select a new classifier, font substitution or per-font exception. Coverage sums describe pixel values rather than perceived weight or outline accuracy.
