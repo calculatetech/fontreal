@@ -32,6 +32,37 @@ python3 tools/browser.py status floorp
 
 The status shows the configured working profile, treated parent processes, and processes that still need a restart. A browser or FreeType update can make the recorded override incompatible. The wrapper then warns and starts the installed browser without the private library. Its rendering preferences remain configured until you disable or rebuild. Matching build support must be updated before enabling an unsupported revision.
 
+## When Nimbus Sans looks untreated
+
+The raw profile supports TrueType and CFF fonts. Legacy Type 1 fonts keep their native rendering. A loaded Fontreal library alone does not prove that a particular font receives treatment.
+
+Some installations contain both CFF and Type 1 copies of Nimbus Sans. Firefox can select a Type 1 copy for ordinary Nimbus Sans or Helvetica requests, even when `fc-match` reports CFF. Inspect the available copies:
+
+```sh
+fc-list 'Nimbus Sans' -f '%{family}|%{style}|%{fontformat}\n'
+```
+
+If both formats exist, first make sure that CFF copies cover the styles you use. To exclude only the legacy Nimbus Sans copies, save this optional rule as `51-fontreal-nimbus-cff.conf` in your per-user Fontconfig `conf.d` directory:
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <selectfont>
+    <rejectfont>
+      <pattern>
+        <patelt name="family"><string>Nimbus Sans</string></patelt>
+        <patelt name="fontformat"><string>Type 1</string></patelt>
+      </pattern>
+    </rejectfont>
+  </selectfont>
+</fontconfig>
+```
+
+Fully quit and reopen Firefox after adding the rule. Reloading a tab does not rebuild its font list. This rule affects Nimbus Sans selection across applications for that user. It preserves the font files and leaves other families available. Remove this rule and restart the affected applications to restore the original selection. The browser enable and disable commands do not manage this separate Fontconfig rule.
+
+In a controlled Firefox comparison, embedded CFF received the raw profile while ordinary Nimbus Sans and Helvetica selected untreated Type 1 copies. Excluding those copies made all three routes match the treated native masks exactly for t, f, e, o, and s. This establishes the format bypass. It does not establish a visual winner for curved strokes or qualify every website.
+
 ## Restore the original rendering
 
 Fully quit the browser before disabling. The browser saves its preferences when it exits, so live edits cannot safely restore the original values.

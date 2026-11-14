@@ -326,3 +326,13 @@ The [source record](../images/browser-common-ground/home-source-captures.json) b
 Use `tests/firefox_home_curve_test.py --probe PROBE --libraries RAW SMALL LARGER --stock-library STOCK --label-font FONT`. The two curve libraries retain S17's private build records and source files. The checker binds their actual strengths, patch hashes, source hashes, and library hashes before calling the probe. It rasterizes pre-render outlines independently, checks repeated renders and X coordinates, reconstructs raw alpha-over composition by two methods, and reopens every native/detail crop. FreeType can clear outline storage after rasterization, so the Oracle consumes the separately captured pre-render outline.
 
 The matched reference covers two Home runs on one recorded desktop. It does not establish optical quality for every face, weight, application, or scale. Continue judging the actual weak crowns and preserved edge softness before choosing a curve rule.
+
+## Nimbus Sans format bypass
+
+The user identifies weak t, f, e, o, and s strokes in a Facebook text bubble and requests Nimbus Sans as the reference. Its lowercase o matches untreated native Nimbus Sans at a 15-unit device size. Native CFF and Type 1 masks agree for this condition, so the image alone cannot identify the file format.
+
+A controlled page in the working Firefox profile separates an embedded Nimbus Sans CFF file, ordinary Nimbus Sans, and Helvetica. The embedded CFF run matches the active raw profile exactly. Both ordinary family requests match untreated native masks exactly. Each result covers all five letters with zero RGB error. The browser also maps legacy Nimbus Sans Type 1 files.
+
+Two disposable Firefox profiles use the same raw library and rendering preferences. The default font list reproduces the bypass. A Fontconfig rule that excludes the Type 1 Nimbus Sans copies makes all three routes match the treated CFF masks exactly. All four CFF styles remain available. The tested selections for Inconsolata Nerd Font, Noto Sans, Noto Serif, Arial, and Nimbus Roman remain unchanged.
+
+The CFF patch therefore works on this system. Duplicate legacy font selection can hide its effect during ordinary browsing. The [narrow Fontconfig rule](../experiments/browser-masks.md#when-nimbus-sans-looks-untreated) preserves the requested family and keeps Type 1 outside the raw profile. Resolve this selection difference before judging a stronger curve rule. The controlled test does not establish the result on the user's Facebook page after a normal browser restart.
