@@ -544,4 +544,36 @@ gwenview results/native-normal-study/gallery/0000_Hack_Regular_11pt.png
 
 The [portable record](../images/browser-common-ground/native-normal-captures.json) binds sixteen source conditions and 1,536 captured native glyphs. Each glyph has its codepoint, capture hash, loaded-outline hash, raw raster and transformed mask. Font files, libraries, probe and composing helpers also have hash bindings. Native glyph indexes must match the exact shaped source. Repeated renders and independent outline rasterization agree. Two compositors reproduce every row. Saved native crops and grid fills retain exact pixels. One complete updated Hack italic page also matches its actual 100% Gwenview presentation pixel for pixel. Seven representative images are published here. All seventeen remain in the generated folder for arrow browsing.
 
-The installed profile remains unchanged. Native-normal shape now supplies the Hack benchmark, while the raw-versus-transformed contrast decision remains open. Other fonts and live applications require separate optical judgment before choosing a general rendering policy.
+The user selects native-normal + 170 as best overall in this matrix. Inconsolata retains the most visible weak coverage, especially H/K/M/V/W/u on black at 11pt. The installed profile remains unchanged. The selected component treatment still needs live-application and layout qualification.
+
+## Inconsolata and the requested ×1.375 gain
+
+The user asks whether the native-normal sheets contain ×1.375. They do not. S25 applies that gain only to ten annotated Hack pixels. This new study applies the requested multiplication to residual coverage in Inconsolata Regular, on the selected native + 170 baseline. Both integer sizes, 11pt and 12pt, retain the native shape, bounds and positions.
+
+![Inconsolata 11pt with two bounded gain trials](../images/browser-common-ground/inconsolata-gain-0000_Inconsolata_Regular_11pt_gain.png)
+
+The first column is the accepted baseline. The middle multiplies remaining values 128–229 by 11/8, with half-up rounding and a strengthening ceiling of 226. The right uses the same multiplication with ceiling 255 as a saturation control. Values below 128 and at or above 230 remain identical. Existing values above a strengthening ceiling never decrease. Both trials start from the same immutable baseline and run once. They do not compound each other.
+
+The 226 variant preserves partial coverage in every newly strengthened cell. Its single-value transfer is monotonic: a larger input never gives a smaller output. The 255 control exposes a boundary problem. It maps 229 to 255 while protected 230 stays at 230. It can therefore make a formerly weaker cell brighter than a stronger protected one. That control is not a selected general policy.
+
+![H's split stem and the gain values](../images/browser-common-ground/inconsolata-gain-0001_Inconsolata_H_11pt_grid.png)
+
+In H at 11pt, the right stem includes pairs 128 + 152 while the left has 64 + 242 after the accepted pass. The gain changes 128 + 152 to 176 + 209 in both trial columns. In u, a right-stem pair 144 + 124 becomes 198 + 124. These changes add coverage. They do not concentrate split coverage into a single pixel or correct pixel alignment. This distinction matters even when the glyph looks brighter.
+
+Other weak runs lack an original 230+ reference for the accepted pass. In the 11pt m, ten eligible pixels form one such run. W has isolated eligible runs too. Raising only the coverage threshold cannot address those missing references. The requested gain tests whether a bounded partial lift can improve their appearance without making already strong strokes heavier.
+
+![W includes both lower-coverage edges and weak runs without strong references](../images/browser-common-ground/inconsolata-gain-0005_Inconsolata_W_11pt_grid.png)
+
+Across 96 captured glyphs at 11pt, the 226 trial changes 519 pixels and creates no new fully covered pixels. The 255 control changes 532 and creates 96 fully covered pixels. At 12pt, the corresponding counts are 527/0 and 533/73. These counts describe masks, not perceived weight. The [12pt page](../images/browser-common-ground/inconsolata-gain-0007_Inconsolata_Regular_12pt_gain.png) retains the less-pronounced condition as a control. Both pages include alphabets, the full pangram, digits, common punctuation and separated marks on both backgrounds.
+
+Reproduce the eight-page folder after the native-normal source study exists:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/inconsolata_gain_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/inconsolata-gain/gallery/0000_Inconsolata_Regular_11pt_gain.png
+```
+
+Arrow browsing covers the 11pt sheet, six numbered H/K/M/V/W/u grids, and the 12pt sheet. The [portable record](../images/browser-common-ground/inconsolata-gain-captures.json) binds all 192 native glyph captures, original outlines, raw/baseline/trial masks, counts and eight image hashes. Four examples are published here. Checks cover all 256 transfer inputs, boundaries, rounding, the partial variant's monotonicity and the saturation control's inversion. Capture hashes, repeated renders, independent rasterization and baseline recomputation must agree. Both compositors, complete native crops and every reopened grid fill retain exact pixels. The complete 11pt page also matches its actual 100% Gwenview presentation pixel for pixel.
+
+No gain is installed or selected for general use. Other fonts and weights require held-out checks after optical judgment. The experiment isolates the gain request while keeping the accepted native geometry and strong pixels intact.
