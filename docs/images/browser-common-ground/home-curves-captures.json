@@ -1,0 +1,76 @@
+{
+  "kind": "Actual Firefox Home matched before curve comparison",
+  "cases": [
+    {
+      "case": "caption",
+      "baseline_error": {
+        "maximum_channel_error": 1,
+        "mean_channel_error": 0.043236714975845414,
+        "matched_nonempty_occurrences": 8,
+        "wrong_size_maximum_channel_error": 227,
+        "linear_blend_maximum_channel_error": 57
+      },
+      "images": [
+        {
+          "mode": "raw",
+          "file": "home-caption-raw.png",
+          "sha256": "8e49704429a2655833257b9ff6884f6f4b91655fed3a2f22eefa96e771175e87"
+        },
+        {
+          "mode": "small",
+          "file": "home-caption-small.png",
+          "sha256": "790317f202b8cb9b9ce641728d15f14e608195021fcbc7af757c718fffc33d4a"
+        },
+        {
+          "mode": "larger",
+          "file": "home-caption-larger.png",
+          "sha256": "1ef82097d27245dafd84e36136eab2728744fd7d2218aa1c41d2add4c5253fc3"
+        }
+      ]
+    },
+    {
+      "case": "heading",
+      "baseline_error": {
+        "maximum_channel_error": 1,
+        "mean_channel_error": 0.040990698680510494,
+        "matched_nonempty_occurrences": 14,
+        "wrong_size_maximum_channel_error": 227,
+        "linear_blend_maximum_channel_error": 57
+      },
+      "images": [
+        {
+          "mode": "raw",
+          "file": "home-heading-raw.png",
+          "sha256": "d662c9074a23f7412eda8bf31f26c938ec45b8d14c4e453cda9d29c411e0c76e"
+        },
+        {
+          "mode": "small",
+          "file": "home-heading-small.png",
+          "sha256": "d78924baf765d6a43549d5ba7bb061f32835b6cae1026985f11e1261568fc851"
+        },
+        {
+          "mode": "larger",
+          "file": "home-heading-larger.png",
+          "sha256": "92b72e110ab92d2e1742f604794350eb73431d36d7c3a6b1a2e5cd238c236802"
+        }
+      ]
+    }
+  ],
+  "source_sha256": "3a3761c1d765be7d27b6fbb1bba66e34dd9676b1d92d58cecfb060ac5fc04cee",
+  "checker_sha256": "0ab1f28ca55263204bdbf66fd987d57896f33f2d1338922672d504d25fd1447b",
+  "libraries": [
+    "ae8489a3c5b26bd2238f8e23b833cc26bbb5ae896ad9bba82f3fb88933dc41f6",
+    "3fd1f7d0285559d9949879027731cfead9772926acf1d63e7f11c219bb05452e",
+    "31066814b62219fc185ddc5c9b66d134257e1a2c83637b3ca3d76a02a532f0f3"
+  ],
+  "stock_library_sha256": "119762cc898175319d44c39f3ec5d7f1244739248999bfdef6ad2e34f81aaa7a",
+  "image": {
+    "file": "firefox-home-curves.png",
+    "sha256": "1d7f7b2c2fb2abe8d2ad0b034c875f8b92b63ff741c06a6743ba81fc730725dc"
+  },
+  "limits": [
+    "Two measured Home text runs, not all application text",
+    "Matched baseline allows one RGB quantization level",
+    "Curve trials change geometry; visual edge quality remains unselected"
+  ]
+}

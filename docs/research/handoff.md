@@ -29,6 +29,14 @@ For the requested Helvetica preference, keep this rule in the user's `fontconfig
 
 The target favors pixel alignment over exact low-density geometry. A detected width of 1.5 device pixels must round to two, while 1.4 rounds to one. These are stroke-width measurements, not font-size requests. Curves and diagonals still need softened edges. Avoid weak crowns, weak middle strokes, inconsistent intensity, and excessive diagonal weight. Test font choice, point size, scale, weight, italic, and background together. Do not add website-specific rules or substitute every light face with regular.
 
+## Matched Firefox Home reference
+
+The latest user rejects the synthetic 12pt chart as unrepresentative of normal application text and selects Firefox Home's light-on-dark crowns. Use the [actual Home comparison](16pt-geometry.md#matched-firefox-home-reference) as the next optical reference. Its first column is real Home text, and its second reproduces both complete source crops within one RGB level. The source includes a system-caption label and the recent-activity heading. Actual font files, native sizes, measured colors, and per-occurrence origins replace assumptions about pure black/white and a 12pt request.
+
+`tests/firefox_home_curve_test.py` replays the raw profile and the earlier 1/16- and 1/8-device-pixel curve strengths against that source. Supply the existing native probe, three private libraries, the stock raster library, and label font. The curve libraries must keep S17's build records and sources. The public source and comparison records preserve only tight generic text crops and portable metadata. No full Home window or browsing data belongs in public evidence. The older chart and custom-page match remain separate component evidence, not qualification of Home.
+
+The user authorizes the existing activation tool to apply the new raw profile to ordinary Firefox and completes a normal quit/reopen. Preserve the original working account. Do not infer a KDE upgrade from browser activation. No curve strength is selected or deployed. Use Home only as a measured reproduction case; the eventual treatment must remain general.
+
 ## Curve-weight follow-up
 
 The latest user reports weak curved strokes and crowns in real use, while explicitly retaining raw processing's softer jaggies. The selected raw profile remains the control. The [new curve-weight study](16pt-geometry.md#curve-weight-with-raw-coverage) replays S6 at zero, 1/16, and 1/8 device pixel of Y expansion, with no coverage boost and with actual stock Qt beside it. It covers nine faces at integer 8–16pt, including light, bold, italic, monospace, serif, and static CFF. No trial strength is selected for deployment.

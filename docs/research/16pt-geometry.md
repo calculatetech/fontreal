@@ -1,6 +1,6 @@
 # Geometry and stroke contrast at 16pt
 
-The latest [raw curve-weight comparison](#curve-weight-with-raw-coverage) tests weak crowns without restoring the earlier coverage boosts.
+The latest [Firefox Home comparison](#matched-firefox-home-reference) first matches actual application text before testing weak crowns. The earlier [raw curve-weight comparison](#curve-weight-with-raw-coverage) remains component evidence.
 
 Qt defaults are closer to the source outlines than the original Auto mono + 242 benchmark in this test. That benchmark gives stronger stroke contrast and crisp pixel placement. The current goal retains clarity while making pixel rounding respect the source proportions.
 
@@ -306,3 +306,23 @@ Both strengths preserve every tested V/v/W/w occurrence and every X contour coor
 The [capture record](../images/browser-common-ground/raw-curves-captures.json) includes font and library hashes, all 81 conditions, native pair decisions, changed-occurrence counts, and twenty image hashes. Zero expansion reproduces the earlier nearest reference exactly. For each strength, 1,883 traced decisions include 1,223 eligible round pairs. Independent rasterization reproduces every glyph. Scalar identity-coverage composition predicts each raw mask and encoded final canvas. Saved crops reproduce the source pixels. These checks establish faithful evidence, not a visual winner.
 
 Run `tests/raw_curve_darkening_test.py --stock-build RECORD --nearest-library LIBRARY --label-font FONT` from the repository root. The stock record must identify the existing pinned FreeType 2.14.2 source and private headers. The script keeps build output and images under their configured storage roots. It records and checks cached source/library identities. The experiment has no installed-library or application-profile writes. CFF coverage includes static Nimbus Sans here. Variable CFF2, other scripts, fractional display scales, and real-application curve treatment need later qualification.
+
+## Matched Firefox Home reference
+
+The user reports that the earlier samples look darker than normal application text. Their requested reference is Firefox Home's light-on-dark text, especially its soft crowns. The earlier 12pt, pure black/white chart is not a qualified optical reference for those conditions. It remains a valid component comparison. Matching a custom page to that chart alone does not establish a match to Firefox Home.
+
+The native Home capture supplies two generic text runs: a shortcut label and the recent-activity heading. The shortcut uses the system caption font, Noto Sans at 10pt. Its native size is about 13.333 device units, rather than Qt's rounded 13-unit result for the same point request. The heading uses the installed Noto Sans Bold face. The packaged Home style requests 600 weight and a 1.133rem heading at a 15px root. Its native raster size rounds to 17 units. These device values describe the diagnostic, not new synthetic comparison-size labels.
+
+The measured capture background is RGB 19,18,21 and the opaque text color is RGB 242,240,248. The first comparison assumed pure black and white. Both size and color must stay fixed when judging the actual Home condition. Source stylesheet and Fontconfig observations identify candidate settings. Matching the complete captured text verifies the selected font and native size.
+
+![Actual Firefox Home text, matched native baseline, and two small curve-width trials](../images/browser-common-ground/firefox-home-curves.png)
+
+The first column contains actual Home text crops. The second reconstructs those same pixels with the native raw profile. Every one of the 22 nonempty glyph occurrences and both complete crops agree within one RGB level per channel. Mean absolute error is about 0.04 per channel over each full crop. A wrong-size control differs by up to 227 levels. Linear-light composition differs by up to 57. The matching raw/encoded baseline therefore distinguishes the earlier mismatched size and blend conditions.
+
+Columns three and four retain the measured fonts, native sizes, colors, and glyph origins. They replay the existing round-segment rule at 1/16 and 1/8 device pixel, with raw coverage and encoded blending. Native pixels appear above exact 3x details. The displayed 1720×440 figure matches its saved PNG at actual 100% zoom. Neither strength is installed or selected by this evidence. Home is a measured fixture, not a page-specific rendering rule.
+
+The [source record](../images/browser-common-ground/home-source-captures.json) binds the two tight generic-text crops, font hashes, measured colors, native sizes, and occurrence origins. It contains no full window, browsing history, bookmarks, or account data. The [comparison record](../images/browser-common-ground/home-curves-captures.json) binds native library and checker hashes, six result images, the figure, and the baseline/error contrasts. Earlier 12pt charts retain their distinct capture identity.
+
+Use `tests/firefox_home_curve_test.py --probe PROBE --libraries RAW SMALL LARGER --stock-library STOCK --label-font FONT`. The two curve libraries retain S17's private build records and source files. The checker binds their actual strengths, patch hashes, source hashes, and library hashes before calling the probe. It rasterizes pre-render outlines independently, checks repeated renders and X coordinates, reconstructs raw alpha-over composition by two methods, and reopens every native/detail crop. FreeType can clear outline storage after rasterization, so the Oracle consumes the separately captured pre-render outline.
+
+The matched reference covers two Home runs on one recorded desktop. It does not establish optical quality for every face, weight, application, or scale. Continue judging the actual weak crowns and preserved edge softness before choosing a curve rule.
