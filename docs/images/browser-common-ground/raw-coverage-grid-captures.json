@@ -6,13 +6,17 @@
   "library_sha256": "ae8489a3c5b26bd2238f8e23b833cc26bbb5ae896ad9bba82f3fb88933dc41f6",
   "stock_library_sha256": "119762cc898175319d44c39f3ec5d7f1244739248999bfdef6ad2e34f81aaa7a",
   "probe_sha256": "50d65750315037917f36b0a97fc78ce32a1d2e697a295907c01b9f7c90b7065b",
-  "checker_sha256": "c362ecd86c880f1dcdcb6ae4e102c83314063ca798ad0b3054ba8131d216a8d4",
+  "checker_sha256": "bd60fd2f38da94c50872f086f95294d6cd1b04131853c94b6132f57adc9eacc0",
   "glyphs": {
     "o": {
       "width": 7,
       "height": 8,
       "left": 1,
       "top": 8,
+      "advance": [
+        576,
+        0
+      ],
       "coverage": [
         [
           0,
@@ -94,6 +98,10 @@
       "height": 8,
       "left": 1,
       "top": 8,
+      "advance": [
+        512,
+        0
+      ],
       "coverage": [
         [
           31,
@@ -167,6 +175,10 @@
       "height": 8,
       "left": 1,
       "top": 8,
+      "advance": [
+        576,
+        0
+      ],
       "coverage": [
         [
           0,
@@ -248,6 +260,10 @@
       "height": 8,
       "left": 1,
       "top": 8,
+      "advance": [
+        512,
+        0
+      ],
       "coverage": [
         [
           14,
@@ -329,6 +345,10 @@
       "height": 11,
       "left": 1,
       "top": 11,
+      "advance": [
+        384,
+        0
+      ],
       "coverage": [
         [
           0,
@@ -404,6 +424,10 @@
       "height": 11,
       "left": 1,
       "top": 11,
+      "advance": [
+        384,
+        0
+      ],
       "coverage": [
         [
           0,
@@ -479,6 +503,10 @@
       "height": 11,
       "left": 0,
       "top": 11,
+      "advance": [
+        640,
+        0
+      ],
       "coverage": [
         [
           94,
@@ -620,6 +648,10 @@
       "height": 11,
       "left": 0,
       "top": 11,
+      "advance": [
+        896,
+        0
+      ],
       "coverage": [
         [
           139,

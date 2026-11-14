@@ -80,7 +80,8 @@ def main():
                 natives.append((nx, 104, image))
             values = [list(data[row*width:(row+1)*width]) for row in range(height)]
             records[char] = dict(width=width, height=height, left=glyph['left'], top=glyph['top'],
-                                 coverage=values, mask_sha256=hashlib.sha256(data).hexdigest())
+                                 advance=glyph['advance'], coverage=values,
+                                 mask_sha256=hashlib.sha256(data).hexdigest())
             for col in range(width):
                 draw.text((x+col*cell+cell//2, y-12), str(col+1), font=number, anchor='mm', fill='white')
             for row in range(height):

@@ -358,3 +358,38 @@ The f/t stems reach 255, while their curved terminals retain gray pixels. V/W al
 Run `tests/raw_coverage_grid_test.py --probe PROBE --library RAW --stock-library STOCK --font FONT --label-font LABELFONT`. Use the existing native probe, matching raw and stock FreeType libraries, and installed Nimbus Sans Regular CFF font. The checker independently rasterizes each loaded outline, checks repeat renders and saves every value. It reopens the PNGs to compare all cell intensities and native crops. Results stay under `results/raw-coverage-grids`, with temporary native probe records under `build/raw-coverage-grids`.
 
 The [capture record](../images/browser-common-ground/raw-coverage-grid-captures.json) binds the eight masks, complete coverage arrays, input hashes, checker and three images. All six source-matched glyph hashes agree with the current grids. These are raw diagnostic values for one measured font and size. The experiment does not change the working browser preset.
+
+## Strong-neighbor averages from coverage 173
+
+The user identifies 173 as the lowest coverage that needs strengthening. They request an average from nearby original pixels at 230 or above. They also identify a gap in direct averaging: three eligible pixels around an o corner leave the middle pixel without a strong neighbor. Keep this as a coverage-only experiment on the matched Nimbus masks before broad qualification.
+
+The direct candidate changes only original values from 173 through 229. It replaces each with the mean of its original 230+ eight-neighbors, rounded to the nearest integer with halves upward. A pixel without such a neighbor stays unchanged. Every reference comes from the untouched source mask.
+
+The connected candidate first groups 173–229 pixels that touch along a side or corner. It averages the unique original 230+ pixels touching each group. Every eligible pixel in that group receives the same target. A group without a strong neighbor stays unchanged. Each reference pixel contributes once, even when it touches several weak pixels. Boosted pixels never become new references. The target remains between the weakest and strongest reference values.
+
+![Native text and enlarged details for raw, direct-neighbor and connected averages](../images/browser-common-ground/neighbor-coverage-preview.png)
+
+For o, the connected method strengthens all twelve eligible pixels. Direct averaging changes eight and strands four middle pixels. In the upper-left corner, raw 225 stays 225 under direct averaging and becomes 241 under the shared reference. All original values below 173 and at or above 230 remain identical. Outlines, bitmap bounds and glyph advances stay fixed. Native words share whole-pixel advances and fixed comparison spaces.
+
+![Numbered o pixels, including the stranded middle pixel](../images/browser-common-ground/neighbor-coverage-o.png)
+
+| Glyph | Direct changes | Connected changes | Numbered grid |
+| --- | --- | --- | --- |
+| o | 8 | 12 | [Grid](../images/browser-common-ground/neighbor-coverage-o.png) |
+| s | 7 | 9 | [Grid](../images/browser-common-ground/neighbor-coverage-s.png) |
+| e | 7 | 10 | [Grid](../images/browser-common-ground/neighbor-coverage-e.png) |
+| a | 9 | 10 | [Grid](../images/browser-common-ground/neighbor-coverage-a.png) |
+| f | 1 | 1 | [Grid](../images/browser-common-ground/neighbor-coverage-f.png) |
+| t | 0 | 0 | [Grid](../images/browser-common-ground/neighbor-coverage-t.png) |
+| V | 8 | 8 | [Grid](../images/browser-common-ground/neighbor-coverage-V.png) |
+| W | 19 | 19 | [Grid](../images/browser-common-ground/neighbor-coverage-W.png) |
+
+Orange borders mark every changed cell. V and W change, so this method does not establish diagonal preservation. It leaves the low-coverage edges unchanged but can increase apparent weight. Eight-neighbor adjacency can combine weak pixels at touching branches. A light face without a qualifying strong reference receives no correction in that group.
+
+The [capture record](../images/browser-common-ground/neighbor-coverage-captures.json) contains every source group, unique reference index, target and transformed value. It binds S20's native source, checker and nine images. The raw record now includes native advances for shared placement. Its original coverage and three image hashes remain unchanged.
+
+Run `tests/neighbor_coverage_test.py --label-font FONT` after generating the raw grids. The checker consumes their portable record. Hand-calculated cases cover the 173/230 boundaries, three-pixel gaps, missing references, diagonal adjacency, row wrapping, duplicate reference contacts and half-up means. Mirrored and transposed actual masks produce the same spatial result. The connected result also stays unchanged on a repeated pass. Two independent compositors reproduce the per-glyph treatment and final encoded pixels. Saved native strips, exact enlarged details and numbered cells match their source values.
+
+The bounded choice is a shared mean for a weak connected group. [ImageJ's reconstruction documentation](https://imagej.github.io/plugins/morpholibj) supplies background on propagation constrained by a mask. This experiment uses an average instead of maximum-based dilation. It imports no ImageJ code. Harmonic interpolation can supply a varying reference along longer runs, but adds a solver before the simpler mean is judged.
+
+This preview covers eight glyphs from one font at one measured size. The user requires a broad check after Nimbus visual acceptance. That check must include more characters, font families, integer 8–16pt sizes, weights, italic styles and backgrounds. Keep V/v/W/w, digits and straight-stroke controls visible. Neither synthetic correctness nor the local reference bound establishes acceptable optical weight. No new treatment is installed.
