@@ -515,3 +515,33 @@ gwenview results/hack-eight/gallery/00_Hack_11pt_shape-and-coverage.png
 ```
 
 The checker compiles the existing single-glyph probe with Qt6Core and FreeType development files. Its [portable record](../images/browser-common-ground/hack-eight-captures.json) binds font, source case, libraries, flags, native captures, outlines, masks, annotated coordinates, checker and figures. Independent rasterization reproduces all original masks. Repeated renders agree. Explicit checks require ten changed cells, preserved support and ordering, unchanged other pixels, complete native/enlarged bounds and exact saved crops and grid fills. The complete first page also matches Gwenview at 100% pixel for pixel. No installed profile or general filter changes in this study.
+
+## Native-normal shape and coverage at 11–12pt
+
+The user prefers the local ×1.375 trial but still rejects the shape. Font-native normal is their only accurate shape reference for Hack Regular's 11pt 8. This is a bounded optical selection for that glyph. The local gain preference remains separate evidence. Its ten annotated coordinates do not transfer to the native raster.
+
+![Hack Regular 11pt with native-normal shape and controlled coverage](../images/browser-common-ground/native-normal-0000_Hack_Regular_11pt.png)
+
+The columns show current auto-mono with 170 + guarded bridge, native-normal raw coverage, and native-normal with the same bridge pass. The native columns share one loaded outline, bitmap bounds and origin. The third column can still look heavier because its coverage changes. Outline identity does not guarantee equal perceived shape. No local ×1.375 gain enters either native column.
+
+The native probe uses `FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_BITMAP`, numeric flags 32776, with normal grayscale rasterization. [FreeType distinguishes native preference from disabling its auto-hinter](https://freetype.org/freetype2/docs/reference/ft2-glyph_retrieval.html#ft_load_xxx). The explicit no-auto mode exactly reproduces the selected Hack control from S25, which used default/native preference. The matching stock library prevents the browser profile from overriding the requested flags. No new fitting rule or classifier is introduced.
+
+![Hack 11pt 8 with separate source geometry and coverage grids](../images/browser-common-ground/native-normal-0001_Hack_Regular_11pt_8_grid.png)
+
+The Hack 8 grid retains the old seven-column mono raster and the nine-column native raster. Each cell shows original coverage above displayed coverage. Orange borders mark coverage changes. The native bridge pass changes fourteen pixels in this 8. Its two native columns keep identical geometry and bounds. This separates the user's preferred shape from the remaining contrast decision.
+
+The matrix covers Hack's four actual styles at 11pt and 12pt. Regular Inconsolata Nerd Font, Nimbus Roman CFF, DejaVu Sans and Arial supply the other eight conditions. Each page includes both backgrounds, the complete pangram, uppercase and lowercase alphabets, digits, ASCII punctuation, separated marks, curves and diagonals. Explicit S/A/Y/V/W rows retain the earlier diagonal constraints. The full folder contains sixteen native pages and one grid page.
+
+Published examples include [Hack italic](../images/browser-common-ground/native-normal-0003_Hack_Italic_11pt.png), [Inconsolata](../images/browser-common-ground/native-normal-0009_Inconsolata-Nerd-Font_Regular_11pt.png), [Nimbus Roman](../images/browser-common-ground/native-normal-0011_Nimbus-Roman_Regular_11pt.png), [DejaVu Sans](../images/browser-common-ground/native-normal-0013_DejaVu-Sans_Regular_11pt.png), and [Arial](../images/browser-common-ground/native-normal-0015_Arial_Regular_11pt.png). The original shaped positions and baselines remain fixed across columns. Long alphabet and control rows split at spaces while retaining every selected character. These are controlled raster comparisons. They do not qualify native-hinted text layout or live-application spacing.
+
+Generate the study after the broad source gallery exists:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/native_normal_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/native-normal-study/gallery/0000_Hack_Regular_11pt.png
+```
+
+The [portable record](../images/browser-common-ground/native-normal-captures.json) binds sixteen source conditions and 1,536 captured native glyphs. Each glyph has its codepoint, capture hash, loaded-outline hash, raw raster and transformed mask. Font files, libraries, probe and composing helpers also have hash bindings. Native glyph indexes must match the exact shaped source. Repeated renders and independent outline rasterization agree. Two compositors reproduce every row. Saved native crops and grid fills retain exact pixels. One complete updated Hack italic page also matches its actual 100% Gwenview presentation pixel for pixel. Seven representative images are published here. All seventeen remain in the generated folder for arrow browsing.
+
+The installed profile remains unchanged. Native-normal shape now supplies the Hack benchmark, while the raw-versus-transformed contrast decision remains open. Other fonts and live applications require separate optical judgment before choosing a general rendering policy.
