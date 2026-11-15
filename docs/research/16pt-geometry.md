@@ -725,3 +725,39 @@ gwenview results/noto-stem-winner/gallery/06_Noto-Serif_Regular_11pt_affected.pn
 ```
 
 The [portable record](../images/browser-common-ground/stem-winner-captures.json) binds the old source records, fixtures, font, native captures, library, unchanged helpers and new consumer. It includes complete n masks, pair values, totals and centroid positions. The matrix report lists all additional changes, their mask digests and the complete image inventory. The displayed affected-condition set must equal the audit set. Independent rasterization checks all glyphs used on the focused and additional pages. Two compositors check each native text row. Reopened native strips, exact enlargements and numbered fills check the saved figures. Direct fixtures cover the four n donors, unchanged strong cores and upper join, original u identity, reflected and transposed inputs, protected fringes and insufficient area. No installed profile or earlier comparison output changes.
+
+## Residual contrast in the accepted benchmark
+
+The user prefers the strong-winner treatment in every affected comparison. They report better contrast, sharpness and geometry. That treatment is the new optical benchmark. Noto Sans Regular and Segoe UI Regular at 11pt retain some contrast variation. The next inspection preserves their accepted pixels rather than applying another global darkening pass.
+
+![Accepted Noto Sans and Segoe UI at 11pt](../images/browser-common-ground/contrast-focus-00_Accepted_Noto-Sans_Segoe-UI_Regular_11pt.png)
+
+The overview shows Noto Sans on the left and Segoe UI on the right. Both use the accepted treatment on both backgrounds. They are different fonts, not different rendering trials. Every text strip must equal its right-hand strip in the accepted source gallery. Source font, point request, geometry and placement remain unchanged.
+
+Segoe UI H provides a concrete unresolved split stem. Outside the crossbar, its original left pair contains 160 + 156 coverage, total 316. Its right pair contains 244 + 68, total 312. The accepted processing raises the left pair to 220 + 215, total 435, while the right pair stays at 312. The left stem therefore remains spread across two competing pixels despite almost equal original pair totals. The existing selector requires at least 16 coverage units between the original sides. This pair differs by four, so it stays outside that selector. These measurements identify a candidate cause of uneven contrast. They do not select a new dominance rule.
+
+![Segoe UI H original and accepted coverage](../images/browser-common-ground/contrast-focus-42_Segoe-UI_Regular_11pt_H_dark.png)
+
+The matching [white-background H map](../images/browser-common-ground/contrast-focus-44_Segoe-UI_Regular_11pt_H_light.png) retains the same coverage values. Curve edges provide a different diagnostic: Noto Sans e retains 114 at the third cell of its top row. Low coverage at an outer edge is not automatically a defect. The maps allow the reader to distinguish a weak stroke from intended smoothing before changing the benchmark.
+
+![Noto Sans e](../images/browser-common-ground/contrast-focus-05_Noto-Sans_Regular_11pt_e_dark.png)
+
+![Segoe UI e](../images/browser-common-ground/contrast-focus-06_Segoe-UI_Regular_11pt_e_dark.png)
+
+![Noto Sans n](../images/browser-common-ground/contrast-focus-13_Noto-Sans_Regular_11pt_n_dark.png)
+
+![Segoe UI n](../images/browser-common-ground/contrast-focus-14_Segoe-UI_Regular_11pt_n_dark.png)
+
+![Noto Sans W control](../images/browser-common-ground/contrast-focus-53_Noto-Sans_Regular_11pt_W_dark.png)
+
+The complete inspection starts with a/e/m/n/o/u, 0/3/5/8 and H/M/N/W controls. One native overview and 56 coverage pages form a flat 57-page folder. Adjacent pages alternate the fonts for the same character and background. Each map places original native coverage on the left and accepted coverage on the right. Rows and columns start at one. Values remain 0–255 coverage under both polarities. No new gain, redistribution, hinting or threshold change is applied.
+
+After the matching source galleries exist, generate the folder:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/contrast_focus_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/contrast-focus/gallery/00_Accepted_Noto-Sans_Segoe-UI_Regular_11pt.png
+```
+
+The [portable record](../images/browser-common-ground/contrast-focus-captures.json) includes complete original and accepted arrays for all 28 glyph/font pairs. It binds the accepted record, source captures, font and library identities, helpers, all 190 accepted context masks and complete image inventory. Every accepted mask must reproduce the earlier audit and its digests. Independent rasterization checks all original outlines. Two compositors check the native overview, which must also equal the accepted source images. Reopened native samples and every numbered cell fill check both polarities. The installed profile and earlier galleries remain unchanged while the remaining contrast problem is identified.
