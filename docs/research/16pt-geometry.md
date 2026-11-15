@@ -761,3 +761,64 @@ gwenview results/contrast-focus/gallery/00_Accepted_Noto-Sans_Segoe-UI_Regular_1
 ```
 
 The [portable record](../images/browser-common-ground/contrast-focus-captures.json) includes complete original and accepted arrays for all 28 glyph/font pairs. It binds the accepted record, source captures, font and library identities, helpers, all 190 accepted context masks and complete image inventory. Every accepted mask must reproduce the earlier audit and its digests. Independent rasterization checks all original outlines. Two compositors check the native overview, which must also equal the accepted source images. Reopened native samples and every numbered cell fill check both polarities. The installed profile and earlier galleries remain unchanged while the remaining contrast problem is identified.
+
+## Generic profile and corner regressions
+
+The user supplies seven worst cases and requires a generic algorithm, without font or character exceptions. Segoe UI a/0/H and Noto Sans m/3/H/M expose unresolved winners, corner bleed and intersection bleed. Broadway, Calisto MT and Castellar add intentional stroke contrast and intricate detail as regression controls. These examples select tests and figures, not rendering branches.
+
+The experimental processor takes only original coverage bytes, accepted coverage bytes and bitmap width. It has no font, glyph or codepoint input, file access or font-library dependency. Every glyph receives the same rules. The accepted strong-winner benchmark remains unchanged while the new variants need optical judgment.
+
+The three-column pages show the accepted benchmark, A for profiles and joins, and B for A plus native corner fringe. Both backgrounds retain encoded coverage composition. No hinting, outline, advance or placement changes occur. Native coverage is area coverage, as described in the [FreeType rendering contract](https://freetype.org/freetype2/docs/reference/ft2-glyph_retrieval.html#ft_render_glyph). That contract supports the arithmetic, not the experimental classification rules proposed here.
+
+![Noto Sans Regular 11pt profile trials](../images/browser-common-ground/stroke-profile-000_Noto-Sans_Regular_11pt_trials.png)
+
+![Segoe UI Regular 11pt profile trials](../images/browser-common-ground/stroke-profile-001_Segoe-UI_Regular_11pt_trials.png)
+
+A finds short two-pixel edge profiles with stable native fringe coverage. Isolated cross-sections supply evidence for a thin stroke and its winning pixel. The core reaches at least 240 and retains any stronger accepted value. At isolated anchors, the pair retains its original total. Nearly equal sides are allowed. Exact ties prefer an existing accepted winner, then the positive axis direction. Conflicting orientations are rejected. A two-profile segment requires native strong support beyond both ends, which protects small isolated marks, including asymmetric dots.
+
+The accepted fringe shift at isolated anchors supplies an edge-phase reference. A carries that shift through supported joins, retaining small native variations rather than flattening curves. A core floor can cross an interruption when the original channel remains stable and anchors support both ends. A short curved step can also resolve when two processed pixels compete and native strong support exists on both perpendicular sides. The chosen core must reach both native supports through eight-neighbor adjacency. Otherwise A retains the two-pixel path. The algorithm preserves positive support and never decreases a native strong pixel or a selected core. It can reduce a processed strong pixel that the structural evidence identifies as native-weak fringe.
+
+B tests a separate corner rule. When two perpendicular native-strong neighbors and two opposite faint neighbors identify an exposed convex corner, B removes added fringe coverage. The pixel returns to its native value. Selected cores stay protected. This distinguishes extra corner ink from a main stroke that needs a coverage floor. B is an alternative for optical review, not an assumed improvement in every glyph.
+
+![Segoe UI a](../images/browser-common-ground/stroke-profile-124_Segoe-UI_Regular_11pt_a_dark_grid.png)
+
+![Noto Sans m](../images/browser-common-ground/stroke-profile-126_Noto-Sans_Regular_11pt_m_dark_grid.png)
+
+![Segoe UI 0](../images/browser-common-ground/stroke-profile-128_Segoe-UI_Regular_11pt_0_dark_grid.png)
+
+![Noto Sans 3](../images/browser-common-ground/stroke-profile-130_Noto-Sans_Regular_11pt_3_dark_grid.png)
+
+![Noto Sans H](../images/browser-common-ground/stroke-profile-132_Noto-Sans_Regular_11pt_H_dark_grid.png)
+
+![Segoe UI H](../images/browser-common-ground/stroke-profile-134_Segoe-UI_Regular_11pt_H_dark_grid.png)
+
+![Noto Sans M](../images/browser-common-ground/stroke-profile-136_Noto-Sans_Regular_11pt_M_dark_grid.png)
+
+The direct regressions include measurable results. Segoe UI H resolves its isolated left pairs from 220/215 to 240/76 and carries its core through the crossbar. Noto Sans H keeps its outer fringes at 99 and 96 through the join. Noto Sans m resolves the competing middle pair to 107/240. Segoe UI 0's upper curved pair becomes 250/114. Noto Sans 3's short lower segment becomes 248/111 and 248/116. Noto Sans M's exposed outer corner drops from 193 to 70 in A. Its inner top fringe returns from 226 to native 167 in B. These numerical results do not prove that every optical effect is preferable.
+
+The three new families use fresh captures from the same unmodified native probe, Qt and FreeType providers. No font file is redistributed. All five available faces receive 11pt and 12pt requests. Calisto MT includes regular, bold and italic. Broadway and Castellar have regular only. Missing styles are explicit. Each new case has an original-native versus existing-treatment reference page before the three-column trials. This makes intentional weight contrast visible without assuming that the existing treatment is already correct for these fonts.
+
+![Broadway native reference](../images/browser-common-ground/stroke-profile-002_Broadway_Regular_11pt_intent.png)
+
+![Broadway trials](../images/browser-common-ground/stroke-profile-003_Broadway_Regular_11pt_trials.png)
+
+![Calisto MT native reference](../images/browser-common-ground/stroke-profile-006_Calisto-MT_Regular_11pt_intent.png)
+
+![Calisto MT trials](../images/browser-common-ground/stroke-profile-007_Calisto-MT_Regular_11pt_trials.png)
+
+![Castellar native reference](../images/browser-common-ground/stroke-profile-018_Castellar_Regular_11pt_intent.png)
+
+![Castellar trials](../images/browser-common-ground/stroke-profile-019_Castellar_Regular_11pt_trials.png)
+
+The full matrix covers twenty families, 118 font/style/point conditions and 11,210 printable-ASCII codepoint cases. Those contain 11,158 unique glyph instances because Castellar shares some glyphs across uppercase and lowercase. Every alias must have identical native and processed data. The folder contains 138 sheets: 114 trial condition pages, ten native references and fourteen detailed grids. It includes every changed condition and every new regression condition. A changes 1,676 codepoint cases and B changes 4,930 relative to the accepted benchmark. A finite matrix does not establish correctness for every font, size, script or glyph.
+
+Generate the experiment after the accepted source studies exist and the regression fonts are installed:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/stroke_profile_test.py --self-test
+PYTHONDONTWRITEBYTECODE=1 python3 tests/stroke_profile_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/stroke-profile-study/gallery/002_Broadway_Regular_11pt_intent.png
+```
+
+The [portable record](../images/browser-common-ground/stroke-profile-captures.json) binds both new source files, earlier accepted inputs, font and library identities, native captures, complete image inventory and each audited record. It includes full arrays and structural evidence for the seven supplied regressions. Per-codepoint digests bind the complete generated audit entries, including all raw/accepted/A/B mask hashes, sums and change counts. The full generated manifest retains those entries directly. Its `masks.json` companion retains all four complete arrays for every unique glyph instance, with a bound file hash. Independent rasterization checks every source glyph. Two compositors check each native text strip. Reopened strips and numbered fills check both polarities. Direct tests cover equal and near-equal splits, thick strokes, isolated dots, joins, corners, native strong pixels, reflected cases and transposed axes. The processing rules and all regression inputs remain separate. No accepted benchmark, installed profile or prior gallery changes.
