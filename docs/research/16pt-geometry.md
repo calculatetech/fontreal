@@ -892,3 +892,34 @@ gwenview results/weighted-stroke-study/gallery/035_Nimbus-Mono-PS_Regular_11pt_p
 ```
 
 The [portable record](../images/browser-common-ground/weighted-stroke-captures.json) binds the unchanged selector, preferred inputs, new processor, complete arrays and images. Full-entry digests cover all target arithmetic, mask hashes, sums and centroids. The generated `masks.json` retains all arrays and selected indices. A separate histogram calculation checks every weighted target. Native source rasterization, two compositors, matching earlier B strips, reopened crops and numbered fills check the displayed evidence. The fixtures retain the supplied p, its exact joins, the separate 188 change, an outlier, disconnected dots, short marks and intentional stroke contrast. Numerical checks establish these finite 11–12pt ASCII cases, not optical acceptance or a new installed profile.
+
+## Selected weighted stems at 8–16pt
+
+The user selects weighted stems only and reports a readability improvement throughout the comparison. This becomes the optical benchmark. The optional curve extension remains unselected. The next chart expands the same unchanged treatment to every integer size from 8pt through 16pt, regular and bold only.
+
+The KDE group contains Noto Sans, Noto Serif, Hack, DejaVu Sans and DejaVu Serif. The chart adds Inconsolata Nerd Font, Broadway, Calisto MT, Castellar, Arial, Segoe UI and Nimbus Sans, plus Nimbus Mono PS and Nimbus Roman as earlier regression cases. The fourteen families supply 26 actual faces. Broadway and Castellar have no installed bold face; the chart records this and does not synthesize one. All font identities match the earlier source records.
+
+![Noto Sans regular 8–12pt](../images/browser-common-ground/weighted-size-000_Noto-Sans_Regular_8-12pt_dark.png)
+
+![Noto Sans bold 13–16pt](../images/browser-common-ground/weighted-size-007_Noto-Sans_Bold_13-16pt_light.png)
+
+Each face has four charts: 8–12pt and 13–16pt on both backgrounds. Each size has the full pangram, uppercase alphabet and digits, then punctuation and b/d/f/p/q controls. All printable ASCII source glyphs appear. Native-size strips keep the same positions in both columns, without image scaling. Previous B is on the left; selected B plus weighted stems is on the right. Previous B is a diagnostic comparison, not stock KDE or Qt. The recipe remains native-normal hints, whole-pixel placement and encoded coverage at 96 DPI and scale 1.
+
+![Inconsolata regular 8–12pt](../images/browser-common-ground/weighted-size-040_Inconsolata-Nerd-Font_Regular_8-12pt_dark.png)
+
+![Inconsolata bold 13–16pt](../images/browser-common-ground/weighted-size-047_Inconsolata-Nerd-Font_Bold_13-16pt_light.png)
+
+The 104-chart folder covers 234 face/size conditions, 22,230 codepoint cases and 21,996 unique glyph instances. Castellar shares some glyphs across upper- and lowercase. Every alias must retain identical native and processed data. The fresh 11–12pt raw, B and weighted masks match the approved study byte for byte. The selected pass changes 159 cases relative to B in this matrix, with zero coverage decreases. None changes at 16pt in this set. Unchanged cases remain visible; the chart is not filtered to affected glyphs or fonts.
+
+Generate it after the source studies and their stock Qt provider are available:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/weighted_size_chart_test.py --self-test
+PYTHONDONTWRITEBYTECODE=1 python3 tests/weighted_size_chart_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/weighted-size-chart/gallery/000_Noto-Sans_Regular_8-12pt_dark.png
+```
+
+The consumer adapts a private copy of the existing native probe only for the point range and wider text rows. It leaves the original probe and every processor unchanged. Exact source fonts, actual loaded stock Qt/FreeType libraries, repeated captures and independent rasterization bind the native evidence. A separate histogram calculation verifies every weighted target. Checks retain positive support, strong pixels and every unselected stem neighbor. Two compositors verify each native text strip; reopened images verify every saved strip.
+
+The [portable record](../images/browser-common-ground/weighted-size-captures.json) contains all conditions, missing styles, library and font identities, chart hashes and selected source bindings. Each condition digest binds its complete generated audit, including all 95 codepoints, mask hashes, sums and target arithmetic. The full manifest and `masks.json` retain complete audit entries and mask arrays. Seventeen representative images transfer with Git. The full gallery remains a generated artifact. This finite ASCII chart uses one DPI and scale; it does not qualify live application layout, other scripts or deployment. The installed profile remains unchanged.
