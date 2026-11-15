@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-016: Support Chromium-based browsers and Electron applications.** Identify each exact engine and its reached text owner. Start with a source-built stock/passive-instrumentation fixture for the installed Teams Electron version, then carry the selected method into that owner. Qualify the installed Chromium-based browser and Teams for Linux before Bitwarden. Preserve accounts, application data, ordinary launch and security chains, updates and stock fallback. Include the Flatpak packages. A host FreeType mapping does not establish coverage. See the [engine and Flatpak specification](plans/FR-016-chromium-flatpak.md).
+- **FR-016: Support Chromium-based browsers and Electron applications.** Identify each exact engine and its reached text owner. Start with a source-built stock/passive-instrumentation fixture for the installed Teams Electron version, then carry the selected method into that owner. Qualify the installed Chromium-based browser and Teams for Linux before Bitwarden. Preserve accounts, application data, ordinary launch and security chains, updates and stock fallback. Include the Flatpak packages. A host FreeType mapping does not establish coverage. New native Flatpak launches currently fail because the document-portal mount is absent, including through the native user manager. Application qualification waits for that session prerequisite. See the [engine and Flatpak specification](plans/FR-016-chromium-flatpak.md).
 
 ## Planned next
 

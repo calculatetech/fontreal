@@ -63,3 +63,13 @@ The probe supplies independent paths, advances, bounds and raw A8 masks. Ordinar
 The test compares each selected mask with the existing numerical reference. It also checks repeated glyphs, repaint, a later glyph, stroke text, styles, variable coordinates and both palettes. Color faces and bitmap-only faces retain stock rendering. Default Chromium local lookup excludes the synthetic non-scalable bitmap-only face. Only that fixture uses a private Fontconfig scan rule to expose its unchanged bytes; it does not establish normal browser bitmap-only support. A grayscale font with embedded strikes uses its outlines. Test-only fonts, fontconfig, profiles and captures stay below the configured build and results roots. The variable-font checks use Ubuntu Sans Mono. If Cantarell is absent, the test downloads and extracts the pinned Ubuntu font package privately; it does not install it.
 
 The final OS-window expectation uses provider-derived selected masks and the pinned Skia integer A8 composition. Native unhinted, non-axis-aligned and large path controls keep their stock pixels. Normal and trace windows must match it exactly. Native PNG files also match within their own color representation. The complete stock/passive fixture runs again after selected construction. Results go below `results/chromium-selected`; installed-application ownership and daily use remain separate requirements.
+
+## Application startup prerequisite
+
+Before assembling an application view, test its normal Flatpak startup:
+
+```sh
+/usr/bin/flatpak run --command=/usr/bin/true APP_ID
+```
+
+Replace `APP_ID` with an installed application ID. This starts no account-bearing application code. It still requires the normal sandbox and document portal. A running portal service does not prove that its document mount exists. If this command fails because a document-portal `by-app` directory is absent, restore the native session prerequisite before application qualification. Do not substitute a launch that disables the document portal. An already running application does not prove that a new launch works.
