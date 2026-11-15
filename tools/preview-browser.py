@@ -15,7 +15,7 @@ WORK = ROOT / "build/freetype-native"
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("control", "control-preblend", "encoded", "preblend", "ramp217", "raw"))
+    parser.add_argument("mode", choices=("control", "control-preblend", "encoded", "preblend", "ramp217", "raw", "weighted"))
     parser.add_argument("url", nargs="?", help="Optional test page; defaults to the local font fixture")
     parser.add_argument("--browser", choices=("firefox", "floorp"), default="firefox")
     parser.add_argument("--scale", type=float, choices=(1.0, 1.25, 1.5), default=1.0)
@@ -84,7 +84,7 @@ def main():
 ''')
         env["FONTCONFIG_FILE"] = str(fontconfig)
         env["FONTREAL_FT_RENDERING"] = "0" if control else "1"
-        env["FONTREAL_FT_CONTRAST"] = args.mode if args.mode in ("ramp217", "raw") else "mild"
+        env["FONTREAL_FT_CONTRAST"] = args.mode if args.mode in ("ramp217", "raw", "weighted") else "mild"
         env["LD_LIBRARY_PATH"] = str(library.parent) + (
             ":" + env["LD_LIBRARY_PATH"] if env.get("LD_LIBRARY_PATH") else "")
         url = args.url or (ROOT / "tests/browser_masks.html").as_uri() + "#" + args.mode

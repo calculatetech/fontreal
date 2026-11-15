@@ -143,17 +143,18 @@ def discovery(root):
             assert legacy[0][2]["FONTREAL_FT_CONTRAST"] == "mild"
             main_call("enable", browser)
             upgraded = json.loads(state.read_text())
-            assert upgraded["contrast"] == "raw" and upgraded["original_prefs"] == original_prefs
+            assert upgraded["contrast"] == "weighted" and upgraded["original_prefs"] == original_prefs
             assert upgraded["block"].startswith("\n")
             assert user_js.read_text() == 'user_pref("fixture.no.newline", 19);' + upgraded["block"]
-            state.write_text(json.dumps(dict(upgraded,contrast="ramp217")))
-            with patch.object(os, "execve", side_effect=lambda *args: legacy.append(args)):
-                browser_tool.run(browser, [])
-            assert legacy[-1][2]["FONTREAL_FT_CONTRAST"] == "ramp217"
-            main_call("enable", browser)
-            upgraded = json.loads(state.read_text())
-            assert upgraded["contrast"] == "raw" and upgraded["original_prefs"] == original_prefs
-            assert user_js.read_text() == 'user_pref("fixture.no.newline", 19);' + upgraded["block"]
+            for old_mode in ("raw", "ramp217"):
+                state.write_text(json.dumps(dict(upgraded,contrast=old_mode)))
+                with patch.object(os, "execve", side_effect=lambda *args: legacy.append(args)):
+                    browser_tool.run(browser, [])
+                assert legacy[-1][2]["FONTREAL_FT_CONTRAST"] == old_mode
+                main_call("enable", browser)
+                upgraded = json.loads(state.read_text())
+                assert upgraded["contrast"] == "weighted" and upgraded["original_prefs"] == original_prefs
+                assert user_js.read_text() == 'user_pref("fixture.no.newline", 19);' + upgraded["block"]
             directory = str(Path(record["library"]).parent)
             captured = []
             fallback_before = tree(profile)
@@ -359,7 +360,7 @@ os.execve = record
                 library_dir = str(Path(record["library"]).parent)
                 assert child_env["LD_LIBRARY_PATH"] == library_dir + ":" + env["LD_LIBRARY_PATH"]
                 assert child_env["FONTREAL_FT_EXECUTABLE"].split(":") == record["scope"]
-                assert child_env["FONTREAL_FT_RENDERING"] == "1" and child_env["FONTREAL_FT_CONTRAST"] == "raw"
+                assert child_env["FONTREAL_FT_RENDERING"] == "1" and child_env["FONTREAL_FT_CONTRAST"] == "weighted"
                 for key, value in env.items():
                     if key != "LD_LIBRARY_PATH":
                         assert child_env.get(key) == value, (key, child_env.get(key), value)
@@ -426,7 +427,7 @@ def process_scope(record):
         return json.loads(got.stdout)
     normal = qt("qt-normal", {})
     inherited = dict(LD_LIBRARY_PATH=str(Path(record["libraries"]["candidate"]["library"]).parent),
-                     FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="raw", FONTREAL_FT_EXECUTABLE="/usr/bin/firefox:/usr/lib/firefox/firefox-bin")
+                     FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="weighted", FONTREAL_FT_EXECUTABLE="/usr/bin/firefox:/usr/lib/firefox/firefox-bin")
     scoped = qt("qt-inherited", inherited)
     unscoped = qt("qt-unscoped-control", {k: v for k, v in inherited.items() if k != "FONTREAL_FT_EXECUTABLE"})
     for key in ("masks", "images", "qtGui", "fonts"):
@@ -602,6 +603,7 @@ module.main()
                     if native_bundle:
                         env["FONTCONFIG_FILE"] = str(normal_fonts)
                     child = client = log = None
+                    manager_pid = None
                     def command(arguments):
                         return [*namespace, *map(str, arguments)]
                     def tool(action, failure=None):
@@ -647,7 +649,7 @@ module.main()
                                 Path(str(output) + ".fc").read_text())
                     def navigate(url):
                         client.command("WebDriver:Navigate", {"url": url})
-                    def launch(phase, bootstrap=False, expected_profile=None):
+                    def launch(phase, bootstrap=False, expected_profile=None, desktop_action=None):
                         nonlocal child, client, log
                         log_path = directory / f"{phase}.log"
                         log = log_path.open("w")
@@ -655,9 +657,19 @@ module.main()
                         if phase == "stock-pending" and browser == "firefox":
                             args = [f"/usr/bin/{browser}"]
                         args += ["--marionette", storage_url]
-                        child = subprocess.Popen(command(args), env=env, stdout=log, stderr=log)
+                        launch_env = dict(env)
+                        if desktop_action:
+                            launch_env["MOZ_MARIONETTE"] = "1"
+                            gio = """import gi,sys
+from gi.repository import Gio
+app=Gio.DesktopAppInfo.new_from_filename(sys.argv[1]); assert app
+if sys.argv[2]=='main': assert app.launch_uris([sys.argv[3]],None)
+else: app.launch_action(sys.argv[2],None)
+"""
+                            args = [sys.executable,"-c",gio,home/".local/share/applications"/(browser+".desktop"),desktop_action,storage_url]
+                        child = subprocess.Popen(command(args), env=launch_env, stdout=log, stderr=log)
                         for _ in range(300):
-                            assert child.poll() is None, log_path.read_text()[-4000:]
+                            assert child.poll() is None or (desktop_action and child.returncode==0), log_path.read_text()[-4000:]
                             if "Marionette\tINFO\tListening on port" in log_path.read_text():
                                 break
                             time.sleep(.1)
@@ -759,6 +771,24 @@ module.main()
                         tool("disable", "Fully quit")
                         assert (owned(), user_js.read_bytes(), state.read_bytes()) == before_live
                         quit()
+                        legacy_mode = "raw" if browser == "firefox" else "mild"
+                        if not native_helper:
+                            legacy_block = activation["block"]
+                            if legacy_mode == "mild":
+                                legacy_block = legacy_block.replace('freetype.gamma", -1', 'freetype.gamma", 0')
+                            user_js.write_bytes(user_js.read_bytes().replace(activation["block"].encode(), legacy_block.encode()))
+                            activation.update(contrast=legacy_mode, block=legacy_block)
+                            state.write_text(json.dumps(activation))
+                            legacy_process = launch("retained-" + legacy_mode)
+                            assert json.loads(tool("status"))["active_pids"] == [legacy_process["pid"]]
+                            assert owned()["gfx.font_rendering.freetype.gamma"]["value"] == (0 if legacy_mode == "mild" else -1)
+                            chrome("Services.prefs.savePrefFile(null); return true;")
+                            assert storage() == {"cookie": "fontreal=early", "stored": "early"}
+                            tool("enable")
+                            activation = json.loads(state.read_text())
+                            assert activation["original_prefs"] == original_prefs and activation["contrast"] == "weighted"
+                            assert json.loads(tool("status"))["restart_required_pids"] == [legacy_process["pid"]]
+                            quit()
                         if native_helper:
                             older_process = launch("older-v1")
                             assert older_library["library"] in Path(f"/proc/{older_process['pid']}/maps").read_text()
@@ -787,7 +817,7 @@ module.main()
                         assert all(v["user"] for v in effective.values())
                         assert json.loads(tool("status"))["active_pids"] == [treated["pid"]]
                         inherited_helper, inherited_helper_env, inherited_fc = browser_helper("treated")
-                        assert inherited_helper_env[:3] == ["1", "raw", ":".join(activation["scope"])]
+                        assert inherited_helper_env[:3] == ["1", "weighted", ":".join(activation["scope"])]
                         assert str(Path(library).parent) in inherited_helper_env[3].split(":")
                         for key in ("masks", "images", "qtGui", "fonts"):
                             assert inherited_helper[key] == normal_helper[key], (browser, key)
@@ -809,10 +839,105 @@ module.main()
                             time.sleep(.1)
                         origin = next(cell["box"] for cell in measurement["cells"] if cell["name"] == "origin")
                         glyph = masks.crop(image, measurement, origin)
-                        raw = recipe.probe(recipe.BUILD/'nearest/.libs/libfreetype.so.6', masks.NOTO / "NotoSans-Regular.ttf", char='m')
-                        reference = raw['rendered'][0]
+                        from selected_profile_test import expected_mask
+                        raw = masks.probe(record, masks.NOTO / "NotoSans-Regular.ttf", flags=32776,
+                                          char='m', enabled=False, variant='stock')
+                        reference = dict(raw['rendered'][0])
+                        reference['mask'] = expected_mask(bytes.fromhex(reference['mask']), reference['width']).hex()
                         error = masks.fit(glyph, reference["width"], reference["height"], masks.blend(bytes.fromhex(reference["mask"]), (0,0,0), (255,255,255), False))
                         assert error["error"] <= 1, (browser, error)
+                        launch_paths = []
+                        if not explicit and not native_helper:
+                            quit()
+                            for action in ("main", "new-window", "new-private-window"):
+                                desktop_parent = launch("desktop-"+action, desktop_action=action)
+                                assert library in Path(f"/proc/{desktop_parent['pid']}/maps").read_text()
+                                argv = Path(f"/proc/{desktop_parent['pid']}/cmdline").read_bytes().split(b"\0")
+                                if action!="main": assert (b"--private-window" if action=="new-private-window" else b"--new-window") in argv
+                                navigate((ROOT / "tests/browser_masks.html").as_uri()+"?size=15")
+                                for _ in range(100):
+                                    if client.script("return !!window.fontreal && document.fonts.status==='loaded'"):break
+                                    time.sleep(.1)
+                                measured=client.script("return window.fontreal.measure()")
+                                for _ in range(30):
+                                    actual=masks.screenshot(env,directory/"desktop.png")
+                                    if (17,91,143) in set(actual.get_flattened_data()):break
+                                    time.sleep(.1)
+                                box=next(c["box"] for c in measured["cells"] if c["name"]=="origin")
+                                fitted=masks.fit(masks.crop(actual,measured,box),reference["width"],reference["height"],masks.blend(bytes.fromhex(reference["mask"]),(0,)*3,(255,)*3,False))
+                                assert fitted["error"]<=1,(browser,action,fitted)
+                                helper_got,_,helper_fc=browser_helper("desktop-"+action)
+                                for key in ("masks","images","qtGui","fonts"):assert helper_got[key]==normal_helper[key]
+                                assert helper_fc==normal_fc
+                                launch_paths.append(dict(entry=action,pid=desktop_parent['pid'],pixel_error=fitted['error']))
+                                quit()
+                            chooser_log=directory/'desktop-profile-manager.log'
+                            chooser_code="from gi.repository import Gio; import sys; app=Gio.DesktopAppInfo.new_from_filename(sys.argv[1]); assert app; app.launch_action('open-profile-manager',None)"
+                            with chooser_log.open('w') as output:
+                                subprocess.run(command([sys.executable,'-c',chooser_code,home/'.local/share/applications'/(browser+'.desktop')]),env=env,stdout=output,stderr=output,check=True)
+                            def processes(argument):
+                                found=[]
+                                for proc in Path('/proc').iterdir():
+                                    if not proc.name.isdecimal():continue
+                                    try:
+                                        argv=(proc/'cmdline').read_bytes().split(b'\0')
+                                        environment=(proc/'environ').read_bytes().split(b'\0')
+                                        if argument in argv and ('XDG_RUNTIME_DIR='+env['XDG_RUNTIME_DIR']).encode() in environment:
+                                            found.append((int(proc.name),environment))
+                                    except (FileNotFoundError,PermissionError,ProcessLookupError):pass
+                                return found
+                            for _ in range(100):
+                                managers=[item for item in processes(b'--ProfileManager')
+                                          if library in Path(f'/proc/{item[0]}/maps').read_text()]
+                                if managers:break
+                                time.sleep(.1)
+                            assert len(managers)==1,managers
+                            manager_pid=managers[0][0]
+                            assert library in Path(f'/proc/{manager_pid}/maps').read_text()
+                            kwins=[item for item in processes(b'fr-browser-test') if
+                                   any(v.startswith(b'DBUS_SESSION_BUS_ADDRESS=') and
+                                       v!=('DBUS_SESSION_BUS_ADDRESS='+env.get('DBUS_SESSION_BUS_ADDRESS','')).encode()
+                                       for v in item[1])]
+                            assert len(kwins)==1
+                            bus=next(v.split(b'=',1)[1].decode() for v in kwins[0][1] if v.startswith(b'DBUS_SESSION_BUS_ADDRESS='))
+                            bus_env=dict(env,DBUS_SESSION_BUS_ADDRESS=bus)
+                            def chooser_window(close=False):
+                                name='fr-chooser-'+str(time.monotonic_ns()); script=directory/'chooser.js'
+                                script.write_text('var rows=[]; for(var w of workspace.windowList()) if(w.pid=='+str(manager_pid)+') { rows.push({caption:w.caption,width:w.clientGeometry.width,height:w.clientGeometry.height});'+('w.closeWindow();' if close else '')+'} console.warn("'+name+' "+JSON.stringify(rows));')
+                                identifier=masks.run(['qdbus6','org.kde.KWin','/Scripting','org.kde.kwin.Scripting.loadScript',script,name],env=bus_env).stdout.strip()
+                                masks.run(['qdbus6','org.kde.KWin','/Scripting/Script'+identifier,'org.kde.kwin.Script.run'],env=bus_env)
+                                for _ in range(50):
+                                    lines=[line for line in (masks.OUT/'kwin.log').read_text().splitlines() if name+' [' in line]
+                                    if lines:break
+                                    time.sleep(.05)
+                                masks.run(['qdbus6','org.kde.KWin','/Scripting','org.kde.kwin.Scripting.unloadScript',name],env=bus_env)
+                                assert lines
+                                return json.loads(lines[-1].split(name+' ',1)[1])
+                            for _ in range(50):
+                                windows=chooser_window()
+                                if windows:break
+                                time.sleep(.1)
+                            assert any('profile' in w['caption'].lower() and w['width']>100 and w['height']>100 for w in windows),windows
+                            chooser_window(close=True)
+                            for _ in range(100):
+                                if not processes(b'--ProfileManager'):break
+                                time.sleep(.1)
+                            assert not processes(b'--ProfileManager')
+                            launch_paths.append(dict(entry='open-profile-manager',pid=manager_pid,windows=windows))
+                            manager_pid = None
+                            saved_state=state.read_bytes()
+                            state.write_text(json.dumps(dict(activation,browser_version="old-fixture-version")))
+                            fallback_parent=launch("version-fallback")
+                            fallback_maps=Path(f"/proc/{fallback_parent['pid']}/maps").read_text()
+                            installed=Path('/usr/lib/x86_64-linux-gnu/libfreetype.so.6').resolve()
+                            assert library not in fallback_maps and str(installed) in fallback_maps
+                            assert 'Fontreal inactive: browser version changed' in (directory/'version-fallback.log').read_text()
+                            fallback_helper,_,fallback_fc=browser_helper("version-fallback")
+                            for key in ("masks","images","qtGui","fonts"):assert fallback_helper[key]==normal_helper[key]
+                            assert fallback_fc==normal_fc
+                            launch_paths.append(dict(entry='version-fallback',pid=fallback_parent['pid'],provider=str(installed)))
+                            quit(); state.write_bytes(saved_state)
+                            treated=launch("treated-resumed")
                         tool("enable")
                         quit()
                         repeated = json.loads(state.read_text())
@@ -935,6 +1060,7 @@ module.main()
                         results.append(dict(browser=browser, explicit=explicit, stock=stock, treated=treated,
                                             restored=restored, pixel_error=error, namespace=namespace,
                                             home_value=env["HOME"], original_prefs=original_prefs,
+                                            launch_paths=launch_paths,
                                             scope=activation["scope"], actual_argv=actual_argv, xdg={key:value for key,value in actual_env.items() if key.startswith("XDG_")},
                                             browser_spawned_qt=dict(masks=len(inherited_helper["masks"]), images=len(inherited_helper["images"]),
                                                                     fontconfig=inherited_fc, inherited_environment=inherited_helper_env),
@@ -943,6 +1069,12 @@ module.main()
                                             kept=kept, storage="later-changed"))
                         print(f"PASS actual working profile {label}", flush=True)
                     finally:
+                        if manager_pid:
+                            try:
+                                environment=Path(f'/proc/{manager_pid}/environ').read_bytes().split(b'\0')
+                                assert ('XDG_RUNTIME_DIR='+env['XDG_RUNTIME_DIR']).encode() in environment
+                                os.kill(manager_pid,15)
+                            except (FileNotFoundError,ProcessLookupError):pass
                         if client:
                             try:
                                 quit()

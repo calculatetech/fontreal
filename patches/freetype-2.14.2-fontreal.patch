@@ -1,6 +1,6 @@
 --- a/src/base/ftobjs.c
 +++ b/src/base/ftobjs.c
-@@ -16,9 +16,15 @@
+@@ -16,10 +16,17 @@
   */
  
  
@@ -14,9 +14,11 @@
 +#include <freetype/tttables.h>
 +#include <freetype/ftmm.h>
  #include <freetype/otsvg.h>
++#include "fontreal_coverage.h"
  
  #include <freetype/internal/ftvalid.h>
-@@ -892,6 +898,227 @@
+ #include <freetype/internal/ftobjs.h>
+@@ -910,6 +917,228 @@
  #endif /* GRID_FIT_METRICS */
  
  
@@ -43,7 +45,8 @@
 +    if ( !format ||
 +         ( ft_strcmp( format, "TrueType" ) &&
 +           ( ft_strcmp( format, "CFF" ) || !contrast ||
-+             ft_strcmp( contrast, "raw" ) ) ) )
++             ( ft_strcmp( contrast, "raw" ) &&
++               ft_strcmp( contrast, "weighted" ) ) ) ) )
 +      return FALSE;
 +
 +    if ( scope && *scope )
@@ -244,29 +247,40 @@
    /* documentation is in freetype.h */
  
    FT_EXPORT_DEF( FT_Error )
-@@ -942,6 +1165,14 @@
+@@ -959,6 +1188,25 @@
  
      if ( load_flags & FT_LOAD_BITMAP_METRICS_ONLY )
        load_flags &= ~FT_LOAD_RENDER;
 +
 +    if ( ft_fontreal_raster( face, load_flags ) )
 +    {
-+      load_flags &= ~( ( 15L << 16 ) | FT_LOAD_MONOCHROME |
-+                       FT_LOAD_NO_AUTOHINT );
-+      load_flags |= FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO |
-+                    FT_LOAD_NO_BITMAP;
++      const char* contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
++
++      if ( contrast && !ft_strcmp( contrast, "weighted" ) )
++      {
++        load_flags &= ~( ( 15L << 16 ) | FT_LOAD_MONOCHROME |
++                         FT_LOAD_FORCE_AUTOHINT );
++        load_flags |= FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_BITMAP;
++      }
++      else
++      {
++        load_flags &= ~( ( 15L << 16 ) | FT_LOAD_MONOCHROME |
++                         FT_LOAD_NO_AUTOHINT );
++        load_flags |= FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO |
++                      FT_LOAD_NO_BITMAP;
++      }
 +    }
  
      /*
       * Determine whether we need to auto-hint or not.
-@@ -5000,15 +5231,76 @@
+@@ -4992,15 +5240,90 @@
    FT_Render_Glyph( FT_GlyphSlot    slot,
                     FT_Render_Mode  render_mode )
    {
 -    FT_Library  library;
 +    FT_Library       library;
 +    FT_Error         error;
-+    FT_Bool          fontreal, ramp, light = FALSE;
++    FT_Bool          fontreal, weighted, ramp, light = FALSE;
 +    FT_FontrealSupportRec support = { 0 };
 +    FT_Memory        memory;
 +    const char*      contrast;
@@ -283,11 +297,16 @@
 -    return FT_Render_Glyph_Internal( library, slot, render_mode );
 +    contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
 +
++    weighted = contrast && !ft_strcmp( contrast, "weighted" );
 +    fontreal = slot->format == FT_GLYPH_FORMAT_OUTLINE &&
 +               ft_fontreal_raster( slot->face, slot->internal->load_flags ) &&
-+               ( slot->internal->load_flags & FT_LOAD_FORCE_AUTOHINT ) &&
-+               FT_LOAD_TARGET_MODE( slot->internal->load_flags ) ==
-+                 FT_RENDER_MODE_MONO;
++               ( weighted
++                 ? ( slot->internal->load_flags & FT_LOAD_NO_AUTOHINT ) &&
++                   FT_LOAD_TARGET_MODE( slot->internal->load_flags ) ==
++                     FT_RENDER_MODE_NORMAL
++                 : ( slot->internal->load_flags & FT_LOAD_FORCE_AUTOHINT ) &&
++                   FT_LOAD_TARGET_MODE( slot->internal->load_flags ) ==
++                     FT_RENDER_MODE_MONO );
 +    if ( fontreal )
 +      render_mode = FT_RENDER_MODE_NORMAL;
 +
@@ -308,7 +327,16 @@
 +
 +    if ( !error && fontreal && slot->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY )
 +    {
-+      if ( ramp && !light )
++      if ( weighted && slot->bitmap.num_grays == 256 )
++      {
++        int status = fontreal_selected_coverage( memory,
++                       slot->bitmap.buffer, slot->bitmap.width,
++                       slot->bitmap.rows, slot->bitmap.pitch );
++        if ( status )
++          error = status == 1 ? FT_THROW( Out_Of_Memory )
++                              : FT_THROW( Invalid_Argument );
++      }
++      else if ( ramp && !light )
 +        ft_fontreal_ramp217( slot, &support );
 +      else if ( contrast && !ft_strcmp( contrast, "mild" ) )
 +      {
@@ -341,7 +369,7 @@
  
 --- a/include/freetype/internal/ftobjs.h
 +++ b/include/freetype/internal/ftobjs.h
-@@ -690,6 +690,9 @@
+@@ -702,6 +702,9 @@
  
    /* Free the bitmap of a given glyphslot when needed (i.e., only when it */
    /* was allocated with ft_glyphslot_alloc_bitmap).                       */

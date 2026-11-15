@@ -260,11 +260,11 @@ def native(record,nearest,variable):
 def browser(record,trace,nearest,variable,mode='ramp217',font_group='tt'):
     fonts=[masks.NOTO/'NotoSans-Regular.ttf',masks.NOTO/'NotoSerif-Regular.ttf',Path('/usr/share/fonts/truetype/lato/Lato-Light.ttf'),variable]
     faces=[(0,400),(1,400),(2,300),(3,300),(3,400),(3,700)]
-    if mode == 'raw':
+    if mode in ('raw','weighted'):
         fonts += [Path('/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'),
                   Path('/usr/share/fonts/truetype/hack/Hack-Bold.ttf'),masks.NOTO/'NotoSerif-Italic.ttf']
         faces += [(4,400),(5,700),(6,400)]
-    assert font_group in ('tt','tt-tail','cff','cff-tail','cff2') and (font_group=='tt' or mode=='raw')
+    assert font_group in ('tt','tt-tail','cff','cff-tail','cff2') and (font_group=='tt' or mode in ('raw','weighted'))
     variables={3}
     if font_group in ('cff','cff-tail'):
         fonts=list(CFF_FONTS.values())
@@ -274,10 +274,10 @@ def browser(record,trace,nearest,variable,mode='ramp217',font_group='tt'):
         fonts=[CFF_FONTS['Cantarell Variable']]
         faces=[(0,w) for w in (300,399.5,400,700)]
         variables={0}
-    if mode=='raw' and font_group!='cff2':
+    if mode in ('raw','weighted') and font_group!='cff2':
         faces=faces[6:] if font_group.endswith('-tail') else faces[:6]
-    points = (8,11,12,16) if mode == 'raw' else (8,11,16)
-    row_height,line_height = (40,36) if mode == 'raw' else (55,50)
+    points = (8,11,12,16) if mode in ('raw','weighted') else (8,11,16)
+    row_height,line_height = (40,36) if mode in ('raw','weighted') else (55,50)
     css=''.join(f'@font-face{{font-family:F{i};src:url(/font/{i});font-weight:100 900;}}' for i in range(len(fonts)))
     if font_group in ('cff','cff-tail'):
         css=css.replace('src:url(/font/7);','src:local("Noto Sans CJK JP");')
@@ -297,6 +297,15 @@ def browser(record,trace,nearest,variable,mode='ramp217',font_group='tt'):
     server=http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler)
     threading.Thread(target=server.serve_forever,daemon=True).start()
     oracle=Oracle(Path(record['libraries']['stock']['library']));results=[]
+    reference_library=record['libraries']['stock']['library'] if mode=='weighted' else nearest
+    reference_flags=0x8008 if mode=='weighted' else 0x20028
+    def reference(font,**kwargs):
+        return probe(reference_library,font,flags=reference_flags,**kwargs)
+    def coverage(loaded,rendered,weight):
+        if mode=='weighted':
+            from selected_profile_test import expected_mask
+            return dict(rendered,mask=expected_mask(bytes.fromhex(rendered['mask']),rendered['width']).hex())
+        return expected(oracle,loaded,rendered,0 if mode=='raw' else weight)
     try:
         with masks.nested_display() as display:
             for name in ('firefox','floorp'):
@@ -336,12 +345,12 @@ def browser(record,trace,nearest,variable,mode='ramp217',font_group='tt'):
                             size=point*96/72
                             if font in variables:
                                 target=directory/f'variable-{point}.json'
-                                run([BUILD/'variable',fonts[font],size,'0x20028',target],env=environment(nearest))
+                                run([BUILD/'variable',fonts[font],size,reference_flags,target],env=environment(reference_library))
                                 step=next(r for r in json.loads(target.read_text()) if r['weight']==weight and r['mode']=='ramp217')
-                                ref=step['glyphs'][0];want=expected(oracle,ref['loaded'],ref['rendered'],0 if mode == 'raw' else weight)
+                                ref=step['glyphs'][0];want=coverage(ref['loaded'],ref['rendered'],weight)
                             else:
-                                ref=probe(nearest,fonts[font],size=size,char=cell['character']);want=expected(oracle,ref['loaded'],ref['rendered'][0],0 if mode == 'raw' else weight)
-                            family=probe(nearest,fonts[font],size=size,char=cell['character'])['family'].encode().hex()
+                                ref=reference(fonts[font],size=size,char=cell['character']);want=coverage(ref['loaded'],ref['rendered'][0],weight)
+                            family=reference(fonts[font],size=size,char=cell['character'])['family'].encode().hex()
                             selected=[r for r in rasters if r['glyph']==ref['glyph'] and (font_group=='tt' or r['family']==family) and
                                       abs(r['y_scale']*r['units']/65536/64-size)<.02 and
                                       all(r[k]==want[k] for k in ('mask','width','height'))]
@@ -352,12 +361,12 @@ def browser(record,trace,nearest,variable,mode='ramp217',font_group='tt'):
                             for char in text:
                                 if font in variables:
                                     glyph=next(g for g in step['glyphs'] if g['char']==char)
-                                    glyph_expected=expected(oracle,glyph['loaded'],glyph['rendered'],0 if mode == 'raw' else weight)
+                                    glyph_expected=coverage(glyph['loaded'],glyph['rendered'],weight)
                                 else:
                                     key=(font,weight,point,char)
-                                    if key not in glyph_cache: glyph_cache[key]=probe(nearest,fonts[font],size=size,char=char)
+                                    if key not in glyph_cache: glyph_cache[key]=reference(fonts[font],size=size,char=char)
                                     glyph=glyph_cache[key]
-                                    glyph_expected=expected(oracle,glyph['loaded'],glyph['rendered'][0],0 if mode == 'raw' else weight)
+                                    glyph_expected=coverage(glyph['loaded'],glyph['rendered'][0],weight)
                                 expected_occurrences.append(glyph_expected)
                                 if char!=' ': assert any(r['glyph']==glyph['glyph'] and (font_group=='tt' or r['family']==family) and abs(r['y_scale']*r['units']/65536/64-size)<.02 and
                                            all(r[k]==glyph_expected[k] for k in ('mask','width','height')) for r in rasters),(name,cell,char,'word raster')

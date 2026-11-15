@@ -222,7 +222,7 @@ def enable(browser):
     wrapper.write_text(wrapper_text)
     wrapper.chmod(0o755)
     desktop.write_text(desktop_text)
-    record.update(browser_version=VERSIONS[browser], freetype_version=build["spec"]["source"], contrast="raw",
+    record.update(browser_version=VERSIONS[browser], freetype_version=build["spec"]["source"], contrast="weighted",
         library=library["library"], library_sha256=library["sha256"], build=str(build_path), scope=scope,
         hooks=[dict(path=str(p), sha256=sha(p)) for p in (wrapper, desktop)])
     state.write_text(json.dumps(record, indent=2) + "\n")

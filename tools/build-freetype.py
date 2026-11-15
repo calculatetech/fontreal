@@ -19,6 +19,8 @@ VERSION = "2.14.2+dfsg-1ubuntu0.2"
 PATCH = ROOT / "patches/freetype-2.14.2-fontreal.patch"
 GEOMETRY = ROOT / "patches/freetype-nearest-property.patch"
 TRACE = ROOT / "tests/freetype_browser_trace.h"
+PROCESSOR = ROOT / "src/fontreal_coverage.cpp"
+DECLARATION = ROOT / "src/fontreal_coverage.h"
 # These exact archives were checked against Ubuntu's authenticated source index.
 ARCHIVES = {
     "freetype_2.14.2+dfsg-1ubuntu0.2.dsc": "37305c65f89ccfdbfdaafba675a203865603180eedd44578fb30a3b38dc6ae0c",
@@ -84,6 +86,8 @@ def main():
                if harfbuzz != "--without-harfbuzz" or dev != "libharfbuzz-dev"}
     spec = dict(source=version, archives=archives, headers=headers, patch=sha(PATCH), harfbuzz=harfbuzz,
                 geometry=sha(GEOMETRY), provider_recipe=sha(ROOT / "tools/freetype_provider.py"),
+                processor=sha(PROCESSOR), declaration=sha(DECLARATION),
+                mask_compiler=output(["c++", "--version"]).splitlines()[0],
                 recipe=sha(Path(__file__)),
                 trace=sha(TRACE) if args.trace else None,
                 compiler=output(["cc", "--version"]).splitlines()[0])
@@ -135,17 +139,27 @@ def main():
     shutil.copytree(stock_source, candidate_source, symlinks=True)
     for patch in (GEOMETRY, PATCH):
         subprocess.run(["patch", "--batch", "--fuzz=0", "-p1", "-i", str(patch)], cwd=candidate_source, env=env, check=True)
+    for source in (PROCESSOR, DECLARATION):
+        shutil.copyfile(source, candidate_source / "src/base" / source.name)
+    processor = destination / "coverage.o"
+    subprocess.run(["c++", "-std=c++17", "-O2", "-fPIC", "-fvisibility=hidden", "-fvisibility-inlines-hidden",
+                    "-I" + str(prefix / "include/freetype2"), "-c", str(candidate_source / "src/base" / PROCESSOR.name),
+                    "-o", str(processor)], env=env, check=True)
     env["PKG_CONFIG_PATH"] = str(prefix / "lib/x86_64-linux-gnu/pkgconfig")
     env["CC"] = "cc"
     env["CFLAGS"] = "-O2" + (f" -DFONTREAL_TEST_TRACE -include {TRACE}" if args.trace else "")
     libraries = {}
     for mode, source in (("stock", stock_source), ("candidate", candidate_source)):
+        build_env = dict(env)
+        if mode == "candidate":
+            # FreeType's own export list also hides the private C++ implementation.
+            build_env["LDFLAGS"] = f"{processor} -lstdc++ -lm"
         build = destination / mode
         build.mkdir()
         command = [str(source / "configure"), f"--prefix={destination / (mode + '-install')}",
                    harfbuzz]
         with (build / "configure.log").open("w") as log:
-            subprocess.run(command, cwd=build, env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
+            subprocess.run(command, cwd=build, env=build_env, stdout=log, stderr=subprocess.STDOUT, check=True)
         configured = (build / "configure.log").read_text()
         features = ["external zlib: yes", "bzip2:         yes", "libpng:        yes", "brotli:        yes"]
         features += (["harfbuzz:      yes (dynamic)", "pthread:       yes"] if version == VERSION
@@ -154,11 +168,11 @@ def main():
             if feature not in configured:
                 raise SystemExit(f"Private build is missing a distro feature: {feature}; see {build / 'configure.log'}")
         with (build / "build.log").open("w") as log:
-            subprocess.run(["make", f"-j{min(12, os.cpu_count() or 1)}"], cwd=build, env=env,
+            subprocess.run(["make", f"-j{min(12, os.cpu_count() or 1)}"], cwd=build, env=build_env,
                            stdout=log, stderr=subprocess.STDOUT, check=True)
         library = (build / ".libs/libfreetype.so.6").resolve()
         libraries[mode] = dict(library=str(library), sha256=sha(library), configure=command,
-                               cflags=env["CFLAGS"],
+                               cflags=env["CFLAGS"], ldflags=build_env.get("LDFLAGS", ""),
                                dependencies=output(["ldd", str(library)]))
     # Addresses change; public symbol names and types must not.
     exports = [{tuple(line.split()[1:]) for line in output(
@@ -169,7 +183,7 @@ def main():
     (destination / "NOTICE").write_text(
         "Based in part on the work of the FreeType Team.\n"
         "Portions are copyright The FreeType Project (https://freetype.org).\n"
-        "The candidate adds opt-in browser masks, nearest Y fitting, and native dropout-guided coverage.\n"
+        "The candidate adds the selected native-normal weighted-stem profile and retained diagnostic modes.\n"
         "See FTL.TXT, the retained source notices, and the Fontreal patch.\n")
     record.write_text(json.dumps(dict(spec=spec, libraries=libraries,
                                     header_packages={d.name: sha(d) for d in debs}), indent=2) + "\n")
