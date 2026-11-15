@@ -822,3 +822,42 @@ gwenview results/stroke-profile-study/gallery/002_Broadway_Regular_11pt_intent.p
 ```
 
 The [portable record](../images/browser-common-ground/stroke-profile-captures.json) binds both new source files, earlier accepted inputs, font and library identities, native captures, complete image inventory and each audited record. It includes full arrays and structural evidence for the seven supplied regressions. Per-codepoint digests bind the complete generated audit entries, including all raw/accepted/A/B mask hashes, sums and change counts. The full generated manifest retains those entries directly. Its `masks.json` companion retains all four complete arrays for every unique glyph instance, with a bound file hash. Independent rasterization checks every source glyph. Two compositors check each native text strip. Reopened strips and numbered fills check both polarities. Direct tests cover equal and near-equal splits, thick strokes, isolated dots, joins, corners, native strong pixels, reflected cases and transposed axes. The processing rules and all regression inputs remain separate. No accepted benchmark, installed profile or prior gallery changes.
+
+## Minimum contrast for sustained subpixel stems
+
+The user selects B from the profile/corner comparison as the preferred optical benchmark. They report excellent results across the other examples. Nimbus Mono PS Regular 11pt b/d/f/p/q remain weak along their long stems. The earlier source-area rule cannot fully resolve them: isolated native stem totals are only 194–198. The b/p core is 186 in preferred B, d/q is 213, and f is 224. A 240 core plus a positive fringe needs more area than those native totals provide.
+
+This experiment compares preferred B, a 226 core floor and a 240 core floor. Both trials use a total coverage of 255 for eligible subpixel main-stroke sections. The neighboring fringe gets the remainder: 29 beside a 226 core, or 15 beside a 240 core. A stronger existing weak core is retained. True joins with native pair totals 255–384 retain that larger total. Already-strong preferred pixels remain byte-identical, including bowl and serif pixels. This deliberately changes source coverage area and centroid, while retaining original bounds, positive support, outlines and placement.
+
+![Nimbus Mono PS long-stem comparison](../images/browser-common-ground/thin-stroke-000_Nimbus-Mono-PS_Regular_11pt_trials.png)
+
+The processor takes only original bytes, preferred bytes and bitmap width. It estimates native stroke width from positive runs across three scanlines, with stable area and slope compensation. Any persistent width above one pixel blocks normalization for that glyph. This prevents a resolved thick stroke from supplying permission to darken its thin neighbors. A stable main lane needs five samples, at least three weak samples and an isolated native two-pixel anchor. Weak native core values can vary by at most 16. Native strong pixels can bridge a join, but never change. Coherent native coverage selects the winner; exact ties use the positive axis. Conflicting core/fringe proposals are rejected. No family, codepoint, glyph identifier or annotated coordinate enters this rule.
+
+The five grids expose every changed stem cell. Orange outlines mark changes from preferred B. The dark and light grids use the same coverage values.
+
+![Nimbus Mono PS b coverage](../images/browser-common-ground/thin-stroke-031_Nimbus-Mono-PS_Regular_11pt_b_dark_grid.png)
+
+![Nimbus Mono PS d coverage](../images/browser-common-ground/thin-stroke-033_Nimbus-Mono-PS_Regular_11pt_d_dark_grid.png)
+
+![Nimbus Mono PS f coverage](../images/browser-common-ground/thin-stroke-035_Nimbus-Mono-PS_Regular_11pt_f_dark_grid.png)
+
+![Nimbus Mono PS p coverage](../images/browser-common-ground/thin-stroke-037_Nimbus-Mono-PS_Regular_11pt_p_dark_grid.png)
+
+![Nimbus Mono PS q coverage](../images/browser-common-ground/thin-stroke-039_Nimbus-Mono-PS_Regular_11pt_q_dark_grid.png)
+
+The same processor audits all 118 source conditions and 11,210 codepoint cases. The 226 trial changes 185 cases; the 240 trial changes 187. Changes occur in 21 conditions, including several light faces. The 41-sheet folder shows every changed condition, all ten decorative-font conditions, unchanged Noto Sans and Segoe UI Regular 11pt controls, and ten numbered target maps. Broadway and Calisto MT are unchanged. Castellar has additional changes, so its design intent remains an optical regression check. A width limit alone cannot prove that all intentional hairlines retain their character.
+
+![Castellar regression comparison](../images/browser-common-ground/thin-stroke-011_Castellar_Regular_11pt_trials.png)
+
+![Nimbus Mono PS 12pt comparison](../images/browser-common-ground/thin-stroke-028_Nimbus-Mono-PS_Regular_12pt_trials.png)
+
+Generate these trials after the profile/corner study exists:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/thin_stroke_test.py --self-test
+PYTHONDONTWRITEBYTECODE=1 python3 tests/thin_stroke_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/thin-stroke-study/gallery/000_Nimbus-Mono-PS_Regular_11pt_trials.png
+```
+
+The [portable record](../images/browser-common-ground/thin-stroke-captures.json) binds both source files, the frozen B source record, all complete source/trial arrays and all generated images. Per-codepoint digests bind full entries with mask hashes, sums, centroid movement and inferred native width. The generated `masks.json` retains every array and lane decision. Independent native rasterization checks all source glyphs. Reflections in both axes and transposition agree across every unique source glyph. Two compositors check each native strip; preferred strips match the earlier B gallery exactly where a source page exists. Reopened crops and numbered fills check saved images. Direct fixtures cover under-budget stems, joined cores, ties, thick/thin contrast, short marks, insufficient area and protected strong pixels. These remain finite ASCII diagnostics at 11–12pt, 96 DPI and scale 1. Neither trial changes installed profiles or the preferred B source.
