@@ -683,3 +683,45 @@ gwenview results/noto-coverage-grid/gallery/00_Noto-Sans_Regular_11pt_a_dark.png
 ```
 
 The [portable record](../images/browser-common-ground/noto-coverage-captures.json) includes all four original outlines, bitmap bounds, original and processed masks, complete numbered arrays and image hashes. It binds the parent record, native capture, font, library and helpers. The generator recomputes every processed mask and requires the combined digest to match the broad study. An independent rasterizer checks each original outline. Reopened native strips and every grid-cell fill check both polarities. The maps support the next optical diagnosis without changing the accepted treatments or installed profile.
+
+## One winner in the split stem
+
+The user identifies n as the remaining target. Its split left stem needs one dominant pixel, like the earlier Inconsolata u correction. The existing strong-pixel guard blocks that result. The original lower pairs contain 184 + 152 coverage. The bridge and gain pass raises them to 245 + 209. Since one pixel already exceeds 230, the original core selector skips the pair. Both pixels then compete as a bright stem.
+
+![Noto Sans n, preserving the strong core while reducing its fringe](../images/browser-common-ground/stem-winner-00_Noto-Sans_Regular_11pt_n_native.png)
+
+The new trial keeps the existing 245 core. The original pair total is 336, which leaves 91 for the fringe. Exactly four cells change from 209 to 91. The upper four rows, crown, join and right stem stay identical. The focused page changes n alone and retains all other context masks. The source outline, bitmap bounds, placement and nonzero support stay fixed. The whole glyph sum falls from 7,353 to 6,881. Within each corrected pair, the coverage centroid moves toward the core. Its distance from the core falls from 0.460 to 0.271 pixels. Thus conserved native pair area does not preserve apparent geometry.
+
+![Numbered n coverage before and after](../images/browser-common-ground/stem-winner-01_Noto-Sans_Regular_11pt_n_grid_dark.png)
+
+The matching [white-background grid](../images/browser-common-ground/stem-winner-02_Noto-Sans_Regular_11pt_n_grid_light.png) retains the same coverage values. Rows 5–8, column 2 contain the four changes. Column 1 remains 245 throughout the stem.
+
+The function reuses the existing selector on actual native coverage before contrast raises a core. It starts with the accepted native-area result. For a selected weak-native pair, it preserves an already strong chosen core and reduces its fringe to the native total minus that core. The remainder must stay positive and below both the core and its previous fringe. A strong fringe or insufficient native area blocks the change. This extends the existing selector without new geometric thresholds or modifications to the earlier helpers. Inconsolata u retains its accepted 240 + 28 result.
+
+The user requests the other affected fonts in the samples. The numerical audit covers all 10,260 glyphs from the 108 source conditions. It finds 436 additional changed glyph cases in 48 conditions across sixteen families. Every affected condition has a before/after sheet. The three n detail pages and 48 full sheets share one 51-page folder. Each full sheet applies the same general function to all eligible glyphs and lists the changed characters. Both backgrounds and all source text rows remain visible. The left side is the previous core trial. The right side preserves strong winners and removes their excess fringe coverage.
+
+![All affected Noto Sans Regular 11pt glyphs](../images/browser-common-ground/stem-winner-03_Noto-Sans_Regular_11pt_affected.png)
+
+![Noto Serif Regular 11pt](../images/browser-common-ground/stem-winner-06_Noto-Serif_Regular_11pt_affected.png)
+
+![Arial Regular 11pt](../images/browser-common-ground/stem-winner-18_Arial_Regular_11pt_affected.png)
+
+![Calibri Light 12pt](../images/browser-common-ground/stem-winner-24_Calibri_Light_12pt_affected.png)
+
+![Hack Regular 11pt](../images/browser-common-ground/stem-winner-36_Hack_Regular_11pt_affected.png)
+
+![Inconsolata Regular 11pt](../images/browser-common-ground/stem-winner-39_Inconsolata-Nerd-Font_Regular_11pt_affected.png)
+
+![Nimbus Roman CFF Regular 11pt](../images/browser-common-ground/stem-winner-49_Nimbus-Roman_Regular_11pt_affected.png)
+
+The complete folder also includes affected DejaVu, Liberation, Segoe UI, Lato and Nimbus Sans faces. Nimbus Mono PS has no additional changes. Unaffected conditions keep their earlier gallery pages. Numerical checks do not establish optical acceptance of these new effects.
+
+After the broad core study creates its matching full manifest and native captures, generate the folder:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/noto_stem_winner_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/noto-stem-winner/gallery/06_Noto-Serif_Regular_11pt_affected.png
+```
+
+The [portable record](../images/browser-common-ground/stem-winner-captures.json) binds the old source records, fixtures, font, native captures, library, unchanged helpers and new consumer. It includes complete n masks, pair values, totals and centroid positions. The matrix report lists all additional changes, their mask digests and the complete image inventory. The displayed affected-condition set must equal the audit set. Independent rasterization checks all glyphs used on the focused and additional pages. Two compositors check each native text row. Reopened native strips, exact enlargements and numbered fills check the saved figures. Direct fixtures cover the four n donors, unchanged strong cores and upper join, original u identity, reflected and transposed inputs, protected fringes and insufficient area. No installed profile or earlier comparison output changes.
