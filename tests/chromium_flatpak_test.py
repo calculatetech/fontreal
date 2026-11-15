@@ -107,7 +107,7 @@ def build_record(path=None):
     return path.resolve(),record
 
 
-def glyph_ids(font):
+def glyph_ids(font,characters="m8Wg"):
     # Opaque FreeType handles provide only the independent cmap, never a mask oracle.
     ft=ctypes.CDLL('libfreetype.so.6'); handle=ctypes.c_void_p(); face=ctypes.c_void_p()
     ft.FT_Init_FreeType.argtypes=[ctypes.POINTER(ctypes.c_void_p)]
@@ -118,8 +118,8 @@ def glyph_ids(font):
     try:
         assert ft.FT_New_Face(handle,os.fsencode(font),0,ctypes.byref(face))==0
         try:
-            result={char:ft.FT_Get_Char_Index(face,ord(char)) for char in 'm8Wg'}
-            assert all(result.values()) and len(set(result.values()))==4
+            result={char:ft.FT_Get_Char_Index(face,ord(char)) for char in characters}
+            assert all(result.values()) and len(set(result.values()))==len(set(characters))
             return result
         finally:ft.FT_Done_Face(face)
     finally:ft.FT_Done_FreeType(handle)

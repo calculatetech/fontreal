@@ -1,6 +1,6 @@
 # Licensing and third-party notices
 
-Fontreal's original application, tests, scripts, and documentation use the [MIT License](LICENSE). The Qt-derived, FreeType-derived and Skia-derived patches are exceptions. Dependency licenses also remain in effect.
+Fontreal's original application, tests, scripts, and documentation use the [MIT License](LICENSE). The Qt-derived, FreeType-derived, Skia-derived and Chromium-derived patches are exceptions. Dependency licenses also remain in effect.
 
 ## Qt patches
 
@@ -44,7 +44,7 @@ The original mask processor in `src/fontreal_coverage.cpp` and its declaration u
 
 ## Built packages and dependencies
 
-The passive Skia observation patch, `patches/skia-747cf654-fontreal-trace.patch`, contains source context and modifications under [Skia's BSD license](LICENSES/Skia-BSD-3-Clause.txt). The source revision is `747cf654ed6f864f4402e7d6eb54a6ede60141e5`. Original copyright notices remain in the source checkout. The root MIT license does not replace these terms. Source-built Electron artifacts also retain their Electron license and Chromium third-party notices.
+The passive observation patch, `patches/skia-747cf654-fontreal-trace.patch`, and selected integration patch, `patches/skia-747cf654-fontreal-selected.patch`, contain source context and modifications under [Skia's BSD license](LICENSES/Skia-BSD-3-Clause.txt). The source revision is `747cf654ed6f864f4402e7d6eb54a6ede60141e5`. Original copyright notices remain in the source checkout. The root MIT license does not replace these terms. The private C1 baseline retains its Electron license, but its `LICENSES.chromium.html` is an upstream sample page. It is not a redistributable binary bundle. Selected artifacts must retain complete credits from the pinned official Chromium generator and bind their license inputs. The Chromium GN patch, `patches/chromium-152-fontreal-selected-gn.patch`, retains [Chromium's BSD license](LICENSES/Chromium-BSD-3-Clause.txt). Original provider-probe, bridge and build code use MIT. The selected build also compiles the unchanged pinned libc++ memory-resource source needed by the existing processor. Retain its unchanged LLVM license and exception explicitly with the selected artifact, alongside the generated complete credits.
 
 Patched Qt libraries remain Qt libraries under their upstream licenses. The MIT license for Fontreal's original code does not remove Qt's requirements for corresponding source, notices, or library replacement. Keep the native build bundle's `source/` directory, recipes, copyright files, and original packages with a distribution. The [build guide](docs/build-system.md) explains the bundle.
 
