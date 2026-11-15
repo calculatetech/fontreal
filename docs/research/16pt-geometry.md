@@ -655,3 +655,31 @@ gwenview results/stem-core-study/gallery/000_Noto-Sans_Regular_11pt_stock-Qt.png
 The [portable record](../images/browser-common-ground/stem-core-captures.json) binds all 10,260 glyphs through source-outline and mask digests. It includes full masks and selected pairs for all 348 glyph conditions with changes. The digest order and dimensions define the concatenated arrays. The generated full manifest retains every original and trial array plus layout coordinates. Library, package, font, helper, native capture and image hashes bind the inputs and outputs. Independent rasterization checks each loaded outline. Two compositors check each native text row. Reopened PNG crops check the complete saved strips, and direct fixtures cover the accepted u, axis transposition, reflection, short marks and low available area.
 
 The new selector preserves nonzero support, existing strong pixels, source outlines and bitmap bounds. It can shift the ink centroid and perceived geometry. Native-area conservation applies only to selected pairs, not the whole original glyph. The broader treatment still needs human judgment and real-application testing. It changes no installed library, profile, font or preference.
+
+## Noto Sans Regular 11pt numbered coverage
+
+The user reports that the other tested fonts look great in all conditions and that Inconsolata cleaned up well. The next inspection targets a, e, o and n in Noto Sans Regular at 11pt. These charts use the exact captured masks from the broad study. They apply no new darkening or geometry change.
+
+Each page shows original native coverage, the selected 170 + gain baseline, core 240/native area and core 240/gained area. None of these four glyphs has an eligible straight-stem pair. All three processed maps are identical. The original column makes the preceding coverage changes visible. Orange borders identify changed values. Rows and columns start at one within the native glyph bitmap.
+
+Coverage measures how much ink fills a pixel. Zero means no ink and 255 means full ink. The cell numbers remain coverage values on both backgrounds. On white, the displayed gray value is 255 minus coverage. The small strips above each grid repeat the exact native glyph pixels, without resizing.
+
+![Noto Sans Regular 11pt a coverage](../images/browser-common-ground/noto-coverage-00_Noto-Sans_Regular_11pt_a_dark.png)
+
+![Noto Sans Regular 11pt e coverage](../images/browser-common-ground/noto-coverage-02_Noto-Sans_Regular_11pt_e_dark.png)
+
+![Noto Sans Regular 11pt o coverage](../images/browser-common-ground/noto-coverage-04_Noto-Sans_Regular_11pt_o_dark.png)
+
+![Noto Sans Regular 11pt n coverage](../images/browser-common-ground/noto-coverage-06_Noto-Sans_Regular_11pt_n_dark.png)
+
+The matching [white-background a](../images/browser-common-ground/noto-coverage-01_Noto-Sans_Regular_11pt_a_light.png), [e](../images/browser-common-ground/noto-coverage-03_Noto-Sans_Regular_11pt_e_light.png), [o](../images/browser-common-ground/noto-coverage-05_Noto-Sans_Regular_11pt_o_light.png) and [n](../images/browser-common-ground/noto-coverage-07_Noto-Sans_Regular_11pt_n_light.png) pages retain the same numbers. Open the full images at 100% for pixel inspection.
+
+After the broad core study creates its matching native capture, generate the eight-page folder:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/noto_coverage_grid_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/noto-coverage-grid/gallery/00_Noto-Sans_Regular_11pt_a_dark.png
+```
+
+The [portable record](../images/browser-common-ground/noto-coverage-captures.json) includes all four original outlines, bitmap bounds, original and processed masks, complete numbered arrays and image hashes. It binds the parent record, native capture, font, library and helpers. The generator recomputes every processed mask and requires the combined digest to match the broad study. An independent rasterizer checks each original outline. Reopened native strips and every grid-cell fill check both polarities. The maps support the next optical diagnosis without changing the accepted treatments or installed profile.
