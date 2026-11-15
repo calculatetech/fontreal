@@ -861,3 +861,34 @@ gwenview results/thin-stroke-study/gallery/000_Nimbus-Mono-PS_Regular_11pt_trial
 ```
 
 The [portable record](../images/browser-common-ground/thin-stroke-captures.json) binds both source files, the frozen B source record, all complete source/trial arrays and all generated images. Per-codepoint digests bind full entries with mask hashes, sums, centroid movement and inferred native width. The generated `masks.json` retains every array and lane decision. Independent native rasterization checks all source glyphs. Reflections in both axes and transposition agree across every unique source glyph. Two compositors check each native strip; preferred strips match the earlier B gallery exactly where a source page exists. Reopened crops and numbered fills check saved images. Direct fixtures cover under-budget stems, joined cores, ties, thick/thin contrast, short marks, insufficient area and protected strong pixels. These remain finite ASCII diagnostics at 11–12pt, 96 DPI and scale 1. Neither trial changes installed profiles or the preferred B source.
+
+## Weighted stem darkening without coverage transfer
+
+The user prefers the fit of 226, while 240 improves readability but adds jaggies. The supplied p grid exposes a separate regression: both fixed-budget trials take coverage from the joins. At row 2, column 3, the preferred 226 becomes 132 or 118. At row 6, column 3, it becomes 117 or 103. This is a consequence of the transfer rule, rather than a requirement for a stronger stem. The user requests a weighted reference from approximately the strongest quarter of pixels, then emphasizes that darkening stems alone appears sufficient.
+
+The new comparison keeps preferred B on the left. The middle raises only detected long-stem cores. The right adds a separate supported-curve extension for the requested 188 corner. Neither version removes coverage. Both retain the old detector's width guard, lane selection and conflict handling, but discard all of its transferred-coverage output. Original masks, source layouts, installed profiles and earlier galleries remain intact.
+
+![Weighted stem comparison](../images/browser-common-ground/weighted-stroke-000_Nimbus-Mono-PS_Regular_11pt_trials.png)
+
+The target comes from the preferred glyph's highest quarter of positive pixels. The selected count rounds upward and includes all ties at its lower boundary. Each reference receives a weight equal to its coverage. The target is `sum(value * value) / sum(value)`, rounded to the nearest integer with half ties upward. This uses the stronger observed coverage instead of choosing the maximum or a fixed floor. Existing stronger core values remain unchanged. Every preferred 230+ value remains exact.
+
+For p, the reference set contains twelve 226 pixels and one 227 pixel. Its weighted average is about 226.08 and its target is 226. The eight 186 stem pixels become 226. Both 226 join neighbors stay 226, and the middle column leaves every non-core pixel exact. The separate right column also raises the top-right 188 to 226. The same formula gives b 231, d 226, f 233 and q 228; these values are measured outputs, not character-specific settings.
+
+![Weighted p coverage on white](../images/browser-common-ground/weighted-stroke-035_Nimbus-Mono-PS_Regular_11pt_p_light_grid.png)
+
+The optional extension needs an existing selected long core. It considers eight-connected preferred 170+ components containing that core and at least two distinct upper-quarter references. A candidate must be below the target, below 230, and a strict local coverage peak across at least one pixel axis. Identified core and fringe pixels are excluded from this extra pass. Disconnected marks cannot inherit another component's strength. All decisions use unchanged preferred evidence. This is a separate optical proposal, not a necessary part of stem darkening.
+
+The complete 118-condition audit contains 11,210 codepoint cases and 11,158 unique glyph instances. Stem-only changes 152 cases in seventeen conditions. The optional extension changes 169 cases in eighteen conditions. Both have zero coverage decreases, exact positive support, and unchanged preferred strong pixels. Both-axis reflections and transposition agree across the full unique-glyph set. The 38-sheet folder includes 28 native comparison pages and ten maps, with every affected condition, all ten decorative conditions and unchanged Noto/Segoe controls. Wider and intricate designs still need optical judgment; added coverage can change apparent weight and smoothness.
+
+![Castellar weighted regression](../images/browser-common-ground/weighted-stroke-011_Castellar_Regular_11pt_trials.png)
+
+Generate this comparison after the frozen source studies exist:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/weighted_stroke_test.py --self-test
+PYTHONDONTWRITEBYTECODE=1 python3 tests/weighted_stroke_test.py \
+  --stock-library STOCK_LIBRARY --label-font LABEL_FONT
+gwenview results/weighted-stroke-study/gallery/035_Nimbus-Mono-PS_Regular_11pt_p_light_grid.png
+```
+
+The [portable record](../images/browser-common-ground/weighted-stroke-captures.json) binds the unchanged selector, preferred inputs, new processor, complete arrays and images. Full-entry digests cover all target arithmetic, mask hashes, sums and centroids. The generated `masks.json` retains all arrays and selected indices. A separate histogram calculation checks every weighted target. Native source rasterization, two compositors, matching earlier B strips, reopened crops and numbered fills check the displayed evidence. The fixtures retain the supplied p, its exact joins, the separate 188 change, an outlier, disconnected dots, short marks and intentional stroke contrast. Numerical checks establish these finite 11–12pt ASCII cases, not optical acceptance or a new installed profile.
