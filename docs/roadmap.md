@@ -17,11 +17,10 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-No task is active.
+- **FR-016: Support Chromium-based browsers and Electron applications.** Identify each exact engine and its reached text owner. Start with a source-built stock/passive-instrumentation fixture for the installed Teams Electron version, then carry the selected method into that owner. Qualify the installed Chromium-based browser and Teams for Linux before Bitwarden. Preserve accounts, application data, ordinary launch and security chains, updates and stock fallback. Include the Flatpak packages. A host FreeType mapping does not establish coverage. See the [engine and Flatpak specification](plans/FR-016-chromium-flatpak.md).
 
 ## Planned next
 
-- **FR-016: Support Chromium-based browsers and Electron applications.** Use the installed Chromium-based browser and Teams for Linux as initial targets, then Bitwarden. Trace each exact engine and its font backend. Match the selected reference in a local fixture before testing the application. Include the Flatpak packages; preserve accounts, application data and normal sandboxes. A loaded system FreeType library does not establish coverage of an embedded renderer.
 - **FR-017: Deliver treatment inside Flatpak sandboxes.** Prioritize Teams, Bitwarden and Telegram. Build against each application's actual runtime or bundled engine, with exact version records and a separate opt-in comparison. Check both Qt/GTK runtime libraries and embedded browser engines. Preserve accounts, application data, normal updates, sandboxes and a stock launch. A host library replacement alone is not coverage.
 - **FR-005: GNOME application support.** Identify the actual GTK 3 and GTK 4 text paths, including Pango, Cairo, and GPU composition. Build isolated tests in existing applications. Match the reference before proposing desktop configuration or library changes. [PangoCairo documentation](https://docs.gtk.org/PangoCairo/) identifies one relevant path, without establishing coverage of every GTK renderer.
 - **FR-003: Calibrate native application text.** Focus on Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales, and light/dark colors. Retain other fonts as comparison controls. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.

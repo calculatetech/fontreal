@@ -39,7 +39,7 @@ Fontreal contains a comparison viewer, rendering patches, and tools that build m
 
 The private FreeType builder supports exact Debian 13 and Ubuntu 26.04 source revisions on amd64. It builds the original and modified libraries together. Version checks prevent an override from loading after an incompatible update.
 
-KDE system packages currently contain the earlier raw profile. Updating that package workflow to the selected method is separate work. Chromium browsers, Electron applications, and Flatpak applications also need their own integration. Teams, Bitwarden, and Telegram are the next targets. See the [roadmap](docs/roadmap.md).
+KDE system packages currently contain the earlier raw profile. Updating that package workflow to the selected method is separate work. Chromium browsers, Electron applications, and Flatpak applications also need their own integration. The [engine workflow](docs/experiments/chromium-flatpak.md) inspects Edge, Teams, Bitwarden and Telegram, then compares stock and traced builds of the Teams engine. It does not activate application support. See the [roadmap](docs/roadmap.md).
 
 ## Try it
 
@@ -70,4 +70,4 @@ See the [contribution guide](CONTRIBUTING.md) before adding documentation or cap
 
 ## License
 
-Fontreal’s original code and documentation use [MIT](LICENSE). Qt-derived patches retain their upstream LGPL/GPL alternatives. FreeType-derived patches use the FreeType Project License. See the [third-party notices](THIRD_PARTY_NOTICES.md).
+Fontreal’s original code and documentation use [MIT](LICENSE). Qt-derived patches retain their upstream LGPL/GPL alternatives. FreeType-derived patches use the FreeType Project License. The Skia observation patch uses Skia’s BSD license. See the [third-party notices](THIRD_PARTY_NOTICES.md).

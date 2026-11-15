@@ -1,6 +1,6 @@
 # Licensing and third-party notices
 
-Fontreal's original application, tests, scripts, and documentation use the [MIT License](LICENSE). The Qt-derived and FreeType-derived patches are exceptions. Dependency licenses also remain in effect.
+Fontreal's original application, tests, scripts, and documentation use the [MIT License](LICENSE). The Qt-derived, FreeType-derived and Skia-derived patches are exceptions. Dependency licenses also remain in effect.
 
 ## Qt patches
 
@@ -43,6 +43,8 @@ This software is based in part on the work of the FreeType Team. Portions are co
 The original mask processor in `src/fontreal_coverage.cpp` and its declaration use MIT. The private FreeType candidate links the system standard C++ runtime. That runtime retains its own license and runtime exception.
 
 ## Built packages and dependencies
+
+The passive Skia observation patch, `patches/skia-747cf654-fontreal-trace.patch`, contains source context and modifications under [Skia's BSD license](LICENSES/Skia-BSD-3-Clause.txt). The source revision is `747cf654ed6f864f4402e7d6eb54a6ede60141e5`. Original copyright notices remain in the source checkout. The root MIT license does not replace these terms. Source-built Electron artifacts also retain their Electron license and Chromium third-party notices.
 
 Patched Qt libraries remain Qt libraries under their upstream licenses. The MIT license for Fontreal's original code does not remove Qt's requirements for corresponding source, notices, or library replacement. Keep the native build bundle's `source/` directory, recipes, copyright files, and original packages with a distribution. The [build guide](docs/build-system.md) explains the bundle.
 
