@@ -1,0 +1,967 @@
+{
+  "method": {
+    "point_sizes": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "dpi": 96,
+    "scale": 1,
+    "weight": "Regular 400",
+    "codepoints": "U+0020 through U+007E",
+    "freetype": "2.13.3 pristine reference",
+    "truetype_interpreter": 40,
+    "hinted_flags": 8,
+    "unhinted_flags": 10,
+    "design_flags": 11,
+    "device_size": "round(point_size * 96 / 72 * 64) / 64",
+    "reference_library_sha256": "7cd51aa90455b425d8b75f5efc67f8b47086367d65d8c4ee23c0ec0a8a8b889e",
+    "coverage_source_sha256": "125c39efdc3e1003b533add69af082b3318323d71f1e15713322deae33d7cc59",
+    "probe_sources": {
+      "tests/selected_profile_probe.cpp": "97470fbd2b98a006ae33ca537e0c3073b7dabfa26bb6811c650ae72667325185",
+      "tests/freetype_mask_probe.cpp": "04445b25a8a05217187c39f08f116dfca8c4d2f5ffc6afb1f04b061d1e0cb64b",
+      "tests/selected_mask_probe.cpp": "e1993f4e83cb590afd3c5c7a83c9718b1240aca217c65646e0249c98ca833898"
+    },
+    "thresholds": {
+      "intermediate_inclusive": [
+        32,
+        223
+      ],
+      "strong_core_minimum": 242
+    },
+    "aggregation": "Each of 95 ASCII glyphs appears once. Percentages pool nonzero pixels across glyphs. No text-frequency weighting or readability score."
+  },
+  "fonts": {
+    "NotoSans": {
+      "file": "NotoSans-Regular.ttf",
+      "sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "names": {
+        "1": "Noto Sans",
+        "2": "Regular",
+        "5": "Version 2.004; ttfautohint (v1.8.3) -l 8 -r 50 -G 200 -x 14 -D latn -f none -a qsq -X \"\""
+      },
+      "units_per_em": 1000,
+      "x_height_cap_height": [
+        536,
+        714
+      ],
+      "table_sha256": {
+        "fpgm": "08929844619198eaa9f4c265ba8521746c1b19ce3c9be38edd63c9cf5f11a5d2",
+        "prep": "f82cb22f5c8cf0fc205c5fae3570704ad6eb96b6ee53cca3c74cc4169bd238b8",
+        "cvt ": "d9b969d085531c05bdfb9897beaf0cf32e050724a5824b0ed0dd11535842c21a",
+        "gasp": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940"
+      }
+    },
+    "NotoSansDisplay": {
+      "file": "NotoSansDisplay-Regular.ttf",
+      "sha256": "3dd456595e9226472ab8adaf9408400c671b97dbba241d883d05e2ab70ceadac",
+      "names": {
+        "1": "Noto Sans Display",
+        "2": "Regular",
+        "5": "Version 2.003; ttfautohint (v1.8.3) -l 8 -r 50 -G 200 -x 14 -D latn -f none -a qsq -X \"\""
+      },
+      "units_per_em": 1000,
+      "x_height_cap_height": [
+        536,
+        714
+      ],
+      "table_sha256": {
+        "fpgm": "44e6f89aa809453f2144ac932e798472c5becc648f34f2f66f654869304d05a6",
+        "prep": "d7849a1ab8fc0949b120f636207dc0929709152d27cb70e9880c0aec0c07efa2",
+        "cvt ": "2c90364ab03b29915bf59409eef145a5257664104f4a8b625cd9fd7df36691f5",
+        "gasp": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940"
+      }
+    }
+  },
+  "design_units": {
+    "NotoSans": {
+      "H": {
+        "width": 546,
+        "height": 714,
+        "bearing_x": 97,
+        "advance": 741
+      },
+      "I": {
+        "width": 258,
+        "height": 714,
+        "bearing_x": 40,
+        "advance": 339
+      },
+      "e": {
+        "width": 458,
+        "height": 556,
+        "bearing_x": 55,
+        "advance": 564
+      },
+      "l": {
+        "width": 88,
+        "height": 760,
+        "bearing_x": 85,
+        "advance": 258
+      },
+      "n": {
+        "width": 452,
+        "height": 546,
+        "bearing_x": 85,
+        "advance": 618
+      },
+      "o": {
+        "width": 496,
+        "height": 556,
+        "bearing_x": 55,
+        "advance": 605
+      },
+      "x": {
+        "width": 493,
+        "height": 536,
+        "bearing_x": 18,
+        "advance": 529
+      }
+    },
+    "NotoSansDisplay": {
+      "H": {
+        "width": 516,
+        "height": 714,
+        "bearing_x": 91,
+        "advance": 699
+      },
+      "I": {
+        "width": 247,
+        "height": 714,
+        "bearing_x": 37,
+        "advance": 322
+      },
+      "e": {
+        "width": 434,
+        "height": 556,
+        "bearing_x": 51,
+        "advance": 532
+      },
+      "l": {
+        "width": 87,
+        "height": 760,
+        "bearing_x": 79,
+        "advance": 245
+      },
+      "n": {
+        "width": 429,
+        "height": 546,
+        "bearing_x": 79,
+        "advance": 584
+      },
+      "o": {
+        "width": 469,
+        "height": 556,
+        "bearing_x": 51,
+        "advance": 570
+      },
+      "x": {
+        "width": 469,
+        "height": 536,
+        "bearing_x": 16,
+        "advance": 501
+      }
+    }
+  },
+  "examples_10pt": {
+    "NotoSans": {
+      "l": {
+        "width": 2,
+        "height": 11,
+        "left": 1,
+        "top": 11,
+        "hinted_outline_x_26_6": [
+          73,
+          148
+        ],
+        "middle_row": 5,
+        "raw_middle_row": [
+          220,
+          80
+        ],
+        "selected_middle_row": [
+          240,
+          60
+        ],
+        "unhinted_outline_x_26_6": [
+          73,
+          148
+        ],
+        "unhinted_raw_middle_row": [
+          220,
+          80
+        ]
+      },
+      "n": {
+        "width": 7,
+        "height": 8,
+        "left": 1,
+        "top": 8,
+        "hinted_outline_x_26_6": [
+          73,
+          133,
+          144,
+          148,
+          171,
+          206,
+          249,
+          281,
+          293,
+          374,
+          384,
+          458
+        ],
+        "middle_row": 4,
+        "raw_middle_row": [
+          220,
+          80,
+          0,
+          0,
+          0,
+          255,
+          40
+        ],
+        "selected_middle_row": [
+          247,
+          53,
+          0,
+          0,
+          0,
+          255,
+          40
+        ],
+        "unhinted_outline_x_26_6": [
+          73,
+          133,
+          144,
+          148,
+          171,
+          206,
+          249,
+          281,
+          293,
+          374,
+          384,
+          458
+        ],
+        "unhinted_raw_middle_row": [
+          220,
+          81,
+          0,
+          0,
+          0,
+          255,
+          40
+        ]
+      }
+    },
+    "NotoSansDisplay": {
+      "l": {
+        "width": 2,
+        "height": 11,
+        "left": 1,
+        "top": 11,
+        "hinted_outline_x_26_6": [
+          67,
+          142
+        ],
+        "middle_row": 5,
+        "raw_middle_row": [
+          244,
+          56
+        ],
+        "selected_middle_row": [
+          244,
+          56
+        ],
+        "unhinted_outline_x_26_6": [
+          67,
+          142
+        ],
+        "unhinted_raw_middle_row": [
+          244,
+          56
+        ]
+      },
+      "n": {
+        "width": 6,
+        "height": 8,
+        "left": 1,
+        "top": 8,
+        "hinted_outline_x_26_6": [
+          67,
+          127,
+          138,
+          142,
+          163,
+          195,
+          236,
+          265,
+          277,
+          354,
+          359,
+          433
+        ],
+        "middle_row": 4,
+        "raw_middle_row": [
+          244,
+          56,
+          0,
+          0,
+          100,
+          196
+        ],
+        "selected_middle_row": [
+          244,
+          56,
+          0,
+          0,
+          52,
+          244
+        ],
+        "unhinted_outline_x_26_6": [
+          67,
+          127,
+          138,
+          142,
+          163,
+          195,
+          236,
+          265,
+          277,
+          354,
+          359,
+          433
+        ],
+        "unhinted_raw_middle_row": [
+          244,
+          56,
+          0,
+          0,
+          100,
+          196
+        ]
+      }
+    }
+  },
+  "conditions": [
+    {
+      "font": "NotoSans",
+      "pt": 8,
+      "mode": "hinted",
+      "raw": {
+        "ink": 1224.7490196078431,
+        "nonzero": 2476,
+        "intermediate_pct": 71.48626817447496,
+        "core242_pct": 4.20032310177706
+      },
+      "selected": {
+        "ink": 1375.4196078431373,
+        "nonzero": 2476,
+        "intermediate_pct": 36.47011308562197,
+        "core242_pct": 12.075928917609048
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 8,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 1184.592156862745,
+        "nonzero": 2684,
+        "intermediate_pct": 70.64083457526081,
+        "core242_pct": 3.1669150521609537
+      },
+      "selected": {
+        "ink": 1340.7960784313725,
+        "nonzero": 2684,
+        "intermediate_pct": 42.73472429210134,
+        "core242_pct": 7.377049180327869
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 9,
+      "mode": "hinted",
+      "raw": {
+        "ink": 1577.7764705882353,
+        "nonzero": 3057,
+        "intermediate_pct": 60.58227019954204,
+        "core242_pct": 7.327445207719987
+      },
+      "selected": {
+        "ink": 1698.3372549019607,
+        "nonzero": 3057,
+        "intermediate_pct": 33.72587504088976,
+        "core242_pct": 14.327772325809617
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 9,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 1498.8980392156864,
+        "nonzero": 3225,
+        "intermediate_pct": 65.24031007751938,
+        "core242_pct": 6.1395348837209305
+      },
+      "selected": {
+        "ink": 1648.7098039215687,
+        "nonzero": 3225,
+        "intermediate_pct": 39.87596899224806,
+        "core242_pct": 13.023255813953488
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 10,
+      "mode": "hinted",
+      "raw": {
+        "ink": 1982.9882352941177,
+        "nonzero": 3792,
+        "intermediate_pct": 63.5548523206751,
+        "core242_pct": 11.814345991561181
+      },
+      "selected": {
+        "ink": 2153.427450980392,
+        "nonzero": 3792,
+        "intermediate_pct": 39.45147679324894,
+        "core242_pct": 29.2457805907173
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 10,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 1848.592156862745,
+        "nonzero": 3812,
+        "intermediate_pct": 65.16264428121721,
+        "core242_pct": 8.158447009443861
+      },
+      "selected": {
+        "ink": 2021.0392156862745,
+        "nonzero": 3812,
+        "intermediate_pct": 40.398740818468,
+        "core242_pct": 20.59286463798531
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 11,
+      "mode": "hinted",
+      "raw": {
+        "ink": 2187.372549019608,
+        "nonzero": 4035,
+        "intermediate_pct": 61.858736059479554,
+        "core242_pct": 13.977695167286246
+      },
+      "selected": {
+        "ink": 2356.6862745098038,
+        "nonzero": 4035,
+        "intermediate_pct": 40.346964064436186,
+        "core242_pct": 29.49194547707559
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 11,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 2238.2549019607845,
+        "nonzero": 4301,
+        "intermediate_pct": 65.03138804929087,
+        "core242_pct": 11.067193675889328
+      },
+      "selected": {
+        "ink": 2425.9882352941177,
+        "nonzero": 4301,
+        "intermediate_pct": 42.734247849337365,
+        "core242_pct": 26.156707742385493
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 12,
+      "mode": "hinted",
+      "raw": {
+        "ink": 2747.733333333333,
+        "nonzero": 4895,
+        "intermediate_pct": 59.14198161389172,
+        "core242_pct": 20.14300306435138
+      },
+      "selected": {
+        "ink": 2920.733333333333,
+        "nonzero": 4895,
+        "intermediate_pct": 42.32890704800817,
+        "core242_pct": 34.85188968335036
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 12,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 2666.0549019607843,
+        "nonzero": 4951,
+        "intermediate_pct": 61.0583720460513,
+        "core242_pct": 16.400727125833164
+      },
+      "selected": {
+        "ink": 2848.643137254902,
+        "nonzero": 4951,
+        "intermediate_pct": 43.36497677236922,
+        "core242_pct": 30.660472631791556
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 13,
+      "mode": "hinted",
+      "raw": {
+        "ink": 3280.8470588235296,
+        "nonzero": 5753,
+        "intermediate_pct": 55.95341560924735,
+        "core242_pct": 24.091778202676863
+      },
+      "selected": {
+        "ink": 3526.8117647058825,
+        "nonzero": 5753,
+        "intermediate_pct": 42.60385885624891,
+        "core242_pct": 36.22457848079263
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 13,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 3127.0470588235294,
+        "nonzero": 5772,
+        "intermediate_pct": 56.34095634095634,
+        "core242_pct": 22.505197505197504
+      },
+      "selected": {
+        "ink": 3352.478431372549,
+        "nonzero": 5772,
+        "intermediate_pct": 43.745668745668745,
+        "core242_pct": 34.372834372834376
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 14,
+      "mode": "hinted",
+      "raw": {
+        "ink": 3541.956862745098,
+        "nonzero": 6066,
+        "intermediate_pct": 54.51697988789977,
+        "core242_pct": 26.0468183316848
+      },
+      "selected": {
+        "ink": 3794.3490196078433,
+        "nonzero": 6066,
+        "intermediate_pct": 41.55951203428948,
+        "core242_pct": 38.06462248598747
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 14,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 3627.7960784313727,
+        "nonzero": 6518,
+        "intermediate_pct": 53.98895366676895,
+        "core242_pct": 24.930960417305922
+      },
+      "selected": {
+        "ink": 3871.0666666666666,
+        "nonzero": 6518,
+        "intermediate_pct": 42.32893525621356,
+        "core242_pct": 35.96195151887082
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 15,
+      "mode": "hinted",
+      "raw": {
+        "ink": 4107.419607843137,
+        "nonzero": 6797,
+        "intermediate_pct": 52.817419449757246,
+        "core242_pct": 28.615565690745917
+      },
+      "selected": {
+        "ink": 4432.439215686274,
+        "nonzero": 6797,
+        "intermediate_pct": 38.45814329851405,
+        "core242_pct": 42.47462115639252
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 15,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 4166.345098039215,
+        "nonzero": 7185,
+        "intermediate_pct": 53.50034794711204,
+        "core242_pct": 26.708420320111344
+      },
+      "selected": {
+        "ink": 4512.078431372549,
+        "nonzero": 7185,
+        "intermediate_pct": 38.88656924147529,
+        "core242_pct": 40.77940153096729
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 16,
+      "mode": "hinted",
+      "raw": {
+        "ink": 4893.901960784314,
+        "nonzero": 7505,
+        "intermediate_pct": 49.26049300466356,
+        "core242_pct": 31.165889407061957
+      },
+      "selected": {
+        "ink": 5318.756862745098,
+        "nonzero": 7505,
+        "intermediate_pct": 32.89806795469687,
+        "core242_pct": 46.64890073284477
+      }
+    },
+    {
+      "font": "NotoSans",
+      "pt": 16,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 4742.313725490196,
+        "nonzero": 7853,
+        "intermediate_pct": 50.46479052591366,
+        "core242_pct": 28.829746593658474
+      },
+      "selected": {
+        "ink": 5096.043137254902,
+        "nonzero": 7853,
+        "intermediate_pct": 37.09410416401375,
+        "core242_pct": 42.08582707245639
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 8,
+      "mode": "hinted",
+      "raw": {
+        "ink": 1186.137254901961,
+        "nonzero": 2512,
+        "intermediate_pct": 74.28343949044586,
+        "core242_pct": 1.7515923566878981
+      },
+      "selected": {
+        "ink": 1334.0509803921568,
+        "nonzero": 2512,
+        "intermediate_pct": 38.69426751592356,
+        "core242_pct": 8.519108280254777
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 8,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 1147.0196078431372,
+        "nonzero": 2706,
+        "intermediate_pct": 72.39467849223946,
+        "core242_pct": 1.2564671101256466
+      },
+      "selected": {
+        "ink": 1299.0235294117647,
+        "nonzero": 2706,
+        "intermediate_pct": 43.20029563932003,
+        "core242_pct": 4.434589800443459
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 9,
+      "mode": "hinted",
+      "raw": {
+        "ink": 1525.5960784313725,
+        "nonzero": 2993,
+        "intermediate_pct": 55.362512529234884,
+        "core242_pct": 8.018710324089541
+      },
+      "selected": {
+        "ink": 1649.8235294117646,
+        "nonzero": 2993,
+        "intermediate_pct": 33.67858336117608,
+        "core242_pct": 13.631807550952221
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 9,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 1449.2392156862745,
+        "nonzero": 3141,
+        "intermediate_pct": 60.776822667940145,
+        "core242_pct": 6.781279847182426
+      },
+      "selected": {
+        "ink": 1588.0901960784313,
+        "nonzero": 3141,
+        "intermediate_pct": 40.11461318051576,
+        "core242_pct": 11.493155046163642
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 10,
+      "mode": "hinted",
+      "raw": {
+        "ink": 1922.0117647058823,
+        "nonzero": 3694,
+        "intermediate_pct": 59.799675148890095,
+        "core242_pct": 14.185165132647537
+      },
+      "selected": {
+        "ink": 2078.619607843137,
+        "nonzero": 3694,
+        "intermediate_pct": 39.090416892257714,
+        "core242_pct": 28.938819707634
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 10,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 1791.8549019607842,
+        "nonzero": 3732,
+        "intermediate_pct": 60.58413719185423,
+        "core242_pct": 10.235798499464094
+      },
+      "selected": {
+        "ink": 1952.2274509803922,
+        "nonzero": 3732,
+        "intermediate_pct": 39.30868167202572,
+        "core242_pct": 21.811361200428724
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 11,
+      "mode": "hinted",
+      "raw": {
+        "ink": 2120.274509803922,
+        "nonzero": 3927,
+        "intermediate_pct": 61.87929717341482,
+        "core242_pct": 14.285714285714286
+      },
+      "selected": {
+        "ink": 2292.843137254902,
+        "nonzero": 3927,
+        "intermediate_pct": 40.13241660300484,
+        "core242_pct": 29.258976317799846
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 11,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 2169.4823529411765,
+        "nonzero": 4191,
+        "intermediate_pct": 65.06800286327845,
+        "core242_pct": 11.333810546408971
+      },
+      "selected": {
+        "ink": 2347.3058823529414,
+        "nonzero": 4191,
+        "intermediate_pct": 42.47196373180625,
+        "core242_pct": 23.97995705082319
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 12,
+      "mode": "hinted",
+      "raw": {
+        "ink": 2662.921568627451,
+        "nonzero": 4725,
+        "intermediate_pct": 59.93650793650794,
+        "core242_pct": 17.67195767195767
+      },
+      "selected": {
+        "ink": 2849.8117647058825,
+        "nonzero": 4725,
+        "intermediate_pct": 41.56613756613756,
+        "core242_pct": 32.19047619047619
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 12,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 2583.6588235294116,
+        "nonzero": 4766,
+        "intermediate_pct": 62.9039026437264,
+        "core242_pct": 14.561477129668486
+      },
+      "selected": {
+        "ink": 2787.5098039215686,
+        "nonzero": 4766,
+        "intermediate_pct": 42.908099034830045,
+        "core242_pct": 30.96936634494335
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 13,
+      "mode": "hinted",
+      "raw": {
+        "ink": 3182.086274509804,
+        "nonzero": 5508,
+        "intermediate_pct": 55.954974582425564,
+        "core242_pct": 22.276688453159043
+      },
+      "selected": {
+        "ink": 3393.8627450980393,
+        "nonzero": 5508,
+        "intermediate_pct": 41.63035584604212,
+        "core242_pct": 35.92955700798838
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 13,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 3032.733333333333,
+        "nonzero": 5545,
+        "intermediate_pct": 57.04238052299369,
+        "core242_pct": 20.955816050495944
+      },
+      "selected": {
+        "ink": 3240.2431372549017,
+        "nonzero": 5545,
+        "intermediate_pct": 42.84941388638413,
+        "core242_pct": 33.850315599639316
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 14,
+      "mode": "hinted",
+      "raw": {
+        "ink": 3436.0588235294117,
+        "nonzero": 5956,
+        "intermediate_pct": 54.80188045668234,
+        "core242_pct": 25.268636668905305
+      },
+      "selected": {
+        "ink": 3707.01568627451,
+        "nonzero": 5956,
+        "intermediate_pct": 41.739422431161856,
+        "core242_pct": 38.112827400940226
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 14,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 3519.6039215686274,
+        "nonzero": 6392,
+        "intermediate_pct": 54.27096370463079,
+        "core242_pct": 24.405506883604506
+      },
+      "selected": {
+        "ink": 3771.8705882352942,
+        "nonzero": 6392,
+        "intermediate_pct": 42.16207759699625,
+        "core242_pct": 35.8729662077597
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 15,
+      "mode": "hinted",
+      "raw": {
+        "ink": 3982.164705882353,
+        "nonzero": 6610,
+        "intermediate_pct": 54.67473524962178,
+        "core242_pct": 28.532526475037823
+      },
+      "selected": {
+        "ink": 4288.125490196078,
+        "nonzero": 6610,
+        "intermediate_pct": 41.16490166414523,
+        "core242_pct": 41.22541603630862
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 15,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 4039.309803921569,
+        "nonzero": 6978,
+        "intermediate_pct": 55.03009458297507,
+        "core242_pct": 26.841501862997994
+      },
+      "selected": {
+        "ink": 4355.219607843137,
+        "nonzero": 6978,
+        "intermediate_pct": 41.3298939524219,
+        "core242_pct": 39.696188019489824
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 16,
+      "mode": "hinted",
+      "raw": {
+        "ink": 4744.239215686274,
+        "nonzero": 7495,
+        "intermediate_pct": 49.5396931287525,
+        "core242_pct": 31.02068045363576
+      },
+      "selected": {
+        "ink": 5166.717647058824,
+        "nonzero": 7495,
+        "intermediate_pct": 32.78185456971314,
+        "core242_pct": 47.765176784523014
+      }
+    },
+    {
+      "font": "NotoSansDisplay",
+      "pt": 16,
+      "mode": "unhinted",
+      "raw": {
+        "ink": 4596.909803921569,
+        "nonzero": 7823,
+        "intermediate_pct": 50.56883548510802,
+        "core242_pct": 29.36213728748562
+      },
+      "selected": {
+        "ink": 4956.36862745098,
+        "nonzero": 7823,
+        "intermediate_pct": 36.35433976735268,
+        "core242_pct": 43.79394094337211
+      }
+    }
+  ]
+}

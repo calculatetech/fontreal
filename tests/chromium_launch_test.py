@@ -128,7 +128,6 @@ def main():
             record=dict(spec=dict(application=application,location='obsolete deployment'),views=dict(normal=dict(
                 directory=str(source),files=delivery.builder.tree(source),engine_sha256=delivery.target.sha(source/folder/executable))))
             build=source.parent/'build.json';builds[name]=build;put(build,json.dumps(record))
-            put(build.parent/'qualification.json',json.dumps(dict(passed=True,build_sha256=delivery.target.sha(build))))
         native=dict(current='A',deployments=deployments);put(root/'native.json',json.dumps(native))
         originals={str(p):p.read_bytes() for p in (root/'deployments').rglob('*') if p.is_file()}
         marker=home/'original-profile/marker';put(marker,'keep working data');marker_bytes=marker.read_bytes()
@@ -239,6 +238,7 @@ def main():
             argument=json.dumps(str(portal),ensure_ascii=False).replace('%','%%')
             put(destinations[4],'[Service]\nExecStart=\nExecStart=:/usr/bin/gio launch '+argument+'\n')
             proof=builds['teams'].parent/'qualification.json'
+            put(proof,json.dumps(dict(passed=True,build_sha256=delivery.target.sha(builds['teams']))))
             state=dict(application=application,build=str(builds['teams']),build_sha256=delivery.target.sha(builds['teams']),
                        qualification=str(proof),qualification_sha256=delivery.target.sha(proof),tool_sha256=delivery.target.sha(legacy),
                        hooks=[dict(path=str(p),sha256=delivery.target.sha(p)) for p in destinations])

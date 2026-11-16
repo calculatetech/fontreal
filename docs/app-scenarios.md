@@ -2,7 +2,7 @@
 
 Run commands from the repository root as your normal desktop user. Keep the checkout and active artifacts in place while Fontreal is enabled. Put `build` and `results` on the chosen build volume before building. All commands below use the existing app identity and ordinary sandbox.
 
-The guides linked below own the full commands and prerequisites. This page identifies which recipe to follow and what establishes success. A configured hook, loaded library, or successful engine fixture alone does not prove that a live application uses the selected renderer.
+The guides linked below own the full commands and prerequisites. Follow the [test policy](../CONTRIBUTING.md#when-to-run-tests) to distinguish development checks from routine deployment. A configured hook or loaded library alone does not prove that a live application uses the selected renderer.
 
 ## Choose the integration
 
@@ -12,9 +12,9 @@ The guides linked below own the full commands and prerequisites. This page ident
 | Floorp | [Working-profile browser recipe](experiments/browser-masks.md#enable-the-working-profile) | Same selected method, separately enabled and checked |
 | Teams for Linux Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use) | Current Teams resources with the saved selected Electron engine. Application updates do not disable treatment |
 | System Qt 6, KDE and KWin | [Native package and session recipe](build-system.md) | Selected native-normal and weighted stems in matching Debian 13 and Ubuntu 26.04 packages |
-| Edge and other Chromium browsers | [Owner inventory](experiments/chromium-flatpak.md#applications-without-activation) | Not qualified. Teams engine results do not establish browser support |
+| Chrome, Edge, Brave, Vivaldi and other Chromium browsers | [Why these browsers are unsupported](experiments/chromium-flatpak.md#chromium-based-browsers-are-not-supported) | Unsupported. Fontreal has no supported way to apply its stroke adjustments inside their page text engine |
 | Bitwarden Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#build-and-qualify-bitwarden) | Separate selected engine with current native resources, disabled RunAsNode fuse, original process isolation and working data |
-| Telegram Flatpak | Same owner inventory | Not qualified. Its bundled Qt and runtime FreeType require separate checks |
+| Telegram Flatpak | [Owner inventory](experiments/chromium-flatpak.md#applications-without-activation) | Not qualified. Its bundled Qt and runtime FreeType require separate checks |
 | Other GTK/GNOME apps, Qt 5, Wine and Windows | [Roadmap](roadmap.md) | No selected activation recipe yet |
 
 Follow each integration guide. Build source revisions remain pinned. Application releases do not trigger repeated Fontreal qualification. A different rendering engine still needs an integration. Do not apply a Teams override to another Electron application.
@@ -30,7 +30,7 @@ python3 -B tools/browser.py enable floorp
 
 Fully quit and reopen each browser normally. Run the corresponding `status` command from the [browser guide](experiments/browser-masks.md#enable-the-working-profile). Make sure that the intended original profile is selected and no parent still needs a restart.
 
-For automated reproduction, run [Repeat the checks](experiments/browser-masks.md#repeat-the-checks). Component checks establish masks and geometry. The actual browser checks establish placement and final pixels. The delivery check establishes ordinary launch routing, original preferences and reversal. Keep each report with its exact build record.
+For a Fontreal change, [Repeat the checks](experiments/browser-masks.md#repeat-the-checks) supplies development checks for masks, geometry, final pixels, launch routing and reversal. Keep each development report with its exact build record.
 
 For an untreated Nimbus Sans request, follow the [CFF versus Type 1 diagnosis](experiments/browser-masks.md#when-nimbus-sans-looks-untreated). That optional font-selection rule is separate from activation and has its own removal step.
 
@@ -38,7 +38,7 @@ Browser updates keep the saved Fontreal library enabled. Rebuild and re-enable t
 
 ## Teams and Bitwarden: current application and original data
 
-Follow [Enable Teams or Bitwarden for daily use](experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use). Build and qualify each engine through that guide. Enable each target with its printed application record. Fully quit and reopen the target normally. Status must show `enabled: true` and `compatibility: null`.
+Follow [Enable Teams or Bitwarden for daily use](experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use). Build each engine and application view through that guide. Enable each target with its printed application record. Fully quit and reopen the target normally. Status must show `enabled: true` and `compatibility: null`.
 
 An application update refreshes its code and resources on the next launch. It does not disable Fontreal or require another font test. The private engine receives upstream fixes when rebuilt. Preserve the full coherent engine and notices. The native absolute Flatpak command supplies stock rendering with the same account data.
 
@@ -46,9 +46,9 @@ Run [Checks when Fontreal changes](experiments/chromium-flatpak.md#checks-when-f
 
 ## Native KDE: packages and fresh sessions
 
-Use [Build for the running system](build-system.md) for the selected profile. Its package tests and disposable Plasma session tests are required before installation.
+Use [Build for the running system](build-system.md) for the selected profile. Build, verify and prepare the bundle, then follow its installation commands. Package and disposable Plasma session tests belong to Fontreal development under the test policy.
 
-Keep the entire verified bundle, official rollback packages, deployment manifest and session reports together. The guide distinguishes container package checks, disposable VM sessions, browser-launched Qt helpers, host installation and recovery. Run destructive session checks only inside the marked disposable VM.
+Keep the entire verified bundle, official rollback packages and deployment manifest together. Retain development reports when those checks run. Installation does not require new reports for each build. Run destructive session checks only inside the marked disposable VM.
 
 After host activation, log out and back in normally. Run `fontreal-session status` in the new session. A preference for the next login does not establish the values inherited by the current session. Retain the exact predecessor bundle when testing an upgrade from an existing Fontreal installation.
 

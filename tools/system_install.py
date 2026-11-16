@@ -137,20 +137,6 @@ def transaction(builder, directory, rollback=False, simulate=False):
     else:
         deployment = json.loads((directory / "deployment.json").read_text())
         verify_activation(builder, directory, deployment, plan)
-        for filename in ("package-checks/package-results.json", "session-checks/session-results.json"):
-            record = json.loads((directory / filename).read_text())
-            if (record.get("schema") != 1 or record.get("passed") is not True
-                    or record["bundle_sha256"] != builder.sha(directory / "bundle.json")
-                    or record.get("deployment_sha256") != builder.sha(directory / "deployment.json")):
-                raise ValueError(f"Validation belongs to a different bundle: {filename}")
-            if record.get("selected_profile") != builder.SELECTED_PROFILE:
-                raise ValueError("Complete the selected-profile package and session checks before installation.")
-            if filename.startswith("package-checks/"):
-                updates = record.get("updates", [])
-                if len(updates) != len(builder.SOURCES) or {r["source"] for r in updates} != set(builder.SOURCES):
-                    raise ValueError("Run the package checks with --updates before installation.")
-            if filename.startswith("session-checks/") and record.get("complete_runtime") is not True:
-                raise ValueError("Complete the real Plasma session checks before installation.")
         inventory = builder.package_inventory(directory / "packages")
         selected = [directory / "packages" / inventory[(p["name"], p["arch"])]["path"]
                     for p in plan["installed"]]

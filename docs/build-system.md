@@ -2,9 +2,11 @@
 
 Fontreal builds local FreeType and Qt packages on demand. It reads the installed distro, architecture, binary packages, and source revisions. It builds matching FreeType, QtBase, and Qt Declarative packages in a disposable Docker container. The build does not install packages on the host.
 
+Follow the [test policy](../CONTRIBUTING.md#when-to-run-tests). For routine deployment, build, verify and prepare the bundle, then continue to [Apply, enable, and restore](#apply-enable-and-restore). The package and VM checks below apply when Fontreal changes.
+
 The initial targets are Debian 13 amd64 with Qt 6.8.2 and Ubuntu 26.04 amd64 with Qt 6.10.2. FreeType requires `2.13.3+dfsg-1+deb13u1` on Debian or `2.14.2+dfsg-1ubuntu0.2` on Ubuntu. Qt distro revisions can change within the supported source versions. Exact sources and original binary packages must remain available in official repositories. Unsupported systems, mixed source revisions, and unavailable packages stop the build. Update the official system to a coherent supported version before making another plan.
 
-Use Python 3.11 or later, `dpkg`, `dpkg-query`, `dpkg-deb`, and a working local Docker engine. Install FreeType, QtGui, and QtQuick through the distro first. Package build dependencies stay inside the container. Pixel checks also need a C++ compiler, `pkg-config`, matching Qt/FreeType development files, and Pillow. Install those validation prerequisites before capturing the plan. Architecture-independent Qt documentation stays unchanged. Coinstalled i386 FreeType uses the distro cross toolchain and receives the same local version. Foreign-architecture Qt and installed debug packages need a separate supported build strategy.
+Use Python 3.11 or later, `dpkg`, `dpkg-query`, `dpkg-deb`, and a working local Docker engine. Install FreeType, QtGui, and QtQuick through the distro first. Package build dependencies stay inside the container. Development pixel checks also need a C++ compiler, `pkg-config`, matching Qt/FreeType development files, and Pillow. For development checks, install those prerequisites before capturing the plan. Architecture-independent Qt documentation stays unchanged. Coinstalled i386 FreeType uses the distro cross toolchain and receives the same local version. Foreign-architecture Qt and installed debug packages need a separate supported build strategy.
 
 Choose bundle storage outside a private home directory. Native APT's `_apt` user must be able to traverse the resolved directories and read every package archive, including originals, activation and any retained predecessor. Keep private home permissions and APT's sandbox unchanged. A source-tree link to a suitable build-storage directory works; `build/system-packages` in the examples names that readable location or link. Check access again after copying a bundle to another machine.
 
@@ -17,6 +19,7 @@ mkdir -p build
 python3 tools/system-build.py plan > build/system.json
 python3 tools/system-build.py build build/system.json --output build/system-packages --jobs 4
 python3 tools/system-build.py verify build/system-packages
+python3 tools/system-build.py prepare build/system-packages
 ```
 
 The output directory must not exist before `build`. Use a new directory for another build. Keep sufficient free disk space for the container, source archives, and both toolkit builds. The default uses four parallel jobs. Lower `--jobs` when memory is limited.
@@ -41,10 +44,9 @@ The local version appends `afontreal` and a numeric build identity. Debian's ver
 
 ## Test the installed packages
 
-Run the package checks before desktop installation:
+For changes to Fontreal, run the package checks below. Routine builds and installations do not require these checks or their reports:
 
 ```sh
-python3 tools/system-build.py prepare build/system-packages
 python3 tests/system_build_test.py --originals build/system-packages/original
 python3 tests/system_install_test.py
 python3 - <<'PY'
@@ -76,9 +78,11 @@ Update checks offer retained official payloads with synthetic higher version met
 
 Quick uses optional capabilities from the loaded Gui and FreeType libraries. The selected profile requires the default-off, typed, per-library `fontreal-selected-v1` property. Stock, nearest-only and older TrueType-only providers cannot satisfy it. The `fontreal-nearest-y-v2` property remains available for explicit older diagnostics. New consumers fall back when FreeType or Gui loses that capability. An official Quick update can leave patched Gui treatment on native text until the next login. Checks cover actual widget and Quick output, normal windows, sampled layers, unexposed targets, immediate symbol binding, and inherited enabled values.
 
-`prepare` builds the small activation package. It does not rebuild native libraries or change `bundle.json`. Its separate `deployment.json` binds the activation package, scripts, notice, and recipe to the native bundle. Keep both manifests and all recorded artifacts together. Package tests must run after preparation. Installation requires all three independent update cases and results for these exact manifests.
+`prepare` builds the small activation package. It does not rebuild native libraries or change `bundle.json`. Its separate `deployment.json` binds the activation package, scripts, notice, and recipe to the native bundle. Keep both manifests and all recorded artifacts together. During Fontreal development, run package tests after preparation so their evidence identifies the exact manifests. Installation checks artifact integrity and package compatibility without requiring test reports.
 
 ## Check a complete Plasma session
+
+This is a development check under the test policy. It is not a routine build or installation step.
 
 The VM must provide `spectacle` (`kde-spectacle`), `konsole`, `kscreen-doctor`, `qdbus6`, `plasma-apply-colorscheme`, and `powerdevil`. Install `fonts-noto-core`, `fonts-noto-color-emoji`, `fonts-urw-base35`, and `fonts-dejavu-core` before the test snapshot.
 

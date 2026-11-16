@@ -1,5 +1,7 @@
 # Carry the selected profile into native KDE packages
 
+The [deployment test scope](FR-016-deployment-tests.md) supersedes per-build test-report preconditions in this specification. The [test policy](../../CONTRIBUTING.md#when-to-run-tests) controls when the development checks below run.
+
 ## Outcome and owners
 
 

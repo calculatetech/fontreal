@@ -236,26 +236,18 @@ def main():
                        "raise SystemExit(91)\n")
         apt.chmod(0o755)
         env = dict(os.environ, PATH=str(provider) + os.pathsep + os.environ["PATH"])
-        rejected_install(directory, env, "package-results.json")
-        assert not invoked.exists()
-        report(directory, "session-checks")
-        for changes, reason in (({"selected_profile": None}, "selected-profile"), ({"passed": False}, "package-results.json"),
-                                ({"updates": []}, "--updates"),
-                                ({"updates": [{"source": "qt6-base"}, {"source": "qt6-base"}]}, "--updates"),
-                                ({"updates": [{"source": "qt6-base"}, {"source": "qt6-declarative"},
-                                               {"source": "qt6-declarative"}]}, "--updates"),
-                                ({"deployment_sha256": "0" * 64}, "package-results.json")):
-            report(directory, "package-checks", **changes)
-            rejected_install(directory, env, reason)
-            assert not invoked.exists()
-        report(directory, "package-checks")
-        for changes, reason in (({"passed": False}, "session-results.json"),
-                                ({"complete_runtime": False}, "session checks"),
-                                ({"bundle_sha256": "0" * 64}, "session-results.json")):
-            report(directory, "session-checks", **changes)
-            rejected_install(directory, env, reason)
-            assert not invoked.exists()
-        report(directory, "session-checks")
+        # A routine build needs no development reports. The deliberate APT
+        # error proves simulation was reached, not successful installation.
+        assert not (directory / "package-checks/package-results.json").exists()
+        assert not (directory / "session-checks/session-results.json").exists()
+        cli("install", directory, "--simulate", success=False, env=env)
+        arguments, = json.loads(invoked.read_text())
+        assert "--simulate" in arguments and "--no-remove" in arguments
+        expected = {str(directory / "packages" / (p["name"] +
+                    ("_" + p["arch"] if p["arch"] != "amd64" else "") + ".deb")) for p in plan["installed"]}
+        expected.add(str(directory / "activation/fontreal-session.deb"))
+        assert {p for p in arguments if p.endswith(".deb")} == expected
+        invoked.unlink()
         raw_directory, raw = next((d, p) for d, p in raw_targets if (p["os"], p["release"]) == (system["ID"], system["VERSION_ID"]))
         assert set(raw["sources"]) == set(build.SOURCES) and not build.selected_plan(raw)
         report(raw_directory, "package-checks", selected_profile=None)
@@ -312,7 +304,7 @@ def main():
         build.write_json(records, changed)
         rejected_install(directory, env, "versions changed")
         assert not invoked.exists()
-    print("PASS: immutable native input, both deployment profiles, complete activation inventories, late Quick mismatch and pre-APT validation/snapshot rejection")
+    print("PASS: immutable native input, deployment without test reports, complete activation inventories, late Quick mismatch and snapshot rejection")
 
 
 if __name__ == "__main__":

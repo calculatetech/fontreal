@@ -1,5 +1,7 @@
 # Chromium and Flatpak rendering
 
+The [deployment test scope](FR-016-deployment-tests.md) supersedes per-build qualification and test-report preconditions in this specification. The [test policy](../../CONTRIBUTING.md#when-to-run-tests) controls when the development checks below run.
+
 
 ## Outcome and current boundary
 

@@ -793,8 +793,8 @@ def main():
         setup_packages([*predecessor_files, predecessor / "activation/fontreal-session.deb"])
         assert build.installed() == plan["installed"]
     assert font_state(fonts.values()) == saved_fonts, "Package/session operations changed the user's fonts."
-    # The guarded production entry point needs the completed runtime/recovery proof.
-    # Its own apply/login/rollback continuation below can revoke this provisional result.
+    # Record session evidence before exercising production install and rollback.
+    # A failed continuation removes this provisional development result.
     results.update(passed=True, complete_runtime=True)
     result_path = reports / "session-results.json"
     build.write_json(result_path, results)

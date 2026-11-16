@@ -110,16 +110,11 @@ def enable(name,build_path):
     build_path=build_path.resolve(strict=True);record=load_build(build_path,name);reason=compatibility(record)
     if reason:raise ValueError(reason+'; no hook was changed.')
     builder.verify(record['views']['normal'])
-    proof_path=build_path.parent/'qualification.json'
-    if not proof_path.is_file():raise ValueError('Run the actual-app qualification check before enabling this application view.')
-    proof=json.loads(proof_path.read_text())
-    if proof.get('passed') is not True or proof.get('build_sha256')!=target.sha(build_path):
-        raise ValueError('The actual-app qualification does not identify this build.')
     state,legacy=read_state()
     if state['apps']:require_owned(state)
     owned=hook_paths(state['apps']);apps=dict(state['apps'])
     apps[name]=dict(application=APPS[name],build=str(build_path),build_sha256=target.sha(build_path),
-                    qualification=str(proof_path),qualification_sha256=target.sha(proof_path),tool_sha256=target.sha(Path(__file__)))
+                    tool_sha256=target.sha(Path(__file__)))
     for key,p in hook_paths(apps).items():
         if key not in owned and (p.exists() or p.is_symlink()):
             raise ValueError('Existing per-user launch customizations were left untouched: '+str(p))

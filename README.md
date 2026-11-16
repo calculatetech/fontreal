@@ -8,6 +8,12 @@ A stroke split across neighboring pixels can look fuzzy. Curves can have pale ga
 
 The selected method uses the font’s native hints to preserve its shape. It then adjusts grayscale coverage, the amount of ink in each pixel. The same rules apply to every font and character. They preserve details at corners and intersections and use nearby strong strokes to set the final stem intensity.
 
+## Suggested fonts
+
+Start with **Noto Sans Display Regular at 10pt** for general UI text, menus and toolbars. This is the preferred starting point with the selected Fontreal profile at 96 DPI and 100% scale. The [font analysis](docs/research/noto-sans-display.md) explains the measured stroke alignment, compares whole-point sizes from 8pt through 16pt, and separates this recommendation from a universal claim about readability.
+
+For terminals, start with **Liberation Mono Regular at 11pt**, or **LiterationMono Nerd Font Regular at 11pt** for the Nerd Font version. These are preferred terminal choices based on their crisp, clean appearance with Fontreal. The terminal recommendation reflects visual use. The linked measurements cover the UI font, not these terminal faces.
+
 ## Compare stock Qt and Fontreal
 
 Stock Qt is on the left. Fontreal is on the right. These are real Qt captures at 96 DPI and 100% scale, using the supplied KDE defaults:
@@ -39,13 +45,15 @@ Fontreal contains a comparison viewer, rendering patches, and tools that build m
 
 The private FreeType builder supports pinned Debian 13 and Ubuntu 26.04 sources on amd64. It builds the original and modified libraries together. Saved browser builds remain enabled across browser updates.
 
-The [native KDE workflow](docs/build-system.md) builds matching FreeType and Qt packages with the same selected method. It preserves chosen fonts and sizes. The [Teams and Bitwarden workflow](docs/experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use) supplies separate selected engines inside their native Flatpak sandboxes. Both retain original working data and support independent reversal. Edge and Telegram remain uncovered. See the [roadmap](docs/roadmap.md).
+The [native KDE workflow](docs/build-system.md) builds matching FreeType and Qt packages with the same selected method. It preserves chosen fonts and sizes. The [Teams and Bitwarden workflow](docs/experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use) supplies separate selected engines inside their native Flatpak sandboxes. Both retain original working data and support independent reversal. Telegram remains uncovered. See the [roadmap](docs/roadmap.md).
+
+Chromium-based browsers, including Chrome, Edge, Brave and Vivaldi, are not supported by Fontreal. They draw page text inside their own browser engine. Fontreal has no supported way to apply its stroke adjustments inside that engine. Desktop font settings and browser extensions cannot add that access. See [why Chromium browsers are unsupported](docs/experiments/chromium-flatpak.md#chromium-based-browsers-are-not-supported).
 
 ## Try it
 
 For a supported Firefox or Floorp installation, follow the [browser guide](docs/experiments/browser-masks.md). Build requirements include Python 3, C and C++17 compilers, make, pkg-config, patch, dpkg-source, and APT download access.
 
-The [app-specific scenarios](docs/app-scenarios.md) link the exact requirements, commands, expected results, update behavior, and recovery steps for each integration. Use these recipes when repeating a test on another machine.
+The [app-specific scenarios](docs/app-scenarios.md) link the requirements, build commands, activation, update behavior and recovery steps for each integration. Follow the [test policy](CONTRIBUTING.md#when-to-run-tests) when Fontreal changes. Routine builds and deployments use the existing supported recipes.
 
 ```sh
 python3 tools/browser.py enable firefox
