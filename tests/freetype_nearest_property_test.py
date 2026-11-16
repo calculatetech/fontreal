@@ -2,6 +2,7 @@
 """Check the TT/CFF nearest capability against independent and real older providers."""
 import ctypes as C
 import json
+import os
 from pathlib import Path
 import shlex
 
@@ -116,7 +117,7 @@ def main():
     assert recipe.sha(Path(older['library'])) == older['sha256']
     capability_checks = []
     for label, path in [('stock', stock), ('real-v1', older['library']), ('v2', candidate)]:
-        ft = C.CDLL(str(path)); ft.FT_Init_FreeType.argtypes = [C.POINTER(C.c_void_p)]; ft.FT_Done_FreeType.argtypes = [C.c_void_p]
+        ft = C.CDLL(str(path), mode=os.RTLD_LOCAL | os.RTLD_DEEPBIND); ft.FT_Init_FreeType.argtypes = [C.POINTER(C.c_void_p)]; ft.FT_Done_FreeType.argtypes = [C.c_void_p]
         ft.FT_Property_Get.argtypes = [C.c_void_p, C.c_char_p, C.c_char_p, C.c_void_p]
         ft.FT_Property_Set.argtypes = [C.c_void_p, C.c_char_p, C.c_char_p, C.c_void_p]
         library = C.c_void_p(); assert ft.FT_Init_FreeType(C.byref(library)) == 0

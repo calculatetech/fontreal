@@ -14,13 +14,18 @@
      }
 --- a/src/gui/text/freetype/qfontengine_ft.cpp
 +++ b/src/gui/text/freetype/qfontengine_ft.cpp
-@@ -149,4 +149,9 @@
+@@ -149,4 +149,14 @@
      if (!freetypeData->library) {
          FT_Init_FreeType(&freetypeData->library);
 +        if (qgetenv("FONTREAL_RENDERING") == "1"
 +            && qgetenv("FONTREAL_FITTING") == "nearest") {
 +            FT_Bool nearest = true;
 +            FT_Property_Set(freetypeData->library, "autofitter", "fontreal-nearest-y-v2", &nearest);
++        }
++        if (qgetenv("FONTREAL_RENDERING") == "1"
++            && qgetenv("FONTREAL_FITTING") == "native") {
++            FT_Bool selected = true;
++            FT_Property_Set(freetypeData->library, "autofitter", "fontreal-selected-v1", &selected);
 +        }
  #if defined(FT_FONT_FORMATS_H)
          // Freetype defaults to disabling stem-darkening on CFF, we re-enable it.
@@ -35,7 +40,7 @@
      defaultFormat = format;
      this->antialias = antialias;
  
-@@ -1029,8 +1033,30 @@
+@@ -1029,8 +1033,31 @@
      default_hint_style = style;
  }
  
@@ -46,15 +51,16 @@
 +        || FT_HAS_COLOR(freetype->face))
 +        return false;
 +    static const bool nearest = qgetenv("FONTREAL_FITTING") == "nearest";
-+    if (nearest) {
++    static const bool native = qgetenv("FONTREAL_FITTING") == "native";
++    if (nearest || native) {
 +        FT_Bool active = false;
 +        if (FT_Property_Get(freetype->face->glyph->library, "autofitter",
-+                            "fontreal-nearest-y-v2", &active) || !active)
++                            native ? "fontreal-selected-v1" : "fontreal-nearest-y-v2", &active) || !active)
 +            return false;
 +    }
 +    const char *format = FT_Get_Font_Format(freetype->face);
 +    return format && (qstrcmp(format, "TrueType") == 0
-+        || (nearest && qstrcmp(format, "CFF") == 0));
++        || ((nearest || native) && qstrcmp(format, "CFF") == 0));
 +}
 +
  bool QFontEngineFT::expectsGammaCorrectedBlending() const
@@ -66,14 +72,19 @@
      return stemDarkeningDriver;
  }
  
-@@ -1066,6 +1084,13 @@
+@@ -1066,6 +1084,18 @@
      if (forceAutoHint)
          load_flags |= FT_LOAD_FORCE_AUTOHINT;
  
 +    if (fontrealEnabled() && !(flags & DesignMetrics)
 +        && !(set && set->outline_drawing) && format != Format_ARGB) {
-+        load_flags &= ~(FT_LOAD_NO_HINTING | (15 << 16) | FT_LOAD_MONOCHROME);
-+        load_flags |= FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO | FT_LOAD_NO_BITMAP;
++        load_flags &= ~(FT_LOAD_NO_HINTING | (15 << 16) | FT_LOAD_MONOCHROME
++                        | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_NO_AUTOHINT);
++        load_flags |= FT_LOAD_NO_BITMAP;
++        if (qgetenv("FONTREAL_FITTING") == "native")
++            load_flags |= FT_LOAD_NO_AUTOHINT;
++        else
++            load_flags |= FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO;
 +        hsubpixel = false;
 +        vfactor = 1;
 +    }
@@ -135,7 +146,7 @@
  
 +    if (engine->fontrealEnabled()) {
 +        engine->setDefaultHintStyle(QFontEngine::HintFull);
-+        engine->forceAutoHint = true;
++        engine->forceAutoHint = qgetenv("FONTREAL_FITTING") != "native";
 +        engine->subpixelType = QFontEngine::Subpixel_None;
 +        antialias = true;
 +        format = QFontEngine::Format_A8;

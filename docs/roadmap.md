@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-No task is active.
+- **FR-019: Carry the selected profile into native KDE packages.** Update the matching native FreeType capability and coherent Qt/FreeType package bundle to the finalized native-normal and weighted-stem method. Retain coinstalled architecture handling, package/update/rollback checks and disposable full-session proof before host deployment. Preserve chosen fonts and sizes. Native authorization and normal user logout/login follow the reviewed bundle. The earlier nearest-50% raw package method remains available until this update passes. See the [native package specification](plans/FR-019-native-selected.md) and [build guide](build-system.md).
 
 ## Planned next
 
@@ -29,7 +29,6 @@ No task is active.
 
 ## Planned later
 
-- **FR-019: Carry the selected profile into native KDE packages.** Update the matching native FreeType capability and coherent Qt/FreeType package bundle to the finalized native-normal and weighted-stem method. Retain coinstalled architecture handling, package/update/rollback checks and disposable full-session proof before host deployment. Preserve chosen fonts and sizes. Native authorization and normal user logout/login follow the reviewed bundle. The earlier nearest-50% raw package method remains available until this update passes. See the KDE package clauses of the [native integration specification](plans/FR-018-axis-study.md) and [build guide](build-system.md).
 - **FR-006: Wine application support.** Trace GDI and DirectWrite separately. Test a private Wine prefix and existing Windows applications without changing the user's prefixes. Compare glyph masks, placement, and composition. Wine's [FreeType integration](https://github.com/wine-mirror/wine/blob/master/dlls/win32u/freetype.c) is a starting point for investigation.
 - **FR-007: Windows 11 feasibility.** Determine which GDI, DirectWrite, and application-owned paths expose enough control. First test a normal application using documented APIs. Evaluate crisp hinting, grayscale edges, pixel placement, and blending separately. Microsoft's [custom DirectWrite rendering parameters](https://learn.microsoft.com/en-us/windows/win32/api/dwrite/nf-dwrite-idwritefactory-createcustomrenderingparams) expose some controls, but do not prove system-wide feasibility. Proceed to a Windows 11 prototype only if the required behavior is achievable and a Windows test environment is available.
 

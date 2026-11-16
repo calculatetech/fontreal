@@ -23,14 +23,14 @@ ROOT = fixtures.ROOT
 LEGACY_BASE = "6ae8559d14f2448cd24f320f8d4c480669c80e0c"
 
 
-def retained_activation(directory, plan):
+def retained_activation(directory, plan, revision=LEGACY_BASE):
     # Use the actual old producer and source, not a new package relabeled as old.
     with tempfile.TemporaryDirectory(prefix="fontreal-retained-source-") as temporary:
         source = Path(temporary)
         for name in ("tools/system_install.py", "packaging/session/fontreal-session", "packaging/session/fontreal.sh", "packaging/session/NOTICE"):
             path = source / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(subprocess.check_output(["git", "show", f"{LEGACY_BASE}:{name}"], cwd=ROOT))
+            path.write_bytes(subprocess.check_output(["git", "show", f"{revision}:{name}"], cwd=ROOT))
         spec = importlib.util.spec_from_file_location("retained_installer", source / "tools/system_install.py")
         installer = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(installer)
@@ -51,7 +51,7 @@ def cli(*args, success=True, env=None):
 
 
 def report(directory, name, **changes):
-    record = dict(schema=1, passed=True, bundle_sha256=build.sha(directory / "bundle.json"),
+    record = dict(schema=1, passed=True, selected_profile=build.SELECTED_PROFILE, bundle_sha256=build.sha(directory / "bundle.json"),
                   deployment_sha256=build.sha(directory / "deployment.json"))
     if name == "package-checks":
         record["updates"] = [dict(source=source) for source in build.SOURCES]
@@ -72,7 +72,7 @@ def retained_native(directory):
     assert Path("/var/lib/fontreal-test-ready").is_file(), "Use the marked disposable VM."
     subprocess.run(["systemd-detect-virt", "--vm"], check=True, capture_output=True)
     metadata = json.loads((directory / "build.json").read_text())
-    assert metadata.get("representative_retained_schema1") is True, "Do not label these current Qt payloads as a historical build."
+    label = "representative retained" if metadata.get("representative_retained_schema1") is True else "retained"
     cli("verify", directory)
     plan = build.verify_artifacts(directory, json.loads((directory / "bundle.json").read_text()))
     assert set(plan["sources"]) == {"qt6-base", "qt6-declarative"}
@@ -104,12 +104,12 @@ def retained_native(directory):
         if build.installed() != before:
             subprocess.run(["sudo", "apt-get", "install", "-y", "--allow-downgrades",
                             *map(str, sorted((directory / "original").glob("*.deb"))), "fontreal-session-"], check=True)
-    print("PASS: representative retained Qt-only verify, predecessor discovery and actual rollback preserve unowned FreeType")
+    print(f"PASS: {label} Qt-only verify, predecessor discovery and actual rollback preserve unowned FreeType")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--retained-native", type=Path, help="Check an explicitly labeled retained-format Qt-only fixture with actual payloads in a marked disposable VM.")
+    parser.add_argument("--retained-native", type=Path, help="Check a retained Qt-only bundle with actual payloads in a marked disposable VM.")
     args = parser.parse_args()
     if args.retained_native:
         retained_native(args.retained_native.resolve())
@@ -120,6 +120,7 @@ def main():
         root = Path(temporary)
         targets = []
         retained_targets = []
+        raw_targets = []
         for name, release, upstream, base, declarative in (
                 ("debian", "13", "6.8.2", "6.8.2+dfsg-9+deb13u2", "6.8.2+dfsg-7"),
                 ("ubuntu", "26.04", "6.10.2", "6.10.2+dfsg-7", "6.10.2+dfsg-3")):
@@ -139,6 +140,11 @@ def main():
                     assert member.uid == member.gid == 0
                     expected_mode = 0o755 if member.isdir() or member.name == "./usr/bin/fontreal-session" else 0o644
                     assert member.mode == expected_mode, (member.name, oct(member.mode))
+            control = subprocess.check_output(["dpkg-deb", "--ctrl-tarfile", directory / "activation/fontreal-session.deb"])
+            with tarfile.open(fileobj=io.BytesIO(control)) as payload:
+                script = payload.getmember("./postinst")
+                assert script.uid == script.gid == 0 and script.mode == 0o755
+                subprocess.run(["sh", "-n"], input=payload.extractfile(script).read(), check=True)
             assert build.sha(directory / "bundle.json") == native_hash
             assert all(build.sha(directory / a["path"]) == a["sha256"] for a in native["artifacts"])
             cli("verify", directory)
@@ -156,6 +162,21 @@ def main():
             notice.write_bytes(original)
             cli("verify", directory)
             targets.append((directory, plan))
+
+            raw = copy.deepcopy(plan)
+            raw["sources"]["freetype"].pop("selected")
+            raw["sources"]["freetype"]["capability_sha256"] = None
+            raw_directory = root / ("raw-" + name)
+            raw_directory.mkdir()
+            fixtures.bundle(raw_directory, raw)
+            cli("verify", raw_directory)
+            assert "selected profile" in cli("prepare", raw_directory, success=False).stderr
+            assert not (raw_directory / "activation").exists()
+            # The actual pre-selected three-family producer supplies valid old
+            # activation metadata. These small archives remain synthetic tests.
+            retained_activation(raw_directory, raw, "e8303f596998d6231b2d5bbd8c8b273d541c9b01")
+            cli("verify", raw_directory)
+            raw_targets.append((raw_directory, raw))
 
             retained = fixtures.retained_plan(plan)
             previous = root / ("retained-" + name)
@@ -205,14 +226,20 @@ def main():
                          "for p in records:\n print('\\t'.join([p['name'],p['arch'],p['version'],p['source'],p['source_version'],'installed']))\n")
         query.chmod(0o755)
         apt = provider / "apt-get"
+        response = provider / "apt-response.json"
         apt.write_text("#!/usr/bin/env python3\nimport json,sys\nfrom pathlib import Path\n"
-                       f"Path({str(invoked)!r}).write_text(json.dumps(sys.argv))\nraise SystemExit(91)\n")
+                       f"log=Path({str(invoked)!r}); calls=json.loads(log.read_text()) if log.exists() else []\n"
+                       "calls.append(sys.argv); log.write_text(json.dumps(calls))\n"
+                       f"response=Path({str(response)!r})\n"
+                       "if response.exists():\n data=json.loads(response.read_text()); print(data['stdout'],end=''); "
+                       "print(data['stderr'],end='',file=sys.stderr); raise SystemExit(data['status'])\n"
+                       "raise SystemExit(91)\n")
         apt.chmod(0o755)
         env = dict(os.environ, PATH=str(provider) + os.pathsep + os.environ["PATH"])
         rejected_install(directory, env, "package-results.json")
         assert not invoked.exists()
         report(directory, "session-checks")
-        for changes, reason in (({"passed": False}, "package-results.json"),
+        for changes, reason in (({"selected_profile": None}, "selected-profile"), ({"passed": False}, "package-results.json"),
                                 ({"updates": []}, "--updates"),
                                 ({"updates": [{"source": "qt6-base"}, {"source": "qt6-base"}]}, "--updates"),
                                 ({"updates": [{"source": "qt6-base"}, {"source": "qt6-declarative"},
@@ -229,6 +256,13 @@ def main():
             rejected_install(directory, env, reason)
             assert not invoked.exists()
         report(directory, "session-checks")
+        raw_directory, raw = next((d, p) for d, p in raw_targets if (p["os"], p["release"]) == (system["ID"], system["VERSION_ID"]))
+        assert set(raw["sources"]) == set(build.SOURCES) and not build.selected_plan(raw)
+        report(raw_directory, "package-checks", selected_profile=None)
+        report(raw_directory, "session-checks", selected_profile=None)
+        rejected_install(raw_directory, env, "selected profile")
+        assert not invoked.exists(), "Complete/raw installation must stop before APT."
+        print("PASS complete/raw three-family own-metadata install refusal before APT (synthetic archives)")
         previous, retained = next((d, p) for d, p in retained_targets if (p["os"], p["release"]) == (system["ID"], system["VERSION_ID"]))
         report(previous, "package-checks", updates=[dict(source=source) for source in retained["sources"]])
         report(previous, "session-checks")
@@ -237,10 +271,39 @@ def main():
         assert not invoked.exists()
         # The deliberate APT error proves rollback selection, never successful application.
         cli("rollback", previous, "--simulate", success=False, env=env)
-        arguments = json.loads(invoked.read_text())
+        arguments, = json.loads(invoked.read_text())
         assert {p for p in arguments if p.endswith(".deb")} == {str(previous / "original" / (p["name"] + ".deb")) for p in retained["original"]}
         assert "fontreal-session-" in arguments
         invoked.unlink()
+        # Native APT emits Remv proposals for rollback without --no-remove.
+        # An agreeing allowed prefix cannot hide a later unrelated removal.
+        prefix = "Reading package lists...\nBuilding dependency tree...\nReading state information...\n"
+        allowed = "Remv fontreal-session [0~local20261111190000]\n"
+        for proposal in (prefix, prefix + allowed):
+            build.write_json(response, dict(status=0, stdout=proposal, stderr=""))
+            cli("rollback", directory, "--simulate", env=env)
+            calls = json.loads(invoked.read_text())
+            assert (len(calls) == 1 and "--simulate" in calls[0] and "--allow-downgrades" in calls[0]
+                    and "--no-remove" not in calls[0])
+            invoked.unlink()
+        build.write_json(response, dict(status=0, stdout=prefix + allowed + "Remv unrelated:amd64 [1.0]\n", stderr=""))
+        rejected = cli("rollback", directory, success=False, env=env)
+        assert "APT proposed removing another package" in rejected.stderr
+        calls = json.loads(invoked.read_text())
+        assert (len(calls) == 1 and "--simulate" in calls[0] and "--no-remove" not in calls[0]), (
+            "No real APT call may follow an unsafe proposal.")
+        invoked.unlink()
+        # Native --no-remove aborts before simulation output; do not invent a
+        # successful install Remv proposal that the actual provider cannot emit.
+        build.write_json(response, dict(status=100, stdout=prefix,
+                                       stderr="E: Packages need to be removed but remove is disabled.\n"))
+        rejected = cli("install", directory, success=False, env=env)
+        assert "remove is disabled" in rejected.stderr
+        calls = json.loads(invoked.read_text())
+        assert len(calls) == 1 and "--simulate" in calls[0] and "--no-remove" in calls[0]
+        print("PASS safe rollback proposals, later unrelated removal refusal, and native install no-remove error before real APT")
+        invoked.unlink()
+        response.unlink()
         changed = copy.deepcopy(plan["installed"])
         for p in changed:
             if p["source"] == "qt6-declarative":

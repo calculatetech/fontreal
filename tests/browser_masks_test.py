@@ -39,8 +39,11 @@ def digest(path):
 def protected():
     paths = [Path.home() / name for name in (
         ".config/kdeglobals", ".config/kcmfonts", ".config/fontconfig/fonts.conf",
-        ".config/fontconfig/conf.d/50-helvetica-noto-sans.conf",
-        ".config/mozilla/firefox/profiles.ini", ".mozilla/firefox/profiles.ini", ".floorp/profiles.ini")]
+        ".config/fontconfig/conf.d/50-helvetica-noto-sans.conf")]
+    config = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    paths += [base / name for base in (config / "mozilla/firefox", Path.home() / ".mozilla/firefox",
+                                       config / "floorp", Path.home() / ".floorp")
+              for name in ("profiles.ini", "installs.ini")]
     paths += [Path("/usr/lib/x86_64-linux-gnu/libfreetype.so.6").resolve()]
     return {str(p): digest(p) if p.exists() else None for p in paths}
 
@@ -441,7 +444,9 @@ def browser_run(record, env, browser, mode, scale, pixels=15):
 
 @contextmanager
 def nested_display():
-    with tempfile.TemporaryDirectory(prefix="browser-test-", dir=WORK) as temporary:
+    WORK.mkdir(parents=True, exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="b-", dir=WORK) as temporary:
         state = Path(temporary)
         env = os.environ.copy()
         for key in ("LD_PRELOAD", "LD_LIBRARY_PATH", "WAYLAND_SOCKET", "WAYLAND_DISPLAY",
@@ -515,6 +520,17 @@ def browser_checks(record):
     return dict(scenarios=["S1", "S7", "S8", "S9", "S10"], runs=results)
 
 
+def prepare_probe(record):
+    WORK.mkdir(parents=True, exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
+    artifact = Path(record["libraries"]["stock"]["library"]).parents[2]
+    flags = shlex.split(run(["pkg-config", "--cflags", "--libs", "Qt6Core"]).stdout)
+    run(["c++", "-std=c++17", "-fPIC", ROOT / "tests/freetype_mask_probe.cpp",
+         "-I" + str(artifact / "headers/usr/include/freetype2"),
+         "-L" + str(Path(record["libraries"]["stock"]["library"]).parent), "-lfreetype", *flags,
+         "-o", WORK / "mask-probe"])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", choices=("all", "build", "freetype", "isolation", "page", "chrome", "placement", "blend"), default="all")
@@ -532,11 +548,7 @@ def main():
         assert digest(Path(v["library"])) == v["sha256"]
         assert record["spec"]["harfbuzz"] in v["configure"]
         assert "[libfreetype.so.6]" in run(["readelf", "-d", v["library"]]).stdout
-    flags = shlex.split(run(["pkg-config", "--cflags", "--libs", "Qt6Core"]).stdout)
-    run(["c++", "-std=c++17", "-fPIC", ROOT / "tests/freetype_mask_probe.cpp",
-         "-I" + str(artifact / "headers/usr/include/freetype2"),
-         "-L" + str(Path(record["libraries"]["stock"]["library"]).parent), "-lfreetype", *flags,
-         "-o", WORK / "mask-probe"])
+    prepare_probe(record)
     report = dict(build=str(record_path), case=args.case, build_scenario="S11")
     if args.case in ("all", "freetype"):
         report["freetype"] = freetype(record)

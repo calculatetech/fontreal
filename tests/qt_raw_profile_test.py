@@ -17,14 +17,41 @@ ROOT = recipe.ROOT
 OUT = ROOT / "results/qt-raw-profile"
 
 
+def matrix_cases(probe, fonts, mode="raw"):
+    paths = list(fonts.values())
+    cases = []
+    for point in range(8, 17):
+        for start in range(0, len(paths), 3):
+            selected = paths[start:start+3]
+            while len(selected) < 3:
+                selected.append(selected[-1])
+            case = probe(point, selected)
+            assert case["mode"] == mode and case["requestedSize"] == point and case["sizeUnit"] == "pt"
+            assert case["checkedImages"] == sum(f["textCases"] * 6 for f in case["fonts"])
+            assert len(case["masks"]) == sum(len(f["testGlyphs"]) for f in case["fonts"])
+            for font in case["fonts"]:
+                if font["path"] == fonts["Noto Sans CJK JP"]:
+                    assert font["testGlyphs"].endswith("漢国文") and font["faceIndex"] == 0
+            cases.append(case)
+        print(f"PASS {mode} Qt {point}pt", flush=True)
+    actual = {(font["path"], case["requestedSize"]) for case in cases for font in case["fonts"]}
+    assert actual == {(path, point) for path in paths for point in range(8, 17)}
+    return cases
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--probe", type=Path, default=ROOT / "build/qt-native-probe")
     parser.add_argument("--variable-font", type=Path, required=True)
+    parser.add_argument("--profile", choices=("nearest", "selected"), default="nearest")
     args = parser.parse_args()
+    global OUT
+    if args.profile == "selected":
+        OUT = ROOT / "results/qt-selected-profile"
     OUT.mkdir(parents=True, exist_ok=True)
     record, _, nearest = recipe.prepare()
-    rows = json.loads((ROOT / "results/raw-coverage/input.json").read_text())
+    from raw_coverage_test import input_rows
+    rows = input_rows(record)
     conditions = matrix(rows, names=NAMES + ["Arial Regular"] + list(recipe.CFF_FONTS))
     fonts = {row["label"]: row["font_path"] for row in conditions.values()}
     assert len(fonts) == 28 and len(conditions) == 252
@@ -36,28 +63,20 @@ def main():
                FONTREAL_CONTRAST="none", FONTREAL_TEST_REFERENCE_FREETYPE=str(nearest.resolve()))
     for key in ("FONTREAL_FT_RENDERING", "FONTREAL_FT_CONTRAST", "FONTREAL_FT_EXECUTABLE"):
         env.pop(key, None)
+    if args.profile == "selected":
+        env.update(FONTREAL_FITTING="native", FONTREAL_CONTRAST="weighted",
+                   FONTREAL_TEST_REFERENCE_FREETYPE=record["libraries"]["stock"]["library"],
+                   FONTREAL_TEST_SELECTED_REFERENCE=str(ROOT / "tests/selected_reference.py"))
     paths = list(fonts.values())
     def probe(selected_env, point=16, mode="raw", selected=None):
         selected = selected or paths[:3]
+        if args.profile == "selected" and mode == "raw":
+            mode = "selected"
         result = subprocess.run([str(args.probe), mode, "none", str(point), "1", *selected, str(OUT)],
                                 env=selected_env, text=True, capture_output=True, check=True)
         return json.loads(result.stdout)
-    for point in range(8, 17):
-        for start in range(0, len(paths), 3):
-            selected = paths[start:start+3]
-            while len(selected) < 3:
-                selected.append(selected[-1])
-            case = probe(env, point, selected=selected)
-            assert case["mode"] == "raw" and case["requestedSize"] == point and case["sizeUnit"] == "pt"
-            assert case["checkedImages"] == sum(f["textCases"] * 6 for f in case["fonts"])
-            assert len(case["masks"]) == sum(len(f["testGlyphs"]) for f in case["fonts"])
-            for font in case["fonts"]:
-                if font["path"] == str(recipe.CFF_FONTS["Noto Sans CJK JP"]):
-                    assert font["testGlyphs"].endswith("漢国文") and font["faceIndex"] == 0
-            cases.append(case)
-        print(f"PASS forced raw Qt {point}pt", flush=True)
-    actual = {(font["path"], case["requestedSize"]) for case in cases for font in case["fonts"]}
-    assert actual == {(path, point) for path in paths for point in range(8, 17)}
+    cases = matrix_cases(lambda point, selected: probe(env, point, selected=selected), fonts,
+                         "selected" if args.profile == "selected" else "raw")
     selected = [fonts[name] for name in ("Noto Sans Regular", "Nimbus Sans Regular", "URW Bookman Light")]
     opposing = []
     for name, value_type, value in (("antialias", "bool", "false"), ("hinting", "bool", "false"),
@@ -96,7 +115,7 @@ def main():
     if env.get("LD_LIBRARY_PATH"):
         helper_path += ":" + env["LD_LIBRARY_PATH"]
     helper = dict(env, LD_LIBRARY_PATH=helper_path,
-                  FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="raw",
+                  FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="weighted" if args.profile == "selected" else "raw",
                   FONTREAL_FT_EXECUTABLE="/usr/bin/firefox:/usr/lib/firefox/firefox-bin")
     normal, inherited = probe(env, selected=selected), probe(helper, selected=selected)
     assert normal["masks"] == inherited["masks"] and normal["images"] == inherited["images"]
@@ -117,7 +136,11 @@ def main():
         assert actual["designPositions"] == expected_positions
         assert actual["designAdvances"] != actual["hintedAdvances"]
     fallbacks = []
-    for provider in (older, record["libraries"]["stock"]):
+    providers = [older, record["libraries"]["stock"]]
+    nearest_only = recipe.v1_provider(record, version=2)[1] if args.profile == "selected" else None
+    if nearest_only:
+        providers.append(nearest_only)
+    for provider in providers:
         assert recipe.sha(Path(provider["library"])) == provider["sha256"]
         provider_path = str(Path(provider["library"]).parent) + ":" + env.get("LD_LIBRARY_PATH", "")
         fallback_env = dict(env, LD_LIBRARY_PATH=provider_path)
@@ -132,8 +155,12 @@ def main():
         directory = Path(temporary)
         graphics = kde.private_environment(directory)
         with kde.display(graphics, directory) as graphics:
-            for name, provider in (("v1", older), ("stock", record["libraries"]["stock"]),
-                                   ("v2", record["libraries"]["candidate"])):
+            supported = "selected" if args.profile == "selected" else "v2"
+            providers = [("v1", older), ("stock", record["libraries"]["stock"]),
+                         (supported, record["libraries"]["candidate"])]
+            if nearest_only:
+                providers.append(("nearest-only-v2", nearest_only))
+            for name, provider in providers:
                 for factor in (1, 1.25):
                     outputs = []
                     for enabled in (False, True):
@@ -149,15 +176,15 @@ def main():
                             r"FONTREAL_SELECT font=.* requested=(\d+) effective=(\d+) eligible=(\d+) glyphs=(\d+)", capture.stderr)]
                         outputs.append(output)
                     equal = [f["cellHash"] for f in outputs[0]["frames"]] == [f["cellHash"] for f in outputs[1]["frames"]]
-                    assert equal == (name != "v2")
+                    assert equal == (name != supported)
                     assert Path(outputs[1]["qtGui"].strip()) == Path(normal["qtGui"].strip())
                     assert Path(outputs[1]["qtQuick"].strip()).parent == Path(normal["qtGui"].strip()).parent
                     selections = outputs[1]["selections"]
                     assert selections and any(requested == 0 for requested, _, _, _ in selections)
-                    assert all(eligible == (1 if name == "v2" else 0) for _, _, eligible, _ in selections)
-                    assert all(effective == (1 if name == "v2" else 0)
+                    assert all(eligible == (1 if name == supported else 0) for _, _, eligible, _ in selections)
+                    assert all(effective == (1 if name == supported else 0)
                                for requested, effective, _, _ in selections if requested == 0)
-                    if name == "v2":
+                    if name == supported:
                         assert all(c["hypotheses"]["none/encoded"]["matches"]
                                    for frame in outputs[1]["frames"] for c in frame["cells"])
                     assert provider["library"] in outputs[1]["freetypeLibraries"]
@@ -173,7 +200,7 @@ def main():
         assert [f["requestedWeight"] for f in got["fonts"]] == [float(w) for w in weights.split(',')]
         variations.append(got)
     (OUT / "native.json").write_text(json.dumps(dict(faces=28, conditions=252, reference=source,
-        candidate=record["libraries"]["candidate"], cases=cases, opposing=opposing,
+        profile=args.profile, candidate=record["libraries"]["candidate"], cases=cases, opposing=opposing,
         helper=inherited, fallbacks=fallbacks, quick_fallbacks=quick_fallbacks,
         exclusions=dict(selected=excluded, disabled=excluded_stock), variations=variations), indent=2) + "\n")
 

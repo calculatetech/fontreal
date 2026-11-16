@@ -33,6 +33,7 @@ def fixture(os_name, release, upstream, base, declarative):
                            patch_sha256=build.sha(build.patch_file(source, upstream)),
                            capability_sha256=build.sha(build.capability_patch(source)) if build.capability_patch(source) else None)
                for source, version in zip(build.SOURCES, (build.FREETYPE[(os_name, release)], base, declarative))}
+    sources["freetype"]["selected"] = build.selected_inputs()
     return dict(schema=1, os=os_name, release=release, arch="amd64", identity=identity,
                 installed=copy.deepcopy(original), original=original, sources=sources)
 
@@ -169,6 +170,8 @@ def main():
             ("late-source-mismatch", lambda p: p["original"][-1].update(source_version="6.8.2+dfsg-8")),
             ("wrong-qt", lambda p: p["sources"]["qt6-base"].update(version="6.10.2+dfsg-7")),
             ("stale-patch", lambda p: p["sources"]["qt6-declarative"].update(patch_sha256="0" * 64)),
+            ("stale-selected-core", lambda p: p["sources"]["freetype"]["selected"].update(processor="0" * 64)),
+            ("missing-selected-core", lambda p: p["sources"]["freetype"]["selected"].pop("processor")),
             ("wrong-version", lambda p: p["sources"]["qt6-base"].update(build_version="6.8.2+dfsg-9+deb13u2+fontreal1")),
         ]:
             plan = copy.deepcopy(cases[0])
@@ -182,6 +185,7 @@ def main():
         previous = copy.deepcopy(cases[0])
         for source, entry in previous["sources"].items():
             entry.update(patch_sha256="1" * 64, capability_sha256="2" * 64 if source != "freetype" else None)
+        previous["sources"]["freetype"].pop("selected")
         rejected(previous, root, "old-build-inputs")
         old = root / "old-bundle"
         old.mkdir()

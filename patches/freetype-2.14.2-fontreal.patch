@@ -1,6 +1,6 @@
 --- a/src/base/ftobjs.c
 +++ b/src/base/ftobjs.c
-@@ -16,10 +16,17 @@
+@@ -16,10 +16,18 @@
   */
  
  
@@ -15,13 +15,24 @@
 +#include <freetype/ftmm.h>
  #include <freetype/otsvg.h>
 +#include "fontreal_coverage.h"
++#include <freetype/ftmodapi.h>
  
  #include <freetype/internal/ftvalid.h>
  #include <freetype/internal/ftobjs.h>
-@@ -910,6 +917,228 @@
+@@ -910,6 +917,243 @@
  #endif /* GRID_FIT_METRICS */
  
  
++  static FT_Bool
++  ft_fontreal_selected( FT_Face face )
++  {
++    FT_Bool selected = FALSE;
++
++    return !FT_Property_Get( FT_FACE_LIBRARY( face ), "autofitter",
++                              "fontreal-selected-v1", &selected ) && selected;
++  }
++
++
 +  static FT_Bool
 +  ft_fontreal_raster( FT_Face   face,
 +                      FT_Int32  flags )
@@ -30,9 +41,10 @@
 +    const char*  format;
 +    const char*  scope = ft_getenv( "FONTREAL_FT_EXECUTABLE" );
 +    const char*  contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
++    FT_Bool      selected = ft_fontreal_selected( face );
 +
 +
-+    if ( !enabled || ft_strcmp( enabled, "1" ) ||
++    if ( ( !selected && ( !enabled || ft_strcmp( enabled, "1" ) ) ) ||
 +         !FT_IS_SCALABLE( face ) || FT_HAS_COLOR( face ) ||
 +         ( flags & ( FT_LOAD_NO_SCALE            |
 +                     FT_LOAD_NO_RECURSE          |
@@ -44,10 +56,14 @@
 +    format = FT_Get_Font_Format( face );
 +    if ( !format ||
 +         ( ft_strcmp( format, "TrueType" ) &&
-+           ( ft_strcmp( format, "CFF" ) || !contrast ||
-+             ( ft_strcmp( contrast, "raw" ) &&
-+               ft_strcmp( contrast, "weighted" ) ) ) ) )
++           ( ft_strcmp( format, "CFF" ) ||
++             ( !selected && ( !contrast ||
++               ( ft_strcmp( contrast, "raw" ) &&
++                 ft_strcmp( contrast, "weighted" ) ) ) ) ) ) )
 +      return FALSE;
++
++    if ( selected )
++      return TRUE;
 +
 +    if ( scope && *scope )
 +    {
@@ -82,7 +98,7 @@
 +  ft_fontreal_nearest( FT_Face face, FT_Int32 flags )
 +  {
 +    const char* contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
-+    return contrast &&
++    return !ft_fontreal_selected( face ) && contrast &&
 +           ( !ft_strcmp( contrast, "ramp217" ) ||
 +             !ft_strcmp( contrast, "raw" ) ) &&
 +           ft_fontreal_raster( face, flags );
@@ -247,7 +263,7 @@
    /* documentation is in freetype.h */
  
    FT_EXPORT_DEF( FT_Error )
-@@ -959,6 +1188,25 @@
+@@ -959,6 +1188,26 @@
  
      if ( load_flags & FT_LOAD_BITMAP_METRICS_ONLY )
        load_flags &= ~FT_LOAD_RENDER;
@@ -256,7 +272,8 @@
 +    {
 +      const char* contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
 +
-+      if ( contrast && !ft_strcmp( contrast, "weighted" ) )
++      if ( ft_fontreal_selected( face ) ||
++           ( contrast && !ft_strcmp( contrast, "weighted" ) ) )
 +      {
 +        load_flags &= ~( ( 15L << 16 ) | FT_LOAD_MONOCHROME |
 +                         FT_LOAD_FORCE_AUTOHINT );
@@ -273,7 +290,7 @@
  
      /*
       * Determine whether we need to auto-hint or not.
-@@ -4992,15 +5240,90 @@
+@@ -4992,15 +5240,91 @@
    FT_Render_Glyph( FT_GlyphSlot    slot,
                     FT_Render_Mode  render_mode )
    {
@@ -297,7 +314,8 @@
 -    return FT_Render_Glyph_Internal( library, slot, render_mode );
 +    contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
 +
-+    weighted = contrast && !ft_strcmp( contrast, "weighted" );
++    weighted = ft_fontreal_selected( slot->face ) ||
++               ( contrast && !ft_strcmp( contrast, "weighted" ) );
 +    fontreal = slot->format == FT_GLYPH_FORMAT_OUTLINE &&
 +               ft_fontreal_raster( slot->face, slot->internal->load_flags ) &&
 +               ( weighted
@@ -314,7 +332,7 @@
 +    previous_format = slot->format;
 +#endif
 +    memory = library->memory;
-+    ramp = fontreal && contrast && !ft_strcmp( contrast, "ramp217" );
++    ramp = fontreal && !weighted && contrast && !ft_strcmp( contrast, "ramp217" );
 +    error = FT_Err_Ok;
 +    if ( ramp )
 +    {
@@ -398,3 +416,51 @@
      if ( module->fontreal_nearest_y &&
           scaler.render_mode == FT_RENDER_MODE_MONO &&
           FT_IS_SCALABLE( face ) && !FT_HAS_COLOR( face ) &&
+--- a/src/autofit/afmodule.h
++++ b/src/autofit/afmodule.h
+@@ -40,4 +40,5 @@
+     FT_Bool       no_stem_darkening;
+     FT_Bool       fontreal_nearest_y;
++    FT_Bool       fontreal_selected;
+     FT_Int        darken_params[8];
+ 
+--- a/src/autofit/afmodule.c
++++ b/src/autofit/afmodule.c
+@@ -115,6 +115,16 @@
+ #endif
+ 
+ 
++    if ( !ft_strcmp( property_name, "fontreal-selected-v1" ) )
++    {
++#ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
++      if ( value_is_string )
++        return FT_THROW( Invalid_Argument );
++#endif
++      module->fontreal_selected = *(const FT_Bool*)value != 0;
++      return error;
++    }
++
+     if ( !ft_strcmp( property_name, "fontreal-nearest-y-v2" ) )
+     {
+ #ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+@@ -300,6 +311,12 @@
+     AF_Module  module         = (AF_Module)ft_module;
+ 
+ 
++    if ( !ft_strcmp( property_name, "fontreal-selected-v1" ) )
++    {
++      *(FT_Bool*)value = module->fontreal_selected;
++      return error;
++    }
++
+     if ( !ft_strcmp( property_name, "fontreal-nearest-y-v2" ) )
+     {
+       *(FT_Bool*)value = module->fontreal_nearest_y;
+@@ -416,6 +433,7 @@
+     module->default_script    = AF_SCRIPT_DEFAULT;
+     module->no_stem_darkening = TRUE;
+     module->fontreal_nearest_y = FALSE;
++    module->fontreal_selected = FALSE;
+ 
+     module->darken_params[0]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1;
+     module->darken_params[1]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1;

@@ -12,28 +12,40 @@ from encoded_refinement_test import EXTRA, NAMES, font_weight, matrix, scalar_ma
 OUT = recipe.ROOT/'results/raw-coverage'
 
 
-def native(record,nearest,variable):
-    candidate=record['libraries']['candidate']['library'];stock=record['libraries']['stock']['library']
-    folder=Path('/usr/share/fonts/truetype')
+def font_paths():
+    folder=recipe.FONT_ROOT/'truetype'
     faces={f'{family} {style}':folder/('hack' if family=='Hack' else 'noto')/(family.replace(' ','')+'-'+style+'.ttf')
            for family in ('Noto Sans','Noto Serif','Hack') for style in ('Regular','Bold','Italic','BoldItalic')}
     faces['Lato Light']=folder/'lato/Lato-Light.ttf'
     faces.update({name:folder/path for name,path in EXTRA.items()})
     faces['Arial Regular']=folder/'msttcorefonts/Arial.ttf'
     assert set(faces)==set(NAMES+['Arial Regular'])
+    return dict(faces, **recipe.CFF_FONTS)
+
+
+def input_rows(record):
+    OUT.mkdir(parents=True, exist_ok=True)
+    faces={name:path for name,path in font_paths().items() if name not in recipe.CFF_FONTS}
     weights={name:font_weight(path) for name,path in faces.items()}
     tt=[dict(id=f'raw-{index}-{point}pt',label=name,point_size=point,logical_dpi=96,scale=1,
              cutoff=128 if weights[name]<400 else 160,font_path=str(path))
         for index,(name,path) in enumerate(faces.items()) for point in range(8,17)]
     tt_input=OUT/'truetype-input.json';tt_input.write_text(json.dumps(tt))
-    recipe.run([recipe.BUILD/'chart','stock',tt_input,OUT/'truetype-qt'],env=recipe.environment(stock))
+    recipe.run([recipe.BUILD/'chart','stock',tt_input,OUT/'truetype-qt'],env=recipe.environment(record['libraries']['stock']['library']))
     inputs=json.loads((OUT/'truetype-qt/rows.json').read_text())
     cff=[dict(id=f'cff{index}-{point}pt',label=name,point_size=point,cutoff=128 if name=='URW Bookman Light' else 160,
               font_path=str(path)) for index,(name,path) in enumerate(recipe.CFF_FONTS.items()) for point in range(8,17)]
     cff_input=OUT/'cff-input.json';cff_input.write_text(json.dumps(cff))
-    recipe.run([recipe.BUILD/'chart','stock',cff_input,OUT/'cff-qt'],env=recipe.environment(stock))
+    recipe.run([recipe.BUILD/'chart','stock',cff_input,OUT/'cff-qt'],env=recipe.environment(record['libraries']['stock']['library']))
     inputs+=json.loads((OUT/'cff-qt/rows.json').read_text())
     source=OUT/'input.json';source.write_text(json.dumps(inputs));names=NAMES+['Arial Regular']+list(recipe.CFF_FONTS)
+    return inputs
+
+
+def native(record,nearest,variable):
+    candidate=record['libraries']['candidate']['library'];stock=record['libraries']['stock']['library']
+    inputs = input_rows(record)
+    source=OUT/'input.json'; names=NAMES+['Arial Regular']+list(recipe.CFF_FONTS)
     matrix(inputs,names=names)
     for bad in (inputs[:-1]+[inputs[0]],inputs[:-1],
                 [dict(inputs[0],point_size=8.5)]+inputs[1:],

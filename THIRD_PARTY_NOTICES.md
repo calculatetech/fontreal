@@ -34,13 +34,13 @@ Fontreal modifications are Copyright (c) 2026 Michael Beutler and Fontreal contr
 
 ## FreeType patch
 
-The `patches/freetype-*.patch` files contain changes and source context from FreeType, including its base and automatic hinting modules. The same applies to `tests/freetype_curve_trace.patch` and `tests/freetype_tt_only_v1.patch`. Original upstream copyright notices remain in the source files. Their upstream license permits use under the FreeType Project License or GPL 2.0. Fontreal distributes these patches under the [FreeType Project License](LICENSES/FTL.TXT). The root MIT license does not replace these terms.
+The `patches/freetype-*.patch` files and `packaging/freetype-capability.patch` contain changes and source context from FreeType, including its base and automatic hinting modules. The same applies to `tests/freetype_curve_trace.patch` and `tests/freetype_tt_only_v1.patch`. Original upstream copyright notices remain in the source files. Their upstream license permits use under the FreeType Project License or GPL 2.0. Fontreal distributes these patches under the [FreeType Project License](LICENSES/FTL.TXT). The root MIT license does not replace these terms.
 
 Fontreal modifications are Copyright (c) 2026 Michael Beutler and Fontreal contributors. They add opt-in automatic monochrome fitting, nearest Latin Y rounding, raw grayscale output, the selected native-normal coverage entry, retained contrast diagnostics, and test-only mask observation. The changes preserve original source headers. Private builders retain distro source patches and create separate stock, modified, and reference source trees.
 
 This software is based in part on the work of the FreeType Team. Portions are copyright 1996-2025 The FreeType Project (https://freetype.org). Retain the unchanged `FTL.TXT`, source notices, modification description, and binary acknowledgement with a distribution. Each private build includes `FTL.TXT` and `NOTICE` beside its source trees and libraries.
 
-The original mask processor in `src/fontreal_coverage.cpp` and its declaration use MIT. The private FreeType candidate links the system standard C++ runtime. That runtime retains its own license and runtime exception.
+The original mask processor in `src/fontreal_coverage.cpp` and its declaration use MIT. The private and native FreeType candidates link the system standard C++ runtime. That runtime retains its own license and runtime exception.
 
 ## Built packages and dependencies
 

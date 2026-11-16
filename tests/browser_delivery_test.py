@@ -3,6 +3,8 @@
 import argparse
 from contextlib import ExitStack, contextmanager, redirect_stderr, redirect_stdout
 import configparser
+import fcntl
+import hashlib
 import importlib.util
 import http.server
 import io
@@ -12,6 +14,7 @@ from pathlib import Path
 import re
 import shlex
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -48,6 +51,55 @@ def main_call(action, browser, failure=None):
 
 def tree(path):
     return {str(p.relative_to(path)): masks.digest(p) for p in path.rglob("*") if p.is_file()}
+
+
+def verify_profile_data(before, after):
+    """Keep account data exact while allowing a new, released native Unix lock."""
+    assert set(before) == set(after), "The original profile collection changed."
+    native_locks = {}
+    for profile in before:
+        for name in set(before[profile]) | set(after[profile]):
+            if before[profile].get(name) == after[profile].get(name):
+                continue
+            assert (name == ".parentlock" and name not in before[profile]
+                    and after[profile].get(name) == hashlib.sha256(b"").hexdigest()), (
+                        "Unrelated native profile data changed", profile, name)
+            path = Path(profile) / name
+            metadata = path.lstat()
+            assert stat.S_ISREG(metadata.st_mode) and metadata.st_size == 0, path
+            descriptor = os.open(path, os.O_RDWR | os.O_NOFOLLOW)
+            try:
+                fcntl.lockf(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.lockf(descriptor, fcntl.LOCK_UN)
+            finally:
+                os.close(descriptor)
+            native_locks[str(path)] = dict(regular=True, empty=True, symlink=False, unlocked=True)
+    return native_locks
+
+
+def all_index_paths(home, config):
+    return [base / name for base in (config / "mozilla/firefox", home / ".mozilla/firefox",
+                                     config / "floorp", home / ".floorp")
+            for name in ("profiles.ini", "installs.ini")]
+
+
+def declared_profile_paths(indexes):
+    """Collect every native profile declaration, excluding mutable app metadata."""
+    profiles = set()
+    for index in indexes:
+        config = configparser.ConfigParser(interpolation=None)
+        config.read(index)
+        for section in config.sections():
+            if section.startswith("Profile") and config.has_option(section, "Path"):
+                path = Path(config[section]["Path"])
+                if config.getboolean(section, "IsRelative"):
+                    path = index.parent / path
+                else:
+                    assert path.is_absolute(), (index, section, path)
+                profiles.add(path.resolve())
+            if (section.startswith("Install") or index.name == "installs.ini") and config.has_option(section, "Default"):
+                profiles.add((index.parent / config[section]["Default"]).resolve())
+    return profiles
 
 
 @contextmanager
@@ -89,7 +141,87 @@ Locked=1
     return index, unused
 
 
+def enumerated_discovery(root):
+    """Exercise the current Floorp path collector, without replacing it."""
+    results = []
+    for case in ("modern-default", "configured-decoy", "legacy", "absent", "no-default",
+                 "missing-prefs", "equivalent", "late-conflict", "retarget"):
+        home = root / case
+        profile, other = home / "working", home / "other"
+        for path in (profile, other):
+            path.mkdir(parents=True)
+            (path / "prefs.js").write_text('user_pref("fixture.keep", 83);\n')
+        config = home / ("configured" if case == "configured-decoy" else ".config")
+        modern, legacy = config / "floorp", home / ".floorp"
+        def write(base, targets):
+            base.mkdir(parents=True, exist_ok=True)
+            path = base / "profiles.ini"
+            path.write_text("[General]\nVersion=2\n" + "".join(
+                f"[Install{number}]\nDefault={target}\nLocked=1\n" for number, target in enumerate(targets)))
+            return path
+        expected = []
+        if case == "legacy":
+            expected = [write(legacy, [profile])]
+        elif case != "absent":
+            expected = [write(modern, [] if case == "no-default" else [profile])]
+        if case == "configured-decoy":
+            write(home / ".config/floorp", [other])
+        elif case == "equivalent":
+            write(modern, [os.path.relpath(profile, modern), profile])
+            expected.append(write(legacy, [profile]))
+        elif case == "late-conflict":
+            write(modern, [profile, profile])
+            expected.append(write(legacy, [other]))
+        elif case == "missing-prefs":
+            (profile / "prefs.js").unlink()
+        with patch.object(Path, "home", return_value=home), \
+                patch.object(browser_tool, "process_ids", return_value=[]), patch.dict(os.environ):
+            os.environ["XDG_DATA_HOME"] = str(home / "data")
+            if case == "configured-decoy":
+                os.environ["XDG_CONFIG_HOME"] = str(config)
+            else:
+                os.environ.pop("XDG_CONFIG_HOME", None)
+            assert browser_tool.profile_indexes("floorp") == expected, case
+            before = tree(home)
+            if case in ("absent", "no-default", "missing-prefs", "late-conflict"):
+                main_call("enable", "floorp", "already contain prefs.js" if case == "missing-prefs" else "no profile")
+                assert tree(home) == before, case
+            else:
+                main_call("enable", "floorp")
+                state, _, _ = browser_tool.paths("floorp")
+                activation = json.loads(state.read_text())
+                assert Path(activation["profile"]) == profile
+                assert activation["original_prefs"] == []
+                assert (profile / "prefs.js").read_bytes() == b'user_pref("fixture.keep", 83);\n'
+                for name, digest in before.items():
+                    assert masks.digest(home / name) == digest, (case, name)
+                if case == "retarget":
+                    index = expected[0]
+                    original = index.read_bytes()
+                    write(modern, [other])
+                    fixed = tree(home)
+                    main_call("enable", "floorp", "Disable the previous profile")
+                    assert tree(home) == fixed and json.loads(state.read_text())["original_prefs"] == []
+                    index.write_bytes(original)
+                main_call("disable", "floorp")
+                assert tree(home) == before, case
+            results.append(dict(case=case, indexes=[str(p.relative_to(home)) for p in expected]))
+    return results
+
+
 def discovery(root):
+    collection = root / "native-profile-collection"
+    base = collection / "indexes"
+    base.mkdir(parents=True)
+    relative, absolute, later = base / "relative", collection / "outside", collection / "later"
+    profiles, installs = base / "profiles.ini", base / "installs.ini"
+    profiles.write_text(f"[Profile0]\nIsRelative=1\nPath=relative\n"
+                        f"[Profile1]\nIsRelative=0\nPath={relative}\n"
+                        f"[Profile2]\nIsRelative=0\nPath={absolute}\n"
+                        "[InstallFIRST]\nDefault=relative\n")
+    installs.write_text(f"[FIRST]\nDefault={relative}\n[SECOND]\nDefault={later}\n")
+    assert declared_profile_paths([profiles, installs, base / "absent.ini"]) == {
+        relative.resolve(), absolute.resolve(), later.resolve()}
     results = []
     for browser in browser_tool.VERSIONS:
         home = root / browser
@@ -212,7 +344,7 @@ def discovery(root):
                     else: raise AssertionError("Unsupported builder activated a profile")
                 assert tree(home) == before
         results.append([browser, "unique-install-default", "version-rejection", "version-fallback"])
-    return results
+    return dict(selectors=results, real_floorp_indexes=enumerated_discovery(root / "real-indexes"))
 
 
 def process_observation(root):
@@ -446,30 +578,37 @@ def lifecycle(root, record):
     real_home = Path.home()
     native_bundle = os.environ.get("FONTREAL_TEST_NATIVE_BUNDLE")
     home = real_home if native_bundle else root / "home"
+    if native_bundle:
+        import system_session_test as native_session
+        directory = Path(native_bundle).resolve()
+        plan = native_session.build.verify_artifacts(directory, json.loads((directory / "bundle.json").read_text()))
+        native_session.captured_predecessor(directory, plan, os.environ.get("FONTREAL_TEST_NATIVE_PREVIOUS"))
+        assert native_session.build.installed() == plan["original"], "Continue from the full session's official rollback."
     if not native_bundle:
         (home / "Projects/fontreal").mkdir(parents=True)
     metadata = {}
     saved_indexes = {}
+    unrelated = {}
+    expected_indexes = all_index_paths(home, Path(os.environ.get("XDG_CONFIG_HOME", home / ".config")))
     if native_bundle:
-        for base in (home / ".config/mozilla/firefox", home / ".mozilla/firefox", home / ".floorp"):
-            for name in ("profiles.ini", "installs.ini"):
-                path = base / name
-                saved_indexes[path] = path.read_bytes() if path.exists() else None
+        assert len(expected_indexes) == len(set(expected_indexes)) == 8
+        saved_indexes = {path: path.read_bytes() if path.exists() else None for path in expected_indexes}
+        unrelated = {path: tree(path) for path in declared_profile_paths(expected_indexes)}
     for browser in browser_tool.VERSIONS:
         if native_bundle:
             assert not browser_tool.paths(browser)[0].exists(), "Use an unconfigured disposable browser account."
-        config = configparser.ConfigParser(interpolation=None)
-        config.read(browser_tool.profile_indexes(browser))
-        if native_bundle:
-            assert config.sections() and all(s.startswith("Install") and config[s].get("Default") == "unused"
-                                             for s in config.sections()), "Use only seeded disposable installation identities."
-            for path in browser_tool.profile_indexes(browser):
-                unused = path.parent / "unused"
-                if unused.exists():
-                    assert list(unused.iterdir()) == [unused / "prefs.js"]
-                    assert (unused / "prefs.js").read_text() == 'user_pref("fixture.unused", 49);\n'
-        metadata[browser] = [section for section in config.sections() if section.startswith("Install")]
-        assert metadata[browser]
+        observed = {}
+        for path in browser_tool.profile_indexes(browser):
+            config = configparser.ConfigParser(interpolation=None)
+            config.read(path)
+            identifiers = [s for s in config.sections() if s.startswith("Install") and config.has_option(s, "Default")]
+            assert identifiers, (browser, path, config.sections())
+            observed[str(path.parent)] = identifiers
+            if native_bundle:
+                assert not (path.parent / "unused").exists(), "Use a fresh disposable native browser fixture."
+        assert observed, browser
+        metadata[browser] = dict(scope="native-provider-observed" if native_bundle else "synthetic-all-roots",
+                                 bases=observed)
     namespace = [] if native_bundle else ["bwrap", "--bind", "/", "/", "--bind", str(home), str(real_home),
                  "--bind", str(ROOT), str(ROOT), "--proc", "/proc", "--dev-bind", "/dev", "/dev"]
     output = root / "lifecycle.json"
@@ -477,6 +616,9 @@ def lifecycle(root, record):
     metadata_path.write_text(json.dumps(metadata))
     record_path = root / "build.json"
     record_path.write_text(json.dumps(record))
+    if native_bundle:
+        (OUT / "native-unrelated-trees.json").write_text(json.dumps(dict(
+            phase="before", before={str(path): contents for path, contents in unrelated.items()}), indent=2))
     runner = """import json, sys
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
@@ -502,9 +644,30 @@ results = test.lifecycle_inside(root, json.loads((root/'build.json').read_text()
                     path.unlink(missing_ok=True)
                 else:
                     path.write_bytes(content)
+            for browser in browser_tool.VERSIONS:
+                for base in metadata[browser]["bases"]:
+                    unused = Path(base) / "unused"
+                    if unused.exists():
+                        import shutil
+                        shutil.rmtree(unused)
+            assert set(saved_indexes) == set(expected_indexes)
+            assert {p: p.read_bytes() if p.exists() else None for p in expected_indexes} == saved_indexes
+            after = {str(path): tree(path) for path in unrelated}
+            before = {str(path): contents for path, contents in unrelated.items()}
+            differences = {path: {name: dict(before=before[path].get(name), after=after[path].get(name))
+                                 for name in sorted(set(before[path]) | set(after[path]))
+                                 if before[path].get(name) != after[path].get(name)}
+                           for path in before if before[path] != after[path]}
+            preservation = dict(phase="after", before=before, after=after, differences=differences)
+            (OUT / "native-unrelated-trees.json").write_text(json.dumps(preservation, indent=2))
+            preservation["native_empty_lockfiles"] = verify_profile_data(before, after)
+            (OUT / "native-unrelated-trees.json").write_text(json.dumps(preservation, indent=2))
     results = json.loads(output.read_text())
     for result in results:
         result["namespace"] = namespace
+        if native_bundle:
+            result["native_authority"] = metadata[result["browser"]]
+            result["restored_native_indexes"] = {str(p): masks.digest(p) if p.exists() else None for p in expected_indexes}
     return results
 
 
@@ -515,6 +678,10 @@ def lifecycle_inside(root, record, installation_identities):
         assert native_helper and Path("/var/lib/fontreal-test-ready").is_file()
         subprocess.run(["systemd-detect-virt", "--vm"], check=True, capture_output=True)
         native_bundle = Path(native_bundle).resolve()
+        import system_session_test as native_session
+        native_plan = native_session.build.verify_artifacts(native_bundle, json.loads((native_bundle / "bundle.json").read_text()))
+        predecessor, predecessor_files = native_session.captured_predecessor(
+            native_bundle, native_plan, os.environ.get("FONTREAL_TEST_NATIVE_PREVIOUS"))
     real_home = Path.home()
     home = real_home if native_bundle else root / "home"
     # The native home provider changes only inside this mount namespace.
@@ -554,8 +721,11 @@ module.main()
 <edit name="rgba" mode="assign"><const>none</const></edit>
 </match></fontconfig>''')
     def indexes(browser, profile):
-        installs = installation_identities[browser]
-        bases = [home / ".config/mozilla/firefox", home / ".mozilla/firefox"] if browser == "firefox" else [home / ".floorp"]
+        observed = installation_identities[browser]["bases"]
+        installs = list(dict.fromkeys(identifier for identifiers in observed.values() for identifier in identifiers))
+        bases = ([Path(base) for base in observed] if native_bundle else
+                 [home / ".config/mozilla/firefox", home / ".mozilla/firefox"] if browser == "firefox" else
+                 [home / ".config/floorp", home / ".floorp"])
         for base in bases:
             base.mkdir(parents=True, exist_ok=True)
             unused = base / "unused"
@@ -565,12 +735,13 @@ module.main()
             for number in range(2):
                 text += f"[Profile{number}]\nName=misleading-{number}\nIsRelative=1\nPath=unused\nDefault=1\n"
             text += f"[Profile2]\nName=working\nIsRelative=0\nPath={profile}\n"
-            for install in installs:
+            base_installs = observed[str(base)] if native_bundle else installs
+            for install in base_installs:
                 text += f"[{install}]\nDefault={profile}\nLocked=1\n"
-            if browser == "firefox":
+            if browser == "firefox" and not native_bundle:
                 text += f"[InstallHISTORICAL]\nDefault={unused}\nLocked=1\n"
             (base / "profiles.ini").write_text(text)
-            (base / "installs.ini").write_text("".join(f"[{install[7:]}]\nDefault={profile}\nLocked=1\n" for install in installs))
+            (base / "installs.ini").write_text("".join(f"[{install[7:]}]\nDefault={profile}\nLocked=1\n" for install in base_installs))
         return {str(p): masks.digest(p) for base in bases for p in base.rglob("*") if p.is_file()}
     try:
         with masks.nested_display() as display:
@@ -593,13 +764,16 @@ module.main()
                     }
                     (profile / "user.js").write_text("".join(f"user_pref({json.dumps(k)}, {json.dumps(v)});\n" for k,v in settings.items()))
                     # Native XDG selection stays fixed across enable, remote, cold launch, and reversal.
-                    env = dict(display, XDG_CONFIG_HOME=str(home / ".config"), XDG_DATA_HOME=str(home / ".local/share"),
+                    configuration = Path(os.environ.get("XDG_CONFIG_HOME", home / ".config")) if native_bundle else home / ".config"
+                    env = dict(display, XDG_CONFIG_HOME=str(configuration), XDG_DATA_HOME=str(home / ".local/share"),
                                TMPDIR=str(root), GDK_BACKEND="wayland", MOZ_ENABLE_WAYLAND="1", MOZ_REMOTE_ALLOW_SYSTEM_ACCESS="1",
                                FONTREAL_RENDERING="1", FONTREAL_BLEND="encoded" if native_helper else "linear",
-                               FONTREAL_CONTRAST="none" if native_helper else "mild",
-                               FONTREAL_FITTING="nearest" if native_helper else "")
+                               FONTREAL_CONTRAST="weighted" if native_helper else "mild",
+                               FONTREAL_FITTING="native" if native_helper else "")
                     if native_helper:
                         env["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"]
+                        env["FONTREAL_TEST_REFERENCE_FREETYPE"] = record["libraries"]["stock"]["library"]
+                        env["FONTREAL_TEST_SELECTED_REFERENCE"] = str(ROOT / "tests/selected_reference.py")
                     if native_bundle:
                         env["FONTCONFIG_FILE"] = str(normal_fonts)
                     child = client = log = None
@@ -625,7 +799,7 @@ module.main()
                     def owned():
                         return chrome("return Object.fromEntries(" + json.dumps(list(browser_tool.PREFS)) + ".map(k => [k, {user: Services.prefs.prefHasUserValue(k), value: Services.prefs.getPrefType(k) === 128 ? Services.prefs.getBoolPref(k) : Services.prefs.getIntPref(k)}]));")
                     helper = directory / "qt-helper.sh"
-                    qt_command = [str(ROOT / "build/qt-native-probe"), "raw" if native_helper else "stock",
+                    qt_command = [str(ROOT / "build/qt-native-probe"), "selected" if native_helper else "stock",
                                   "none" if native_helper else "mild", "12" if native_helper else "15", "1",
                                   str(masks.NOTO / "NotoSans-Regular.ttf"), "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
                                   "/usr/share/fonts/opentype/urw-base35/NimbusSans-Regular.otf", str(directory)]
@@ -653,8 +827,8 @@ module.main()
                         nonlocal child, client, log
                         log_path = directory / f"{phase}.log"
                         log = log_path.open("w")
-                        args = [f"/usr/bin/{browser}", "--new-instance", "--profile", profile] if bootstrap else [real_home / ".local/bin" / browser]
-                        if phase == "stock-pending" and browser == "firefox":
+                        args = [f"/usr/bin/{browser}", "--new-instance", "--profile", expected_profile or profile] if bootstrap else [real_home / ".local/bin" / browser]
+                        if phase == "stock-pending":
                             args = [f"/usr/bin/{browser}"]
                         args += ["--marionette", storage_url]
                         launch_env = dict(env)
@@ -674,7 +848,15 @@ else: app.launch_action(sys.argv[2],None)
                                 break
                             time.sleep(.1)
                         else:
-                            raise AssertionError(log_path.read_text()[-4000:])
+                            raise AssertionError((log_path.read_text()[-4000:],
+                                                  str(browser_tool.running_profiles(browser).get(child.pid))))
+                        actual_port = int(re.findall(r"Listening on port (\d+)", log_path.read_text())[-1])
+                        assert actual_port == port, (browser, phase, actual_port, port)
+                        if not desktop_action:
+                            observed_parent = browser_tool.running_profiles(browser).get(child.pid)
+                            (directory / f"{phase}-parent.json").write_text(json.dumps(dict(
+                                pid=child.pid, profile=str(observed_parent), port=actual_port,
+                                argv=Path(f"/proc/{child.pid}/cmdline").read_bytes().decode().rstrip("\0").split("\0"))))
                         client = masks.Marionette(port)
                         client.command("WebDriver:SetWindowRect", dict(x=0, y=0, width=1380, height=1240))
                         got = identity()
@@ -724,8 +906,9 @@ else: app.launch_action(sys.argv[2],None)
                         assert normal_helper_env[:3] == ["", "", ""]
                         if native_bundle:
                             assert normal_fc.split("|")[-4:] == ["True", "3", "False", "5"], normal_fc
-                        state = home / ".config/fontreal/browsers" / f"{browser}.json"
-                        index_paths = [Path(path) for path in fixed if path.endswith("/profiles.ini")]
+                        state = configuration / "fontreal/browsers" / f"{browser}.json"
+                        index_paths = [path for path in all_index_paths(home, configuration)
+                                       if path.name == "profiles.ini" and str(path) in fixed]
                         index_bytes = {path: path.read_bytes() for path in index_paths}
                         misleading_active = index_paths[0].parent / "unused"
                         original_user_bytes = user_js.read_bytes() if user_js.exists() else None
@@ -949,12 +1132,39 @@ else: app.launch_action(sys.argv[2],None)
                             saved_state = state.read_bytes(), user_js.read_bytes()
                             inherited_library_path = env["LD_LIBRARY_PATH"]
                             native_command = [sys.executable, ROOT / "tools/system-build.py"]
+                            assert client is None and child is None
+                            if predecessor is not None:
+                                native_session.setup_packages([*predecessor_files, predecessor / "activation/fontreal-session.deb"])
+                            assert native_session.build.installed() == native_plan["installed"]
+                            captured = dict(records=native_session.build.installed(),
+                                            bundle_sha256=native_session.build.sha(predecessor / "bundle.json") if predecessor else None,
+                                            deployment_sha256=native_session.build.sha(predecessor / "deployment.json") if predecessor else None)
+                            source_directory = Path("/usr/share/fontreal")
+                            if source_directory.exists() or source_directory.is_symlink():
+                                metadata = source_directory.lstat()
+                                captured["provider_directory"] = dict(uid=metadata.st_uid, gid=metadata.st_gid,
+                                    permissions=oct(metadata.st_mode & 0o7777), symlink=source_directory.is_symlink())
+                            else:
+                                captured["provider_directory"] = None
                             try:
                                 subprocess.run(["sudo", *map(str, native_command), "install", str(native_bundle)], check=True,
                                                text=True, capture_output=True)
                                 installed_version = subprocess.check_output(
                                     ["dpkg-query", "-W", "-f=${Version}", "libfreetype6:amd64"], text=True)
                                 assert "afontreal" in installed_version
+                                provider_metadata = {}
+                                source_record = Path("/usr/share/fontreal/system.json")
+                                for path in (source_record, source_record.parent, source_record.parent.parent):
+                                    metadata = path.lstat()
+                                    owner = subprocess.run(["dpkg-query", "-S", str(path)], text=True, capture_output=True)
+                                    provider_metadata[str(path)] = dict(uid=metadata.st_uid, gid=metadata.st_gid,
+                                        mode=oct(metadata.st_mode), permissions=oct(metadata.st_mode & 0o7777),
+                                        symlink=path.is_symlink(), owners=owner.stdout.splitlines(),
+                                        owner_status=owner.returncode)
+                                (OUT / f"native-provider-metadata-{label}.json").write_text(json.dumps(dict(
+                                    source_sha256=masks.digest(Path(__file__)), installed_version=installed_version,
+                                    paths=provider_metadata), indent=2))
+                                assert provider_metadata[str(source_record.parent)]["permissions"] == "0o755"
                                 assert browser_tool.freetype_version() == record["spec"]["source"]
                                 env["LD_LIBRARY_PATH"] = ""
                                 native_parent = launch("native-installed")
@@ -968,12 +1178,13 @@ else: app.launch_action(sys.argv[2],None)
                                 quit()
                                 assert (state.read_bytes(), user_js.read_bytes()) == saved_state
                                 native_transitions.append(dict(phase="installed", provider=installed_version,
-                                                               parent=native_parent, helper=native_qt))
+                                                               parent=native_parent, helper=native_qt, captured_predecessor=captured))
                             finally:
                                 if client:
                                     quit()
                                 subprocess.run(["sudo", *map(str, native_command), "rollback", str(native_bundle)], check=True,
                                                text=True, capture_output=True)
+                            assert native_session.build.installed() == native_plan["original"]
                             assert browser_tool.freetype_version() == record["spec"]["source"]
                             restored_parent = launch("native-rolled-back")
                             assert library in Path(f"/proc/{restored_parent['pid']}/maps").read_text()
@@ -989,44 +1200,59 @@ else: app.launch_action(sys.argv[2],None)
                             assert (state.read_bytes(), user_js.read_bytes()) == saved_state
                             native_transitions.append(dict(phase="rolled-back", parent=restored_parent, helper=restored_qt))
                             env["LD_LIBRARY_PATH"] = inherited_library_path
-                        if browser == "firefox":
-                            native_indexes = {Path(path): Path(path).read_bytes() for path in fixed
-                                              if path.endswith(("/profiles.ini", "/installs.ini"))}
-                            unused_prefs = (misleading_active / "prefs.js").read_bytes()
-                            (misleading_active / "user.js").write_text("".join(
+                        if browser in ("firefox", "floorp"):
+                            native_indexes = {path: path.read_bytes() for path in all_index_paths(home, configuration)
+                                              if str(path) in fixed}
+                            alternate_profile = root / (label + "-retarget")
+                            alternate_profile.mkdir()
+                            (alternate_profile / "user.js").write_text("".join(
                                 f"user_pref({json.dumps(k)}, {json.dumps(v)});\n" for k, v in settings.items()))
                             try:
+                                launch("create-test-owned-alternate", bootstrap=True, expected_profile=alternate_profile)
+                                quit()
                                 for path, content in native_indexes.items():
-                                    text = content.decode().replace(str(profile), str(misleading_active))
+                                    config = configparser.ConfigParser(interpolation=None)
+                                    config.optionxform = str
+                                    config.read_string(content.decode())
+                                    for section in config.sections():
+                                        if (section.startswith("Install") or path.name == "installs.ini") and config.has_option(section, "Default"):
+                                            config[section]["Default"] = str(alternate_profile)
                                     if path.name == "profiles.ini":
-                                        text += f"\n[InstallPREVIOUS]\nDefault={profile}\nLocked=1\n"
-                                    path.write_text(text)
-                                alternate = launch("alternate-ordinary", expected_profile=misleading_active)
+                                        assert not config.has_section("Profile3")
+                                        config["Profile3"] = dict(Name="test-owned-retarget", IsRelative="0", Path=str(alternate_profile))
+                                    with path.open("w") as output:
+                                        config.write(output, space_around_delimiters=False)
+                                (directory / "retarget-input.json").write_text(json.dumps(dict(
+                                    indexes={str(path): path.read_text() for path in native_indexes},
+                                    alternate_profile=str(alternate_profile),
+                                    alternate_preferences=(alternate_profile / "user.js").read_text()), indent=2))
+                                alternate = launch("alternate-ordinary", expected_profile=alternate_profile)
                                 chrome("Services.prefs.savePrefFile(null); return true;")
-                                before_retarget = state.read_bytes(), user_js.read_bytes(), owned()
+                                alternate_argv = Path(f"/proc/{alternate['pid']}/cmdline").read_bytes().decode().rstrip("\0").split("\0")
+                                assert not any(arg in ("--profile", "--no-remote", "--new-instance", "-P") for arg in alternate_argv)
+                                quit()
+                                before_retarget = state.read_bytes(), user_js.read_bytes()
                                 protected_files = [state, user_js, home / ".local/bin" / browser,
                                                    home / ".local/share/applications" / f"{browser}.desktop",
-                                                   profile / "prefs.js", misleading_active / "prefs.js",
-                                                   misleading_active / "user.js", *native_indexes]
+                                                   profile / "prefs.js", alternate_profile / "prefs.js",
+                                                   alternate_profile / "user.js", *native_indexes]
                                 before_files = {path: path.read_bytes() for path in protected_files}
+                                before_trees = tree(profile), tree(alternate_profile)
+                                complete_indexes = all_index_paths(home, configuration)
+                                before_indexes = {path: path.read_bytes() if path.exists() else None for path in complete_indexes}
                                 tool("enable", "Disable the previous profile")
-                                assert (state.read_bytes(), user_js.read_bytes(), owned()) == before_retarget
+                                assert (state.read_bytes(), user_js.read_bytes()) == before_retarget
                                 assert {path: path.read_bytes() for path in protected_files} == before_files, [
                                     str(path) for path in protected_files if path.read_bytes() != before_files[path]]
+                                assert (tree(profile), tree(alternate_profile)) == before_trees
+                                assert {p: p.read_bytes() if p.exists() else None for p in complete_indexes} == before_indexes
+                                assert json.loads(state.read_text())["original_prefs"] == original_prefs
                                 assert alternate["pid"] != treated["pid"]
-                                quit()
                             finally:
                                 if client:
                                     quit()
                                 for path, content in native_indexes.items():
                                     path.write_bytes(content)
-                                for path in misleading_active.iterdir():
-                                    if path.is_dir():
-                                        import shutil
-                                        shutil.rmtree(path)
-                                    else:
-                                        path.unlink()
-                                (misleading_active / "prefs.js").write_bytes(unused_prefs)
                         with user_js.open("ab") as output:
                             output.write(b'user_pref("fixture.added.later", 71);\n')
                         tool("disable")
@@ -1149,8 +1375,9 @@ def docs():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", choices=("all", "discovery", "process", "desktop", "scope", "lifecycle", "diagnostic", "docs"), default="all")
-    parser.add_argument("--native-helper", action="store_true", help="Check the actual forced raw Qt helper and a retained v1 activation.")
+    parser.add_argument("--native-helper", action="store_true", help="Check the actual selected Qt helper and a retained v1 activation.")
     parser.add_argument("--native-bundle", type=Path, help="In a marked disposable VM, continue an existing activation across guarded native install and rollback.")
+    parser.add_argument("--previous", type=Path, help="The same verified captured predecessor bundle used by the full-session check.")
     args = parser.parse_args()
     if args.native_helper:
         os.environ["FONTREAL_TEST_NATIVE_HELPER"] = "1"
@@ -1158,6 +1385,9 @@ def main():
         assert args.native_helper and Path("/var/lib/fontreal-test-ready").is_file()
         subprocess.run(["systemd-detect-virt", "--vm"], check=True, capture_output=True)
         os.environ["FONTREAL_TEST_NATIVE_BUNDLE"] = str(args.native_bundle.resolve())
+    if args.previous:
+        assert args.native_bundle, "--previous requires --native-bundle."
+        os.environ["FONTREAL_TEST_NATIVE_PREVIOUS"] = str(args.previous.resolve())
     OUT.mkdir(parents=True, exist_ok=True)
     masks.OUT.mkdir(parents=True, exist_ok=True)
     before = masks.protected()

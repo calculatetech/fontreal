@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Install and check a build bundle inside a disposable distro container."""
 import argparse
+from email.parser import Parser
+import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
+import tarfile
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,22 +32,25 @@ def capture(command, env):
 def treatment(env, mode, contrast="mild"):
     env = dict(env)
     for name in ("LD_LIBRARY_PATH", "LD_PRELOAD", "FONTREAL_RENDERING", "FONTREAL_BLEND", "FONTREAL_CONTRAST",
-                 "FONTREAL_FITTING", "QT_QUICK_DEFAULT_TEXT_RENDER_TYPE"):
+                 "FONTREAL_FITTING", "QT_QUICK_DEFAULT_TEXT_RENDER_TYPE", "FONTREAL_TEST_SELECTED_REFERENCE"):
         env.pop(name, None)
     if mode != "stock":
-        env.update(FONTREAL_RENDERING="1", FONTREAL_BLEND="encoded" if mode == "raw" else mode,
+        env.update(FONTREAL_RENDERING="1", FONTREAL_BLEND="encoded" if mode in ("raw", "selected") else mode,
                    FONTREAL_CONTRAST="none" if mode == "raw" else contrast)
         if mode == "raw":
             env["FONTREAL_FITTING"] = "nearest"
+    if mode == "selected":
+        env.update(FONTREAL_BLEND="encoded", FONTREAL_CONTRAST="weighted", FONTREAL_FITTING="native",
+                   FONTREAL_TEST_SELECTED_REFERENCE=str(ROOT / "tests/selected_reference.py"))
     env["FONTREAL_TEST_REFERENCE_FREETYPE"] = env["FONTREAL_TEST_NEAREST_FREETYPE"] if mode == "raw" else env["FONTREAL_TEST_STOCK_FREETYPE"]
     return env
 
 
 def native(probe, env, fonts, directory, mode, selection=None):
     records = []
-    sizes = ((8, 1), (11, 1.25), (16, 1)) if mode in ("raw", "raw-stock") else ((15, 1), (15, 1.25), (10, 1.5))
+    sizes = ((8, 1), (11, 1.25), (16, 1)) if mode in ("raw", "raw-stock", "selected") else ((15, 1), (15, 1.25), (10, 1.5))
     for pixels, scale in sizes:
-        for contrast in (("none",) if mode in ("stock", "raw", "raw-stock") else ("none", "mild")):
+        for contrast in (("none",) if mode in ("stock", "raw", "raw-stock", "selected") else ("none", "mild")):
             selected = dict(treatment(env, selection or ("stock" if mode == "raw-stock" else mode), contrast), QT_QPA_PLATFORM="offscreen", QT_SCALE_FACTOR=str(scale))
             result = capture([probe, mode, contrast, pixels, scale, *fonts, directory], selected)
             record = json.loads(result.stdout)
@@ -53,7 +61,7 @@ def native(probe, env, fonts, directory, mode, selection=None):
 
 def quick(probe, env, font, directory, mode, scale=1, phase=0, contrast="mild", hidden=False, fallback=False):
     directory.mkdir()
-    if mode == "raw":
+    if mode in ("raw", "selected"):
         contrast = "none"
     selected = dict(treatment(env, mode, contrast), QT_SCALE_FACTOR=str(scale))
     if fallback:
@@ -65,11 +73,13 @@ def quick(probe, env, font, directory, mode, scale=1, phase=0, contrast="mild", 
     assert record["graphicsApi"] == 3 and record["scale"] == scale and record["unexposed"] == hidden
     assert all("/usr/lib/" in record[key] and "qt-native" not in record[key] for key in ("qtGui", "qtQuick"))
     assert len(record["frames"]) == 5
+    assert [frame["frame"] for frame in record["frames"]] == list(range(5))
     assert record["frames"][0]["hash"] == record["frames"][1]["hash"]
     for frame in record["frames"]:
+        assert len(frame["cells"]) == 54
         assert {g["cell"] for g in frame["cells"]} == {f"cell/{r}/{c}" for r in range(6) for c in range(9)}
         if mode != "stock" and not fallback:
-            blend = "encoded" if mode == "raw" else mode
+            blend = "encoded" if mode in ("raw", "selected") else mode
             expected = f"{contrast}/{blend}"
             opposite = f"{contrast}/{'encoded' if blend == 'linear' else 'linear'}"
             assert all(g["hypotheses"][expected]["matches"] for g in frame["cells"]), (directory, frame)
@@ -187,6 +197,10 @@ def update_checks(probe, graphics, font, reports, originals, candidates, referen
         expected = raw_native["stock" if fallback else "raw"]
         assert [r["images"] for r in widget] == [r["images"] for r in expected]
         group["raw_widget"] = widget
+        selected_widget = native(native_probe, graphics, raw_fonts, reports,
+                                 "raw-stock" if fallback else "selected", selection="selected")
+        assert [r["images"] for r in selected_widget] == [r["images"] for r in raw_native["stock" if fallback else "selected"]]
+        group["selected_widget"] = selected_widget
         import browser as browser_provider
         expected_provider = future if source == "freetype" else plan["sources"]["freetype"]["version"]
         assert browser_provider.freetype_version() == expected_provider
@@ -209,6 +223,19 @@ def update_checks(probe, graphics, font, reports, originals, candidates, referen
                     cells = [c for c in frame["cells"] if c["path"] == 0]
                     assert len(cells) == 9 and all(c["hypotheses"]["none/encoded"]["matches"] for c in cells)
             group.setdefault("raw_quick", []).append(record)
+        for hidden in (False, True):
+            record = quick(probe, dict(graphics, LD_BIND_NOW="1"), mixed_fonts[1],
+                           reports / f"updated-{source}-selected-{hidden}", "selected", hidden=hidden, fallback=True)
+            if fallback:
+                assert [f["cellHash"] for f in record["frames"]] == [f["cellHash"] for f in raw_quick[hidden]["frames"]]
+            else:
+                for frame in record["frames"]:
+                    cells = [c for c in frame["cells"] if c["path"] == 0]
+                    assert len(cells) == 9
+                    assert {c["cell"] for c in cells} == {f"cell/0/{column}" for column in range(9)}
+                    assert all(c["hypotheses"]["none/encoded"]["matches"] for c in cells)
+                    assert all(c["hypotheses"]["none/encoded"]["x"] == c["expectedX"] for c in cells)
+            group.setdefault("selected_quick", []).append(record)
         results.append(group)
     return results
 
@@ -219,14 +246,75 @@ def baseline_packages(originals, plan):
         build.run(["apt-get", "update"])
     versions = {p["source"]: p["version"] for p in plan["original"] if p["name"] in ("libqt6gui6", "libqt6quick6")}
     base, declarative = versions["qt6-base"], versions["qt6-declarative"]
-    packages = ["build-essential", "cmake", "ninja-build", "libfreetype-dev", f"qt6-base-dev={base}", f"qt6-base-private-dev={base}",
+    packages = ["build-essential", "python3-pil", "python3-fonttools", "cmake", "ninja-build", "libfreetype-dev", f"qt6-base-dev={base}", f"qt6-base-private-dev={base}",
                 f"qt6-declarative-dev={declarative}", f"qt6-declarative-private-dev={declarative}", "fontconfig", "fonts-noto-core", "fonts-dejavu-core", "fonts-cantarell", "fonts-noto-cjk",
-                "fonts-urw-base35", "fonts-noto-color-emoji", "xvfb", "xauth", "dbus-x11",
+                "fonts-urw-base35", "fonts-noto-color-emoji", "xfonts-base", "xvfb", "xauth", "dbus-x11",
                 "libplasmaquick6" if plan["os"] == "debian" else "libplasmaquick7",
                 "plasma-desktoptheme", "qml6-module-org-kde-breeze", "qml6-module-org-kde-kirigami",
                 f"qml6-module-qtqml-workerscript={declarative}", f"qml6-module-qtquick-window={declarative}", "plasma-integration"]
+    if any(p["arch"] == "i386" for p in plan["original"]):
+        packages.append("crossbuild-essential-i386")
     build.run(["apt-get", "install", "-y", "--no-install-recommends", "--allow-downgrades", "--no-remove",
                *packages, *sorted(originals.glob("*.deb"))])
+
+
+def selected_source(target, entry, upstream_copyright):
+    inputs = entry["selected"]
+    files = {"processor": "src/base/fontreal_coverage.cpp", "declaration": "src/base/fontreal_coverage.h",
+             "render": "debian/patches/fontreal-render.patch", "license": "docs/FONTREAL-MIT.TXT"}
+    actual = {name: build.sha(target / relative) for name, relative in files.items()}
+    assert actual == {name: inputs[name] for name in files}, actual
+    license_text = (ROOT / "LICENSE").read_text()
+    assert build.sha(ROOT / "LICENSE") == inputs["license"]
+    copyright_text = (target / "debian/copyright").read_text()
+    assert copyright_text.startswith(upstream_copyright), "Original upstream notices changed."
+    paragraphs = [Parser().parsestr(p) for p in copyright_text.split("\n\n")]
+    selected = [p for p in paragraphs if p.get("License", "").splitlines()[:1] == ["Fontreal-MIT"]]
+    assert len(selected) == 1
+    assert set(selected[0]["Files"].split()) == {files[k] for k in ("processor", "declaration", "license")}
+    lines = selected[0]["License"].splitlines()[1:]
+    assert all(line.startswith(" ") for line in lines)
+    notice = "\n".join("" if line == " ." else line[1:] for line in lines) + "\n"
+    assert notice == license_text, "The complete MIT notice differs from the immutable license."
+    return actual, copyright_text
+
+
+def selected_binary_notices(directory, copyright_text):
+    notices = {}
+    for identity, package in build.package_inventory(directory / "packages").items():
+        if package["source"].split()[0] != "freetype":
+            continue
+        archive = directory / "packages" / package["path"]
+        with tarfile.open(fileobj=io.BytesIO(subprocess.check_output(["dpkg-deb", "--fsys-tarfile", archive]))) as payload:
+            member = payload.getmember(f"./usr/share/doc/{identity[0]}/copyright")
+            assert member.isfile(), (archive, member.name)
+            notice = payload.extractfile(member).read()
+        assert notice == copyright_text.encode(), (archive, "Complete source/binary notices differ")
+        notices[archive.name] = hashlib.sha256(notice).hexdigest()
+    assert notices
+    return notices
+
+
+def corresponding_sources(directory, plan):
+    selected = {}
+    for source in build.SOURCES:
+        with tempfile.TemporaryDirectory(prefix="fontreal-source-") as temporary:
+            descriptor = build.source_descriptor(directory / "source", source, plan["sources"][source]["build_version"])
+            target = Path(temporary) / "source"
+            build.run(["dpkg-source", "--no-check", "-x", descriptor, target])
+            assert build.sha(target / "debian/patches/fontreal.patch") == plan["sources"][source]["patch_sha256"]
+            if plan["sources"][source]["capability_sha256"] is not None:
+                assert build.sha(target / "debian/patches/fontreal-capability.patch") == plan["sources"][source]["capability_sha256"]
+            assert "fontreal.patch" in (target / "debian/patches/series").read_text().splitlines()
+            assert (target / "debian/copyright").is_file()
+            if source == "freetype":
+                original = Path(temporary) / "original"
+                descriptor = build.source_descriptor(directory / "source", source, plan["sources"][source]["version"])
+                build.run(["dpkg-source", "--no-check", "-x", descriptor, original])
+                selected["source_inputs"], copyright_text = selected_source(
+                    target, plan["sources"][source], (original / "debian/copyright").read_text())
+                selected["binary_notices"] = selected_binary_notices(directory, copyright_text)
+    return selected
 
 
 def inside(directory, reports, updates=False):
@@ -244,16 +332,7 @@ def inside(directory, reports, updates=False):
     build.run(["apt-get", "download", *[f"{p['name']}:{p['arch']}={p['version']}" for p in actual_originals]], cwd=references)
     inventory = build.package_inventory(directory / "packages")
     candidates = [directory / "packages" / inventory[(p["name"], p["arch"])]["path"] for p in actual_originals]
-    for source in build.SOURCES:
-        with tempfile.TemporaryDirectory(prefix="fontreal-source-") as temporary:
-            descriptor = build.source_descriptor(directory / "source", source, plan["sources"][source]["build_version"])
-            target = Path(temporary) / "source"
-            build.run(["dpkg-source", "--no-check", "-x", descriptor, target])
-            assert build.sha(target / "debian/patches/fontreal.patch") == plan["sources"][source]["patch_sha256"]
-            if plan["sources"][source]["capability_sha256"] is not None:
-                assert build.sha(target / "debian/patches/fontreal-capability.patch") == plan["sources"][source]["capability_sha256"]
-            assert "fontreal.patch" in (target / "debian/patches/series").read_text().splitlines()
-            assert (target / "debian/copyright").is_file()
+    source_checks = corresponding_sources(directory, plan)
     build.run(["cmake", "-S", ROOT, "-B", "/tmp/fontreal-probes", "-G", "Ninja"])
     build.run(["cmake", "--build", "/tmp/fontreal-probes", "--target", "qt-native-probe", "qt-kde-probe", "--parallel", "2"])
     native_probe = Path("/tmp/fontreal-probes/qt-native-probe")
@@ -262,7 +341,8 @@ def inside(directory, reports, updates=False):
     gpu_fonts = [fonts[0], *[build.output(["fc-match", "-f", "%{file}", family]) for family in ("Nimbus Sans", "Noto Color Emoji")]]
     raw_fonts = [fonts[0], gpu_fonts[1], build.output(["fc-match", "-f", "%{file}", "URW Bookman:style=Light"])]
     results = dict(schema=1, passed=False, raw_profile=False, bundle_sha256=build.sha(directory / "bundle.json"),
-                   deployment_sha256=build.sha(directory / "deployment.json"), native={}, raster=[], quick=[], gpu=[])
+                   deployment_sha256=build.sha(directory / "deployment.json"), corresponding_sources=source_checks,
+                   native={}, raster=[], quick=[], gpu=[])
     with tempfile.TemporaryDirectory(prefix="fontreal-render-") as temporary:
         state = Path(temporary)
         env = kde.private_environment(state)
@@ -289,6 +369,34 @@ def inside(directory, reports, updates=False):
             assert set(installed) == {(p["name"], p["arch"]) for p in actual_originals}
             results["native"]["raw"] = native(native_probe, env, raw_fonts, state, "raw")
             raw_native["raw"] = results["native"]["raw"]
+            results["native"]["selected"] = native(native_probe, env, raw_fonts, state, "selected")
+            raw_native["selected"] = results["native"]["selected"]
+            from qt_raw_profile_test import matrix_cases
+            fixtures = json.loads((reports / "font-fixtures.json").read_text())
+            matrix_fonts = {row["label"]: "/fontreal-matrix-fonts/" + row["file"] for row in fixtures}
+            from encoded_refinement_test import NAMES
+            from browser_live_recipe_test import CFF_FONTS
+            assert set(matrix_fonts) == set(NAMES + ["Arial Regular"] + list(CFF_FONTS)) and len(fixtures) == 28
+            assert all(build.sha(Path(matrix_fonts[row["label"]])) == row["sha256"] for row in fixtures)
+            def matrix_probe(point, selected):
+                matrix_env = dict(treatment(env, "selected"), QT_QPA_PLATFORM="offscreen", QT_SCALE_FACTOR="1", QT_FONT_DPI="96")
+                return json.loads(capture([native_probe, "selected", "none", point, "1", *selected, reports], matrix_env).stdout)
+            results["selected_matrix"] = matrix_cases(matrix_probe, matrix_fonts, "selected")
+            with tempfile.TemporaryDirectory(prefix="fontreal-original-ft-") as temporary:
+                original_ft = Path(temporary)
+                inventory_original = build.package_inventory(directory / "original")
+                archive = directory / "original" / inventory_original[("libfreetype6", "amd64")]["path"]
+                build.run(["dpkg-deb", "-x", archive, original_ft])
+                candidate_exports = build.output(["nm", "-D", "--defined-only", "/usr/lib/x86_64-linux-gnu/libfreetype.so.6"])
+                original_exports = build.output(["nm", "-D", "--defined-only", original_ft / "usr/lib/x86_64-linux-gnu/libfreetype.so.6"])
+                symbols = lambda text: {tuple(line.split()[1:]) for line in text.splitlines()}
+                assert symbols(candidate_exports) == symbols(original_exports)
+                results["freetype_exports"] = len(symbols(candidate_exports))
+            import selected_package_test
+            results["selected_api"] = selected_package_test.run(
+                Path("/usr/lib/x86_64-linux-gnu/libfreetype.so.6").resolve(),
+                Path(os.environ["FONTREAL_TEST_STOCK_FREETYPE"]).resolve(), reports / "selected-api", raw_fonts,
+                foreign=any(p["arch"] == "i386" for p in plan["original"]))
             sys.path.insert(0, str(ROOT / "tools"))
             import browser as browser_provider
             assert browser_provider.freetype_version() == plan["sources"]["freetype"]["version"]
@@ -308,19 +416,19 @@ def inside(directory, reports, updates=False):
                 results["native"][mode] = native(native_probe, env, fonts, state, mode)
             for (entry, order), reference in raster_baseline.items():
                 group = dict(official=reference)
-                for mode in ("stock", "linear", "encoded", "raw"):
+                for mode in ("stock", "linear", "encoded", "raw", "selected"):
                     record = raster_profile(quick_probe, env, gpu_fonts, reports / f"raster-{entry}-{order}-{mode}", mode, entry, order)
                     if mode == "stock":
                         assert record["regions"] == reference["regions"]
                     for original, region in zip(reference["regions"], record["regions"], strict=True):
                         assert (original["row"], original["column"], original["role"]) == (region["row"], region["column"], region["role"])
-                        treated = mode != "stock" and (region["role"] == 0 or (mode == "raw" and region["role"] == 1))
+                        treated = mode != "stock" and (region["role"] == 0 or (mode in ("raw", "selected") and region["role"] == 1))
                         if not treated:
                             assert original["hash"] == region["hash"], region
                         else:
                             assert set(region["glyphs"]) == set("mnogWV")
-                            profile = "none/encoded" if mode == "raw" else f"mild/{mode}"
-                            opposite = "none/linear" if mode == "raw" else "mild/" + ("encoded" if mode == "linear" else "linear")
+                            profile = "none/encoded" if mode in ("raw", "selected") else f"mild/{mode}"
+                            opposite = "none/linear" if mode in ("raw", "selected") else "mild/" + ("encoded" if mode == "linear" else "linear")
                             assert all(g[profile]["matches"] for g in region["glyphs"].values()), region
                             assert any(not g[opposite]["matches"] for g in region["glyphs"].values()), region
                     group[mode] = record
@@ -346,6 +454,11 @@ def inside(directory, reports, updates=False):
                 label = f"raw-cff-{scale}-{phase}-{hidden}"
                 results["quick"].append(quick(quick_probe, graphics, gpu_fonts[1], reports / label,
                                                "raw", scale, phase, hidden=hidden))
+            for scale, phase, hidden in ((1, 0, False), (1, .5, False), (1.25, 0, False), (1.25, .5, False), (1, 0, True)):
+                for face_index, target_font in enumerate(raw_fonts):
+                    label = f"selected-{face_index}-{scale}-{phase}-{hidden}"
+                    results["quick"].append(quick(quick_probe, graphics, target_font, reports / label,
+                                                   "selected", scale, phase, hidden=hidden))
             variable = build.output(["fc-match", "-f", "%{file}", "Cantarell"])
             for sequence in ("300,700,300", "399.5,400,399.5"):
                 variable_env = dict(graphics, FONTREAL_TEST_WEIGHT=sequence.split(',')[0], FONTREAL_TEST_WEIGHT_SEQUENCE=sequence)
@@ -362,7 +475,7 @@ def inside(directory, reports, updates=False):
                 results["quick"].append(record)
             for order, reference in mixed_baseline.items():
                 group = dict(official=reference)
-                for mode in ("stock", "linear", "encoded", "raw"):
+                for mode in ("stock", "linear", "encoded", "raw", "selected"):
                     group[mode] = mixed(quick_probe, graphics, gpu_fonts, reports / (order + "-" + mode), mode, order)
                     for original, frame in zip(reference["frames"], group[mode]["frames"], strict=True):
                         if mode == "stock":
@@ -370,17 +483,17 @@ def inside(directory, reports, updates=False):
                         for before, region in zip(original["regions"], frame["regions"], strict=True):
                             assert (before["id"], before["role"]) == (region["id"], region["role"])
                             assert all(before[k] == region[k] for k in ("ordinary", "windowOrdinary"))
-                            treated = mode != "stock" and (region["role"] == 0 or (mode == "raw" and region["role"] != 2))
+                            treated = mode != "stock" and (region["role"] == 0 or (mode in ("raw", "selected") and region["role"] != 2))
                             if not treated:
                                 assert all(before[k] == region[k] for k in ("text", "windowText"))
                             else:
                                 for key in ("glyphs", "windowGlyphs"):
-                                    profile = "none/encoded" if mode == "raw" else f"mild/{mode}"
+                                    profile = "none/encoded" if mode in ("raw", "selected") else f"mild/{mode}"
                                     assert all(g[profile]["matches"] for g in region[key].values()), region
-                                    opposite = "none/linear" if mode == "raw" else f"mild/{'encoded' if mode == 'linear' else 'linear'}"
+                                    opposite = "none/linear" if mode in ("raw", "selected") else f"mild/{'encoded' if mode == 'linear' else 'linear'}"
                                     assert any(not g[opposite]["matches"] for g in region[key].values())
                 results["gpu"].append(dict(order=order, records=group))
-            for mode, target_font in (("linear", fonts[0]), ("raw", gpu_fonts[1])):
+            for mode, target_font in (("linear", fonts[0]), ("raw", gpu_fonts[1]), ("selected", gpu_fonts[1])):
               for style in ("", "sunken"):
                 target = reports / ("target-" + mode + "-" + (style or "normal"))
                 target.mkdir()
@@ -388,9 +501,9 @@ def inside(directory, reports, updates=False):
                 record = json.loads((target / "result.json").read_text())
                 assert [f["frame"] for f in record["frames"]] == [0, 1, 2] and record["nonindexed"]
                 assert record["frames"][0]["hash"] == record["frames"][2]["hash"]
-                assert (record["frames"][0]["hash"] == record["frames"][1]["hash"]) == (mode == "raw")
+                assert (record["frames"][0]["hash"] == record["frames"][1]["hash"]) == (mode in ("raw", "selected"))
                 for frame in record["frames"]:
-                    expected = "none/encoded" if mode == "raw" else "mild/linear" if frame["compatible"] else "mild/encoded"
+                    expected = "none/encoded" if mode in ("raw", "selected") else "mild/linear" if frame["compatible"] else "mild/encoded"
                     assert set(frame["glyphs"]) == set("lmnogWVwv")
                     assert all(g[expected]["matches"] for g in frame["glyphs"].values()), frame
                 results["gpu"].append(record)
@@ -423,6 +536,7 @@ def inside(directory, reports, updates=False):
                 results["baseline_reselection"] = record
     results["passed"] = True
     results["raw_profile"] = True
+    results["selected_profile"] = build.SELECTED_PROFILE
     build.write_json(reports / "package-results.json", results)
     print("PASS: actual corresponding source, native package ownership, installed widget/Quick pixels, inactive preservation, fractional placement and target transitions")
 
@@ -444,15 +558,22 @@ def main():
     temporary = reports / "tmp"
     temporary.mkdir()
     temporary.chmod(0o1777)
+    from raw_coverage_test import font_paths
+    from browser_live_recipe_test import FONT_ROOT
+    font_root = FONT_ROOT.resolve()
+    fixtures = [dict(label=label, file=str(path.relative_to(FONT_ROOT)), sha256=build.sha(path))
+                for label, path in font_paths().items()]
+    build.write_json(reports / "font-fixtures.json", fixtures)
     image, _ = build.check_plan(plan, current_patches=False)
     nearest = Path(os.environ["FONTREAL_TEST_REFERENCE_FREETYPE"]).resolve()
     stock = Path(os.environ["FONTREAL_TEST_STOCK_FREETYPE"]).resolve()
-    reference_record = json.loads((ROOT / "build/browser-live-recipe/reference.json").read_text())
+    reference_record = json.loads(Path(os.environ.get("FONTREAL_TEST_REFERENCE_RECORD", ROOT / "build/browser-live-recipe/reference.json")).read_text())
     assert build.sha(nearest) == reference_record["sha256"] and reference_record["inputs"]["provider"] == plan["sources"]["freetype"]["version"]
-    assert stock.is_file() and stock != nearest
+    assert stock.is_file() and stock != nearest and build.sha(stock) == reference_record["stock_sha256"]
     try:
         build.run(["docker", "run", "--rm", "--log-driver", "none", "--platform", "linux/amd64", "-v", f"{ROOT}:/repo:ro",
                    "-v", f"{directory}:/bundle:ro", "-v", f"{reports}:/reports", "-e", "DEBIAN_FRONTEND=noninteractive",
+                   "-v", f"{font_root}:/fontreal-matrix-fonts:ro",
                    "-v", f"{nearest}:/fontreal-reference/nearest/libfreetype.so.6:ro",
                    "-v", f"{stock}:/fontreal-reference/stock/libfreetype.so.6:ro",
                    "-e", "FONTREAL_TEST_NEAREST_FREETYPE=/fontreal-reference/nearest/libfreetype.so.6",
@@ -464,7 +585,7 @@ def main():
     finally:
         # Container files remain useful to the local user after normal completion or a failed assertion.
         build.run(["docker", "run", "--rm", "-v", f"{reports}:/reports", image,
-                   "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/reports"])
+                   "sh", "-ec", 'chown -R "$(stat -c %u:%g /reports)" /reports'])
 
 
 if __name__ == "__main__":

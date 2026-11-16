@@ -54,7 +54,8 @@ def desktop_source(browser):
 
 def profile_indexes(browser):
     bases = ([Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "mozilla/firefox",
-              Path.home() / ".mozilla/firefox"] if browser == "firefox" else [Path.home() / ".floorp"])
+              Path.home() / ".mozilla/firefox"] if browser == "firefox" else [
+              Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "floorp", Path.home() / ".floorp"])
     return [base / "profiles.ini" for base in bases if (base / "profiles.ini").exists()]
 
 

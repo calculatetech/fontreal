@@ -18,6 +18,29 @@ static void require(bool ok, const char *message)
     if (!ok) throw std::runtime_error(message);
 }
 
+static QJsonObject selected_property(FT_Library library)
+{
+    QJsonObject capability;
+    if (!qgetenv("FONTREAL_TEST_SELECTED_PROPERTY").isEmpty()) {
+        FT_Bool current = true;
+        require(!FT_Property_Get(library,"autofitter","fontreal-selected-v1",&current) && !current,
+                "Selected property must default off");
+        FT_Bool enabled = qgetenv("FONTREAL_TEST_SELECTED_PROPERTY") == "1";
+        require(!FT_Property_Set(library,"autofitter","fontreal-selected-v1",&enabled),"Cannot set selected property");
+        FT_Set_Default_Properties(library);
+        require(!FT_Property_Get(library,"autofitter","fontreal-selected-v1",&current) && current == enabled,
+                "String environment changed selected property");
+        FT_Library other = nullptr;
+        require(!FT_Init_FreeType(&other),"Other FT init failed");
+        current = true;
+        require(!FT_Property_Get(other,"autofitter","fontreal-selected-v1",&current) && !current,
+                "Selected property leaked between libraries");
+        require(!FT_Done_FreeType(other),"Other FT close failed");
+        capability = {{"selected",bool(enabled)},{"otherDefaultOff",true},{"typedOnly",true}};
+    }
+    return capability;
+}
+
 static QJsonObject snapshot(FT_Face face)
 {
     FT_GlyphSlot s = face->glyph;
@@ -61,6 +84,7 @@ int main(int argc, char **argv)
         FT_Face face = nullptr;
         FT_Face axisSource = nullptr;
         require(!FT_Init_FreeType(&library), "FT_Init_FreeType failed");
+        selected_property(library);
         if (std::atoi(argv[11])) {
             FT_Module hinter = FT_Get_Module(library, "autofitter");
             require(hinter && !FT_Remove_Module(library, hinter), "Cannot remove auto-hinter");

@@ -255,8 +255,8 @@ int main(int argc, char **argv)
         }
         require(argc == 9, "Usage: qt-native-probe expected-mode contrast pixels scale font1 font2 font3 diagnostic-directory");
         const QString mode = QString::fromLocal8Bit(argv[1]);
-        const bool pointRequest = mode == "raw" || mode == "raw-stock";
-        const bool enabled = mode == "linear" || mode == "encoded" || mode == "raw";
+        const bool pointRequest = mode == "raw" || mode == "raw-stock" || mode == "selected";
+        const bool enabled = mode == "linear" || mode == "encoded" || mode == "raw" || mode == "selected";
         const QString contrast = QString::fromLocal8Bit(argv[2]);
         require(contrast == "none" || contrast == "mild", "Invalid expected contrast");
         const bool mild = contrast == "mild";

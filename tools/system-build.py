@@ -2,6 +2,7 @@
 """Build, verify, and apply matching distro FreeType and Qt packages."""
 import argparse
 from datetime import datetime, timezone
+import difflib
 import hashlib
 import json
 import os
@@ -22,6 +23,7 @@ SOURCES = ("freetype", "qt6-base", "qt6-declarative")
 FREETYPE = {("debian", "13"): "2.13.3+dfsg-1+deb13u1",
             ("ubuntu", "26.04"): "2.14.2+dfsg-1ubuntu0.2"}
 FIELDS = "${Package}\t${Architecture}\t${Version}\t${source:Package}\t${source:Version}\t${db:Status-Status}\n"
+SELECTED_PROFILE = "native-normal-weighted-stems-v1"
 
 
 def run(args, **kwargs):
@@ -59,9 +61,19 @@ def patch_file(source, upstream):
 
 
 def capability_patch(source):
-    if source == "freetype":
-        return None
     return ROOT / "packaging" / f"{source}-capability.patch"
+
+
+def selected_inputs():
+    return dict(profile=SELECTED_PROFILE, **{name: sha(ROOT / path) for name, path in (
+        ("render", "patches/freetype-2.14.2-fontreal.patch"),
+        ("processor", "src/fontreal_coverage.cpp"),
+        ("declaration", "src/fontreal_coverage.h"), ("license", "LICENSE"))})
+
+
+def selected_plan(plan):
+    entry = plan.get("sources", {}).get("freetype", {})
+    return bool(entry.get("capability_sha256")) and entry.get("selected", {}).get("profile") == SELECTED_PROFILE
 
 
 def newer(left, right):
@@ -122,14 +134,21 @@ def check_plan(plan, current_patches=True):
         if entry["build_version"] != local_version(base, plan["identity"]):
             raise ValueError("The build version does not match the installed source/binary revisions.")
         capability = capability_patch(source)
-        valid_capability = entry["capability_sha256"] is None if capability is None else re.fullmatch(
-            r"[0-9a-f]{64}", entry["capability_sha256"])
+        valid_capability = (source == "freetype" and not current_patches and entry["capability_sha256"] is None) or re.fullmatch(
+            r"[0-9a-f]{64}", entry["capability_sha256"] or "")
         if not re.fullmatch(r"[0-9a-f]{64}", entry["patch_sha256"]) or not valid_capability:
             raise ValueError("Invalid patch checksum in the system plan.")
         if current_patches and entry["patch_sha256"] != sha(patch_file(source, profile[1])):
             raise ValueError("The plan patch changed. Make a new plan before building.")
         if current_patches and entry["capability_sha256"] != (sha(capability) if capability else None):
             raise ValueError("The package capability patch changed. Make a new plan before building.")
+        if source == "freetype" and (current_patches or "selected" in entry):
+            selected = entry.get("selected", {})
+            if (set(selected) != set(selected_inputs()) or selected.get("profile") != SELECTED_PROFILE
+                    or any(not re.fullmatch(r"[0-9a-f]{64}", selected[k]) for k in selected if k != "profile")):
+                raise ValueError("The selected FreeType processor inputs are incomplete.")
+            if current_patches and selected != selected_inputs():
+                raise ValueError("The selected FreeType inputs changed. Make a new plan before building.")
     return profile
 
 
@@ -168,6 +187,8 @@ def system_plan():
         plan["sources"][source] = dict(version=version, build_version=local_version(base, identity),
                                           patch_sha256=sha(patch_file(source, PROFILES[key][1])),
                                           capability_sha256=sha(capability_patch(source)) if capability_patch(source) else None)
+        if source == "freetype":
+            plan["sources"][source]["selected"] = selected_inputs()
     check_plan(plan)
     return plan
 
@@ -259,6 +280,9 @@ def build(plan_path, destination, jobs):
                'exec python3 /repo/tools/system-build.py _worker "$@"',
                "fontreal", str(jobs), str(os.getuid()), str(os.getgid())]
     run(command)
+    check_plan(plan)
+    if sha(Path(__file__)) != builder_digest:
+        raise ValueError("The build recipe changed during compilation. Make a new build.")
     (destination / "source/build-tool.py").write_bytes(builder_source)
     metadata = json.loads((destination / "build.json").read_text())
     metadata["image"] = json.loads(output(["docker", "image", "inspect", image]))[0]["Id"]
@@ -299,7 +323,9 @@ def worker(jobs):
         (target / role).mkdir()
     run(["apt-get", "download", *[f"{p['name']}:{p['arch']}={p['version']}" for p in plan["original"]]],
         cwd=target / "original")
-    metadata = dict(build_options=f"parallel={jobs} nocheck noddebs", cxxflags="-g0", dependencies={})
+    metadata = dict(build_options=f"parallel={jobs} nocheck noddebs", build_profiles="noudeb",
+                    cxxflags="-g0", selected=selected_inputs(), dependencies={})
+    build_environment = dict(os.environ, DEB_BUILD_PROFILES=metadata["build_profiles"])
     for source in SOURCES:
         parent = Path("/tmp/fontreal") / source
         parent.mkdir(parents=True)
@@ -310,8 +336,11 @@ def worker(jobs):
             raise ValueError(f"Expected one unpacked {source} source tree.")
         tree = candidates[0]
         (tree / "debian/patches").mkdir(exist_ok=True)
-        for patch_name, patch in (("fontreal.patch", patch_file(source, upstream)),
-                                  ("fontreal-capability.patch", capability_patch(source))):
+        patches = [("fontreal.patch", patch_file(source, upstream))]
+        if source == "freetype":
+            patches.append(("fontreal-render.patch", ROOT / "patches/freetype-2.14.2-fontreal.patch"))
+        patches.append(("fontreal-capability.patch", capability_patch(source)))
+        for patch_name, patch in patches:
             if patch is None:
                 continue
             run(["patch", "--batch", "--fuzz=0", "--dry-run", "-p1", "-i", patch], cwd=tree)
@@ -319,12 +348,29 @@ def worker(jobs):
             with (tree / "debian/patches/series").open("a") as queue:
                 queue.write("\n" + patch_name + "\n")
             run(["dpkg-source", "--before-build", tree])
-        env = dict(os.environ, DEBEMAIL="fontreal@localhost", DEBFULLNAME="Fontreal local build",
+        if source == "freetype":
+            # The generated quilt patch keeps the unchanged core in corresponding source.
+            additions = {"src/base/" + name: (ROOT / "src" / name).read_text()
+                         for name in ("fontreal_coverage.cpp", "fontreal_coverage.h")}
+            additions["docs/FONTREAL-MIT.TXT"] = (ROOT / "LICENSE").read_text()
+            copyright_file = tree / "debian/copyright"
+            copyright_text = copyright_file.read_text()
+            stanza = ("\nFiles: src/base/fontreal_coverage.cpp src/base/fontreal_coverage.h docs/FONTREAL-MIT.TXT\n"
+                      "Copyright: 2026 Michael Beutler and Fontreal contributors\nLicense: Fontreal-MIT\n "
+                      + "\n ".join(line if line else "." for line in (ROOT / "LICENSE").read_text().splitlines()) + "\n")
+            patch_text = "".join("".join(difflib.unified_diff([], text.splitlines(keepends=True),
+                fromfile="/dev/null", tofile="b/" + name)) for name, text in additions.items())
+            copyright_file.write_text(copyright_text + stanza)
+            (tree / "debian/patches/fontreal-processor.patch").write_text(patch_text)
+            with (tree / "debian/patches/series").open("a") as queue:
+                queue.write("fontreal-processor.patch\n")
+            run(["dpkg-source", "--before-build", tree])
+        env = dict(build_environment, DEBEMAIL="fontreal@localhost", DEBFULLNAME="Fontreal local build",
                    DEB_BUILD_OPTIONS=metadata["build_options"], DEB_CXXFLAGS_MAINT_APPEND="-g0")
         run(["dch", "--newversion", entry["build_version"], "--distribution", "UNRELEASED",
              "Apply the local Fontreal rendering patch."], cwd=tree, env=env)
         run(["apt-get", "build-dep", "-y", "--no-install-recommends", "--arch-only",
-             f"{source}={entry['version']}"])
+             f"{source}={entry['version']}"], env=build_environment)
         metadata["dependencies"][source] = output(["dpkg-query", "-W", "-f=${binary:Package}\t${Version}\n"])
         run(["dpkg-buildpackage", "--build=source,any", "-us", "-uc", "-tc", f"-j{jobs}"], cwd=tree, env=env)
         binaries = sorted(parent.glob("*.deb"))
@@ -344,9 +390,9 @@ def worker(jobs):
         tree = parent / "source"
         descriptor = source_descriptor(target / "source", "freetype", entry["build_version"])
         run(["dpkg-source", "--no-check", "-x", descriptor, tree])
-        run(["apt-get", "install", "-y", "--no-install-recommends", "crossbuild-essential-i386"])
+        run(["apt-get", "install", "-y", "--no-install-recommends", "crossbuild-essential-i386", "libstdc++6:i386"])
         run(["apt-get", "build-dep", "-y", "--no-install-recommends", "--arch-only", "-a", "i386",
-             f"freetype={entry['version']}"])
+             f"freetype={entry['version']}"], env=build_environment)
         metadata["dependencies"]["freetype:i386"] = output(["dpkg-query", "-W", "-f=${binary:Package}\t${Version}\n"])
         run(["dpkg-buildpackage", "--build=any", "-ai386", "-us", "-uc", "-tc", f"-j{jobs}"], cwd=tree, env=env)
         for path in parent.iterdir():
@@ -401,14 +447,15 @@ def main():
             else:
                 system_install.transaction(sys.modules[__name__], args.bundle.resolve(), rollback=args.command == "rollback", simulate=args.simulate)
         else:
+            owner = Path("/output").stat() if Path("/output").is_dir() else None
             try:
                 worker(args.jobs)
             finally:
                 if Path("/.dockerenv").is_file() and Path("/output").is_dir():
                     for directory, dirs, files in os.walk("/output"):
                         for name in dirs + files:
-                            os.chown(Path(directory) / name, args.uid, args.gid, follow_symlinks=False)
-                    os.chown("/output", args.uid, args.gid)
+                            os.chown(Path(directory) / name, owner.st_uid, owner.st_gid, follow_symlinks=False)
+                    os.chown("/output", owner.st_uid, owner.st_gid)
     except (ValueError, KeyError, OSError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"{error}\n")
 

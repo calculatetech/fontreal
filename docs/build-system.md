@@ -6,6 +6,8 @@ The initial targets are Debian 13 amd64 with Qt 6.8.2 and Ubuntu 26.04 amd64 wit
 
 Use Python 3.11 or later, `dpkg`, `dpkg-query`, `dpkg-deb`, and a working local Docker engine. Install FreeType, QtGui, and QtQuick through the distro first. Package build dependencies stay inside the container. Pixel checks also need a C++ compiler, `pkg-config`, matching Qt/FreeType development files, and Pillow. Install those validation prerequisites before capturing the plan. Architecture-independent Qt documentation stays unchanged. Coinstalled i386 FreeType uses the distro cross toolchain and receives the same local version. Foreign-architecture Qt and installed debug packages need a separate supported build strategy.
 
+Choose bundle storage outside a private home directory. Native APT's `_apt` user must be able to traverse the resolved directories and read every package archive, including originals, activation and any retained predecessor. Keep private home permissions and APT's sandbox unchanged. A source-tree link to a suitable build-storage directory works; `build/system-packages` in the examples names that readable location or link. Check access again after copying a bundle to another machine.
+
 ## Create and build a plan
 
 Run these commands from the repository root as your normal user:
@@ -25,7 +27,7 @@ The plan records the running system. It selects exact source versions, not the n
 
 The container downloads authenticated distro source packages and original binary packages. It appends the Fontreal patch to each distro patch queue. It uses `dpkg-buildpackage` and the native `debian/rules`. FreeType builds first, followed by QtBase and Declarative. Matching development packages enter only the container between builds.
 
-The build preserves distro hardening. It sets `nocheck` because desktop rendering checks run separately. It omits debug packages and compiler debug information to reduce local storage. These options appear in the build record and corresponding source. A successful compile alone does not establish desktop readiness.
+The build preserves distro hardening. FreeType compiles the unchanged C++17 mask processor with the target compiler, including a separate i386 object. Its shared library, static library and demos retain the standard C++ runtime and math dependencies. The exact public export list hides private C++ symbols. The build records `noudeb` because installer packages are outside this desktop target. It sets `nocheck` because desktop rendering checks run separately. It omits debug packages and compiler debug information to reduce local storage. These options appear in the build record and corresponding source. A successful compile alone does not establish desktop readiness. Output ownership follows the mounted directory, so a rootless Docker build remains writable by its host user.
 
 ## Keep the bundle together
 
@@ -33,7 +35,7 @@ The build preserves distro hardening. It sets `nocheck` because desktop renderin
 
 `system.json` records original and installed package identities, source versions, local versions, and patch hashes. `build.json` records dependencies and build inputs. `bundle.json` lists artifact hashes. Verification checks every package family and each source descriptor's archives. It checks a retained bundle against its own records. A later checkout change does not invalidate cached original packages. A new build still requires a plan with the current patches.
 
-Older Qt-only bundles keep their recorded source families for verification, predecessor discovery, and rollback. Their rollback preserves unowned FreeType packages. Build a new complete bundle to install the CFF-capable profile. Installation, new plans, and new activation packages require all three families.
+Older Qt-only bundles keep their recorded source families for verification, predecessor discovery, and rollback. Their rollback preserves unowned FreeType packages. Retained complete bundles with the older raw profile also keep verification, predecessor and rollback support. Build a new selected-profile bundle to prepare activation or install the selected method. Installation, new plans, and new activation packages require all three families.
 
 The local version appends `afontreal` and a numeric build identity. Debian's version comparator checks that it sorts above its official base and below normal update forms. Fontreal adds no package holds or APT priorities. An official Qt update can replace the local build. A new upstream Qt version needs a matching patch port before another Fontreal build.
 
@@ -60,15 +62,19 @@ PY
 
 The discovery check compares the complete system plan with independent OS, dpkg, and original-package records. The original-package argument also covers a running Fontreal predecessor.
 
-The activation metadata check uses the original Qt-only producer from Git commit `6ae8559d14f2448cd24f320f8d4c480669c80e0c`. Keep that history available. Its optional `--retained-native PATH` mode checks an explicitly labelled representative Qt-only bundle with actual payloads in a marked disposable VM. It checks predecessor discovery and actual rollback while preserving unowned FreeType. This mode does not certify historical rendering.
+The activation metadata check uses the original Qt-only producer from Git commit `6ae8559d14f2448cd24f320f8d4c480669c80e0c`. Keep that history available. Its optional `--retained-native PATH` mode checks a retained Qt-only bundle with actual payloads in a marked disposable VM. Keep representative fixtures labelled as representative. The check verifies predecessor discovery and actual rollback while preserving unowned FreeType. This mode does not certify historical rendering.
 
-Reference preparation builds separate stock and nearest-only FreeType libraries from the matching provider. The nearest reference changes only the Latin Y rounding threshold. It retains native CJK fitting. These references supply expected masks without selecting the candidate's native property.
+During configuration, the activation package sets its root-owned source-record directory to mode 755. This also secures the directory after an upgrade from older packages. It preserves an administrator's `dpkg-statoverride` entry and refuses an unexpected owner or symbolic link. The browser provider check keeps its existing trust requirements.
+
+The complete font matrix needs the 28 faces declared by `tests/raw_coverage_test.py`: Noto Sans/Serif, Hack, Lato, Arial and the CFF controls. Install the required licensed fonts before running it. To keep test-only fonts outside the system, set `FONTREAL_TEST_FONT_ROOT` to a directory with the same relative structure as `/usr/share/fonts`. The checker records every font hash and binds that directory read-only inside the container. Font files are not distributed by this repository.
+
+Reference preparation builds separate stock and nearest-only FreeType libraries from the matching provider. The nearest reference changes only the Latin Y rounding threshold. It retains native CJK fitting. These references supply expected masks without selecting the candidate's native property. Selected-profile checks use pristine native-normal rasters with Qt's CFF stem-darkening and TrueType interpreter settings. A separate Python helper applies the unchanged coverage reference. The checks include a raw CFF case that distinguishes those settings from fresh FreeType defaults.
 
 The package check uses another disposable container for the selected release. It unpacks every corresponding source package and installs the actual binaries through APT. Independent probes compare widget and OpenGL pixels, placement, disabled output, mixed fonts, and target transitions. Raw checks include CFF, current CFF2 weights, and actual CID/CJK glyphs. Ordinary and cached static text include repeated TrueType and CFF runs around color draws. Test results stay in `package-checks/` beside the bundle.
 
 Update checks offer retained official payloads with synthetic higher version metadata through a local test APT source. They exercise independent FreeType, QtBase, and Declarative replacement. They do not claim to observe a future official release.
 
-Quick uses optional capabilities from the loaded Gui and FreeType libraries. The normal profile requires the CFF-capable, per-library `fontreal-nearest-y-v2` property. Stock and older TrueType-only providers cannot satisfy it. New consumers fall back when FreeType or Gui loses that capability. An official Quick update can leave patched Gui treatment on native text until the next login. Checks cover actual widget and Quick output, normal windows, sampled layers, unexposed targets, immediate symbol binding, and inherited enabled values.
+Quick uses optional capabilities from the loaded Gui and FreeType libraries. The selected profile requires the default-off, typed, per-library `fontreal-selected-v1` property. Stock, nearest-only and older TrueType-only providers cannot satisfy it. The `fontreal-nearest-y-v2` property remains available for explicit older diagnostics. New consumers fall back when FreeType or Gui loses that capability. An official Quick update can leave patched Gui treatment on native text until the next login. Checks cover actual widget and Quick output, normal windows, sampled layers, unexposed targets, immediate symbol binding, and inherited enabled values.
 
 `prepare` builds the small activation package. It does not rebuild native libraries or change `bundle.json`. Its separate `deployment.json` binds the activation package, scripts, notice, and recipe to the native bundle. Keep both manifests and all recorded artifacts together. Package tests must run after preparation. Installation requires all three independent update cases and results for these exact manifests.
 
@@ -76,25 +82,46 @@ Quick uses optional capabilities from the loaded Gui and FreeType libraries. The
 
 The VM must provide `spectacle` (`kde-spectacle`), `konsole`, `kscreen-doctor`, `qdbus6`, `plasma-apply-colorscheme`, and `powerdevil`. Install `fonts-noto-core`, `fonts-noto-color-emoji`, `fonts-urw-base35`, and `fonts-dejavu-core` before the test snapshot.
 
-Use a disposable Plasma Wayland VM for the bundle's release. Copy the checkout and complete bundle into that VM. Install the exact FreeType and Qt package snapshot recorded in `system.json`. Keep the user's Inconsolata Nerd Font file available in the VM. Copy the independent nearest library and `build/browser-live-recipe/reference.json` too. Preserve the library bytes when copying its symbolic link. Compile `qt-kde-probe` and `qt-native-probe` with the target SDK in the checkout's `build` directory. Restore the captured snapshot after build dependencies are no longer needed. The session runner rejects a different package set before changing packages.
+Use a disposable Plasma Wayland VM for the bundle's release. Copy the checkout and complete bundle into that VM. Keep the new and retained predecessor bundles in APT-readable storage outside its private home directory, using source-tree links if useful. Run the package-access check below on all those bundles. Install the exact FreeType and Qt package snapshot recorded in `system.json`. Keep the user's Inconsolata Nerd Font file available in the VM. Install the [browser check prerequisites](experiments/browser-masks.md#repeat-the-checks), then prepare the independent references in that VM:
+
+```sh
+python3 - <<'PY'
+import shutil
+import sys
+sys.path.insert(0, "tests")
+from browser_live_recipe_test import BUILD, prepare
+record, _, _ = prepare()
+stock = BUILD / "stock/libfreetype.so.6"
+stock.parent.mkdir(exist_ok=True)
+shutil.copyfile(record["libraries"]["stock"]["library"], stock)
+PY
+```
+
+Use a fresh reference directory or its complete existing cache. A copied `reference.json` alone is not a prepared cache: its nearest library and exact build inputs must also match. The command keeps the pristine library bytes and their matching record available for both the session and browser checks.
+
+Compile `qt-kde-probe` and `qt-native-probe` with the target SDK in the checkout's `build` directory. Restore the captured snapshot after build dependencies are no longer needed. The session runner rejects a different package set before changing packages.
 
 After you confirm that the VM is disposable, create the test marker and run the checks as its normal desktop user:
 
 ```sh
 sudo touch /var/lib/fontreal-test-ready
-export FONTREAL_TEST_REFERENCE_FREETYPE="$PWD/build/browser-live-recipe/nearest/.libs/libfreetype.so.6"
+export FONTREAL_TEST_REFERENCE_FREETYPE="$PWD/build/browser-live-recipe/stock/libfreetype.so.6"
 python3 tests/system_session_test.py build/system-packages
 ```
 
-The runner restarts SDDM and changes packages inside that VM. It needs working passwordless sudo there and a persistent SSH session for the controller. It checks fresh logins, normal and D-Bus/systemd application launches, actual desktop pixels, 100% and 125% scales, a live scale change, fonts, disabling, independent official updates, and console rollback. It then exercises the guarded production install and rollback commands. A failed final transaction removes its provisional success report.
+The runner restarts SDDM and changes packages inside that VM. It needs working passwordless sudo there and a persistent SSH session for the controller. Before each single controlled restart, it allows up to 150 seconds for the complete native user-manager job collection to finish and records the outcomes. It then requires new KWin and Plasma processes with the same user manager. It checks fresh logins, normal and D-Bus/systemd application launches, actual desktop pixels, 100% and 125% scales, a live scale change, fonts, disabling, independent official updates, and console rollback. It then exercises the guarded production install and rollback commands. A failed final transaction removes its provisional success report.
 
 The runner sets controlled fonts, colors, and a test widget inside the VM before the preservation snapshot. It compares the complete centered title text separately from transparent decoration corners.
 
 If the captured system already contains Fontreal, add `--previous PATH_TO_PREVIOUS_BUNDLE`. Keep that predecessor's verified activation artifacts too. The runner restores the exact captured official and Fontreal package records before the guarded apply check. Restoring only the official baseline does not recreate that predecessor. Missing predecessor artifacts stop the test.
 
-Copy `session-checks/` back with the unchanged bundle. Package and session results must bind both manifests. Keep virtual display captures separate from human judgments about readability. View captures at one image pixel per display pixel. The normal profile uses raw coverage and encoded blending. Session fixtures exercise CFF desktop text, CFF and TrueType terminal text, and retained TrueType controls. Earlier mild/linear diagnostics remain separate.
+Copy `session-checks/` back with the unchanged bundle. Package and session results must bind both manifests. Keep virtual display captures separate from human judgments about readability. View captures at one image pixel per display pixel. The normal profile uses native-normal hinting, the selected coverage correction, whole-pixel placement and encoded blending. Session fixtures exercise CFF desktop text, CFF and TrueType terminal text, and retained TrueType controls. Earlier mild/linear diagnostics remain separate.
 
-After the full-session check passes, test an existing browser activation across native installation and rollback in that same marked VM. Install the supported Firefox and Floorp packages and the [browser check prerequisites](experiments/browser-masks.md#repeat-the-checks). Use its disposable desktop account with no existing Fontreal browser activation. Start each browser normally once, then quit normally. Keep only the provider-generated `Install...` section names in its `profiles.ini`; set each section's `Default=unused` and `Locked=1`. Do not copy account data or install IDs from another machine. The check verifies the current installation through ordinary browser launches. It temporarily uses the VM account's native home and restores all six profile-index paths, including absent files.
+After the full-session check passes, test an existing browser activation across native installation and rollback in that same marked VM. Install the supported Firefox and Floorp packages and the [browser check prerequisites](experiments/browser-masks.md#repeat-the-checks). Use its disposable desktop account with no existing Fontreal browser activation. Start each browser normally once, then quit normally. Leave its generated profiles and indexes untouched. Do not copy account data or install IDs from another machine.
+
+The check snapshots those original files before fixture preparation. It uses only provider-observed existing profile roots and actual installation IDs for the native proof. It verifies ordinary browser launches, preserves unrelated profile trees, and restores all eight current and legacy `profiles.ini` and `installs.ini` paths, including absent files. Current roots follow `XDG_CONFIG_HOME`; the default is the user's `.config` directory. Synthetic all-root and historical-default cases remain separate from this native authority check.
+
+Account file bytes stay unchanged. The check permits a new empty `.parentlock` synchronization file only when it is regular, is not a link, and is unlocked. Existing file changes and other new files fail.
 
 Extract the matching native runtime for the initial Qt helper, then run the continuation:
 
@@ -110,9 +137,27 @@ python3 tests/browser_delivery_test.py --case lifecycle --native-helper \
     --native-bundle build/system-packages
 ```
 
-Keep `FONTREAL_TEST_REFERENCE_FREETYPE` exported as above. This check uses test-owned profiles, a process-only grayscale Fontconfig configuration, guarded native installation, and actual rollback. It checks ordinary browser restarts, raw CFF Qt helper pixels after installation, untreated Qt fallback after rollback, account data, and original preferences. It preserves the separate Plasma fixture's conflicting rendering settings. Run this command only in the disposable VM.
+Keep `FONTREAL_TEST_REFERENCE_FREETYPE` exported as above. This check uses test-owned profiles, a process-only grayscale Fontconfig configuration, guarded native installation, and actual rollback. It checks ordinary browser restarts, selected CFF Qt helper pixels after installation, untreated Qt fallback after rollback, account data, and original preferences. It preserves the separate Plasma fixture's conflicting rendering settings. Run this command only in the disposable VM.
+
+If the full-session check required `--previous PATH_TO_PREVIOUS_BUNDLE`, add the same argument and exact bundle to this browser command. The check validates that predecessor before browser/index changes. Before each guarded install, with the browser normally closed, it restores the verified captured package set and original activation package. Every rollback still ends at the complete official package set. A missing or mismatched predecessor is an error; the check does not substitute an official-only baseline for it.
 
 ## Apply, enable, and restore
+
+Check native APT access to the complete prepared bundle. If using a retained predecessor, add its path to the first command's arguments too:
+
+```sh
+python3 - build/system-packages <<'PY'
+from pathlib import Path
+import subprocess
+import sys
+for argument in sys.argv[1:]:
+    bundle = Path(argument).resolve()
+    for role in ("packages", "original", "activation"):
+        for package in (bundle / role).glob("*.deb"):
+            subprocess.run(["sudo", "-u", "_apt", "test", "-r",
+                            str(package.resolve())], check=True)
+PY
+```
 
 On the original system, first simulate the exact transaction. Then apply it with sudo:
 
@@ -122,9 +167,11 @@ sudo python3 tools/system-build.py install build/system-packages
 fontreal-session enable
 ```
 
-Log out and back in. Installation starts disabled when the user has no existing activation preference. Rebuilding preserves an existing preference. The session hook requires matching FreeType, Gui, and Quick runtime versions. It selects nearest Latin Y fitting, raw coverage, whole-pixel placement, and encoded blending. It overrides conflicting rendering preferences while preserving chosen fonts and sizes. It adds no loader override.
+Log out and back in. Installation starts disabled when the user has no existing activation preference. Rebuilding preserves an existing preference. The session hook requires matching FreeType, Gui, and Quick runtime versions. It selects native-normal hinting, the selected weighted-stem coverage correction, whole-pixel placement, and encoded blending. It overrides conflicting rendering preferences while preserving chosen fonts and sizes. It adds no loader override.
 
 Run `fontreal-session status` from a terminal in the new session. The preference line describes the next login. The current-process line describes that terminal's inherited values. An official Qt update can leave the preference enabled while the next login uses stock rendering. Rebuild for the updated system when its exact sources remain supported.
+
+After rollback removes the activation hook, Plasma can restore environment values from an earlier login. Check the loaded official libraries and stock output to confirm rollback. Retained environment values alone cannot show that Fontreal rendering is active.
 
 To disable the treatment, run `fontreal-session disable` and log in again. This keeps the patched packages. To restore all captured official packages and remove the activation package, use the console commands:
 

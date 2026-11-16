@@ -39,7 +39,7 @@ Fontreal contains a comparison viewer, rendering patches, and tools that build m
 
 The private FreeType builder supports exact Debian 13 and Ubuntu 26.04 source revisions on amd64. It builds the original and modified libraries together. Version checks prevent an override from loading after an incompatible update.
 
-KDE system packages currently contain the earlier raw profile. Updating that package workflow to the selected method is separate work. Chromium browsers, Electron applications, and Flatpak applications also need their own integration. Teams, Bitwarden, and Telegram are the next targets. See the [roadmap](docs/roadmap.md).
+The [native KDE workflow](docs/build-system.md) builds matching FreeType and Qt packages with the same selected method. It preserves chosen fonts and sizes. Package, update and full-session checks must pass for the exact bundle before installation. Chromium browsers, Electron applications, and Flatpak applications also need their own integration. Teams, Bitwarden, and Telegram are the next targets. See the [roadmap](docs/roadmap.md).
 
 ## Try it
 
@@ -60,7 +60,7 @@ cmake --build build
 ./build/fontreal
 ```
 
-The viewer retains the earlier experimental controls. It does not select the new browser method automatically. For the earlier KDE packages, use the [system build and recovery guide](docs/build-system.md). The [rendering research](docs/research/native-font-rendering.md) explains the background.
+The viewer retains the earlier experimental controls. It does not select the new browser method automatically. For native KDE packages, use the [system build and recovery guide](docs/build-system.md). The [rendering research](docs/research/native-font-rendering.md) explains the background.
 
 ## Feedback welcome
 

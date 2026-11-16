@@ -10,6 +10,6 @@ if [ -f "${XDG_CONFIG_HOME:-"$HOME/.config"}/fontreal/enabled" ] &&
         cmp -s - /usr/share/fontreal/runtime-versions; then
     export FONTREAL_RENDERING=1
     export FONTREAL_BLEND=encoded
-    export FONTREAL_CONTRAST=none
-    export FONTREAL_FITTING=nearest
+    export FONTREAL_CONTRAST=weighted
+    export FONTREAL_FITTING=native
 fi
