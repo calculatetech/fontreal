@@ -3,6 +3,7 @@
 import argparse
 import ctypes
 import importlib.util
+import io
 import json
 import math
 import os
@@ -30,8 +31,9 @@ def write_json(path,value):
     temporary=path.with_suffix('.tmp');temporary.write_text(json.dumps(value,indent=2)+'\n');temporary.replace(path)
 
 
-def selected_build(requested,destination):
+def selected_build(requested,destination,target='teams'):
     command=[sys.executable,str(ROOT/'tools/build-electron-selected.py')]
+    if target!='teams':command+=['--target',target]
     env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',TMPDIR=str(WORK/'cache/tmp'))
     def invoke(command,label):
         write_json(destination/(label+'-command.json'),dict(command=command,cwd=str(ROOT),environment={key:env[key] for key in ('PYTHONDONTWRITEBYTECODE','TMPDIR')}))
@@ -50,6 +52,7 @@ def selected_build(requested,destination):
     assert record['cache_environment']==original['cache_environment']
     module=importlib.util.spec_from_file_location('selected_builder',ROOT/'tools/build-electron-selected.py')
     builder=importlib.util.module_from_spec(module);module.loader.exec_module(builder)
+    if target!='teams':builder.configure(target)
     assert set(spec['inputs'])==set(builder.INPUTS)
     for package in record['packages'].values():builder.c1.verify(package)
     runtime_path=Path(spec['runtime_record'])
@@ -69,7 +72,8 @@ def selected_build(requested,destination):
         assert package['files']['LICENSE.fontreal.txt']==spec['fontreal_license_sha256']
         assert package['files']['LICENSES.chromium.html']==notices['output_sha256']
         assert package['files']['LICENSE.libcxx.txt']==c1.target.sha(path.parent/'LLVM-LICENSE.txt')
-        assert package['files']['LICENSE.node.txt']==spec['node_license_sha256']==c1.target.sha(ROOT/'LICENSES/Node.txt')
+        node_license=ROOT/'LICENSES/Node.txt' if target=='teams' else path.parent/'NODE-LICENSE.txt'
+        assert package['files']['LICENSE.node.txt']==spec['node_license_sha256']==c1.target.sha(node_license)
         assert package['files']['electron']==runtime['packages'][role]['files']['electron']
     probe=record['probe'];assert c1.target.sha(Path(probe['executable']))==probe['sha256']
     image=Path(probe['executable']).read_bytes()
@@ -168,7 +172,21 @@ def cases(destination):
     embedded,tricky=masks.font_fixtures(ids['m'])
     tricky=sfnt_fixture(tricky,destination/'hinting-reliant.ttf','MingLiU',{})
     gray=sfnt_fixture(embedded,destination/'gray-strike.ttf','C2GrayStrike',{})
+    outline=sfnt_fixture(gray,destination/'gray-outline.ttf','C2GrayStrike',{},(b'EBLC',b'EBDT'))
     bitmap=sfnt_fixture(embedded,destination/'bitmap-only.ttf','C2BitmapOnly',{},(b'glyf',b'loca'))
+    # PNG supplies a positive native bitmap control when EBDT is unsupported.
+    data=noto.read_bytes();tables={}
+    for i in range(struct.unpack_from('>H',data,4)[0]):
+        tag,_,offset,size=struct.unpack_from('>4sIII',data,12+16*i);tables[tag]=data[offset:offset+size]
+    count=struct.unpack_from('>H',tables[b'maxp'],4)[0]
+    png=io.BytesIO();Image.new('RGB',(8,8),(19,137,211)).save(png,format='PNG')
+    glyph=struct.pack('>hh4s',0,0,b'png ')+png.getvalue()
+    offsets=[4+4*(count+1)+(len(glyph) if index>ids['m'] else 0) for index in range(count+1)]
+    sbix=struct.pack('>HHII',1,1,1,12)+struct.pack('>HH',15,72)+struct.pack(f'>{count+1}I',*offsets)+glyph
+    # Retain outlines for native local-font validation; the color strike wins rendering.
+    hmtx=bytearray(tables[b'hmtx']);upem=struct.unpack_from('>H',tables[b'head'],18)[0]
+    struct.pack_into('>Hh',hmtx,4*ids['m'],upem,0)
+    png_bitmap=sfnt_fixture(noto,destination/'png-bitmap.ttf','C2PngBitmap',{b'sbix':sbix,b'hmtx':hmtx})
     colr=struct.pack('>HHIIH',0,1,14,20,2)+struct.pack('>HHH',ids['m'],0,2)+struct.pack('>HHHH',ids['W'],0,ids['8'],1)
     cpal=struct.pack('>HHHHIH',0,2,1,2,14,0)+bytes((0,0,255,255,0,255,0,255))
     mixed=sfnt_fixture(noto,destination/'mixed-color.ttf','C2MixedColor',{b'COLR':colr,b'CPAL':cpal})
@@ -179,9 +197,11 @@ def cases(destination):
             dict(id='nimbus-regular',file=c1.FONTS['Nimbus Sans'],family='Nimbus Sans'),
             dict(id='nimbus-bold',file=c1.FONTS['Nimbus Sans'].with_name('NimbusSans-Bold.otf'),family='Nimbus Sans'),
             dict(id='gray-strike',file=gray,family='C2GrayStrike',local=True),
+            dict(id='gray-outline',file=outline,family='C2GrayStrike',local=True),
             dict(id='hinting-reliant',file=tricky,family='MingLiU',local=True,reliant=True),
             dict(id='mixed-color',file=mixed,family='C2MixedColor',local=True,excluded=True),
-            dict(id='bitmap-only',file=bitmap,family='C2BitmapOnly',local=True,excluded=True,characters='m')]
+            dict(id='bitmap-only',file=bitmap,family='C2BitmapOnly',local=True,excluded=True,characters='m'),
+            dict(id='png-bitmap',file=png_bitmap,family='C2PngBitmap',local=True,excluded=True,characters='m')]
     for name,font,family in (('variable-tt',Path('/usr/share/fonts/truetype/ubuntu/UbuntuSansMono[wght].ttf'),'Ubuntu Sans Mono'),
                              ('variable-cff2',cff2_fixture(),'Cantarell')):
         for weight in (300,700):result.append(dict(id=name+'-'+str(weight),file=font,family=family,variation=f'"wght" {weight}',coordinates=['wght',str(weight)]))
@@ -216,7 +236,7 @@ def fixture_config(case,palette,files):
                 stages=dict(empty=[],one=prefix[:1],prefix=prefix,repaint=prefix,later=later,**{'later-repaint':later},matrix=matrix))
 
 
-def capture_window(env,identity,destination,stage,background,collector):
+def capture_window(env,identity,destination,stage,background,collector,empty_primary=False):
     measurement=identity['measurement'];assert measurement['dpr']==1 and measurement['fontLoaded'] and not measurement['contextLost']
     width,height=measurement['width'],measurement['height'];assert (width,height)==(1100,520)
     with Image.open(identity['capture']) as native:
@@ -241,6 +261,7 @@ def capture_window(env,identity,destination,stage,background,collector):
                 painted=True
                 for cell in measurement['cells']:
                     if cell['char']==' ':continue
+                    if empty_primary and cell['font']==0:continue
                     metrics=cell['metrics']
                     assert all(math.isfinite(value) for value in metrics.values()),'Canvas text metrics are not finite'
                     a,b,c,d,tx,ty=cell.get('transform',[1,0,0,1,0,0])
@@ -259,7 +280,7 @@ def capture_window(env,identity,destination,stage,background,collector):
         time.sleep(.1)
 
 
-def run_fixture(package,case,palette,destination,state,env):
+def run_fixture(package,case,palette,destination,state,env,electron):
     destination.mkdir();state.mkdir();fontdir=state/'fonts';fontdir.mkdir();files=[]
     source_files=[case['file']]+([c1.FONTS['Noto Sans']] if case.get('excluded') else [])
     for index,source in enumerate(source_files):
@@ -273,16 +294,16 @@ def run_fixture(package,case,palette,destination,state,env):
         path=state/key.lower();path.mkdir();launch[f'XDG_{key}_HOME']=str(path)
     temporary=state/'tmp';temporary.mkdir();launch.update(TMPDIR=str(temporary),PYTHONDONTWRITEBYTECODE='1',FONTREAL_FIXTURE_CONFIG=str(state/'config.json'))
     fontconfig=state/'fontconfig.xml';fontcache=state/'cache/fontconfig';fontcache.mkdir()
-    metadata='<match target="scan"><test name="family" compare="eq"><string>C2BitmapOnly</string></test><edit name="scalable" mode="assign"><bool>true</bool></edit></match>' if case['id']=='bitmap-only' else ''
+    metadata=f'<match target="scan"><test name="family" compare="eq"><string>{case["family"]}</string></test><edit name="scalable" mode="assign"><bool>true</bool></edit></match>' if case['id']=='bitmap-only' else ''
     fontconfig.write_text(f'<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"><fontconfig><dir>{fontdir}</dir><cachedir>{fontcache}</cachedir>{metadata}</fontconfig>')
     shutil.copyfile(fontconfig,destination/'fontconfig.xml')
-    if case['id']=='bitmap-only':
+    if metadata:
         native_cache=state/'cache/fontconfig-native';native_cache.mkdir()
         native_config=state/'native-fontconfig.xml';native_config.write_text(fontconfig.read_text().replace(metadata,'').replace(str(fontcache),str(native_cache)))
         shutil.copyfile(native_config,destination/'native-fontconfig.xml')
         native_env=dict(launch,FONTCONFIG_FILE=str(native_config))
         native=subprocess.check_output(['fc-scan','--format','%{scalable} %{outline}',str(case['file'])],text=True,env=native_env).strip()
-        default_matches=subprocess.check_output(['fc-list','C2BitmapOnly:scalable=true','--format','%{file}'],text=True,env=native_env)
+        default_matches=subprocess.check_output(['fc-list',case['family']+':scalable=true','--format','%{file}'],text=True,env=native_env)
         assert not default_matches,'Native scalable-only lookup unexpectedly exposed the bitmap fixture'
         exposed=subprocess.check_output(['fc-scan','--format','%{scalable} %{outline}',str(files[0])],text=True,env=dict(launch,FONTCONFIG_FILE=str(fontconfig))).strip()
         assert native=='False False' and exposed=='True False','Synthetic bitmap metadata exposure changed native outline facts'
@@ -308,10 +329,10 @@ def run_fixture(package,case,palette,destination,state,env):
                         if identity['measurement']['stage']==stage:break
                     assert time.monotonic()<deadline,f'Fixture stage {stage} timed out: {destination}'
                     time.sleep(.05)
-                assert identity['versions']['electron']==c1.PINS['electron'] and identity['versions']['chrome']==c1.PINS['chromium']
+                assert identity['versions']['electron']==electron and identity['versions']['chrome']==c1.PINS['chromium']
                 sandbox=c1.sandbox_evidence(identity,Path(config['userData']),child.pid)
                 identities[stage]=identity
-                observations[stage]=capture_window(launch,identity,destination,stage,tuple(int(selected['background'][i:i+2],16) for i in (1,3,5)),collector)
+                observations[stage]=capture_window(launch,identity,destination,stage,tuple(int(selected['background'][i:i+2],16) for i in (1,3,5)),collector,case.get('empty_primary',False))
                 stage_rows=c1.renderer_rows(list(collector.rows),sandbox['hostPid'],sandbox['tracePid'])
                 observations[stage]['selectedRasterCount']=sum(row['owner']=='selected' for row in stage_rows)
             Path(config['quit']).touch();assert child.wait(timeout=20)==0
@@ -336,17 +357,38 @@ def provider(record,case,destination,configuration):
         file=case['file'] if font_index==0 else c1.FONTS['Noto Sans']
         characters=''.join(sorted({cell['char'] for cells in configuration['stages'].values() for cell in cells if cell['font']==font_index}))
         ids[font_index]=c1.glyph_ids(file,characters)
-    if case['id']=='bitmap-only':
+    if case['id'] in ('gray-strike','gray-outline','bitmap-only','png-bitmap'):
         command=[str(record['probe']['executable']),str(case['file']),'15','109','109','2','0','1','0','0','1','-1']
         write_json(destination/'bitmap-command.json',command)
         with (destination/'bitmap.json').open('w') as stdout,(destination/'bitmap-stderr.log').open('w') as stderr:
             subprocess.run(command,stdout=stdout,stderr=stderr,check=True,env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',TMPDIR=str(WORK/'cache/tmp')))
         rows=json.loads((destination/'bitmap.json').read_text());assert len(rows)==1
         row=rows[0];native=row['native']
-        assert row['glyph']==ids[0]['m'] and not row['hasOutlines'] and row['hasBitmap'],'Pristine Fontations did not observe the actual bitmap-only input'
-        assert row['nativeRepresentation']==4 and row['nativeFormat']==1,'Pristine native API did not choose BITMAP/A8'
-        assert (native['width'],native['height'],native['left'],native['top'])==(8,8,0,-8) and native['advance']==[8,0]
-        assert native['path']=='' and bytes.fromhex(native['mask'])==b'\xff'*64,'Pristine native bitmap is not the independently specified solid8x8 strike'
+        assert row['glyph']==ids[0]['m'],'Pristine provider did not reach the fixture glyph'
+        capability={key:row[key] for key in ('glyph','hasOutlines','hasBitmap','nativeRepresentation','nativeFormat')}
+        capability['native_geometry']={key:native[key] for key in ('width','height','left','top','advance')}
+        if case['id'] in ('gray-strike','gray-outline'):
+            assert row['hasOutlines'] and row['nativeRepresentation']==1 and row['nativeFormat']==1
+            assert native['width']>0 and native['height']>0 and native['path'] and native['mask']
+            if case['id']=='gray-outline':assert not row['hasBitmap']
+            capability['result']='ebdt-available-selected-outline' if row['hasBitmap'] else 'native-outline-no-ebdt-decoder'
+        elif case['id']=='png-bitmap':
+            assert row['hasOutlines'] and row['hasBitmap']
+            assert row['nativeRepresentation']==4 and row['nativeFormat']==3,'Pristine native API did not choose BITMAP/ARGB32'
+            assert (native['width'],native['height'],native['left'],native['top'])==(8,8,0,-8)
+            assert abs(native['advance'][0]-15)<1/1024 and native['advance'][1]==0
+            assert not native['path']
+            capability['result']='native-png-bitmap-argb32';capability['specified_rgb']=[19,137,211]
+        elif row['hasBitmap']:
+            assert not row['hasOutlines'] and row['nativeRepresentation']==4 and row['nativeFormat']==1,'Pristine native API did not choose BITMAP/A8'
+            assert (native['width'],native['height'],native['left'],native['top'])==(8,8,0,-8) and native['advance']==[8,0]
+            assert native['path']=='' and bytes.fromhex(native['mask'])==b'\xff'*64,'Pristine native bitmap is not the independently specified solid8x8 strike'
+            capability['result']='native-ebdt-bitmap-a8'
+        else:
+            assert not row['hasOutlines'] and row['nativeRepresentation']==1 and row['nativeFormat']==1
+            assert native['width']==native['height']==0 and not native['path'] and not native['mask'],'Unsupported EBDT unexpectedly produced native glyph content'
+            capability['result']='unsupported-ebdt-no-outlines-native-empty';case['empty_primary']=True
+        case['capability']=capability;write_json(destination/'capability.json',capability)
     for cells in configuration['stages'].values():
         for cell in cells:
             if cell.get('unhinted') or cell.get('native_path') or cell.get('native_transform') or (case.get('excluded') and cell['font']==0):continue
@@ -482,9 +524,16 @@ def check_images(case,palette,condition,fixtures,oracles):
                 pixels=set(stock.crop((20,50,50,90)).getdata())
                 if case['id']=='mixed-color':
                     assert (255,0,0) in pixels and (0,255,0) in pixels,'Mixed color fixture did not actually paint its COLR layers'
-                if case['id'] in ('gray-strike','bitmap-only'):
+                if case['id'] in ('gray-strike','bitmap-only') and case['capability']['hasBitmap']:
                     foreground=tuple(int(configuration['foreground'][i:i+2],16) for i in (1,3,5))
                     assert set(stock.crop((24,72,32,80)).getdata())=={foreground},'Native fixture did not paint its independently specified embedded 8x8 bitmap'
+                if case['id']=='png-bitmap':
+                    assert set(stock.crop((24,72,32,80)).getdata())=={(19,137,211)},'Native fixture did not paint its independently specified opaque PNG'
+            if case.get('empty_primary'):
+                background=tuple(int(configuration['background'][i:i+2],16) for i in (1,3,5))
+                for cell in configuration['stages'][stage]:
+                    if cell['font']==0:
+                        assert set(stock.crop((cell['x']-1,cell['y']-24,cell['x']+24,cell['y']+2)).getdata())=={background},'Unsupported named face painted a fallback glyph'
             expected=compose_expected(stock,configuration,configuration['stages'][stage],oracles,case)
             expected.save(condition/(stage+'-expected.png'))
             assert expected.tobytes()==normal.tobytes(),f'{case["id"]} {palette} {stage}: actual OS pixels differ from independently composed selected masks'
@@ -493,38 +542,71 @@ def check_images(case,palette,condition,fixtures,oracles):
     return checks
 
 
+def check_outline_pair(destination,palette,capability):
+    """One face differs only in strike tables; selected NO_BITMAP always agrees."""
+    strike=destination/('gray-strike-'+palette);outline=destination/('gray-outline-'+palette)
+    roles=('normal','trace') if capability['hasBitmap'] else ('stock','normal','trace')
+    checks=[]
+    for role in roles:
+        for stage in STAGES:
+            for domain in ('window','native'):
+                with Image.open(strike/role/(stage+'-'+domain+'.png')) as a,Image.open(outline/role/(stage+'-'+domain+'.png')) as b:
+                    assert a.mode==b.mode and a.size==b.size and a.tobytes()==b.tobytes(),f'{palette} {role} {stage}: EBDT/outline-only {domain} pixels differ'
+            checks.append(dict(role=role,stage=stage))
+    for folder in (strike,outline):
+        with Image.open(folder/'stock/one-window.png') as image:
+            background=image.getpixel((1090,500))
+            assert any(pixel!=background for pixel in image.crop((24,55,48,85)).getdata()),'Paired native outline control did not paint'
+    result=dict(capability=capability,comparisons=checks,stock_outline_painted=True)
+    write_json(outline/'outline-pair.json',result)
+    return result
+
+
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--build-record',type=Path);args=parser.parse_args()
+    global WORK
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--build-record',type=Path)
+    parser.add_argument('--target',choices=('teams','bitwarden'),default='teams');args=parser.parse_args()
+    c1.configure(args.target);WORK=c1.WORK
     WORK.mkdir(parents=True,exist_ok=True);OUT.mkdir(parents=True,exist_ok=True)
     destination=Path(tempfile.mkdtemp(prefix='selected-fixture-',dir=OUT));print('results: '+str(destination),flush=True)
-    record_path,record,original,contrast=selected_build(args.build_record,destination)
+    record_path,record,original,contrast=selected_build(args.build_record,destination,args.target)
     c1.collector_selfcheck(destination/'sender-selfcheck')
     source=Path(original['source'])
+    vx='third_party/skia/src/base/SkVx.h' if args.target=='bitwarden' else 'third_party/skia/src/core/SkVx.h'
     observer_sources={name:c1.target.sha(source/name) for name in (
         'third_party/blink/renderer/platform/fonts/font_description.cc','third_party/blink/renderer/platform/fonts/font_cache_key.h',
         'components/services/font/fontconfig_matching.cc','third_party/blink/renderer/platform/fonts/linux/font_unique_name_lookup_linux.cc',
         'third_party/blink/renderer/platform/fonts/web_font_decoder.cc','third_party/ots/src/src/ots.cc',
         'third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc',
         'third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.cc',
-        'third_party/skia/src/core/SkScalerContext.cpp','third_party/skia/src/opts/SkBlitMask_opts.h','third_party/skia/src/core/Sk4px.h','third_party/skia/src/core/SkVx.h')}
+        'third_party/skia/src/core/SkScalerContext.cpp','third_party/skia/src/opts/SkBlitMask_opts.h','third_party/skia/src/core/Sk4px.h',vx)}
     write_json(destination/'observer-sources.json',observer_sources)
     matrix=cases(destination/'font-fixtures');results=[];masks.WORK=WORK;masks.OUT=destination
     with tempfile.TemporaryDirectory(prefix='selected-state-',dir=WORK) as temporary:
         with masks.nested_display() as env:
             for case in matrix:
+                if case['id']=='png-bitmap' and all(row['capability']['hasBitmap'] for row in results if row['case']=='bitmap-only'):
+                    assert sum(row['case']=='bitmap-only' for row in results)==2
+                    continue
                 for palette in ('light','dark'):
                     condition=destination/(case['id']+'-'+palette);condition.mkdir();fixtures={}
                     configuration=fixture_config(case,palette,[case['file'],c1.FONTS['Noto Sans']])
                     oracles,ids,queries=provider(record,case,condition/'provider',configuration)
                     for role in ('stock','normal','trace'):
                         package=original['packages']['stock'] if role=='stock' else record['packages'][role]
-                        fixtures[role]=run_fixture(package,case,palette,condition/role,Path(temporary)/(case['id']+'-'+palette+'-'+role),env)
+                        electron=c1.PINS['electron'] if role=='stock' else record['spec']['upstream']['electron']
+                        fixtures[role]=run_fixture(package,case,palette,condition/role,Path(temporary)/(case['id']+'-'+palette+'-'+role),env,electron)
                     assert not fixtures['stock']['rows'] and not fixtures['normal']['rows'],'Stock or normal artifact emitted selected observation'
                     traced=check_trace(case,fixtures['trace'],oracles,ids)
                     images=check_images(case,palette,condition,fixtures,oracles)
-                    results.append(dict(case=case['id'],palette=palette,source=str(case['file']),sha256=c1.target.sha(case['file']),trace=traced,images=images))
+                    result=dict(case=case['id'],palette=palette,source=str(case['file']),sha256=c1.target.sha(case['file']),trace=traced,images=images)
+                    if 'capability' in case:result['capability']=case['capability']
+                    if case['id']=='gray-outline':
+                        capability=next(row['capability'] for row in results if row['case']=='gray-strike' and row['palette']==palette)
+                        result['outline_pair']=check_outline_pair(destination,palette,capability)
+                    results.append(result)
                     print(f'PASS selected {case["id"]} {palette}: native provider, numerical oracle, lifecycle, gates and exact OS composition',flush=True)
-    regression=[sys.executable,str(ROOT/'tests/chromium_flatpak_test.py'),'--target','teams','--case','stock-fixture','--build-record',record['spec']['c1_record']]
+    regression=[sys.executable,str(ROOT/'tests/chromium_flatpak_test.py'),'--target',args.target,'--case','stock-fixture','--build-record',record['spec']['c1_record']]
     with (destination/'c1-stdout.log').open('w') as stdout,(destination/'c1-stderr.log').open('w') as stderr:
         subprocess.run(regression,stdout=stdout,stderr=stderr,check=True,env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',TMPDIR=str(WORK/'cache/tmp')))
     report=dict(builder_identity_contrast=contrast,build_record=str(record_path),build_sha256=c1.target.sha(record_path),scope='exact-engine selected fixture only; actual application and daily activation remain deferred',

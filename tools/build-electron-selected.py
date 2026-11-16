@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Build private selected normal/trace engines and a pristine Fontations oracle."""
+import argparse
 import fcntl
 import hashlib
 import importlib.util
@@ -25,9 +26,32 @@ RENDER_INPUTS=('patches/skia-747cf654-fontreal-selected.patch','patches/chromium
                'integrations/chromium/fontreal_selected.h','integrations/chromium/fontreal_bridge.cpp',
                'src/fontreal_coverage.cpp','src/fontreal_coverage.h','tests/chromium_selected_probe.cpp')
 INPUTS=('tools/build-electron-selected.py',*RENDER_INPUTS)
+PRODUCER=ROOT/'tools/build-electron.py'
+SKIA_PATCH=ROOT/RENDER_INPUTS[0]
+GN_PATCH=ROOT/RENDER_INPUTS[1]
+
+
+def configure(target):
+    global c1,WORK,UPSTREAM,RENDER_INPUTS,INPUTS,PRODUCER,SKIA_PATCH,GN_PATCH
+    if target=='teams':return
+    assert target=='bitwarden'
+    PRODUCER=ROOT/'tools/build-electron-bitwarden.py'
+    module=importlib.util.spec_from_file_location('bitwarden_builder',PRODUCER)
+    c1=importlib.util.module_from_spec(module);module.loader.exec_module(c1)
+    WORK=c1.WORK
+    UPSTREAM=dict(electron=c1.PINS['electron'],commit=c1.PINS['electron_commit'],node_base=c1.PINS['node_base'])
+    SKIA_PATCH=ROOT/'patches/skia-f4ed99d2-fontreal-selected.patch'
+    GN_PATCH=ROOT/'patches/chromium-142-fontreal-selected-gn.patch'
+    RENDER_INPUTS=(str(SKIA_PATCH.relative_to(ROOT)),str(GN_PATCH.relative_to(ROOT)),*RENDER_INPUTS[2:])
+    INPUTS=('tools/build-electron-selected.py',*RENDER_INPUTS)
 
 
 def release_sources(source,view,env):
+    if c1.PINS['electron']==UPSTREAM['electron']:
+        archive=subprocess.check_output(['git','-C',source/'electron','archive',UPSTREAM['commit']])
+        return [],dict(electron_archive_sha256=hashlib.sha256(archive).hexdigest(),node_base=UPSTREAM['node_base'],
+                       node_head=subprocess.check_output(['git','-C',source/'third_party/electron_node','rev-parse','HEAD'],text=True).strip(),
+                       node_patch_series_sha256=c1.sha(source/'electron/patches/node/.patches'))
     original=source/'electron';electron=view/'upstream-electron';node=view/'upstream-node'
     for folder in (electron,node,view/'upstream-chromium'):
         if folder.exists():shutil.rmtree(folder)
@@ -90,7 +114,7 @@ def render(spec,previous,env):
     if gn_view.exists():shutil.rmtree(gn_view)
     shutil.copytree(source/'skia',gn_view,symlinks=True)
     shutil.copyfile(ROOT/'tests/chromium_selected_probe.cpp',gn_view/'fontreal_native_probe.cpp')
-    c1.invoke(['patch','--batch','--fuzz=0','-p1','-i',ROOT/'patches/chromium-152-fontreal-selected-gn.patch'],gn_view,env,'selected-gn-patch')
+    c1.invoke(['patch','--batch','--fuzz=0','-p1','-i',GN_PATCH],gn_view,env,'selected-gn-patch')
     upstream_views,upstream_identity=release_sources(source,view,env)
     def invoke(command,label):
         wrapped=['bwrap','--ro-bind','/','/','--dev','/dev','--bind',out,out,'--bind',WORK/'cache',WORK/'cache']
@@ -113,17 +137,20 @@ def render(spec,previous,env):
                         pristine_files=pristine,bridge=spec['source_identity']['heads']['src/third_party/skia'])
     commands=subprocess.check_output([*ninja,'-t','commands','skia:fontreal_native_probe'],cwd=source,env=env)
     (artifact/'probe-commands.txt').write_bytes(commands);probe_identity['commands_sha256']=c1.sha(artifact/'probe-commands.txt')
-    # Application controls need the same complete release as the selected engine.
-    invoke([*ninja,'electron:electron_dist_zip'],'release-stock-build')
-    stock=c1.package(out/'dist.zip',artifact/'source-stock')
-    c1.invoke(['patch','--batch','--fuzz=0','-p1','-i',c1.PATCH],view,env,'release-passive-patch')
-    shutil.copyfile(c1.HEADER,view/'src/core/fontreal_owner_trace.h')
-    invoke([*ninja,'electron:electron_dist_zip'],'release-passive-build')
-    passive=c1.package(out/'dist.zip',artifact/'source-passive')
+    # The already exact source producer supplies matching application controls.
+    if c1.PINS['electron']==UPSTREAM['electron']:
+        stock=previous['packages']['stock'];passive=previous['packages']['instrumented']
+    else:
+        invoke([*ninja,'electron:electron_dist_zip'],'release-stock-build')
+        stock=c1.package(out/'dist.zip',artifact/'source-stock')
+        c1.invoke(['patch','--batch','--fuzz=0','-p1','-i',c1.PATCH],view,env,'release-passive-patch')
+        shutil.copyfile(c1.HEADER,view/'src/core/fontreal_owner_trace.h')
+        invoke([*ninja,'electron:electron_dist_zip'],'release-passive-build')
+        passive=c1.package(out/'dist.zip',artifact/'source-passive')
     for folder in ('src/core','src/ports'):
         shutil.rmtree(view/folder);shutil.copytree(skia/folder,view/folder,symlinks=True)
     for name in spec['original_files']:os.utime(view/name,None)
-    c1.invoke(['patch','--batch','--fuzz=0','-p1','-i',ROOT/'patches/skia-747cf654-fontreal-selected.patch'],view,env,'selected-source-patch')
+    c1.invoke(['patch','--batch','--fuzz=0','-p1','-i',SKIA_PATCH],view,env,'selected-source-patch')
     for name in ('fontreal_coverage.cpp','fontreal_coverage.h'):shutil.copyfile(ROOT/'src'/name,view/'src/core'/name)
     for name in ('fontreal_selected.h','fontreal_bridge.cpp'):shutil.copyfile(ROOT/'integrations/chromium'/name,view/'src/core'/name)
     (gn_view/'fontreal_build.gni').write_text('fontreal_selected_enabled = true\n')
@@ -151,7 +178,8 @@ def credits(source,env,views,folder):
         assert c1.sha(output)==identity['output_sha256'] and c1.sha(depfile)==identity['depfile_sha256']
         for name,digest in identity['inputs'].items():assert c1.sha(Path(name))==digest
         return identity,output,depfile
-    command=[sys.executable,str(source/'tools/licenses/licenses.py'),'credits','--target-os=linux','--depfile',str(depfile),str(output)]
+    command=[sys.executable,str(source/'tools/licenses/licenses.py'),'credits','--target-os=linux',
+             '--depfile',os.path.relpath(depfile,out),os.path.relpath(output,out)]
     wrapped=['bwrap','--ro-bind','/','/','--dev','/dev','--bind',folder,folder,'--bind',WORK/'cache',WORK/'cache']
     for original,replacement in views:wrapped+=['--ro-bind',replacement,original]
     command=list(map(str,[*wrapped,'--',*command]))
@@ -195,6 +223,9 @@ def package_with_notices(original,destination,html,llvm,fontreal,node):
 
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--target',choices=['teams','bitwarden'],default='teams')
+    configure(parser.parse_args().target)
     WORK.mkdir(parents=True,exist_ok=True)
     with (WORK/'selected-builder.lock').open('w') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -203,18 +234,19 @@ def main():
 
 def build():
     env=c1.environment()
-    result=subprocess.check_output([sys.executable,ROOT/'tools/build-electron.py'],env=env,text=True)
+    result=subprocess.check_output([sys.executable,PRODUCER],env=env,text=True)
     c1_record=Path(result.splitlines()[-1]);previous=json.loads(c1_record.read_text())
     for package in previous['packages'].values():c1.verify(package)
     source=Path(previous['source']);checkout=source.parent;skia=source/'third_party/skia';out=source/'out/Fontreal'
-    gn_args=c1.GN_ARGS.replace('override_electron_version="44.9.0"','override_electron_version="'+UPSTREAM['electron']+'"')
+    gn_args=c1.GN_ARGS.replace('override_electron_version="'+c1.PINS['electron']+'"','override_electron_version="'+UPSTREAM['electron']+'"')
     assert (out/'args.gn').read_text() in (c1.GN_ARGS,gn_args)
     identity=c1.source_identity(checkout)
     assert identity==previous['source_identity']==json.loads((checkout/'.fontreal-source.json').read_text())
-    tools={name:c1.sha(source/path) for name,path in (
+    tool_paths=[
         ('clang','third_party/llvm-build/Release+Asserts/bin/clang++'),('lld','third_party/llvm-build/Release+Asserts/bin/ld.lld'),
-        ('mold','buildtools/third_party/mold/cipd/mold'),('rustc','third_party/rust-toolchain/bin/rustc'),
-        ('gn','buildtools/linux64/gn'),('ninja','third_party/ninja/ninja'))}
+        ('rustc','third_party/rust-toolchain/bin/rustc'),('gn','buildtools/linux64/gn'),('ninja','third_party/ninja/ninja')]
+    if PRODUCER.name=='build-electron.py':tool_paths.append(('mold','buildtools/third_party/mold/cipd/mold'))
+    tools={name:c1.sha(source/path) for name,path in tool_paths}
     runtime_spec=dict(c1_record=str(c1_record),c1_record_sha256=c1.sha(c1_record),source_identity=identity,
               inputs={name:c1.sha(ROOT/name) for name in RENDER_INPUTS},tools=tools,gn_args=gn_args,upstream=UPSTREAM,
               runtime_recipe=hashlib.sha256((inspect.getsource(render)+inspect.getsource(release_sources)).encode()).hexdigest(),
@@ -223,9 +255,10 @@ def build():
               runtime_sources={name:c1.sha(source/name) for name in ('third_party/libc++/src/src/memory_resource.cpp','buildtools/third_party/libc++/BUILD.gn')})
     runtime_record,runtime=render(runtime_spec,previous,env)
     notice,html,depfile=credits(source,env,[(Path(a),Path(b)) for a,b in runtime['upstream_views']],runtime_record.parent/'credits')
+    node_license=ROOT/'LICENSES/Node.txt' if PRODUCER.name=='build-electron.py' else source/'third_party/electron_node/LICENSE'
     spec=dict(runtime_spec,inputs={name:c1.sha(ROOT/name) for name in INPUTS},notices=notice,
               runtime_record=str(runtime_record),runtime_record_sha256=c1.sha(runtime_record),fontreal_license_sha256=c1.sha(ROOT/'LICENSE'),
-              node_license_sha256=c1.sha(ROOT/'LICENSES/Node.txt'))
+              node_license_sha256=c1.sha(node_license))
     artifact=WORK/'selected'/c1.key(spec);record=artifact/'build.json'
     if record.exists():
         saved=json.loads(record.read_text());assert saved['spec']==spec
@@ -234,7 +267,7 @@ def build():
         print(record);return
     artifact.mkdir(parents=True,exist_ok=True)
     llvm=source/'third_party/libc++/src/LICENSE.TXT'
-    packages={role:package_with_notices(package,artifact/role,html,llvm,ROOT/'LICENSE',ROOT/'LICENSES/Node.txt') for role,package in runtime['packages'].items()}
+    packages={role:package_with_notices(package,artifact/role,html,llvm,ROOT/'LICENSE',node_license) for role,package in runtime['packages'].items()}
     for name in ('probe-commands.txt','normal-commands.txt','trace-commands.txt'):
         shutil.copyfile(runtime_record.parent/name,artifact/name)
     probe=dict(runtime['probe']);probe_path=artifact/'fontreal-native-probe'
@@ -242,6 +275,7 @@ def build():
     for label,path in (('FONTREAL',ROOT/'LICENSE'),('SKIA',skia/'LICENSE'),('CHROMIUM',source/'LICENSE'),('LLVM',llvm)):
         shutil.copyfile(path,artifact/(label+'-LICENSE.txt'))
     shutil.copyfile(html,artifact/'LICENSES.chromium.html');shutil.copyfile(depfile,artifact/'credits.d')
+    if PRODUCER.name=='build-electron-bitwarden.py':shutil.copyfile(node_license,artifact/'NODE-LICENSE.txt')
     for name,digest in runtime_spec['original_files'].items():assert c1.sha(skia/name)==digest
     assert c1.sha(source/'skia/BUILD.gn')==runtime_spec['original_gn']
     for package in previous['packages'].values():c1.verify(package)

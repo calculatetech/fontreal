@@ -39,7 +39,7 @@ Fontreal contains a comparison viewer, rendering patches, and tools that build m
 
 The private FreeType builder supports pinned Debian 13 and Ubuntu 26.04 sources on amd64. It builds the original and modified libraries together. Saved browser builds remain enabled across browser updates.
 
-The [native KDE workflow](docs/build-system.md) builds matching FreeType and Qt packages with the same selected method. It preserves chosen fonts and sizes. The [Teams workflow](docs/experiments/chromium-flatpak.md#teams-application-qualification) supplies the selected renderer inside its Flatpak sandbox. Edge, Bitwarden and Telegram require separate integration. See the [roadmap](docs/roadmap.md).
+The [native KDE workflow](docs/build-system.md) builds matching FreeType and Qt packages with the same selected method. It preserves chosen fonts and sizes. The [Teams and Bitwarden workflow](docs/experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use) supplies separate selected engines inside their native Flatpak sandboxes. Both retain original working data and support independent reversal. Edge and Telegram remain uncovered. See the [roadmap](docs/roadmap.md).
 
 ## Try it
 

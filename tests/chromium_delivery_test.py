@@ -39,6 +39,7 @@ ROOT=c1.ROOT
 WORK=(ROOT/'build/chromium-delivery').resolve()
 OUT=(ROOT/'results/chromium-delivery').resolve()
 APPLICATION='com.github.IsmaelMartinez.teams_for_linux'
+AUTOSTART_UNIT='app-'+APPLICATION+'@autostart.service'
 CAPTURE_INVOCATIONS=[]
 
 
@@ -1351,7 +1352,7 @@ def hook_checks(record,state_path,hooks,destination,env):
     for victim in ('flatpak','autostart'):
         changed=original[victim]+b'# SYNTHETIC foreign ownership discriminator\n';hooks[victim].write_bytes(changed)
         try:
-            result=subprocess.run([sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py'),'enable','teams','--record',state['build']],env=env,text=True,capture_output=True)
+            result=subprocess.run([sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py'),'enable','teams','--record',state['apps']['teams']['build']],env=env,text=True,capture_output=True)
             assert result.returncode!=0 and 'changed outside Fontreal' in result.stderr
             assert state_path.read_bytes()==before and all(p.read_bytes()==(changed if name==victim else original[name]) for name,p in hooks.items()),'Ownership refusal changed hook files'
         finally:
@@ -1366,7 +1367,7 @@ def provider_contrasts(record_path,destination,env):
                      ('XDG_DATA_DIRS','data-dirs'),('XDG_CACHE_HOME','cache')):
         path=destination/name;path.mkdir();private[key]=str(path)
     private['SYSTEMD_SCOPE']='user';provider=config/'autostart'/(APPLICATION+'.desktop');provider.parent.mkdir()
-    state=config/'fontreal/chromium/teams.json';unit=delivery.AUTOSTART_UNIT;observations=[];enabled=False
+    state=config/'fontreal/chromium/apps.json';unit=AUTOSTART_UNIT;observations=[];enabled=False
     try:
         command=[sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py'),'enable','teams','--record',str(record_path)]
         with (destination/'enable.stdout').open('w') as out,(destination/'enable.stderr').open('w') as err:subprocess.run(command,env=private,stdout=out,stderr=err,check=True)
@@ -1537,7 +1538,7 @@ def update_cycle(build_record,destination,env):
     preparation=json.loads((WORK/'update/install-command.json').read_text())['environment']
     for key in ('FLATPAK_USER_DIR','XDG_CACHE_HOME','FLATPAK_SYSTEM_CACHE_DIR','TMPDIR'):private[key]=preparation[key]
     state,hooks=delivery.paths();assert not state.exists() and not any(p.exists() or p.is_symlink() for p in hooks.values())
-    unit=delivery.AUTOSTART_UNIT
+    unit=AUTOSTART_UNIT
     runtime=Path(env['XDG_RUNTIME_DIR'])/'systemd/user'/(unit+'.d')/('70-fontreal-update-'+destination.name+'.conf')
     assert not runtime.exists() and not runtime.is_symlink()
     runtime_bytes=('[Service]\nEnvironment='+json.dumps('FLATPAK_USER_DIR='+private['FLATPAK_USER_DIR'])+'\n').encode()
@@ -1670,12 +1671,19 @@ def update_cycle(build_record,destination,env):
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--target',choices=['teams'],required=True)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--target',choices=['teams','bitwarden'],required=True)
     parser.add_argument('--case',choices=['actual-app','lifecycle','update-cycle'],required=True);parser.add_argument('--build-record',type=Path,required=True)
-    args=parser.parse_args();OUT.mkdir(parents=True,exist_ok=True)
+    args=parser.parse_args()
+    if args.target=='bitwarden' and args.case=='update-cycle':parser.error('Bitwarden update-cycle is not supported.')
+    OUT.mkdir(parents=True,exist_ok=True)
     destination=Path(tempfile.mkdtemp(prefix=args.case+'-',dir=OUT));print(destination,flush=True)
     env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',TMPDIR=str((ROOT/'build').resolve()))
-    try:{'actual-app':actual_app,'lifecycle':lifecycle,'update-cycle':update_cycle}[args.case](args.build_record.resolve(),destination,env)
+    try:
+        if args.target=='bitwarden':
+            from bitwarden_pixels_test import actual_app as bitwarden_actual_app
+            from bitwarden_delivery_test import lifecycle as bitwarden_lifecycle
+            {'actual-app':bitwarden_actual_app,'lifecycle':bitwarden_lifecycle}[args.case](args.build_record.resolve(),destination,env)
+        else:{'actual-app':actual_app,'lifecycle':lifecycle,'update-cycle':update_cycle}[args.case](args.build_record.resolve(),destination,env)
     except BaseException as error:
         write_json(destination/'failure.json',dict(passed=False,errorClass=type(error).__name__,message=str(error)))
         raise

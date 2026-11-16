@@ -1,0 +1,45 @@
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -244,8 +244,13 @@
+   public += skia_pathops_public
+ }
+ 
++import("//skia/fontreal_build.gni")
++
+ component("skia") {
+   deps = []
++  if (fontreal_selected_enabled) {
++    deps += [ ":fontreal_selected_processor" ]
++  }
+   public = [
+     "ext/benchmarking_canvas.h",
+     "ext/cicp.h",
+@@ -1145,3 +1150,28 @@
+ group("fuzzers") {
+   deps = [ "//skia/tools/fuzzers" ]
+ }
++
++# Private exact-provider fixture and the unchanged selected processor.
++executable("fontreal_native_probe") {
++  sources = [ "fontreal_native_probe.cpp" ]
++  deps = [ "//base", ":skia", ":bridge_rust_side", ":path_bridge" ]
++  configs -= [ "//build/config/compiler:chromium_code" ]
++  configs += [ ":skia_config", "//build/config/compiler:no_chromium_code" ]
++}
++if (fontreal_selected_enabled) {
++  config("fontreal_freetype_headers") {
++    include_dirs = [ "//third_party/freetype/src/include" ]
++  }
++  source_set("fontreal_selected_processor") {
++    sources = [ "//third_party/skia/src/core/fontreal_coverage.cpp", "//third_party/skia/src/core/fontreal_bridge.cpp" ]
++    deps = [ ":fontreal_memory_resource" ]
++    configs -= [ "//build/config/compiler:chromium_code", "//build/config/compiler:no_exceptions" ]
++    configs += [ ":fontreal_freetype_headers", "//build/config/compiler:no_chromium_code", "//build/config/compiler:exceptions" ]
++  }
++  source_set("fontreal_memory_resource") {
++    sources = [ "//third_party/libc++/src/src/memory_resource.cpp" ]
++    configs -= [ "//build/config/compiler:chromium_code" ]
++    configs += [ "//buildtools/third_party/libc++:config", "//build/config/compiler:no_chromium_code" ]
++  }
++
++}

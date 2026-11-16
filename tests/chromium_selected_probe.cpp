@@ -1,6 +1,7 @@
 // Independent oracle: pristine Fontations interpreter paths and stock Skia A8 raster.
 #include "include/core/SkData.h"
 #include "base/compiler_specific.h"
+#include "base/memory/madv_free_discardable_memory_allocator_posix.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPathBuilder.h"
 #include "include/core/SkPaint.h"
@@ -9,7 +10,11 @@
 #include "include/core/SkFontArguments.h"
 #include "include/core/SkSurfaceProps.h"
 #include "include/ports/SkTypeface_fontations.h"
+#if __has_include("src/core/SkArenaAlloc.h")
 #include "src/core/SkArenaAlloc.h"
+#else
+#include "src/base/SkArenaAlloc.h"
+#endif
 #include "src/core/SkStrikeSpec.h"
 #include "include/core/SkString.h"
 #include "include/core/SkStrokeRec.h"
@@ -37,6 +42,9 @@ static void hex(const void* data, size_t length) {
 #pragma clang unsafe_buffer_usage begin
 int main(int argc,char** argv) {
     if (argc<12 || (argc-12)%2) return 2;
+    // Electron supplies this allocator; the standalone PNG oracle must do so too.
+    static base::MadvFreeDiscardableMemoryAllocatorPosix allocator;
+    base::DiscardableMemoryAllocator::SetInstance(&allocator);
     auto data=SkData::MakeFromFileName(argv[1]);
     if (!data) return 3;
     auto face=fontations_ffi::make_font_ref({data->bytes(),data->size()},0);

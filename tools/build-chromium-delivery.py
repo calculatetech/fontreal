@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble exact Teams application views without copying application data."""
+"""Assemble Teams and Bitwarden views without copying application data."""
 import argparse
 import configparser
 import fcntl
@@ -17,6 +17,8 @@ import chromium_flatpak as target
 ROOT=Path(__file__).resolve().parents[1]
 WORK=(ROOT/'build/chromium-delivery').resolve()
 APPLICATION='com.github.IsmaelMartinez.teams_for_linux'
+LAYOUTS={APPLICATION:('teams-for-linux','teams-for-linux','teams-for-linux'),
+         'com.bitwarden.desktop':('Bitwarden','bitwarden-app','bitwarden')}
 ZYPAK='693a71c5ffa80ec9c9ce2ae03b1ccc493c698e53'
 PATCH=ROOT/'patches/zypak-693a71c5-app-fd.patch'
 
@@ -67,7 +69,7 @@ def zypak(env,runtime,sdk_commit):
     if installed.returncode:
         invoke(['flatpak','--user','remote-add','--if-not-exists','flathub','https://dl.flathub.org/repo/flathub.flatpakrepo'],'sdk-remote',env)
         invoke(['flatpak','--user','install','--noninteractive','--assumeyes','--no-related','flathub',sdk],'sdk-install',env)
-    if run(['flatpak','--user','info','--show-commit',sdk],env=env)!=sdk_commit:
+    if sdk_commit is not None and run(['flatpak','--user','info','--show-commit',sdk],env=env)!=sdk_commit:
         invoke(['flatpak','--user','update','--noninteractive','--assumeyes','--commit='+sdk_commit,sdk],'sdk-pin',env)
     identity=dict(zypak=ZYPAK,nickle=run(['git','-C',source/'nickle','rev-parse','HEAD']),
                   sdk=sdk,sdk_commit=run(['flatpak','--user','info','--show-commit',sdk],env=env),
@@ -125,7 +127,8 @@ def preserve_fuses(engine,original):
 
 
 def current_view(record,selectors=()):
-    location=Path(run(['/usr/bin/flatpak','info',*selectors,'--show-location',APPLICATION])).resolve(strict=True)
+    application=record['spec']['application'];folder,executable,_=LAYOUTS[application]
+    location=Path(run(['/usr/bin/flatpak','info',*selectors,'--show-location',application])).resolve(strict=True)
     saved=record['views']['normal'];source=Path(saved['directory'])
     identity=dict(location=str(location),distribution=str(source),engine=saved['engine_sha256'])
     key=hashlib.sha256(json.dumps(identity,sort_keys=True).encode()).hexdigest()[:20]
@@ -140,16 +143,16 @@ def current_view(record,selectors=()):
             shutil.copytree(location/'files',staging,symlinks=True)
             for p in [staging,*[p for p in staging.rglob('*') if p.is_dir() and not p.is_symlink()]]:
                 p.chmod(p.stat().st_mode|0o700)
-            engine=staging/'teams-for-linux'
+            engine=staging/folder
             # Keep current application resources and modules; replace the coherent engine only.
-            for p in (source/'teams-for-linux').iterdir():
+            for p in (source/folder).iterdir():
                 if p.name=='resources':continue
                 q=engine/p.name
                 if q.is_dir() and not q.is_symlink():shutil.rmtree(q)
                 elif q.exists() or q.is_symlink():q.unlink()
                 if p.is_dir():shutil.copytree(p,q,symlinks=True)
                 else:shutil.copy2(p,q)
-            identity['fuses']=preserve_fuses(engine/'teams-for-linux',location/'files/teams-for-linux/teams-for-linux')
+            identity['fuses']=preserve_fuses(engine/executable,location/'files'/folder/executable)
             for folder in ('bin','lib'):
                 for p in (source/folder).glob('*zypak*'):
                     q=staging/folder/p.name
@@ -162,27 +165,30 @@ def current_view(record,selectors=()):
     return view
 
 
-def build(build_record):
+def build(build_record,application=APPLICATION):
+    folder,executable,command=LAYOUTS[application]
     WORK.mkdir(parents=True,exist_ok=True)
     with (WORK/'builder.lock').open('w') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        invoke(['/usr/bin/flatpak','run','--command=/usr/bin/true',APPLICATION],'native-startup')
-        location=Path(run(['/usr/bin/flatpak','info','--show-location',APPLICATION]))
+        invoke(['/usr/bin/flatpak','run','--command=/usr/bin/true',application],'native-startup')
+        location=Path(run(['/usr/bin/flatpak','info','--show-location',application]))
         metadata=configparser.ConfigParser(interpolation=None);metadata.read(location/'metadata')
         assert metadata['Application']['runtime']=='org.freedesktop.Platform/x86_64/25.08'
-        assert metadata['Application']['command']=='teams-for-linux'
+        assert metadata['Application']['command']==command
         manifest=json.loads((location/'files/manifest.json').read_text())
         record=json.loads(build_record.read_text());c1_path=Path(record['spec']['c1_record']);c1=json.loads(c1_path.read_text())
-        assert manifest['id']==APPLICATION
-        env=sdk_environment();zypak_folder,zypak_record=zypak(env,metadata['Application']['runtime'],manifest['sdk-commit'])
-        spec=dict(application=APPLICATION,location=str(location),commit=run(['/usr/bin/flatpak','info','--show-commit',APPLICATION]),
+        assert manifest['id']==application
+        env=sdk_environment()
+        sdk_commit=manifest['sdk-commit'] if application==APPLICATION else None
+        zypak_folder,zypak_record=zypak(env,metadata['Application']['runtime'],sdk_commit)
+        spec=dict(application=application,location=str(location),commit=run(['/usr/bin/flatpak','info','--show-commit',application]),
                   runtime=metadata['Application']['runtime'],runtime_commit=zypak_record['spec']['runtime_commit'],
                   metadata_sha256=target.sha(location/'metadata'),manifest_sha256=target.sha(location/'files/manifest.json'),
                   original_files=tree(location/'files'),build_record=str(build_record),build_sha256=target.sha(build_record),
                   c1_record_sha256=target.sha(c1_path),zypak=zypak_record,recipe_sha256=target.sha(Path(__file__)),
                   launch_sha256=target.sha(ROOT/'tools/chromium_delivery.py'),
-                  native_desktop=str(location/'export/share/applications'/(APPLICATION+'.desktop')),
-                  native_desktop_sha256=target.sha(location/'export/share/applications'/(APPLICATION+'.desktop')))
+                  native_desktop=str(location/'export/share/applications'/(application+'.desktop')),
+                  native_desktop_sha256=target.sha(location/'export/share/applications'/(application+'.desktop')))
         key=hashlib.sha256(json.dumps(spec,sort_keys=True).encode()).hexdigest()[:20]
         artifact=WORK/'artifacts'/key;receipt=artifact/'build.json'
         if receipt.exists():
@@ -197,28 +203,30 @@ def build(build_record):
             engine=Path(package['directory'])
             assert target.sha(Path(package['archive']))==package['archive_sha256']
             for name,digest in package['files'].items():assert target.sha(engine/name)==digest
-            appdir=view/'teams-for-linux'
+            appdir=view/folder
             for p in engine.iterdir():
                 if p.name=='resources':continue
-                q=appdir/('teams-for-linux' if p.name=='electron' else p.name)
+                q=appdir/(executable if p.name=='electron' else p.name)
                 if p.is_dir():
                     if q.exists():shutil.rmtree(q)
                     shutil.copytree(p,q,symlinks=True)
                 else:
                     if q.exists() or q.is_symlink():q.unlink()
                     shutil.copy2(p,q)
-            fuses=preserve_fuses(appdir/'teams-for-linux',location/'files/teams-for-linux/teams-for-linux')
+            fuses=preserve_fuses(appdir/executable,location/'files'/folder/executable)
             for name in ('bin','lib'):overlay(zypak_folder/name,view/name)
             licenses=view/'share/licenses/fontreal-zypak';licenses.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(WORK/'sources/zypak/LICENSE',licenses/'LICENSE')
             shutil.copyfile(WORK/'sources/zypak/nickle/LICENSE',licenses/'Nickle-LICENSE')
-            assert tree(appdir/'resources')==tree(location/'files/teams-for-linux/resources')
-            views[role]=dict(directory=str(view),fuses=fuses,files=tree(view),engine_sha256=target.sha(appdir/'teams-for-linux'))
+            assert tree(appdir/'resources')==tree(location/'files'/folder/'resources')
+            views[role]=dict(directory=str(view),fuses=fuses,files=tree(view),engine_sha256=target.sha(appdir/executable))
         saved=dict(spec=spec,views=views)
         receipt.write_text(json.dumps(saved,indent=2)+'\n');print(receipt)
 
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--build-record',type=Path,required=True)
-    try:build(parser.parse_args().build_record.resolve())
+    parser.add_argument('--target',choices=['teams','bitwarden'],default='teams')
+    args=parser.parse_args()
+    try:build(args.build_record.resolve(),target.TARGETS[args.target])
     except (ValueError,AssertionError,subprocess.CalledProcessError) as error:raise SystemExit(str(error))

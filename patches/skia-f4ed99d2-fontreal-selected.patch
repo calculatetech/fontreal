@@ -1,0 +1,122 @@
+--- a/src/core/SkScalerContext.h
++++ b/src/core/SkScalerContext.h
+@@ -429,6 +429,7 @@
+         SkMaskBuilder& dst, const SkPath& path, const SkMaskGamma::PreBlend& maskPreBlend,
+         bool doBGR, bool verticalLCD, bool a8FromLCD, bool hairline);
+     void generateImageFromPath(const SkGlyph& glyph, void* imageBuffer);
++    virtual void onPathImage(const SkGlyph&, void*, bool) {}
+ 
+     /** Return the glyph's outline, or if the glyph cannot be converted to one, return {}.
+      *  Does not apply subpixel positioning to the path.
+--- a/src/core/SkScalerContext.cpp
++++ b/src/core/SkScalerContext.cpp
+@@ -502,6 +502,7 @@
+     const bool a8LCD = SkToBool(fRec.fFlags & SkScalerContext::kGenA8FromLCD_Flag);
+     const bool hairline = glyph.pathIsHairline();
+     GenerateImageFromPath(mask, *devPath, fPreBlend, doBGR, doVert, a8LCD, hairline);
++    this->onPathImage(glyph, imageBuffer, false);
+ }
+ 
+ void SkScalerContext::GenerateImageFromPath(
+@@ -650,6 +651,7 @@
+             const bool a8LCD = SkToBool(fRec.fFlags & SkScalerContext::kGenA8FromLCD_Flag);
+             const bool hairline = origGlyph.pathIsHairline();
+             GenerateImageFromPath(mask, *devPath, fPreBlend, doBGR, doVert, a8LCD, hairline);
++            this->onPathImage(*unfilteredGlyph, unfilteredGlyph->fImage, true);
+         }
+     }
+ 
+--- a/src/ports/SkTypeface_fontations.cpp
++++ b/src/ports/SkTypeface_fontations.cpp
+@@ -21,6 +21,7 @@
+ #include "src/core/SkFontDescriptor.h"
+ #include "src/core/SkFontPriv.h"
+ #include "src/ports/SkTypeface_fontations_priv.h"
++#include "src/core/fontreal_selected.h"
+ #include "src/ports/fontations/src/skpath_bridge.h"
+ 
+ namespace {
+@@ -301,6 +302,7 @@
+ void SkTypeface_Fontations::onFilterRec(SkScalerContextRec* rec) const {
+     rec->useStrokeForFakeBold();
+ 
++
+     // See https://issues.skia.org/issues/396360753
+     // We would like Fontations anti-aliasing on a surface with unknown pixel geometry to
+     // look like the FreeType backend in order to avoid perceived regressions
+@@ -319,6 +321,17 @@
+         h = SkFontHinting::kNone;
+     }
+     rec->setHinting(h);
++
++    if (fontreal_eligible(*this, fontations_ffi::outline_format(*fOutlines) != fontations_ffi::OutlineFormat::NoOutlines, *rec)) {
++        rec->fMaskFormat = SkMask::kA8_Format;
++        rec->fFlags &= ~(SkScalerContext::kForceAutohinting_Flag | SkScalerContext::kLinearMetrics_Flag |
++                         SkScalerContext::kEmbeddedBitmapText_Flag | SkScalerContext::kSubpixelPositioning_Flag |
++                         SkScalerContext::kGenA8FromLCD_Flag | SkScalerContext::kLCD_BGROrder_Flag |
++                         SkScalerContext::kLCD_Vertical_Flag);
++        rec->setHinting(SkFontHinting::kNormal);
++        rec->ignorePreBlend();
++        return;
++    }
+ }
+ 
+ class SkrifaLocalizedStrings : public SkTypeface::LocalizedStrings {
+@@ -381,7 +394,24 @@
+ 
+         // Hinting-reliant fonts exist that display incorrect contours when not executing their
+         // hinting instructions. Detect those and force-enable hinting for them.
+-        if (fontations_ffi::hinting_reliant(fOutlines)) {
++        fFontreal = fontreal_eligible(realTypeface, fontations_ffi::outline_format(fOutlines) != fontations_ffi::OutlineFormat::NoOutlines, fRec);
++        fFontrealDescriptor = desc->getChecksum();
++        const bool fontrealReliant = fontations_ffi::hinting_reliant(fOutlines);
++        auto selectedHint = [&](bool light, bool lcd, bool vertical, AutoHinting control) {
++#if FONTREAL_SELECTED_TRACE
++            fontreal_target(this->getTypeface(), fRec, fFontreal, false, fScale.y(), int(control), false, light, lcd, vertical);
++#endif
++            return fontations_ffi::make_hinting_instance(
++                    fOutlines, fGlyphStyles, fScale.y(), fBridgeNormalizedCoords,
++                    light, lcd, vertical, control);
++        };
++        if (fFontreal && !fontrealReliant) {
++            fHintingInstance = selectedHint(false, false, false, AutoHinting::ForceOff);
++            fDoLinearMetrics = false;
++        } else if (fontrealReliant) {
++#if FONTREAL_SELECTED_TRACE
++            fontreal_target(this->getTypeface(), fRec, fFontreal, true, fScale.y(), -1, true, false, false, false);
++#endif
+             fHintingInstance = fontations_ffi::make_mono_hinting_instance(
+                     fOutlines, fScale.y(), fBridgeNormalizedCoords);
+             fDoLinearMetrics = false;
+@@ -447,6 +477,10 @@
+                 }
+             }
+         }
++#if FONTREAL_SELECTED_TRACE
++        if (!fFontreal && !fontrealReliant)
++            fontreal_target(this->getTypeface(), fRec, false, false, fScale.y(), -1, false, false, false, false);
++#endif
+     }
+ 
+     std::optional<SkScalar> getContourHeightForLetter(SkUnichar letter) {
+@@ -514,6 +548,11 @@
+         static const constexpr value_type COLRv1 = 3;
+         static const constexpr value_type BITMAP = 4;
+     };
++
++    void onPathImage(const SkGlyph& glyph, void* imageBuffer, bool direct) override {
++        if (fFontreal && glyph.extraBits()==ScalerContextBits::PATH && glyph.maskFormat()==SkMask::kA8_Format)
++            fontreal_complete(glyph,imageBuffer,direct,this->getTypeface(),fRec,fScale.y(),fRemainingMatrix,fFontrealDescriptor,fPreBlend.isApplicable());
++    }
+ 
+     GlyphMetrics generateMetrics(const SkGlyph& glyph, SkArenaAlloc*) override {
+         GlyphMetrics mx(glyph.maskFormat());
+@@ -906,6 +945,8 @@
+     const SkSpan<const SkColor> fPalette;
+     rust::Box<fontations_ffi::BridgeHintingInstance> fHintingInstance;
+     bool fDoLinearMetrics = false;
++    bool fFontreal = false;
++    uint32_t fFontrealDescriptor = 0;
+     // Keeping the path extraction target buffers around significantly avoids
+     // allocation churn.
+     SkMutex fPathMutex;

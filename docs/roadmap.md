@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-016: Support Chromium-based browsers and Electron applications.** Deliver the selected method through ordinary application launches. Keep treatment enabled across application updates without recurring release qualification. Teams must use current installed resources with the matching Fontreal engine. Bitwarden needs its own Electron 39.8.5 port and isolation-preserving launch. Edge has no established vendor-supported mask hook. Telegram also needs its own reached rendering owners. Preserve accounts, application data, native launch and security chains, official updates and stock escape. A host FreeType mapping does not establish coverage. See the [engine and Flatpak specification](plans/FR-016-chromium-flatpak.md).
+- **FR-016: Support Chromium-based browsers and Electron applications.** Deliver the selected method through ordinary application launches. Keep treatment enabled across application updates without recurring release qualification. Teams and Bitwarden use separate Fontreal engines with current installed resources and original working data. Keep Bitwarden's Electron 39.8.5 port and native process isolation. Edge has no established vendor-supported mask hook. Telegram also needs its own reached rendering owners. Preserve accounts, application data, native launch and security chains, official updates and stock escape. A host FreeType mapping does not establish coverage. See the [engine and Flatpak specification](plans/FR-016-chromium-flatpak.md).
 
 ## Planned next
 

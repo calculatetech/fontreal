@@ -10,10 +10,10 @@ The guides linked below own the full commands and prerequisites. This page ident
 | --- | --- | --- |
 | Firefox | [Working-profile browser recipe](experiments/browser-masks.md#enable-the-working-profile) | Selected native-normal coverage and weighted stems in supported native installations |
 | Floorp | [Working-profile browser recipe](experiments/browser-masks.md#enable-the-working-profile) | Same selected method, separately enabled and checked |
-| Teams for Linux Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#teams-application-qualification) | Current Teams resources with the saved selected Electron engine. Application updates do not disable treatment |
+| Teams for Linux Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use) | Current Teams resources with the saved selected Electron engine. Application updates do not disable treatment |
 | System Qt 6, KDE and KWin | [Native package and session recipe](build-system.md) | Selected native-normal and weighted stems in matching Debian 13 and Ubuntu 26.04 packages |
-| Edge and other Chromium browsers | [Owner inventory](experiments/chromium-flatpak.md#inspect-and-build) | Not qualified. Teams engine results do not establish browser support |
-| Bitwarden Flatpak | Same owner inventory | Not qualified. Its engine and process-isolation wrapper require separate checks |
+| Edge and other Chromium browsers | [Owner inventory](experiments/chromium-flatpak.md#applications-without-activation) | Not qualified. Teams engine results do not establish browser support |
+| Bitwarden Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#build-and-qualify-bitwarden) | Separate selected engine with current native resources, disabled RunAsNode fuse, original process isolation and working data |
 | Telegram Flatpak | Same owner inventory | Not qualified. Its bundled Qt and runtime FreeType require separate checks |
 | Other GTK/GNOME apps, Qt 5, Wine and Windows | [Roadmap](roadmap.md) | No selected activation recipe yet |
 
@@ -36,13 +36,13 @@ For an untreated Nimbus Sans request, follow the [CFF versus Type 1 diagnosis](e
 
 Browser updates keep the saved Fontreal library enabled. Rebuild and re-enable to receive upstream fixes in that private library. A missing or changed private artifact produces a diagnostic and native stock launch. To restore original preferences and hooks, fully quit the browser and use [Restore the original rendering](experiments/browser-masks.md#restore-the-original-rendering).
 
-## Teams: current application and original data
+## Teams and Bitwarden: current application and original data
 
-Follow [Enable Teams for daily use](experiments/chromium-flatpak.md#enable-teams-for-daily-use). Build and check Fontreal once through that guide, then enable with the printed application record. Fully quit and reopen Teams normally. Status must show `enabled: true` and `compatibility: null`.
+Follow [Enable Teams or Bitwarden for daily use](experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use). Build and qualify each engine through that guide. Enable each target with its printed application record. Fully quit and reopen the target normally. Status must show `enabled: true` and `compatibility: null`.
 
 An application update refreshes its code and resources on the next launch. It does not disable Fontreal or require another font test. The private engine receives upstream fixes when rebuilt. Preserve the full coherent engine and notices. The native absolute Flatpak command supplies stock rendering with the same account data.
 
-Run [Checks when Fontreal changes](experiments/chromium-flatpak.md#checks-when-fontreal-changes) during Fontreal development. The focused launch check proves routing and reversal. The actual-app check proves selected text in the packaged dialog. The original-data lifecycle check covers ordinary reopening and stock restoration. These establish different results, so a configured hook alone is not a rendering claim.
+Run [Checks when Fontreal changes](experiments/chromium-flatpak.md#checks-when-fontreal-changes) during Fontreal development. The focused launch check proves routing and reversal. The actual-app check proves selected text in the packaged Teams dialog or Bitwarden email input. The original-data lifecycle check covers ordinary reopening and stock restoration. The shared `apps.json` registry supports legacy Teams migration and independent disable. Disabling one target preserves the other target. These checks establish different results, so a configured hook alone is not a rendering claim.
 
 ## Native KDE: packages and fresh sessions
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check complete release sources, packages and current-app startup, not font tuning."""
 import hashlib
+import argparse
 import importlib.util
 import io
 import json
@@ -34,7 +35,79 @@ def source_retry(source,destination,env):
     finally:shutil.rmtree(view)
 
 
+def bitwarden_engine():
+    root=app.ROOT;selected.c1.configure('bitwarden');selected.WORK=selected.c1.WORK
+    producer=selected.c1.BITWARDEN;source=producer.WORK/('electron-'+producer.PINS['electron'])/'src'
+    before=producer.source_identity(source.parent)
+    native_refs=('com.bitwarden.desktop','org.freedesktop.Platform/x86_64/25.08')
+    native_before={ref:app.delivery.builder.run(['/usr/bin/flatpak','info','--show-commit',ref]) for ref in native_refs}
+    frozen={name:app.c1.target.sha(root/name) for name in ('tools/build-electron.py',
+        'patches/skia-747cf654-fontreal-trace.patch','src/fontreal_coverage.cpp','src/fontreal_coverage.h')}
+    output=(root/'results/chromium-launch').resolve();output.mkdir(parents=True,exist_ok=True)
+    destination=Path(tempfile.mkdtemp(prefix='engine-update-bitwarden-',dir=output));print(destination,flush=True)
+    script_key=app.c1.target.sha(root/'tools/build-electron-selected.py')[:20]
+    receipts=set((producer.WORK/'selected-runtime').glob('*/credits/'+script_key+'/identity.json'))
+    record_path,record,original,contrast=selected.selected_build(None,destination,'bitwarden')
+    gperf=shutil.which('gperf',path=producer.environment()['PATH']);assert gperf is not None
+    assert original['spec']['host_tools']['gperf']==app.c1.target.sha(Path(gperf))
+    assert record['spec']['upstream']==dict(electron='39.8.5',commit='9d2f8cb4da0d35e2daf7e7f60e35313b508cb224',
+                                          node_base='b4acf0c9393e4b31c4937564f059c672967161d8')
+    runtime_path=Path(record['spec']['runtime_record']);runtime=json.loads(runtime_path.read_text())
+    assert runtime['upstream_views']==[] and runtime['baseline_packages']==original['packages']
+    assert set(runtime['spec']['tools'])=={'clang','lld','rustc','gn','ninja'}
+    assert producer.source_identity(source.parent)==before==record['spec']['source_identity']
+    node=source/'third_party/electron_node';base=producer.PINS['node_base']
+    commits=subprocess.check_output(['git','-C',node,'rev-list','--reverse',base+'..HEAD'],text=True).splitlines()
+    patchdir=source/'electron/patches/node';patches=(patchdir/'.patches').read_text().splitlines()
+    assert len(commits)==len(patches)>0
+    for commit,name in zip(commits,patches,strict=True):
+        expected=subprocess.check_output(['git','patch-id','--stable'],input=(patchdir/name).read_bytes()).split()[0]
+        diff=subprocess.check_output(['git','-C',node,'show','--format=','--no-ext-diff',commit])
+        assert subprocess.check_output(['git','patch-id','--stable'],input=diff).split()[0]==expected,name
+    assert not subprocess.check_output(['git','-C',node,'status','--porcelain'],text=True)
+    assert app.c1.target.sha(node/'LICENSE')==record['spec']['node_license_sha256']
+    credits=runtime_path.parent/'credits'/script_key/'identity.json'
+    assert json.loads(credits.read_text())==record['spec']['notices']
+    generated=credits not in receipts
+    if generated:assert 'selected-credits:' in (destination/'builder-stdout.log').read_text()
+    command=[sys.executable,'-B',str(root/'tools/build-chromium-delivery.py'),'--target','bitwarden','--build-record',str(record_path)]
+    with (destination/'assembler-stdout.log').open('w') as stdout:
+        subprocess.run(command,cwd=root,stdout=stdout,check=True)
+    assembled=Path((destination/'assembler-stdout.log').read_text().splitlines()[-1])
+    assembled_sha=app.c1.target.sha(assembled);application=json.loads(assembled.read_text())
+    environment=app.delivery.builder.sdk_environment();sdk=application['spec']['zypak']
+    actual_sdk=app.delivery.builder.run(['flatpak','--user','info','--show-commit',sdk['spec']['sdk']],env=environment)
+    assert sdk['spec']['sdk_commit']==actual_sdk
+    build=Path(next(value for value in sdk['command'][2:] if not value.startswith('-')))
+    assert build.resolve().is_relative_to(app.delivery.builder.WORK)
+    assert app.delivery.builder.run(['flatpak','build',build,'g++','--version'],env=environment)==sdk['compiler']
+    assert app.delivery.builder.run(['flatpak','build',build,'sha256sum','/usr/bin/g++','/usr/bin/ld'],env=environment)==sdk['tools_sha256']
+    retained={role:(view['engine_sha256'],(Path(view['directory'])/'Bitwarden/bitwarden-app').stat().st_mtime_ns)
+              for role,view in application['views'].items()}
+    with (destination/'assembler-reused-stdout.log').open('w') as stdout:
+        subprocess.run(command,cwd=root,stdout=stdout,check=True)
+    assert Path((destination/'assembler-reused-stdout.log').read_text().splitlines()[-1])==assembled
+    assert app.c1.target.sha(assembled)==assembled_sha and json.loads(assembled.read_text())==application
+    assert retained=={role:(view['engine_sha256'],(Path(view['directory'])/'Bitwarden/bitwarden-app').stat().st_mtime_ns)
+                     for role,view in application['views'].items()}
+    readiness=[sys.executable,'-B',str(root/'tests/bitwarden_delivery_test.py'),'--case','readiness','--build-record',str(assembled)]
+    with (destination/'readiness-stdout.log').open('w') as stdout:
+        subprocess.run(readiness,cwd=root,stdout=stdout,check=True)
+    assert producer.source_identity(source.parent)==before
+    assert frozen=={name:app.c1.target.sha(root/name) for name in frozen}
+    assert native_before=={ref:app.delivery.builder.run(['/usr/bin/flatpak','info','--show-commit',ref]) for ref in native_refs}
+    result=dict(passed=True,target='bitwarden',build=str(record_path),build_sha256=app.c1.target.sha(record_path),
+                runtime=str(runtime_path),runtime_sha256=app.c1.target.sha(runtime_path),applicationBuild=str(assembled),
+                sourceIdentity=before,nodePatchCount=len(patches),creditsGeneratedThisRun=generated,
+                noticeContrast=contrast,originalsPreserved=frozen,readinessCommand=readiness,
+                actualSdk=actual_sdk,actualSdkProvenance=True,applicationReusedUnchanged=True)
+    (destination/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+
+
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--target',choices=('teams','bitwarden'),default='teams');args=parser.parse_args()
+    if args.target=='bitwarden':return bitwarden_engine()
     # Synthetic release labels exercise the existing native-module compatibility gate.
     older=dict(electron='44.9.0',chrome='152.0.7977.167',modules='149')
     newer=dict(older,electron='44.9.1',chrome='152.0.7977.168')

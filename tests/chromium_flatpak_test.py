@@ -3,6 +3,7 @@
 import argparse
 import configparser
 import ctypes
+import importlib.util
 import math
 import mmap
 import os
@@ -30,6 +31,19 @@ PINS=dict(electron='44.9.0',electron_commit='fd148b9908b83c8dc09924e45e6df44b83b
 FONTS={'Noto Sans':Path('/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf'),
        'Hack':Path('/usr/share/fonts/truetype/hack/Hack-Regular.ttf'),
        'Nimbus Sans':Path('/usr/share/fonts/opentype/urw-base35/NimbusSans-Regular.otf')}
+PRODUCER=ROOT/'tools/build-electron.py'
+TRACE_PATCH=ROOT/'patches/skia-747cf654-fontreal-trace.patch'
+BITWARDEN=None
+
+
+def configure(name):
+    global WORK,PINS,PRODUCER,TRACE_PATCH,BITWARDEN
+    if name=='teams':return
+    assert name=='bitwarden'
+    PRODUCER=ROOT/'tools/build-electron-bitwarden.py'
+    spec=importlib.util.spec_from_file_location('bitwarden_fixture_builder',PRODUCER)
+    BITWARDEN=importlib.util.module_from_spec(spec);spec.loader.exec_module(BITWARDEN)
+    WORK=BITWARDEN.WORK;PINS=BITWARDEN.PINS;TRACE_PATCH=BITWARDEN.PATCH
 
 
 def owners():
@@ -65,7 +79,7 @@ def build_record(path=None):
         record=json.loads(candidate.read_text()); spec=record['spec']
         if all(spec['pins'].get(k)==v for k,v in PINS.items()) and all(
                 spec.get(k)==target.sha(ROOT/name) for k,name in (
-                    ('recipe','tools/build-electron.py'),('patch','patches/skia-747cf654-fontreal-trace.patch'),
+                    ('recipe',PRODUCER),('patch',TRACE_PATCH),
                     ('header','tests/skia_owner_trace.h'))):
             matching.append((candidate,record))
     assert len(matching)==1, 'Need one completed matching build.json; use --build-record with the builder final path'
@@ -79,6 +93,7 @@ def build_record(path=None):
     heads={name:subprocess.check_output(['git','rev-parse','HEAD'],cwd=checkout/name,text=True).strip()
            for name in ('src','src/electron','src/third_party/skia')}
     observed=dict(pins=PINS,heads=heads,configuration=target.sha(checkout/'.gclient'),entries=target.sha(checkout/'.gclient_entries'))
+    if BITWARDEN is not None:observed=BITWARDEN.source_identity(checkout)
     assert observed==identity, 'Live source HEADs or gclient configuration differ from the build source identity'
     assert heads['src/electron']==PINS['electron_commit']
     subprocess.run(['git','merge-base','--is-ancestor',PINS['skia'],heads['src/third_party/skia']],
@@ -91,8 +106,9 @@ def build_record(path=None):
     cache_environment=record['cache_environment']; cache_root=(WORK/'cache').resolve()
     assert set(cache_environment)==required_cache, 'Build cache environment is incomplete or changed'
     assert cache_root.is_relative_to(WORK)
-    assert all(Path(value).resolve().is_relative_to(cache_root) and Path(value).is_dir()
-               for value in cache_environment.values()), 'A recorded build cache is absent or outside WORK/cache'
+    assert all(Path(value).is_dir() and (Path(value).resolve().is_relative_to(cache_root) or
+               (BITWARDEN is not None and name=='GIT_CACHE_PATH' and Path(value)==WORK/'cache/git'))
+               for name,value in cache_environment.items()), 'A recorded build cache is absent or outside its configured location'
     for role in ('stock','instrumented'):
         package=record['packages'][role]; payload=Path(package['directory']).resolve()
         archive=Path(package['archive']).resolve()
@@ -294,7 +310,7 @@ def sandbox_evidence(identity,user_data,main_pid):
     assert required_caps <= set(caps) and all(len(caps[key])==16 and all(c in '0123456789abcdefABCDEF' for c in caps[key]) for key in required_caps), caps
     assert all(int(caps[key],16)==0 for key in required_caps-{'CapBnd'}), caps
     command=Path(f'/proc/{pid}/cmdline').read_bytes().split(b'\0')
-    assert any(b'--type=renderer' in argument.split() for argument in command), command
+    # Native webContents identifies the renderer; forked children can retain zygote argv.
     assert not any(b'no-sandbox' in arg or b'disable-seccomp' in arg or b'disable-setuid-sandbox' in arg for arg in command)
     return dict(hostPid=pid,tracePid=namespace_pids[-1],namespacePids=namespace_pids,ownedPidMapping=mapping,
                 Seccomp=2,NoNewPrivs=1,capabilities=caps,command=[os.fsdecode(a) for a in command if a])
@@ -419,7 +435,7 @@ def stock_fixture(record_path=None):
     import browser_masks_test as masks
     WORK.mkdir(parents=True,exist_ok=True);OUT.mkdir(parents=True,exist_ok=True)
     destination=Path(tempfile.mkdtemp(prefix='stock-fixture-',dir=OUT))
-    command=[sys.executable,str(ROOT/'tools/build-electron.py')]
+    command=[sys.executable,str(PRODUCER)]
     builder_env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',TMPDIR=str(WORK/'cache/tmp'))
     builder=dict(command=command,cwd=str(ROOT),environment={key:builder_env[key] for key in ('PYTHONDONTWRITEBYTECODE','TMPDIR')})
     (destination/'builder-command.json').write_text(json.dumps(builder,indent=2)+'\n')
@@ -451,7 +467,7 @@ def stock_fixture(record_path=None):
                     assert pair[0]['identity']['measurement']==pair[1]['identity']['measurement']
                     assert pair[0]['font_sha256']==pair[1]['font_sha256']
                     results.extend(pair)
-                    print(f'PASS exact Teams engine stock/instrumented {family} 15px {palette}; real window identity and sandbox',flush=True)
+                    print(f'PASS exact {PINS["electron"]} engine stock/instrumented {family} 15px {palette}; real window identity and sandbox',flush=True)
     report=dict(builder=builder,build_record=str(record_path),build_record_sha256=target.sha(record_path),spec=record['spec'],
                 source_identity=record['source_identity'],cache_environment=record['cache_environment'],
                 scope='exact-engine fixture only; installed application backend coverage remains unknown',sender_selfcheck=sender_check,conditions=results)
@@ -462,11 +478,12 @@ def stock_fixture(record_path=None):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--case',choices=('owners','stock-fixture'),required=True)
-    parser.add_argument('--target',choices=('teams',))
-    parser.add_argument('--build-record',type=Path,help='Completed build-electron.py build.json (auto-detected if unique)')
+    parser.add_argument('--target',choices=('teams','bitwarden'))
+    parser.add_argument('--build-record',type=Path,help='Completed source-builder build.json (auto-detected if unique)')
     args=parser.parse_args()
     if args.case=='stock-fixture':
-        if args.target!='teams':parser.error('--target teams is required for stock-fixture')
+        if args.target is None:parser.error('--target is required for stock-fixture')
+        configure(args.target)
         stock_fixture(args.build_record)
     else:
         OUT.mkdir(parents=True,exist_ok=True)

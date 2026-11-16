@@ -22,7 +22,7 @@
 +# Private exact-provider fixture and the unchanged selected processor.
 +executable("fontreal_native_probe") {
 +  sources = [ "fontreal_native_probe.cpp" ]
-+  deps = [ ":skia", ":bridge_rust_side", ":path_bridge" ]
++  deps = [ "//base", ":skia", ":bridge_rust_side", ":path_bridge" ]
 +  configs -= [ "//build/config/compiler:chromium_code" ]
 +  configs += [ ":skia_config", "//build/config/compiler:no_chromium_code" ]
 +}
