@@ -12,17 +12,22 @@
 +        return !fontrealEnabled() && (default_hint_style == HintLight ||
 +                                     default_hint_style == HintNone);
      }
-
+ 
      bool supportsVerticalSubPixelPositions() const override
 --- a/src/gui/text/freetype/qfontengine_ft.cpp
 +++ b/src/gui/text/freetype/qfontengine_ft.cpp
-@@ -155,4 +155,9 @@
+@@ -155,4 +155,14 @@
      if (!freetypeData->library) {
          FT_Init_FreeType(&freetypeData->library);
 +        if (qgetenv("FONTREAL_RENDERING") == "1"
 +            && qgetenv("FONTREAL_FITTING") == "nearest") {
 +            FT_Bool nearest = true;
 +            FT_Property_Set(freetypeData->library, "autofitter", "fontreal-nearest-y-v2", &nearest);
++        }
++        if (qgetenv("FONTREAL_RENDERING") == "1"
++            && qgetenv("FONTREAL_FITTING") == "native") {
++            FT_Bool selected = true;
++            FT_Property_Set(freetypeData->library, "autofitter", "fontreal-selected-v1", &selected);
 +        }
  #if defined(FT_FONT_FORMATS_H)
          // Freetype defaults to disabling stem-darkening on CFF, we re-enable it.
@@ -36,11 +41,11 @@
 +    }
      defaultFormat = format;
      this->antialias = antialias;
-
-@@ -1127,8 +1131,30 @@
+ 
+@@ -1127,8 +1131,31 @@
      default_hint_style = style;
  }
-
+ 
 +bool QFontEngineFT::fontrealEnabled() const
 +{
 +    static const bool enabled = qgetenv("FONTREAL_RENDERING") == "1";
@@ -48,15 +53,16 @@
 +        || FT_HAS_COLOR(freetype->face))
 +        return false;
 +    static const bool nearest = qgetenv("FONTREAL_FITTING") == "nearest";
-+    if (nearest) {
++    static const bool native = qgetenv("FONTREAL_FITTING") == "native";
++    if (nearest || native) {
 +        FT_Bool active = false;
 +        if (FT_Property_Get(freetype->face->glyph->library, "autofitter",
-+                            "fontreal-nearest-y-v2", &active) || !active)
++                            native ? "fontreal-selected-v1" : "fontreal-nearest-y-v2", &active) || !active)
 +            return false;
 +    }
 +    const char *format = FT_Get_Font_Format(freetype->face);
 +    return format && (qstrcmp(format, "TrueType") == 0
-+        || (nearest && qstrcmp(format, "CFF") == 0));
++        || ((nearest || native) && qstrcmp(format, "CFF") == 0));
 +}
 +
  bool QFontEngineFT::expectsGammaCorrectedBlending() const
@@ -67,23 +73,28 @@
 +    }
      return stemDarkeningDriver;
  }
-
-@@ -1164,6 +1182,13 @@
+ 
+@@ -1164,6 +1182,18 @@
      if (forceAutoHint)
          load_flags |= FT_LOAD_FORCE_AUTOHINT;
-
+ 
 +    if (fontrealEnabled() && !(flags & DesignMetrics)
 +        && !(set && set->outline_drawing) && format != Format_ARGB) {
-+        load_flags &= ~(FT_LOAD_NO_HINTING | (15 << 16) | FT_LOAD_MONOCHROME);
-+        load_flags |= FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO | FT_LOAD_NO_BITMAP;
++        load_flags &= ~(FT_LOAD_NO_HINTING | (15 << 16) | FT_LOAD_MONOCHROME
++                        | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_NO_AUTOHINT);
++        load_flags |= FT_LOAD_NO_BITMAP;
++        if (qgetenv("FONTREAL_FITTING") == "native")
++            load_flags |= FT_LOAD_NO_AUTOHINT;
++        else
++            load_flags |= FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_MONO;
 +        hsubpixel = false;
 +        vfactor = 1;
 +    }
      return load_flags;
  }
-
+ 
 @@ -1933,7 +1958,7 @@
-
+ 
      int glyph_buffer_size = 0;
      std::unique_ptr<uchar[]> glyph_buffer;
 -    FT_Render_Mode renderMode = (default_hint_style == HintLight) ? FT_RENDER_MODE_LIGHT : FT_RENDER_MODE_NORMAL;
@@ -108,7 +119,7 @@
 +                }
 +            }
      }
-
+ 
      if (!g) {
 @@ -2804,6 +2841,18 @@
          lockFace();
@@ -132,12 +143,12 @@
 --- a/src/gui/text/unix/qfontconfigdatabase.cpp
 +++ b/src/gui/text/unix/qfontconfigdatabase.cpp
 @@ -1177,6 +1177,13 @@
-
+ 
      FcPatternDestroy(pattern);
-
+ 
 +    if (engine->fontrealEnabled()) {
 +        engine->setDefaultHintStyle(QFontEngine::HintFull);
-+        engine->forceAutoHint = true;
++        engine->forceAutoHint = qgetenv("FONTREAL_FITTING") != "native";
 +        engine->subpixelType = QFontEngine::Subpixel_None;
 +        antialias = true;
 +        format = QFontEngine::Format_A8;
@@ -153,12 +164,12 @@
  #include <private/qcolortrclut_p.h>
 +#include <private/qcolortrc_p.h>
  #include <private/qscreen_p.h>
-
+ 
  #include <QtGui/qgenericpluginfactory.h>
 @@ -4514,8 +4515,14 @@
  }
  #endif
-
+ 
 +thread_local bool qt_fontrealA8Text = false;
 +
  const QColorTrcLut *QGuiApplicationPrivate::colorProfileForA8Text()
@@ -173,12 +184,12 @@
 --- a/src/gui/kernel/qguiapplication_p.h
 +++ b/src/gui/kernel/qguiapplication_p.h
 @@ -42,6 +42,8 @@
-
+ 
  Q_DECLARE_LOGGING_CATEGORY(lcPopup)
  Q_DECLARE_LOGGING_CATEGORY(lcVirtualKeyboard)
 +
 +extern thread_local bool qt_fontrealA8Text;
-
+ 
  class QColorTrcLut;
  class QPlatformIntegration;
 --- a/src/gui/painting/qpaintengine_raster.cpp
@@ -207,7 +218,7 @@
 +#endif
 +    const QScopedValueRollback<bool> profileScope(qt_fontrealA8Text, fontreal);
      QRasterPaintEngineState *s = state();
-
+ 
      bool verticalSubPixelPositions = fontEngine->supportsVerticalSubPixelPositions()
 --- a/src/gui/rhi/qrhi.h
 +++ b/src/gui/rhi/qrhi.h
@@ -220,7 +231,7 @@
 +        FontrealSrgbWrite = 1 << 15
      };
      Q_DECLARE_FLAGS(Flags, Flag)
-
+ 
 @@ -1313,7 +1314,8 @@
          UsesStencilRef = 1 << 1,
          UsesScissor = 1 << 2,
@@ -230,7 +241,7 @@
 +        FontrealSrgbWrite = 1 << 5
      };
      Q_DECLARE_FLAGS(Flags, Flag)
-
+ 
 --- a/src/gui/rhi/qrhigles2.cpp
 +++ b/src/gui/rhi/qrhigles2.cpp
 @@ -3463,6 +3463,14 @@
@@ -264,7 +275,7 @@
                              quintptr(cmd.args.drawIndexed.firstIndex * state.indexStride + state.indexOffset));
                  if (cmd.args.drawIndexed.instanceCount == 1 || !caps.instancing) {
 @@ -5777,6 +5793,12 @@
-
+ 
      QRHI_RES_RHI(QRhiGles2);
      if (rhiD) {
 +        if (fontrealWriteView) {
@@ -277,7 +288,7 @@
              rhiD->releaseQueue.append(e);
          rhiD->unregisterResource(this);
 @@ -5901,7 +5923,20 @@
-
+ 
      if (!isCompressed) {
          rhiD->f->glBindTexture(target, texture);
 -        if (!m_flags.testFlag(UsedWithLoadStore)) {
@@ -311,7 +322,7 @@
 +++ b/src/gui/rhi/qrhigles2_p.h
 @@ -118,6 +118,7 @@
      bool prepareCreate(QSize *adjustedSize = nullptr);
-
+ 
      GLuint texture = 0;
 +    GLuint fontrealWriteView = 0;
      bool owns = true;

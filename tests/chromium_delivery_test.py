@@ -27,6 +27,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from unittest.mock import patch
 from PIL import Image
 
 import browser_masks_test as masks
@@ -1055,6 +1056,10 @@ def simple_kerning(font,ids):
     return dict(noGpos=True,kernFormat=0,pairs={a+b:value for (a,b),value in relevant.items()})
 
 
+def require_native_modules(versions,baseline):
+    assert versions['modules']==baseline['modules'],'Native module ABI differs from the installed application'
+
+
 def actual_app(build_record,destination,env):
     destination.mkdir(parents=True,exist_ok=True);command=[sys.executable,'-B',str(ROOT/'tools/build-chromium-delivery.py'),'--build-record',str(build_record)]
     write_json(destination/'producer-command.json',command)
@@ -1080,7 +1085,7 @@ def actual_app(build_record,destination,env):
     evidence=selected_evidence(sessions['trace'],oracles,font);write_json(destination/'selected-evidence.json',evidence)
     base=sessions['source-stock']['first']['state']['measure'];checks=[]
     versions=json.loads((destination/'official-stock/identity.json').read_text())['versions']
-    for role in sessions:assert json.loads((destination/role/'identity.json').read_text())['versions']==versions,'Actual engine/native-module ABI differs from original qualified package'
+    for role in sessions:require_native_modules(json.loads((destination/role/'identity.json').read_text())['versions'],versions)
     for role,observations in sessions.items():
         for stage,observation in observations.items():
             state=observation['state'];assert state['measure']==sessions['source-stock'][stage]['state']['measure'],'Actual local control/font/style geometry differs across roles'
@@ -1411,7 +1416,7 @@ def lifecycle(build_record,destination,env):
             write_json(destination/'unsent-uri-safety.json',dict(uri=uri,effectivePredicatesAccepted=rejection,originalHandlerOnly=True,sourceSha256=hashlib.sha256(source.encode()).hexdigest()))
         command=[sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py'),'enable','teams','--record',str(emitted)]
         with (destination/'enable.stdout').open('w') as out,(destination/'enable.stderr').open('w') as err:subprocess.run(command,env=env,stdout=out,stderr=err,check=True)
-        enabled=True;normal=Path(record['views']['normal']['directory']);engine=normal/'teams-for-linux/teams-for-linux'
+        enabled=True;normal=delivery.builder.current_view(record);engine=normal/'teams-for-linux/teams-for-linux'
         hook_checks(record,state_path,hooks,destination/'hook-checks',env)
         unit=generated_autostart(destination/'selected-autostart-generator.json',Path('/usr/bin/gio'),env,hooks['autostart'])
         desktop=configparser.ConfigParser(interpolation=None);desktop.read(hooks['desktop']);actions=[name for name in desktop.sections() if name.startswith('Desktop Action ')]
@@ -1590,7 +1595,9 @@ def update_cycle(build_record,destination,env):
         with ordinary_observer(['/usr/bin/flatpak','run',APPLICATION],destination/'old-native',private,stock_engine,stock,data) as (inspector,identity,instance):
             baseline=destination/'old-native/text';working_text(inspector,baseline,private,stock_engine,proof,False)
         invoke([sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py'),'enable','teams','--record',str(emitted)],'enable-private')
-        enabled=True;normal=Path(record['views']['normal']['directory']);engine=normal/'teams-for-linux/teams-for-linux';phase_view=normal
+        enabled=True
+        with patch.dict(os.environ,private):normal=delivery.builder.current_view(record)
+        engine=normal/'teams-for-linux/teams-for-linux';phase_view=normal
         generated_autostart(destination/'old-selected-effective.json',Path('/usr/bin/gio'),env,hooks['autostart'])
         prestart('old-selected-autostart')
         with ordinary_observer(['systemctl','--user','start',unit],destination/'old-selected-autostart',private,engine,normal,data) as (inspector,identity,instance):
@@ -1603,24 +1610,26 @@ def update_cycle(build_record,destination,env):
         write_json(destination/'after.json',after)
         private_launch_source(Path(after['location']),destination/'updated-source.json',private)
         status=json.loads(invoke([sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py'),'status','teams'],'updated-status'))
-        assert status['enabled'] and status['compatibility'],'Updated official payload did not invalidate old qualification'
+        assert status['enabled'] and status['compatibility'] is None,'Application update disabled the saved Fontreal engine'
         current=Path(after['location'])/'files';current_engine=current/'teams-for-linux/teams-for-linux';phase_view=current
         prestart('updated-native')
         with ordinary_observer(['/usr/bin/flatpak','run',APPLICATION],destination/'updated-native',private,current_engine,current,data) as (inspector,identity,instance):
             updated_baseline=destination/'updated-native/text';working_text(inspector,updated_baseline,private,current_engine,proof,False)
-        generated_autostart(destination/'updated-fallback-effective.json',Path('/usr/bin/gio'),env,hooks['autostart'])
-        prestart('updated-fallback-autostart')
-        with ordinary_observer(['systemctl','--user','start',unit],destination/'updated-fallback-autostart',private,current_engine,current,data) as (inspector,identity,instance):
+        with patch.dict(os.environ,private):updated_view=delivery.builder.current_view(record)
+        updated_engine=updated_view/'teams-for-linux/teams-for-linux';phase_view=updated_view
+        generated_autostart(destination/'updated-selected-effective.json',Path('/usr/bin/gio'),env,hooks['autostart'])
+        prestart('updated-selected-autostart')
+        with ordinary_observer(['systemctl','--user','start',unit],destination/'updated-selected-autostart',private,updated_engine,updated_view,data) as (inspector,identity,instance):
             assert c1.target.sha(marker)==marker_sha
-            working_text(inspector,destination/'updated-fallback-autostart/text',private,current_engine,proof,False,updated_baseline)
+            working_text(inspector,destination/'updated-selected-autostart/text',private,updated_engine,proof,True,updated_baseline)
         invoke([sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py'),'disable','teams'],'disable-private');enabled=False
         generated_autostart(destination/'updated-stock-effective.json',Path('/usr/bin/flatpak'),env)
         prestart('updated-stock-autostart')
         with ordinary_observer(['systemctl','--user','start',unit],destination/'updated-stock-autostart',private,current_engine,current,data) as (inspector,identity,instance):
             working_text(inspector,destination/'updated-stock-autostart/text',private,current_engine,proof,False,updated_baseline)
         assert c1.target.sha(marker)==marker_sha
-        result=dict(passed=True,before=before,after=after,oldQualification=proof['report'],nativeGuardReason=status['compatibility'],
-                    data=str(data),durableMarkerSha256=marker_sha,actualUpdatedStockFallback=True,stockReversal=True,
+        result=dict(passed=True,before=before,after=after,engineQualification=proof['report'],compatibility=status['compatibility'],
+                    data=str(data),durableMarkerSha256=marker_sha,actualUpdatedSelected=True,stockReversal=True,
                     originalWorkingData=host,autostartClaim=True,commands=commands)
     finally:
         try:

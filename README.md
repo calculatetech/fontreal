@@ -37,9 +37,9 @@ Fontreal contains a comparison viewer, rendering patches, and tools that build m
 
 [Firefox and Floorp support](docs/experiments/browser-masks.md) applies this method to your existing working profile. Accounts, bookmarks, history, sessions, and unrelated preferences stay in place. Re-enabling upgrades an older Fontreal activation. Disable restores the original rendering preferences and removes the owned launch hooks.
 
-The private FreeType builder supports exact Debian 13 and Ubuntu 26.04 source revisions on amd64. It builds the original and modified libraries together. Version checks prevent an override from loading after an incompatible update.
+The private FreeType builder supports pinned Debian 13 and Ubuntu 26.04 sources on amd64. It builds the original and modified libraries together. Saved browser builds remain enabled across browser updates.
 
-KDE system packages currently contain the earlier raw profile. Updating that package workflow to the selected method is separate work. The [Teams workflow](docs/experiments/chromium-flatpak.md#teams-application-qualification) builds and checks the exact supported Flatpak application before enabling its ordinary launchers. Edge, Bitwarden and Telegram remain unqualified. See the [roadmap](docs/roadmap.md).
+The [native KDE workflow](docs/build-system.md) builds matching FreeType and Qt packages with the same selected method. It preserves chosen fonts and sizes. The [Teams workflow](docs/experiments/chromium-flatpak.md#teams-application-qualification) supplies the selected renderer inside its Flatpak sandbox. Edge, Bitwarden and Telegram require separate integration. See the [roadmap](docs/roadmap.md).
 
 ## Try it
 
@@ -62,7 +62,7 @@ cmake --build build
 ./build/fontreal
 ```
 
-The viewer retains the earlier experimental controls. It does not select the new browser method automatically. For the earlier KDE packages, use the [system build and recovery guide](docs/build-system.md). The [rendering research](docs/research/native-font-rendering.md) explains the background.
+The viewer retains the earlier experimental controls. It does not select the new browser method automatically. For native KDE packages, use the [system build and recovery guide](docs/build-system.md). The [rendering research](docs/research/native-font-rendering.md) explains the background.
 
 ## Feedback welcome
 

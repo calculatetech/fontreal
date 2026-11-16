@@ -8,8 +8,8 @@ import tempfile
 
 
 def activation(builder, directory, plan):
-    if set(plan["sources"]) != set(builder.SOURCES):
-        raise ValueError("New activation requires FreeType and both Qt source families.")
+    if set(plan["sources"]) != set(builder.SOURCES) or not builder.selected_plan(plan):
+        raise ValueError("New activation requires FreeType and both Qt source families with the selected profile.")
     destination = directory / "activation"
     destination.mkdir()
     with tempfile.TemporaryDirectory(prefix=".fontreal-session-", dir=directory) as temporary:
@@ -38,9 +38,25 @@ def activation(builder, directory, plan):
             "Depends: libfreetype6, libqt6gui6, libqt6quick6, coreutils\n"
             "Description: Explicit per-user Fontreal activation for Plasma\n"
             " Starts disabled and preserves installed fonts.\n")
+        postinst = root / "DEBIAN/postinst"
+        postinst.write_text('''#!/bin/sh
+set -eu
+if [ "${1:-}" = configure ]; then
+    directory=/usr/share/fontreal
+    if [ -L "$directory" ] || [ ! -d "$directory" ] ||
+       [ "$(stat -c %u -- "$directory")" != 0 ] ||
+       [ "$(dpkg-query -S "$directory")" != "fontreal-session: $directory" ]; then
+        printf '%s\\n' 'The Fontreal source record directory is not a root-owned package directory.' >&2
+        exit 1
+    fi
+    if ! dpkg-statoverride --list "$directory" >/dev/null; then
+        chmod 0755 -- "$directory"
+    fi
+fi
+''')
         root.chmod(0o755)
         for path in root.rglob("*"):
-            path.chmod(0o755 if path.is_dir() or path == root / "usr/bin/fontreal-session" else 0o644)
+            path.chmod(0o755 if path.is_dir() or path in (root / "usr/bin/fontreal-session", postinst) else 0o644)
         builder.run(["dpkg-deb", "--build", "--root-owner-group", root,
                      destination / "fontreal-session.deb"])
     for name in ("fontreal-session", "fontreal.sh", "NOTICE"):
@@ -103,8 +119,8 @@ def transaction(builder, directory, rollback=False, simulate=False):
     if (system["ID"], system["VERSION_ID"], builder.output(["dpkg", "--print-architecture"])) != (
             plan["os"], plan["release"], plan["arch"]):
         raise ValueError("The bundle does not match this distribution and architecture.")
-    if not rollback and set(plan["sources"]) != set(builder.SOURCES):
-        raise ValueError("Installation requires FreeType and both Qt source families. Make a new complete bundle.")
+    if not rollback and (set(plan["sources"]) != set(builder.SOURCES) or not builder.selected_plan(plan)):
+        raise ValueError("Installation requires FreeType and both Qt source families with the selected profile. Make a new complete bundle.")
     current = [p for p in builder.installed() if not rollback or p["source"] in plan["sources"]]
     identities = lambda records: {(p["name"], p["arch"]) for p in records}
     if identities(current) != identities(plan["installed"]):
@@ -127,6 +143,8 @@ def transaction(builder, directory, rollback=False, simulate=False):
                     or record["bundle_sha256"] != builder.sha(directory / "bundle.json")
                     or record.get("deployment_sha256") != builder.sha(directory / "deployment.json")):
                 raise ValueError(f"Validation belongs to a different bundle: {filename}")
+            if record.get("selected_profile") != builder.SELECTED_PROFILE:
+                raise ValueError("Complete the selected-profile package and session checks before installation.")
             if filename.startswith("package-checks/"):
                 updates = record.get("updates", [])
                 if len(updates) != len(builder.SOURCES) or {r["source"] for r in updates} != set(builder.SOURCES):

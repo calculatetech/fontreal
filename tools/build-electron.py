@@ -90,13 +90,10 @@ def source_identity(checkout):
 
 
 def main():
-    team=next(r for r in owners() if r['target']=='teams')
-    if team.get('commit')!=TEAMS_COMMIT or team.get('binary',{}).get('sha256')!=TEAMS_BINARY:
-        raise SystemExit('Requires the recorded amd64 Teams 2.28.0 build with Electron 44.9.0. Other engine sources are not established.')
     WORK.mkdir(parents=True,exist_ok=True);env=environment();depot=WORK/'depot_tools'
     base_spec=dict(pins=PINS,gn_args=GN_ARGS,source_files=BASE_FILES)
     spec=dict(base_spec,recipe=sha(Path(__file__)),patch=sha(PATCH),header=sha(HEADER),
-              target_commit=team['commit'],target_binary=team['binary']['sha256'])
+              target_commit=TEAMS_COMMIT,target_binary=TEAMS_BINARY)
     artifact=WORK/'artifacts'/key(spec);record=artifact/'build.json'
     if record.exists():
         saved=json.loads(record.read_text())

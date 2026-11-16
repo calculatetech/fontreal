@@ -10,14 +10,14 @@ The guides linked below own the full commands and prerequisites. This page ident
 | --- | --- | --- |
 | Firefox | [Working-profile browser recipe](experiments/browser-masks.md#enable-the-working-profile) | Selected native-normal coverage and weighted stems in supported native installations |
 | Floorp | [Working-profile browser recipe](experiments/browser-masks.md#enable-the-working-profile) | Same selected method, separately enabled and checked |
-| Teams for Linux Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#teams-application-qualification) | Exact Teams 2.28.0 / Electron 44.9.0 / Chromium 152.0.7977.167 route only |
-| System Qt 6, KDE and KWin | [Native package and session recipe](build-system.md) | Earlier raw profile. The selected weighted package port remains separate work |
+| Teams for Linux Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#teams-application-qualification) | Current Teams resources with the saved selected Electron engine. Application updates do not disable treatment |
+| System Qt 6, KDE and KWin | [Native package and session recipe](build-system.md) | Selected native-normal and weighted stems in matching Debian 13 and Ubuntu 26.04 packages |
 | Edge and other Chromium browsers | [Owner inventory](experiments/chromium-flatpak.md#inspect-and-build) | Not qualified. Teams engine results do not establish browser support |
 | Bitwarden Flatpak | Same owner inventory | Not qualified. Its engine and process-isolation wrapper require separate checks |
 | Telegram Flatpak | Same owner inventory | Not qualified. Its bundled Qt and runtime FreeType require separate checks |
 | Other GTK/GNOME apps, Qt 5, Wine and Windows | [Roadmap](roadmap.md) | No selected activation recipe yet |
 
-Match the exact supported revisions in each guide. Another version, package format, architecture, runtime or bundled toolkit requires its own qualification. Do not apply a Teams override to another Electron application.
+Follow each integration guide. Build source revisions remain pinned. Application releases do not trigger repeated Fontreal qualification. A different rendering engine still needs an integration. Do not apply a Teams override to another Electron application.
 
 ## Firefox and Floorp: original working profiles
 
@@ -34,37 +34,19 @@ For automated reproduction, run [Repeat the checks](experiments/browser-masks.md
 
 For an untreated Nimbus Sans request, follow the [CFF versus Type 1 diagnosis](experiments/browser-masks.md#when-nimbus-sans-looks-untreated). That optional font-selection rule is separate from activation and has its own removal step.
 
-After an incompatible browser or FreeType update, the wrapper starts the installed browser without the private library. Re-enable only when the matching build route supports the new revisions. To restore original preferences and hooks, fully quit the browser and use [Restore the original rendering](experiments/browser-masks.md#restore-the-original-rendering).
+Browser updates keep the saved Fontreal library enabled. Rebuild and re-enable to receive upstream fixes in that private library. A missing or changed private artifact produces a diagnostic and native stock launch. To restore original preferences and hooks, fully quit the browser and use [Restore the original rendering](experiments/browser-masks.md#restore-the-original-rendering).
 
-## Teams: engine, real app, original data, update, activation
+## Teams: current application and original data
 
-Follow the [engine guide](experiments/chromium-flatpak.md) in this order:
+Follow [Enable Teams for daily use](experiments/chromium-flatpak.md#enable-teams-for-daily-use). Build and check Fontreal once through that guide, then enable with the printed application record. Fully quit and reopen Teams normally. Status must show `enabled: true` and `compatibility: null`.
 
-1. Run the owner inventory and native application startup prerequisite.
-2. Build the stock and passive engine pair. Run `stock-fixture`.
-3. Build the selected engine pair. Save the printed selected `build.json` as `C2_BUILD_JSON`.
-4. Run `chromium_selected_test.py` with that exact selected record.
-5. Assemble the application with `build-chromium-delivery.py`. Save its different application record as `TEAMS_BUILD_JSON`.
-6. Run `actual-app` and `lifecycle`. Restore the stock instance, prepare the private update fixture, then run `update-cycle`. Use the same `C2_BUILD_JSON` throughout.
-7. Enable Teams with `TEAMS_BUILD_JSON`, then fully quit and reopen normally.
+An application update refreshes its code and resources on the next launch. It does not disable Fontreal or require another font test. The private engine receives upstream fixes when rebuilt. Preserve the full coherent engine and notices. The native absolute Flatpak command supplies stock rendering with the same account data.
 
-The [guide](experiments/chromium-flatpak.md#teams-application-qualification) contains the exact commands. Replace record placeholders with paths printed by the corresponding builder. Never use an assumed newest directory or another machine's record. Cached artifacts must still match their recorded sources, tools and payload hashes.
-
-The three application checks establish different results:
-
-| Named check | Required observation | Data and final state |
-| --- | --- | --- |
-| `actual-app` | Original local Join Meeting dialog. Unsent W, WW and WWg. Exact stock/passive and selected normal/trace captures, independent masks, later glyph and repaint checks | Temporary comparison data. No message or account change |
-| `lifecycle` | Ordinary desktop and command routes, later renderers, native escape, regenerated portal autostart, disable and stock reopen | Original working data. Normal quit/reopen. Original host stock restored |
-| `update-cycle` | Genuine official package update invalidates the old qualification through the native autostart route | Private installation and private data. Temporary setup removed. Original host stock restored |
-
-Each check must exit zero and produce `report.json` with `passed: true` below `results/chromium-delivery`. Inspect the named subresults too. A previous run's success does not certify a changed input. Original-data checks reopen the working application, so run them during an interval without unsaved work or competing launches. Leave the comparison dialog undisturbed during captures.
-
-Follow [Enable Teams for daily use](experiments/chromium-flatpak.md#enable-teams-for-daily-use) after the checks. Status must report `enabled: true` and `compatibility: null`. A complete normal restart is required. For recovery, the same section gives the absolute native launch command and owned-hook removal commands.
+Run [Checks when Fontreal changes](experiments/chromium-flatpak.md#checks-when-fontreal-changes) during Fontreal development. The focused launch check proves routing and reversal. The actual-app check proves selected text in the packaged dialog. The original-data lifecycle check covers ordinary reopening and stock restoration. These establish different results, so a configured hook alone is not a rendering claim.
 
 ## Native KDE: packages and fresh sessions
 
-Use [Build for the running system](build-system.md) for the earlier raw profile. Its package tests and disposable Plasma session tests are required before installation. Do not use that workflow to claim selected weighted-stem deployment.
+Use [Build for the running system](build-system.md) for the selected profile. Its package tests and disposable Plasma session tests are required before installation.
 
 Keep the entire verified bundle, official rollback packages, deployment manifest and session reports together. The guide distinguishes container package checks, disposable VM sessions, browser-launched Qt helpers, host installation and recovery. Run destructive session checks only inside the marked disposable VM.
 

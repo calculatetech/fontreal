@@ -136,7 +136,8 @@ def fixture(reports, font, terminal_font):
     reference = Path(os.environ["FONTREAL_TEST_REFERENCE_FREETYPE"]).resolve()
     assert reference.is_file()
     test_hook.write_text("export QT_LOGGING_RULES='kwin_scripting.debug=true'\n" +
-                         "export FONTREAL_TEST_REFERENCE_FREETYPE=" + shlex.quote(str(reference)) + "\n")
+                         "export FONTREAL_TEST_REFERENCE_FREETYPE=" + shlex.quote(str(reference)) + "\n" +
+                         "export FONTREAL_TEST_SELECTED_REFERENCE=" + shlex.quote(str(ROOT / "tests/selected_reference.py")) + "\n")
     fc = config / "fontconfig/conf.d/99-fontreal-test.conf"
     fc.parent.mkdir(parents=True, exist_ok=True)
     fc.write_text('''<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
@@ -185,6 +186,31 @@ def fixture(reports, font, terminal_font):
 
 
 def new_login(enabled):
+    jobs = []
+    units = set()
+    started = time.monotonic()
+    def settled_jobs():
+        output = call(["systemctl", "--user", "list-jobs", "--no-legend", "--no-pager", "--plain"],
+                      env=dict(tools_environment(), LC_ALL="C")).stdout
+        current = []
+        for line in output.splitlines():
+            fields = line.split()
+            assert len(fields) == 4 and fields[0].isdecimal(), output
+            current.append(dict(id=int(fields[0]), unit=fields[1], type=fields[2], state=fields[3]))
+            units.add(fields[1])
+        if not jobs or jobs[-1]["jobs"] != current:
+            jobs.append(dict(seconds=time.monotonic() - started, jobs=current))
+            print("Native user jobs: " + json.dumps(current), flush=True)
+        return not current
+    # Native D-Bus activation can take 120 seconds. Let the complete real job
+    # collection terminate before the single controlled logout; do not retry it.
+    try:
+        wait_for(settled_jobs, "terminal native user-manager jobs before logout", seconds=150)
+    except AssertionError as error:
+        raise AssertionError("Native startup/stop jobs did not terminate: " + json.dumps(jobs)) from error
+    outcomes = call(["systemctl", "--user", "show", *sorted(units), "-p", "Id", "-p", "ActiveState",
+                     "-p", "SubState", "-p", "Result"]).stdout if units else ""
+    print("Native user job outcomes: " + json.dumps(outcomes), flush=True)
     if enabled is not None:
         call(["fontreal-session", "enable" if enabled else "disable"])
     manager = pid("systemd")
@@ -205,6 +231,7 @@ def new_login(enabled):
           'var d=desktops()[0]; if(d.widgets("org.fontreal.textprobe").length==0) '
           'd.addWidget("org.fontreal.textprobe",0,0,760,370);')
     return dict(manager=manager, environment=session_environment(),
+                native_job_readiness=dict(boundSeconds=150, observations=jobs, terminalUnits=outcomes),
                 kwin=process_record(pid("kwin_wayland")), plasma=process_record(pid("plasmashell")))
 
 
@@ -326,8 +353,8 @@ def actors(directory, current, font, factor, enabled, launch=True, expected_envi
             expected_env = expected_environment if expected_environment is not None else [{
                 "FONTREAL_RENDERING=" + ("1" if enabled else "0"),
                 "FONTREAL_BLEND=" + ("encoded" if enabled else ""),
-                "FONTREAL_CONTRAST=" + ("none" if enabled else ""),
-                "FONTREAL_FITTING=" + ("nearest" if enabled else "")}]
+                "FONTREAL_CONTRAST=" + ("weighted" if enabled else ""),
+                "FONTREAL_FITTING=" + ("native" if enabled else "")}]
             assert set(group[kind]["process"]["environment"]) in expected_env, group[kind]
             destination = directory / (entry + "-" + kind)
             destination.mkdir()
@@ -431,6 +458,33 @@ def setup_packages(packages):
     # Lower-version resets are disposable test setup, never ordinary update proof.
     call(["sudo", "apt-get", "install", "-y", "--allow-downgrades", "--no-remove",
           *packages], timeout=300)
+
+
+def captured_predecessor(directory, plan, previous):
+    """Resolve the actual captured snapshot, using its owning retained bundle."""
+    if plan["installed"] == plan["original"]:
+        return None, None
+    assert previous is not None, "The captured Fontreal predecessor needs --previous and its actual retained artifacts."
+    predecessor = Path(previous).resolve()
+    old = build.verify_artifacts(predecessor, json.loads((predecessor / "bundle.json").read_text()))
+    package.system_install.verify_activation(build, predecessor, json.loads((predecessor / "deployment.json").read_text()), old)
+    original_records = {(p["name"], p["arch"]): p for p in plan["original"]}
+    old_originals = {(p["name"], p["arch"]): p for p in old["original"]}
+    originals_inventory = build.package_inventory(directory / "original")
+    previous_inventory = build.package_inventory(predecessor / "packages")
+    files = []
+    for p in plan["installed"]:
+        identity = (p["name"], p["arch"])
+        if p == original_records[identity]:
+            files.append(directory / "original" / originals_inventory[identity]["path"])
+        else:
+            version = old["sources"][p["source"]]["build_version"]
+            artifact = previous_inventory[identity]
+            assert p["version"] == p["source_version"] == artifact["version"] == version
+            assert artifact["source"] in (p["source"], f"{p['source']} ({version})")
+            assert old_originals[identity] == original_records[identity]
+            files.append(predecessor / "packages" / artifact["path"])
+    return predecessor, files
 
 
 def clear_actors(current):
@@ -565,7 +619,7 @@ def session_case(directory, current, fonts, enabled, reference=None, live=False,
     login = new_login(preference)
     expected = {
         "FONTREAL_RENDERING": "1" if enabled else "0", "FONTREAL_BLEND": "encoded" if enabled else "",
-        "FONTREAL_CONTRAST": "none" if enabled else "", "FONTREAL_FITTING": "nearest" if enabled else ""}
+        "FONTREAL_CONTRAST": "weighted" if enabled else "", "FONTREAL_FITTING": "native" if enabled else ""}
     allowed = [expected]
     if inherited is not None:
         # After removal, launch paths can retain or clear their old values independently.
@@ -617,7 +671,8 @@ def main():
     directory = args.bundle.resolve()
     reference = Path(os.environ["FONTREAL_TEST_REFERENCE_FREETYPE"]).resolve()
     reference_record = json.loads((ROOT / "build/browser-live-recipe/reference.json").read_text())
-    assert reference.is_file() and build.sha(reference) == reference_record["sha256"], "Use the independent nearest-only reference."
+    assert reference.is_file() and build.sha(reference) == reference_record["stock_sha256"], "Use the independent pristine FreeType reference."
+    os.environ["FONTREAL_TEST_SELECTED_REFERENCE"] = str(ROOT / "tests/selected_reference.py")
     manifest = json.loads((directory / "bundle.json").read_text())
     plan = build.verify_artifacts(directory, manifest)
     system = platform.freedesktop_os_release()
@@ -628,34 +683,12 @@ def main():
     deployment = json.loads((directory / "deployment.json").read_text())
     system_install.verify_activation(build, directory, deployment, plan)
     report = json.loads((directory / "package-checks/package-results.json").read_text())
-    assert report["passed"] is True and report["schema"] == 1
+    assert report["passed"] is True and report["schema"] == 1 and report["selected_profile"] == build.SELECTED_PROFILE
     assert report["bundle_sha256"] == build.sha(directory / "bundle.json")
     assert report["deployment_sha256"] == build.sha(directory / "deployment.json")
     assert len(report["updates"]) == len(build.SOURCES) and {r["source"] for r in report["updates"]} == set(build.SOURCES)
     assert build.installed() == plan["installed"], "Start with the real captured package snapshot."
-    predecessor = None
-    predecessor_files = None
-    if plan["installed"] != plan["original"]:
-        assert args.previous is not None, "The captured Fontreal predecessor needs --previous and its actual retained artifacts."
-        predecessor = args.previous.resolve()
-        old = build.verify_artifacts(predecessor, json.loads((predecessor / "bundle.json").read_text()))
-        system_install.verify_activation(build, predecessor, json.loads((predecessor / "deployment.json").read_text()), old)
-        original_records = {(p["name"], p["arch"]): p for p in plan["original"]}
-        old_originals = {(p["name"], p["arch"]): p for p in old["original"]}
-        originals_inventory = build.package_inventory(directory / "original")
-        previous_inventory = build.package_inventory(predecessor / "packages")
-        predecessor_files = []
-        for p in plan["installed"]:
-            identity = (p["name"], p["arch"])
-            if p == original_records[identity]:
-                predecessor_files.append(directory / "original" / originals_inventory[identity]["path"])
-            else:
-                version = old["sources"][p["source"]]["build_version"]
-                artifact = previous_inventory[identity]
-                assert p["version"] == p["source_version"] == artifact["version"] == version
-                assert artifact["source"] in (p["source"], f"{p['source']} ({version})")
-                assert old_originals[identity] == original_records[identity]
-                predecessor_files.append(predecessor / "packages" / artifact["path"])
+    predecessor, predecessor_files = captured_predecessor(directory, plan, args.previous)
     reports = directory / "session-checks"
     reports.mkdir()
     fonts = {key: Path(call(["fc-match", "-f", "%{file}", family]).stdout) for key, family in (
@@ -670,7 +703,7 @@ def main():
     setup_packages([*originals, activation])
     assert not marker.exists(), "Package installation must start disabled."
     current = reports / "current"
-    results = dict(schema=1, passed=False, complete_runtime=False,
+    results = dict(schema=1, passed=False, complete_runtime=False, selected_profile=build.SELECTED_PROFILE,
                    bundle_sha256=build.sha(directory / "bundle.json"),
                    deployment_sha256=build.sha(directory / "deployment.json"))
     baseline = session_case(reports / "official", current, fonts, False)
@@ -715,7 +748,7 @@ def main():
               PROBE, "quick", fonts["regular"], prefix, "0"])
         record = read_capture(prefix / "result.json", 1)
         record["process"] = process_record(record["pid"])
-        assert set(record["process"]["environment"]) == {"FONTREAL_RENDERING=1", "FONTREAL_BLEND=encoded", "FONTREAL_CONTRAST=none", "FONTREAL_FITTING=nearest"}
+        assert set(record["process"]["environment"]) == {"FONTREAL_RENDERING=1", "FONTREAL_BLEND=encoded", "FONTREAL_CONTRAST=weighted", "FONTREAL_FITTING=native"}
         stock = baseline["scales"]["1"]["actors"]["normal"]["quick"]["pixels"]
         widget_prefix = target / "inherited-widget"
         call(["systemd-run", "--user", "--collect", "--unit=fontreal-inherited-widget", "env", "LD_BIND_NOW=1",
@@ -737,18 +770,23 @@ def main():
                   "lmnogWVwv", "#000000", "#ffffff", target / "widget-glyphs.json"],
                  env=dict(tools_environment(), QT_QPA_PLATFORM="offscreen"))
             assert all(g["none/encoded"]["matches"] for g in json.loads((target / "widget-glyphs.json").read_text()).values())
-        assert session_environment()["FONTREAL_RENDERING"] == "1" and marker.exists()
+        inherited_before_fallback = session_environment()
+        assert inherited_before_fallback["FONTREAL_RENDERING"] == "1" and marker.exists()
         fallback = session_case(target / "next-login", current, fonts, False, baseline)
         assert marker.exists(), "An unsupported pair must preserve the user's preference."
         call(["sudo", "rm", repository])
         call(["sudo", "apt-get", "update"])
         results["updates"].append(dict(source=source, inherited=record, widget=widget, fallback=fallback,
+                                       inherited_before_fallback=inherited_before_fallback,
                                        payload="Retained official payload with synthetic higher control version"))
     command = [sys.executable, ROOT / "tools/system-build.py"]
     call(["sudo", "unshare", "--net", *command, "rollback", directory])
     assert build.installed() == plan["original"]
     assert subprocess.run(["dpkg-query", "-W", "-f=${db:Status-Status}", "fontreal-session"], capture_output=True).stdout != b"installed"
-    results["rollback"] = session_case(reports / "rollback", current, fonts, False, baseline)
+    # Plasma can restore the pre-fallback manager environment on logout after
+    # the activation hook is removed. Rendering must still match official pixels.
+    results["rollback"] = session_case(reports / "rollback", current, fonts, False, baseline,
+                                       inherited=inherited_before_fallback)
     if predecessor is None:
         assert build.installed() == plan["installed"]
     else:

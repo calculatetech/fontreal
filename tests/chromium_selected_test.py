@@ -69,6 +69,7 @@ def selected_build(requested,destination):
         assert package['files']['LICENSE.fontreal.txt']==spec['fontreal_license_sha256']
         assert package['files']['LICENSES.chromium.html']==notices['output_sha256']
         assert package['files']['LICENSE.libcxx.txt']==c1.target.sha(path.parent/'LLVM-LICENSE.txt')
+        assert package['files']['LICENSE.node.txt']==spec['node_license_sha256']==c1.target.sha(ROOT/'LICENSES/Node.txt')
         assert package['files']['electron']==runtime['packages'][role]['files']['electron']
     probe=record['probe'];assert c1.target.sha(Path(probe['executable']))==probe['sha256']
     image=Path(probe['executable']).read_bytes()

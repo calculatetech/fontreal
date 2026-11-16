@@ -10,6 +10,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 
 import chromium_flatpak as target
 
@@ -123,6 +124,44 @@ def preserve_fuses(engine,original):
     return dict(offset=at+2,before=before.decode(),after=after.decode())
 
 
+def current_view(record,selectors=()):
+    location=Path(run(['/usr/bin/flatpak','info',*selectors,'--show-location',APPLICATION])).resolve(strict=True)
+    saved=record['views']['normal'];source=Path(saved['directory'])
+    identity=dict(location=str(location),distribution=str(source),engine=saved['engine_sha256'])
+    key=hashlib.sha256(json.dumps(identity,sort_keys=True).encode()).hexdigest()[:20]
+    cache=WORK/'current';cache.mkdir(parents=True,exist_ok=True)
+    view=cache/key
+    if (view/'.fontreal-view.json').is_file():return view
+    with (WORK/'builder.lock').open('w') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        if (view/'.fontreal-view.json').is_file():return view
+        with tempfile.TemporaryDirectory(prefix='assemble-',dir=cache) as temporary:
+            staging=Path(temporary)/'app'
+            shutil.copytree(location/'files',staging,symlinks=True)
+            for p in [staging,*[p for p in staging.rglob('*') if p.is_dir() and not p.is_symlink()]]:
+                p.chmod(p.stat().st_mode|0o700)
+            engine=staging/'teams-for-linux'
+            # Keep current application resources and modules; replace the coherent engine only.
+            for p in (source/'teams-for-linux').iterdir():
+                if p.name=='resources':continue
+                q=engine/p.name
+                if q.is_dir() and not q.is_symlink():shutil.rmtree(q)
+                elif q.exists() or q.is_symlink():q.unlink()
+                if p.is_dir():shutil.copytree(p,q,symlinks=True)
+                else:shutil.copy2(p,q)
+            identity['fuses']=preserve_fuses(engine/'teams-for-linux',location/'files/teams-for-linux/teams-for-linux')
+            for folder in ('bin','lib'):
+                for p in (source/folder).glob('*zypak*'):
+                    q=staging/folder/p.name
+                    if q.exists() or q.is_symlink():q.unlink()
+                    if p.is_symlink():q.symlink_to(os.readlink(p))
+                    else:shutil.copy2(p,q)
+            shutil.copytree(source/'share/licenses/fontreal-zypak',staging/'share/licenses/fontreal-zypak',dirs_exist_ok=True)
+            (staging/'.fontreal-view.json').write_text(json.dumps(identity,indent=2)+'\n')
+            staging.rename(view)
+    return view
+
+
 def build(build_record):
     WORK.mkdir(parents=True,exist_ok=True)
     with (WORK/'builder.lock').open('w') as lock:
@@ -135,9 +174,6 @@ def build(build_record):
         manifest=json.loads((location/'files/manifest.json').read_text())
         record=json.loads(build_record.read_text());c1_path=Path(record['spec']['c1_record']);c1=json.loads(c1_path.read_text())
         assert manifest['id']==APPLICATION
-        assert run(['/usr/bin/flatpak','info','--show-commit',APPLICATION])==c1['spec']['target_commit']
-        package_module=next(m for m in manifest['modules'] if isinstance(m,dict) and m['name']=='teams-for-linux')
-        assert any('v2.28.0/teams-for-linux_2.28.0_amd64.deb' in s.get('url','') for s in package_module['sources'])
         env=sdk_environment();zypak_folder,zypak_record=zypak(env,metadata['Application']['runtime'],manifest['sdk-commit'])
         spec=dict(application=APPLICATION,location=str(location),commit=run(['/usr/bin/flatpak','info','--show-commit',APPLICATION]),
                   runtime=metadata['Application']['runtime'],runtime_commit=zypak_record['spec']['runtime_commit'],
@@ -154,7 +190,8 @@ def build(build_record):
             for view in saved['views'].values():verify(view)
             print(receipt);return
         artifact.mkdir(parents=True,exist_ok=True);views={}
-        for role,package in [('source-stock',c1['packages']['stock']),('source-passive',c1['packages']['instrumented']),*record['packages'].items()]:
+        baseline=record.get('baseline_packages',c1['packages'])
+        for role,package in [('source-stock',baseline['stock']),('source-passive',baseline['instrumented']),*record['packages'].items()]:
             view=artifact/role;shutil.copytree(location/'files',view,symlinks=True)
             for p in [view,*[p for p in view.rglob('*') if p.is_dir() and not p.is_symlink()]]:p.chmod(p.stat().st_mode|0o700)
             engine=Path(package['directory'])

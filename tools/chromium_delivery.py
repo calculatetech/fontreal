@@ -55,24 +55,15 @@ def load_build(path):
 
 
 def compatibility(record,selectors=()):
-    spec=record['spec']
-    try:
-        if builder.run([NATIVE,'info',*selectors,'--show-location',APPLICATION])!=spec['location']:return 'application deployment changed'
-        if builder.run([NATIVE,'info',*selectors,'--show-commit',APPLICATION])!=spec['commit']:return 'application commit changed'
-        if builder.run([NATIVE,'info','--show-commit',spec['runtime']])!=spec['runtime_commit']:return 'runtime commit changed'
-        location=Path(spec['location'])
-        if target.sha(location/'metadata')!=spec['metadata_sha256'] or target.sha(location/'files/manifest.json')!=spec['manifest_sha256']:
-            return 'native package metadata changed'
-        if target.sha(Path(spec['native_desktop']))!=spec['native_desktop_sha256']:return 'native desktop command changed'
-        if builder.tree(location/'files')!=spec['original_files']:return 'native application code changed'
-        builder.verify(record['views']['normal'])
-    except (OSError,ValueError,KeyError,subprocess.SubprocessError):return 'qualified package or payload unavailable'
+    if not (Path(record['views']['normal']['directory'])/'teams-for-linux/teams-for-linux').is_file():
+        return 'saved Fontreal engine unavailable'
     return None
 
 
 def enable(build_path):
     record=load_build(build_path);reason=compatibility(record)
     if reason:raise ValueError(reason+'; no hook was changed.')
+    builder.verify(record['views']['normal'])
     proof_path=build_path.resolve().parent/'qualification.json'
     if not proof_path.is_file():raise ValueError('Run the actual-app qualification check before enabling this application view.')
     proof=json.loads(proof_path.read_text())
@@ -82,7 +73,8 @@ def enable(build_path):
     if previous:require_owned(previous)
     elif any(p.exists() or p.is_symlink() for p in hooks.values()):
         raise ValueError('Existing per-user launch customizations were left untouched.')
-    desktop_source=Path(record['spec']['native_desktop'])
+    location=Path(builder.run([NATIVE,'info','--show-location',APPLICATION]))
+    desktop_source=location/'export/share/applications'/(APPLICATION+'.desktop')
     desktop=desktop_source.read_text()
     desktop,count=re.subn(r'^Exec=/usr/bin/flatpak(?=\s)',lambda _: 'Exec='+desktop_arg(hooks['flatpak']),desktop,flags=re.M)
     if not count or count!=len(re.findall('^Exec=',desktop,flags=re.M)):
@@ -102,7 +94,7 @@ def enable(build_path):
                hooks=[dict(path=str(p),sha256=target.sha(p)) for p in hooks.values()])
     state_path.parent.mkdir(parents=True,exist_ok=True);state_path.write_text(json.dumps(state,indent=2)+'\n');state_path.chmod(0o600)
     subprocess.run(['systemctl','--user','daemon-reload'],check=True)
-    print('Enabled Teams launch hooks. Fully quit and reopen Teams normally to use the qualified view.')
+    print('Enabled Teams launch hooks. Fully quit and reopen Teams normally to use Fontreal.')
 
 
 def disable():
@@ -127,12 +119,11 @@ def selected(arguments,state):
         if option in ('--user','--system') or option.startswith('--installation='):selectors.append(option);continue
         return None
     record=load_build(Path(state['build']))
-    reason=compatibility(record,selectors)
-    if target.sha(Path(state['build']))!=state['build_sha256'] or target.sha(Path(__file__))!=state['tool_sha256']:
-        reason='qualified delivery input changed'
+    reason=compatibility(record)
+    if target.sha(Path(state['build']))!=state['build_sha256']:reason='saved Fontreal record changed'
     if reason:
         print('Fontreal Teams: '+reason+'; using the current native application.',file=sys.stderr);return None
-    options,fd=view_options(record['views']['normal']['directory'])
+    options,fd=view_options(builder.current_view(record,selectors))
     return [*arguments[:index],*options,*arguments[index:]],fd
 
 
@@ -141,8 +132,8 @@ def run(arguments):
     if state_path.exists():
         try:
             state=json.loads(state_path.read_text());require_owned(state);chosen=selected(arguments,state)
-        except (OSError,ValueError,KeyError,json.JSONDecodeError):
-            print('Fontreal Teams: qualification unavailable; using the current native application.',file=sys.stderr)
+        except (OSError,ValueError,KeyError,AssertionError,subprocess.SubprocessError):
+            print('Fontreal Teams: saved engine unavailable; using the current native application.',file=sys.stderr)
     if chosen is not None:
         command,fd=chosen
         try:

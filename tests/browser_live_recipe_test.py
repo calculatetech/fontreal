@@ -4,6 +4,7 @@ import argparse
 from contextlib import suppress
 import copy
 import http.server
+import hashlib
 import importlib.util
 import json
 import math
@@ -27,15 +28,16 @@ from dropout_continuity_test import mono_raster, bits
 BUILD = ROOT / 'build/browser-live-recipe'
 OUT = ROOT / 'results/browser-live-recipe'
 FIELDS = ('mask','width','height','left','top')
+FONT_ROOT = Path(os.environ.get('FONTREAL_TEST_FONT_ROOT', '/usr/share/fonts'))
 CFF_FONTS = {
-    'Nimbus Sans Regular': Path('/usr/share/fonts/opentype/urw-base35/NimbusSans-Regular.otf'),
-    'Nimbus Sans Bold': Path('/usr/share/fonts/opentype/urw-base35/NimbusSans-Bold.otf'),
-    'Nimbus Sans Italic': Path('/usr/share/fonts/opentype/urw-base35/NimbusSans-Italic.otf'),
-    'Nimbus Sans Bold Italic': Path('/usr/share/fonts/opentype/urw-base35/NimbusSans-BoldItalic.otf'),
-    'Nimbus Roman Regular': Path('/usr/share/fonts/opentype/urw-base35/NimbusRoman-Regular.otf'),
-    'URW Bookman Light': Path('/usr/share/fonts/opentype/urw-base35/URWBookman-Light.otf'),
-    'Cantarell Variable': Path('/usr/share/fonts/opentype/cantarell/Cantarell-VF.otf'),
-    'Noto Sans CJK JP': Path('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'),
+    'Nimbus Sans Regular': (FONT_ROOT / 'opentype/urw-base35/NimbusSans-Regular.otf'),
+    'Nimbus Sans Bold': (FONT_ROOT / 'opentype/urw-base35/NimbusSans-Bold.otf'),
+    'Nimbus Sans Italic': (FONT_ROOT / 'opentype/urw-base35/NimbusSans-Italic.otf'),
+    'Nimbus Sans Bold Italic': (FONT_ROOT / 'opentype/urw-base35/NimbusSans-BoldItalic.otf'),
+    'Nimbus Roman Regular': (FONT_ROOT / 'opentype/urw-base35/NimbusRoman-Regular.otf'),
+    'URW Bookman Light': (FONT_ROOT / 'opentype/urw-base35/URWBookman-Light.otf'),
+    'Cantarell Variable': (FONT_ROOT / 'opentype/cantarell/Cantarell-VF.otf'),
+    'Noto Sans CJK JP': (FONT_ROOT / 'opentype/noto/NotoSansCJK-Regular.ttc'),
 }
 
 
@@ -105,6 +107,9 @@ def prepare():
             with (build/(label+'.log')).open('w') as log:
                 subprocess.run(list(map(str,command)),cwd=build,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
         manifest.write_text(json.dumps(dict(inputs=inputs,sha256=sha(library)),indent=2))
+    saved_reference = json.loads(manifest.read_text())
+    saved_reference['stock_sha256'] = record['libraries']['stock']['sha256']
+    manifest.write_text(json.dumps(saved_reference, indent=2) + '\n')
     flags = shlex.split(run(['pkg-config','--cflags','--libs','Qt6Gui','freetype2']).stdout)
     for source_name,binary in [('point_benchmark_chart.cpp','chart'),('freetype_variable_probe.cpp','variable'),('freetype_mask_probe.cpp','probe')]:
         source_file = ROOT/'tests'/source_name
@@ -116,6 +121,7 @@ def prepare():
             source_file = BUILD/source_name
             source_file.write_text(text)
         run(['c++','-std=c++17','-fPIC','-include','algorithm',source_file,*flags,'-o',BUILD/binary])
+    masks.prepare_probe(record)
     return record,trace,library
 
 
@@ -145,20 +151,29 @@ def probe(library,font,size=15,flags=0x20028,char='2',enabled=False,contrast='ra
     return json.loads(target.read_text())
 
 
-def v1_provider(record):
-    """Rebuild the retained complete TT-only provider for the matching distro."""
+def v1_provider(record, version=1):
+    """Rebuild a retained provider whose capability predates selected coverage."""
+    assert version in (1, 2)
     patch = ROOT/'tests/freetype_tt_only_v1.patch'
-    inputs = dict(spec=record['spec'], patch=sha(patch))
-    manifest = BUILD/'v1-provider.json'
-    source, build = BUILD/'v1-source', BUILD/'v1-build'
+    retained = subprocess.check_output(['git', '-C', str(ROOT), 'show',
+        '63b33e82:patches/freetype-2.14.2-fontreal.patch'])
+    inputs = dict(spec=record['spec'], patch=sha(patch) if version == 1 else None,
+                  retained_render=hashlib.sha256(retained).hexdigest())
+    manifest = BUILD/f'v{version}-provider.json'
+    source, build = BUILD/f'v{version}-source', BUILD/f'v{version}-build'
     library = build/'.libs/libfreetype.so.6'
     if manifest.exists():
         saved = json.loads(manifest.read_text())
         assert saved['inputs'] == inputs and saved['libraries']['candidate']['sha256'] == sha(library)
     else:
         parent = Path(record['libraries']['candidate']['library']).parents[2]
-        shutil.copytree(parent/'candidate-source',source,symlinks=True)
-        run(['patch','--batch','--fuzz=0','-p1','-i',patch],cwd=source)
+        shutil.copytree(parent/'stock-source',source,symlinks=True)
+        retained_patch = BUILD/'v1-retained-render.patch'
+        retained_patch.write_bytes(retained)
+        for selected_patch in (ROOT/'patches/freetype-nearest-property.patch', retained_patch):
+            run(['patch','--batch','--fuzz=0','-p1','-i',selected_patch],cwd=source)
+        if version == 1:
+            run(['patch','--batch','--fuzz=0','-p1','-i',patch],cwd=source)
         build.mkdir()
         env = dict(environment(record['libraries']['stock']['library']), CC='cc', CFLAGS='-O2',
                    PKG_CONFIG_PATH=str(parent/'headers/usr/lib/x86_64-linux-gnu/pkgconfig'))
@@ -166,7 +181,7 @@ def v1_provider(record):
                               (['make','-j4'],'build')]:
             with (build/(label+'.log')).open('w') as log:
                 subprocess.run(list(map(str,command)),cwd=build,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
-        saved = dict(inputs=inputs, spec=dict(source=record['spec']['source'], contract='TrueType-only v1'),
+        saved = dict(inputs=inputs, spec=dict(source=record['spec']['source'], contract='TrueType-only v1' if version == 1 else 'TT/CFF nearest-only v2'),
                      libraries=dict(candidate=dict(library=str(library.resolve()),sha256=sha(library))))
         manifest.write_text(json.dumps(saved,indent=2)+'\n')
     return manifest, saved['libraries']['candidate']

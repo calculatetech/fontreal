@@ -15,6 +15,12 @@ int main(int argc, char **argv)
         require(parse.error==QJsonParseError::NoError,"Invalid job JSON");
         QString directory=argv[2]; require(QDir().mkpath(directory),"Cannot create output");
         FT_Library library=nullptr; require(!FT_Init_FreeType(&library),"FT init failed");
+        QJsonObject capability = selected_property(library);
+        if (qgetenv("FONTREAL_TEST_QT_DRIVER_PROPERTIES") == "1") {
+            FT_Bool noDarkening = false; FT_UInt interpreter = 40;
+            require(!FT_Property_Set(library,"cff","no-stem-darkening",&noDarkening),"CFF property failed");
+            require(!FT_Property_Set(library,"truetype","interpreter-version",&interpreter),"TT property failed");
+        }
         for (auto value:jobs) {
             auto job=value.toObject(); FT_Face face=nullptr;
             require(!FT_New_Face(library,QFile::encodeName(job["file"].toString()),0,&face),"Cannot open source face");
@@ -36,9 +42,22 @@ int main(int argc, char **argv)
                 glyphs.append(QJsonObject{{"codepoint",cp},{"glyph",int(gid)},{"loaded",loaded},
                     {"rendered",rendered},{"repeated",repeated},{"immediate",immediate},{"character",character}});
             }
+            QJsonArray sizeReturn;
+            if (job["sizeReturn"].toBool()) {
+                for (FT_F26Dot6 next : {size, size + 64, size}) {
+                    require(!FT_Set_Char_Size(face,next,next,0,0),"Size transition failed");
+                    require(!FT_Load_Char(face,'g',flags),"Size load failed");
+                    auto loaded = snapshot(face);
+                    require(!FT_Render_Glyph(face->glyph,FT_RENDER_MODE_NORMAL),"Size render failed");
+                    sizeReturn.append(QJsonObject{{"pixels",double(next)/64},{"loaded",loaded},{"rendered",snapshot(face)}});
+                }
+            }
             QFile output(directory+"/"+job["id"].toString()+".json");
             require(output.open(QIODevice::WriteOnly),"Cannot write result");
-            auto bytes=QJsonDocument(QJsonObject{{"id",job["id"]},{"glyphs",glyphs}}).toJson();
+            QJsonObject result{{"id",job["id"]},{"glyphs",glyphs}};
+            if (!capability.isEmpty()) result["capability"] = capability;
+            if (!sizeReturn.isEmpty()) result["sizeReturn"] = sizeReturn;
+            auto bytes=QJsonDocument(result).toJson();
             require(output.write(bytes)==bytes.size(),"Short result write");
             FT_Done_Face(face);
         }

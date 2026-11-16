@@ -21,6 +21,8 @@ python3 tools/browser.py enable floorp
 
 Fully quit and reopen each browser to activate the treatment. An already running browser keeps its loaded library until that restart. The tool configures the ordinary Install-default profile and checks that any running profile agrees. If Firefox has different historical installation defaults, first open it normally. Activation can then use the declared default that all ordinary native parents select. Explicit profile, profile-manager and reset launches cannot resolve that ambiguity. A closed ambiguous installation still refuses activation. The tool does not create or copy browser profiles or change their indexes.
 
+Firefox indexes can live in `mozilla/firefox` below `XDG_CONFIG_HOME` or in the legacy `.mozilla/firefox` directory below your home directory. Floorp indexes can live in `floorp` below `XDG_CONFIG_HOME` or in the legacy `.floorp` directory below your home directory. When unset, `XDG_CONFIG_HOME` defaults to `.config` below your home directory. The tool checks all existing indexes in the active roots. Equivalent relative and absolute defaults count as one profile; distinct defaults cause refusal. Floorp has no Firefox historical-default exception. With a custom configuration root, an inactive `.config/floorp` index below your home directory does not select the working profile.
+
 Activation manages four rendering preferences and installs per-user launch hooks. Re-enabling upgrades an older owned preset and preserves its original restoration values. Your font family, display scale, startup settings, normal Fontconfig configuration, and browser data stay in place. Unrelated applications, including Qt helpers launched by the browser, keep their normal rendering.
 
 Keep the checkout and active build artifacts while enabled. Open a new terminal if an existing shell caches the old browser command. If you change the ordinary default profile, disable treatment before that change and enable it again afterward.
@@ -32,7 +34,7 @@ python3 tools/browser.py status firefox
 python3 tools/browser.py status floorp
 ```
 
-The status shows the configured working profile, treated parent processes, and processes that still need a restart. A browser or FreeType update can make the recorded override incompatible. The wrapper then warns and starts the installed browser without the private library. Its rendering preferences remain configured until you disable or rebuild. Matching build support must be updated before enabling an unsupported revision.
+The status shows the configured working profile, treated parent processes, and processes that still need a restart. Browser updates do not disable Fontreal. Enabled launchers use the saved Fontreal build across browser and system-library updates, without rebuilding or checking installed versions. If the saved library is missing or changed, the wrapper warns and starts the installed browser without it. Disable restores the original rendering settings. After you rebuild Fontreal, run enable again to select that build and retain the original restoration values.
 
 ## When Nimbus Sans looks untreated
 
@@ -78,7 +80,7 @@ Disable restores the original rendering preferences, removes the owned launch ho
 
 ## Requirements and build
 
-The builder supports amd64 Debian 13 with FreeType `2.13.3+dfsg-1+deb13u1` and amd64 Ubuntu 26.04 with `2.14.2+dfsg-1ubuntu0.2`. The launcher accepts installed Firefox `160.0` or Floorp `12.21.1@159.0.1`. Version checks stop a mismatched comparison. Other revisions require a matching source route before activation.
+The builder supports amd64 Debian 13 with FreeType `2.13.3+dfsg-1+deb13u1` and amd64 Ubuntu 26.04 with `2.14.2+dfsg-1ubuntu0.2`. These are build-source requirements, not browser launch gates. Firefox and Floorp releases do not need an entry in a version list. Test when Fontreal changes; a browser update does not require a qualification run. The saved private library receives upstream fixes when you rebuild Fontreal and enable that build.
 
 Use Python 3, C and C++17 compilers, make, pkg-config, patch, dpkg-source, and APT download access. The builder downloads matching development packages into its private directory. It does not install them. Exact source archives have pinned checksums from authenticated distro source indexes. Both routes preserve distro security patches. Debian retains its configuration without HarfBuzz. Ubuntu retains dynamic HarfBuzz. The shared patch applies with zero fuzz to both sources.
 
@@ -158,9 +160,9 @@ The delivery check exercises ordinary commands and desktop actions, native profi
 
 `tests/selected_working_browser_test.py` is a separate, explicit host check. It enables the selected method in existing working profiles and opens local test tabs through the ordinary launchers. It compares actual display pixels on both backgrounds and leaves the browsers running. Close browsers that still use an older renderer normally before running it. It does not disable extensions or alter unrelated preferences. The local fixture declares its own light and dark colors.
 
-After building matching KDE libraries, run the delivery check with `--case lifecycle --native-helper` and their library paths. Export `FONTREAL_TEST_REFERENCE_FREETYPE` with the independent nearest reference. This checks actual browser-child Qt output and an upgrade from the retained TrueType-only provider. The newer provider must support the CFF-capable native property. Older providers must fall back to untreated Qt output.
+After building matching KDE libraries, run the delivery check with `--case lifecycle --native-helper` and their library paths. Export `FONTREAL_TEST_REFERENCE_FREETYPE` with the independent pristine reference. This checks actual browser-child selected Qt output and an upgrade from the retained TrueType-only provider. The newer provider must support the typed selected property for TrueType and CFF. Older providers must fall back to untreated Qt output.
 
-The [native build guide](../build-system.md#check-a-complete-plasma-session) also describes `--native-bundle` for a marked disposable VM. It continues existing browser activations through actual native installation, ordinary restarts, and rollback. It uses that VM account's native profile indexes temporarily, so it requires the documented disposable-account setup.
+The [native build guide](../build-system.md#check-a-complete-plasma-session) also describes `--native-bundle` for a marked disposable VM. It continues existing browser activations through actual native installation, ordinary restarts, and rollback. Start the native browsers normally once and close them normally; leave their generated indexes untouched. The check snapshots all eight current and legacy profile/install index paths before fixture changes, uses only observed native roots and installation IDs, and restores the original files and absence. Synthetic all-root/history checks remain separate. Both browsers also check refusal to move an existing activation to another ordinary default without disabling it first.
 
 The current color-emoji browser fixture produces no visible glyph in both control and candidate. Its empty matching regions do not prove visible emoji rendering. The separate FreeType component check uses an actual color bitmap. Browser toolbar font matching remains unresolved even though separate toolbar captures exist.
 
