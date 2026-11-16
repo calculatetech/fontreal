@@ -24,10 +24,7 @@ def main():
     args = parser.parse_args()
     application = configparser.ConfigParser(interpolation=None)
     application.read(f"/usr/lib/{args.browser}/application.ini")
-    expected = {"firefox": "160.0", "floorp": "12.21.1@159.0.1"}[args.browser]
     version = application.get("App", "Version", fallback="unknown")
-    if version != expected:
-        parser.error(f"This first comparison targets {args.browser} {expected}; found {version}.")
     build_command = [sys.executable, str(ROOT / "tools/build-freetype.py")]
     if args.trace:
         build_command.append("--trace")

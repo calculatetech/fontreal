@@ -34,7 +34,7 @@ python3 tools/browser.py status firefox
 python3 tools/browser.py status floorp
 ```
 
-The status shows the configured working profile, treated parent processes, and processes that still need a restart. A browser or FreeType update can make the recorded override incompatible. The wrapper then warns and starts the installed browser without the private library. Its rendering preferences remain configured until you disable or rebuild. Matching build support must be updated before enabling an unsupported revision.
+The status shows the configured working profile, treated parent processes, and processes that still need a restart. Browser updates do not disable Fontreal. Enabled launchers use the saved Fontreal build across browser and system-library updates, without rebuilding or checking installed versions. If the saved library is missing or changed, the wrapper warns and starts the installed browser without it. Disable restores the original rendering settings. After you rebuild Fontreal, run enable again to select that build and retain the original restoration values.
 
 ## When Nimbus Sans looks untreated
 
@@ -80,7 +80,7 @@ Disable restores the original rendering preferences, removes the owned launch ho
 
 ## Requirements and build
 
-The builder supports amd64 Debian 13 with FreeType `2.13.3+dfsg-1+deb13u1` and amd64 Ubuntu 26.04 with `2.14.2+dfsg-1ubuntu0.2`. The launcher accepts installed Firefox `160.0` or Floorp `12.21.1@159.0.1`. Version checks stop a mismatched comparison. Other revisions require a matching source route before activation.
+The builder supports amd64 Debian 13 with FreeType `2.13.3+dfsg-1+deb13u1` and amd64 Ubuntu 26.04 with `2.14.2+dfsg-1ubuntu0.2`. These are build-source requirements, not browser launch gates. Firefox and Floorp releases do not need an entry in a version list. Test when Fontreal changes; a browser update does not require a qualification run. The saved private library receives upstream fixes when you rebuild Fontreal and enable that build.
 
 Use Python 3, C and C++17 compilers, make, pkg-config, patch, dpkg-source, and APT download access. The builder downloads matching development packages into its private directory. It does not install them. Exact source archives have pinned checksums from authenticated distro source indexes. Both routes preserve distro security patches. Debian retains its configuration without HarfBuzz. Ubuntu retains dynamic HarfBuzz. The shared patch applies with zero fuzz to both sources.
 

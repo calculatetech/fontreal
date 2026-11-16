@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from freetype_provider import official_version
 WORK = (ROOT / "build/freetype-native").resolve()
-VERSIONS = {"firefox": "160.0", "floorp": "12.21.1@159.0.1"}
+BROWSERS = ("firefox", "floorp")
 PREFS = {
     "gfx.text.subpixel-position.force-disabled": True,
     "gfx.webrender.enable-subpixel-aa": False,
@@ -168,8 +168,6 @@ def require_owned(record):
 
 
 def enable(browser):
-    if browser_version(browser) != VERSIONS[browser]:
-        raise ValueError(f"This build targets {browser} {VERSIONS[browser]}; no profile was changed.")
     profile = working_profile(browser)
     state, wrapper, desktop = paths(browser)
     previous = json.loads(state.read_text()) if state.exists() else None
@@ -223,7 +221,7 @@ def enable(browser):
     wrapper.write_text(wrapper_text)
     wrapper.chmod(0o755)
     desktop.write_text(desktop_text)
-    record.update(browser_version=VERSIONS[browser], freetype_version=build["spec"]["source"], contrast="weighted",
+    record.update(browser_version=browser_version(browser), freetype_version=build["spec"]["source"], contrast="weighted",
         library=library["library"], library_sha256=library["sha256"], build=str(build_path), scope=scope,
         hooks=[dict(path=str(p), sha256=sha(p)) for p in (wrapper, desktop)])
     state.write_text(json.dumps(record, indent=2) + "\n")
@@ -263,14 +261,6 @@ def disable(browser):
 
 
 def compatibility(browser, record):
-    if browser_version(browser) != record["browser_version"]:
-        return "browser version changed"
-    try:
-        provider = freetype_version()
-    except ValueError:
-        return "installed FreeType provider record is unavailable or changed"
-    if provider != record["freetype_version"]:
-        return "installed FreeType revision changed"
     library = Path(record["library"])
     if not library.is_file() or sha(library) != record["library_sha256"]:
         return "private library is missing or changed"
@@ -324,7 +314,7 @@ def status(browser):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("enable", "disable", "status", "run"))
-    parser.add_argument("browser", choices=tuple(VERSIONS))
+    parser.add_argument("browser", choices=BROWSERS)
     parser.add_argument("arguments", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     arguments = args.arguments[1:] if args.arguments[:1] == ["--"] else args.arguments

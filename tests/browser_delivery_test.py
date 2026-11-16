@@ -20,7 +20,7 @@ import sys
 import tempfile
 import threading
 import time
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 sys.dont_write_bytecode = True
 os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
@@ -223,11 +223,14 @@ def discovery(root):
     assert declared_profile_paths([profiles, installs, base / "absent.ini"]) == {
         relative.resolve(), absolute.resolve(), later.resolve()}
     results = []
-    for browser in browser_tool.VERSIONS:
+    preview_spec = importlib.util.spec_from_file_location("fontreal_preview", ROOT / "tools/preview-browser.py")
+    preview = importlib.util.module_from_spec(preview_spec)
+    preview_spec.loader.exec_module(preview)
+    for browser in browser_tool.BROWSERS:
         home = root / browser
         profile = home / "existing"
         profile.mkdir(parents=True)
-        original = b'user_pref("fixture.keep", 23);\n'
+        original = b'user_pref("fixture.keep", 23);\nuser_pref("gfx.font_rendering.freetype.gamma", 0);\n'
         (profile / "prefs.js").write_bytes(original)
         index, unused = index_fixture(home, profile)
         fixed = tree(unused), index.read_bytes()
@@ -254,16 +257,16 @@ def discovery(root):
                 assert tree(home) == before, (browser, kind)
                 results.append([browser, kind])
             index.write_bytes(fixed[1])
-            # Only the installed revision observation differs in this D6 contrast.
-            before = tree(home)
-            with patch.object(browser_tool, "browser_version", return_value="future-incompatible"):
-                main_call("enable", browser, "targets")
-            assert tree(home) == before
+            for version in ("160.0" if browser == "firefox" else "12.21.1@159.0.1", "unlisted-release"):
+                with patch.object(browser_tool, "browser_version", return_value=version):
+                    main_call("enable", browser)
+                assert json.loads(state.read_text())["browser_version"] == version
             main_call("enable", browser)
             record = json.loads(state.read_text())
             # Upgrade the old owned block without losing its first restoration baseline.
             user_js = profile / "user.js"
             original_prefs = record["original_prefs"]
+            assert original_prefs
             old_block = "\n" + record["block"].replace('freetype.gamma", -1','freetype.gamma", 0')
             user_js.write_text('user_pref("fixture.no.newline", 19);' + old_block)
             record["block"] = old_block
@@ -271,7 +274,7 @@ def discovery(root):
             state.write_text(json.dumps(record))
             legacy = []
             with patch.object(os, "execve", side_effect=lambda *args: legacy.append(args)):
-                browser_tool.run(browser, [])
+                main_call("run", browser)
             assert legacy[0][2]["FONTREAL_FT_CONTRAST"] == "mild"
             main_call("enable", browser)
             upgraded = json.loads(state.read_text())
@@ -281,56 +284,97 @@ def discovery(root):
             for old_mode in ("raw", "ramp217"):
                 state.write_text(json.dumps(dict(upgraded,contrast=old_mode)))
                 with patch.object(os, "execve", side_effect=lambda *args: legacy.append(args)):
-                    browser_tool.run(browser, [])
+                    main_call("run", browser)
                 assert legacy[-1][2]["FONTREAL_FT_CONTRAST"] == old_mode
                 main_call("enable", browser)
                 upgraded = json.loads(state.read_text())
                 assert upgraded["contrast"] == "weighted" and upgraded["original_prefs"] == original_prefs
                 assert user_js.read_text() == 'user_pref("fixture.no.newline", 19);' + upgraded["block"]
-            directory = str(Path(record["library"]).parent)
+            directory = str(Path(upgraded["library"]).parent)
             captured = []
             fallback_before = tree(profile)
             inherited = f":/fixture/loader::{directory}:/fixture/tail:"
-            with patch.object(browser_tool, "browser_version", return_value="future-incompatible"), \
-                    patch.object(os, "execve", side_effect=lambda *args: captured.append(args)), \
-                    patch.dict(os.environ, LD_LIBRARY_PATH=inherited, FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="mild", FONTREAL_FT_EXECUTABLE="bad"):
-                err = io.StringIO()
-                with redirect_stderr(err):
-                    browser_tool.run(browser, ["https://example.invalid/a b?$=&"])
-                assert "Fontreal inactive: browser version changed" in err.getvalue()
-            executable, argv, env = captured.pop()
-            assert executable == Path("/usr/bin") / browser
-            assert argv == [str(executable), "https://example.invalid/a b?$=&"]
-            assert env["LD_LIBRARY_PATH"] == ":/fixture/loader::/fixture/tail:"
-            assert not any(k in env for k in ("FONTREAL_FT_RENDERING", "FONTREAL_FT_CONTRAST", "FONTREAL_FT_EXECUTABLE"))
-            assert tree(profile) == fallback_before
-            for failure in ("freetype", "provider-record", "missing", "changed"):
+            state.write_text(json.dumps(dict(upgraded, browser_version="old-version", freetype_version="old-source")))
+            saved_state = state.read_bytes()
+            for version in ("old-version", "new-version"):
+                with patch.object(browser_tool, "browser_version", return_value=version) as browser_observation, \
+                        patch.object(browser_tool, "freetype_version", return_value=version) as provider_observation, \
+                        patch.object(subprocess, "check_output") as build_call, \
+                        patch.object(os, "execve", side_effect=lambda *args: captured.append(args)):
+                    main_call("run", browser)
+                    status = json.loads(main_call("status", browser))
+                    browser_observation.assert_not_called()
+                    provider_observation.assert_not_called()
+                    build_call.assert_not_called()
+                executable, argv, env = captured.pop()
+                assert executable == Path("/usr/bin") / browser and argv == [str(executable)]
+                assert env["LD_LIBRARY_PATH"].split(":")[0] == directory
+                assert env["FONTREAL_FT_RENDERING"] == "1" and env["FONTREAL_FT_CONTRAST"] == "weighted"
+                assert env["FONTREAL_FT_EXECUTABLE"] == ":".join(upgraded["scope"])
+                assert status["compatibility"] is None and status["profile"] == str(profile)
+                assert state.read_bytes() == saved_state and tree(profile) == fallback_before
+            for failure in ("missing", "changed"):
                 incompatible = dict(upgraded)
                 if failure == "missing": incompatible["library"] = str(home / "missing-library.so")
                 if failure == "changed": incompatible["library_sha256"] = "0" * 64
                 state.write_text(json.dumps(incompatible))
                 current_directory = str(Path(incompatible["library"]).parent)
                 with ExitStack() as stack:
-                    if failure == "freetype": stack.enter_context(patch.object(browser_tool, "freetype_version", return_value="future-incompatible"))
-                    if failure == "provider-record": stack.enter_context(patch.object(browser_tool, "freetype_version", side_effect=ValueError("Untrusted provider")))
                     stack.enter_context(patch.object(os, "execve", side_effect=lambda *args: captured.append(args)))
                     stack.enter_context(patch.dict(os.environ, LD_LIBRARY_PATH=f":/fixture/loader::{current_directory}:/fixture/tail:", FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="ramp217", FONTREAL_FT_EXECUTABLE="bad"))
                     err = io.StringIO()
-                    with redirect_stderr(err): browser_tool.run(browser, ["https://example.invalid/a b?$=&"])
-                    reason = ("installed FreeType revision changed" if failure == "freetype" else
-                              "installed FreeType provider record is unavailable or changed" if failure == "provider-record" else
-                              "private library is missing or changed")
+                    with patch.object(sys, "argv", [str(ROOT / "tools/browser.py"), "run", browser, "--", "https://example.invalid/a b?$=&"]), redirect_stderr(err):
+                        browser_tool.main()
+                    reason = "private library is missing or changed"
+                    assert json.loads(main_call("status", browser))["compatibility"] == reason
                     assert reason in err.getvalue()
                 executable, argv, env = captured.pop()
                 assert executable == Path("/usr/bin") / browser and argv == [str(executable), "https://example.invalid/a b?$=&"]
                 assert env["LD_LIBRARY_PATH"] == ":/fixture/loader::/fixture/tail:"
                 assert not any(k.startswith("FONTREAL_FT_") for k in env)
                 assert tree(profile) == fallback_before
+            valid_build = Path(upgraded["build"])
+            bad_build = json.loads(valid_build.read_text())
+            bad_build["libraries"]["candidate"]["sha256"] = "0" * 64
+            bad_path = home / "invalid-build.json"
+            bad_path.write_text(json.dumps(bad_build))
+            before = tree(home)
+            with patch.object(subprocess, "check_output", return_value=str(bad_path) + "\n"):
+                main_call("enable", browser, "does not match its build record")
+            assert tree(home) == before
+            bad_path.unlink()
+            preview_profiles = []
+            def preview_launch(command, env):
+                disposable = Path(command[command.index("--profile") + 1])
+                preview_profiles.append(disposable)
+                assert disposable.is_dir() and disposable != profile
+                assert (disposable / "user.js").is_file()
+                assert command[0] == "/usr/bin/" + browser
+                assert env["LD_LIBRARY_PATH"].split(":")[0] == directory
+                assert env["FONTREAL_FT_RENDERING"] == "1" and env["FONTREAL_FT_CONTRAST"] == "weighted"
+                return Mock(pid=12345, wait=Mock(return_value=0), poll=Mock(return_value=0))
+            for version in ("160.0" if browser == "firefox" else "12.21.1@159.0.1", "unlisted-preview-release"):
+                def observed_version(parser, filename):
+                    assert filename == f"/usr/lib/{browser}/application.ini"
+                    parser.read_dict({"App": {"Version": version}})
+                    return [filename]
+                before = tree(home)
+                with patch.object(sys, "argv", ["preview-browser.py", "weighted", "--browser", browser]), \
+                        patch.object(configparser.ConfigParser, "read", observed_version), \
+                        patch.object(subprocess, "check_output", return_value=str(valid_build) + "\n"), \
+                        patch.object(subprocess, "Popen", side_effect=preview_launch), redirect_stdout(io.StringIO()):
+                    assert preview.main() == 0
+                assert not preview_profiles[-1].exists() and tree(home) == before
             state.write_text(json.dumps(upgraded))
             main_call("disable", browser)
             assert user_js.read_text() == 'user_pref("fixture.no.newline", 19);'
             assert [line for line in (profile / "prefs.js").read_text().splitlines(keepends=True)
                     if browser_tool.OWNED_PREF.match(line)] == original_prefs
+            assert (profile / "prefs.js").read_bytes() == original
+            with patch.object(os, "execve", side_effect=lambda *args: captured.append(args)):
+                main_call("run", browser)
+            assert not any(key.startswith("FONTREAL_FT_") for key in captured.pop()[2])
+            assert not state.exists() and not wrapper.exists() and not desktop.exists()
             original_check_output = subprocess.check_output
             for version,machine in (("unknown", "x86_64"), (upgraded["freetype_version"], "aarch64")):
                 before = tree(home)
@@ -343,14 +387,14 @@ def discovery(root):
                         assert error.returncode == 2 and "Requires amd64" in error.output
                     else: raise AssertionError("Unsupported builder activated a profile")
                 assert tree(home) == before
-        results.append([browser, "unique-install-default", "version-rejection", "version-fallback"])
+        results.append([browser, "unique-install-default", "update-independent-activation", "artifact-fallback"])
     return dict(selectors=results, real_floorp_indexes=enumerated_discovery(root / "real-indexes"))
 
 
 def process_observation(root):
     """A normal package replacement leaves a live parent's exe marked deleted."""
     results = []
-    for browser in browser_tool.VERSIONS:
+    for browser in browser_tool.BROWSERS:
         home = root / browser
         profile = home / "existing"
         profile.mkdir(parents=True)
@@ -449,7 +493,7 @@ def process_observation(root):
 
 def desktop_checks(root):
     results = []
-    for browser in browser_tool.VERSIONS:
+    for browser in browser_tool.BROWSERS:
         home = root / f"{browser} home with spaces"
         profile = home / "existing"
         profile.mkdir(parents=True)
@@ -594,7 +638,7 @@ def lifecycle(root, record):
         assert len(expected_indexes) == len(set(expected_indexes)) == 8
         saved_indexes = {path: path.read_bytes() if path.exists() else None for path in expected_indexes}
         unrelated = {path: tree(path) for path in declared_profile_paths(expected_indexes)}
-    for browser in browser_tool.VERSIONS:
+    for browser in browser_tool.BROWSERS:
         if native_bundle:
             assert not browser_tool.paths(browser)[0].exists(), "Use an unconfigured disposable browser account."
         observed = {}
@@ -632,7 +676,7 @@ results = test.lifecycle_inside(root, json.loads((root/'build.json').read_text()
                        timeout=1200 if native_bundle else 300)
     finally:
         if native_bundle:
-            for browser in browser_tool.VERSIONS:
+            for browser in browser_tool.BROWSERS:
                 state = browser_tool.paths(browser)[0]
                 if state.exists():
                     activation = json.loads(state.read_text())
@@ -644,7 +688,7 @@ results = test.lifecycle_inside(root, json.loads((root/'build.json').read_text()
                     path.unlink(missing_ok=True)
                 else:
                     path.write_bytes(content)
-            for browser in browser_tool.VERSIONS:
+            for browser in browser_tool.BROWSERS:
                 for base in metadata[browser]["bases"]:
                     unused = Path(base) / "unused"
                     if unused.exists():
@@ -745,7 +789,7 @@ module.main()
         return {str(p): masks.digest(p) for base in bases for p in base.rglob("*") if p.is_file()}
     try:
         with masks.nested_display() as display:
-            for browser in browser_tool.VERSIONS:
+            for browser in browser_tool.BROWSERS:
                 for explicit in (False, True):
                     label = f"{browser}-{'explicit' if explicit else 'absent'}"
                     directory = OUT / label
@@ -1109,16 +1153,16 @@ else: app.launch_action(sys.argv[2],None)
                             launch_paths.append(dict(entry='open-profile-manager',pid=manager_pid,windows=windows))
                             manager_pid = None
                             saved_state=state.read_bytes()
-                            state.write_text(json.dumps(dict(activation,browser_version="old-fixture-version")))
-                            fallback_parent=launch("version-fallback")
+                            state.write_text(json.dumps(dict(activation,library_sha256="0"*64)))
+                            fallback_parent=launch("artifact-fallback")
                             fallback_maps=Path(f"/proc/{fallback_parent['pid']}/maps").read_text()
                             installed=Path('/usr/lib/x86_64-linux-gnu/libfreetype.so.6').resolve()
                             assert library not in fallback_maps and str(installed) in fallback_maps
-                            assert 'Fontreal inactive: browser version changed' in (directory/'version-fallback.log').read_text()
-                            fallback_helper,_,fallback_fc=browser_helper("version-fallback")
+                            assert 'Fontreal inactive: private library is missing or changed' in (directory/'artifact-fallback.log').read_text()
+                            fallback_helper,_,fallback_fc=browser_helper("artifact-fallback")
                             for key in ("masks","images","qtGui","fonts"):assert fallback_helper[key]==normal_helper[key]
                             assert fallback_fc==normal_fc
-                            launch_paths.append(dict(entry='version-fallback',pid=fallback_parent['pid'],provider=str(installed)))
+                            launch_paths.append(dict(entry='artifact-fallback',pid=fallback_parent['pid'],provider=str(installed)))
                             quit(); state.write_bytes(saved_state)
                             treated=launch("treated-resumed")
                         tool("enable")
@@ -1323,7 +1367,7 @@ def diagnostic(root):
     home.mkdir(parents=True)
     indexes = {}
     inherited_scope = None
-    for browser in browser_tool.VERSIONS:
+    for browser in browser_tool.BROWSERS:
         profile = root / browser
         profile.mkdir()
         (profile / "prefs.js").write_text('user_pref("fixture.keep", 83);\n')
@@ -1342,7 +1386,7 @@ def diagnostic(root):
         assert len(report["browser"]["runs"]) == 18
         return dict(runs=18, normal_hooks=str(home / ".local/bin"), report=str(masks.OUT / "all.json"))
     finally:
-        for browser in browser_tool.VERSIONS:
+        for browser in browser_tool.BROWSERS:
             with observations(home, [indexes[browser]]):
                 main_call("disable", browser)
 
@@ -1357,14 +1401,13 @@ def docs():
         assert f"tools/browser.py {action} firefox" in page, action
     assert "Floorp" in page and "restart" in page.lower()
     assert "preblend" in page.lower() and re.search(r"actual[- ]background", page.lower())
-    for version in browser_tool.VERSIONS.values():
-        assert all(part in page for part in version.split("@")), version
+    assert "Browser updates do not disable Fontreal" in page
     help_text = masks.run([sys.executable, ROOT / "tools/browser.py", "--help"]).stdout
     assert "{enable,disable,status,run}" in help_text and "{firefox,floorp}" in help_text
     for command in re.findall(r"^python3 tools/browser\.py (.+)$", page, re.M):
         arguments = shlex.split(command)
         assert arguments[0] in ("enable", "disable", "status", "run")
-        assert arguments[1] in browser_tool.VERSIONS
+        assert arguments[1] in browser_tool.BROWSERS
     assert "(docs/experiments/browser-masks.md)" in (ROOT / "README.md").read_text()
     for target in re.findall(r"\]\(([^)]+)\)", page):
         if ":" not in target and not target.startswith("#"):
