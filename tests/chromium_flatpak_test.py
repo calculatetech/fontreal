@@ -127,8 +127,8 @@ def glyph_ids(font,characters="m8Wg"):
 
 
 class StderrCollector:
-    def __init__(self,destination):
-        self.destination=destination
+    def __init__(self,destination,trace_only=False):
+        self.destination=destination;self.trace_only=trace_only
         self.receiver,self.sender=socket.socketpair(socket.AF_UNIX,socket.SOCK_DGRAM)
         self.receiver.setsockopt(socket.SOL_SOCKET,socket.SO_PASSCRED,1)
         self.receiver.settimeout(.1)
@@ -154,15 +154,21 @@ class StderrCollector:
                     credentials=[value for level,kind,value in ancillary if level==socket.SOL_SOCKET and kind==socket.SCM_CREDENTIALS]
                     assert len(credentials)==1 and len(credentials[0])==struct.calcsize('3i'), 'Missing or malformed stderr sender credentials'
                     pid,uid,gid=struct.unpack('3i',credentials[0]);assert pid>0, 'Invalid kernel stderr sender PID'
-                    raw.write(data)
-                    index.write(json.dumps(dict(offset=offset,length=len(data),hostPid=pid,uid=uid,gid=gid))+'\n')
-                    offset+=len(data)
+                    if not self.trace_only:
+                        raw.write(data)
+                        index.write(json.dumps(dict(offset=offset,length=len(data),hostPid=pid,uid=uid,gid=gid))+'\n')
+                        offset+=len(data)
                     fragments=(pending.get(pid,b'')+data).split(b'\n');pending[pid]=fragments.pop()
                     assert len(pending[pid])<=1<<20, 'Unbounded incomplete stderr line'
                     for line in fragments:
                         if b'FONTREAL_SKIA ' in line:
+                            if self.trace_only:assert line.startswith(b'FONTREAL_SKIA '), 'Interleaved actual-application trace record'
                             payload=json.loads(line.split(b'FONTREAL_SKIA ',1)[1])
                             assert isinstance(payload,dict) and isinstance(payload.get('pid'),int), 'Malformed trace record'
+                            if self.trace_only:
+                                retained=line+b'\n';raw.write(retained)
+                                index.write(json.dumps(dict(offset=offset,length=len(retained),hostPid=pid,uid=uid,gid=gid,retainedTraceLine=True))+'\n')
+                                offset+=len(retained)
                             self.rows.append(dict(hostPid=pid,payload=payload))
                 assert not any(b'FONTREAL_' in tail for tail in pending.values()), 'Incomplete trace record at end of stderr'
         except Exception as error:self.error=error

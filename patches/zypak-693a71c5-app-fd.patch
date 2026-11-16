@@ -1,0 +1,82 @@
+--- a/src/dbus/flatpak_portal_proxy.h
++++ b/src/dbus/flatpak_portal_proxy.h
+@@ -70,6 +70,7 @@
+     SandboxFlags sandbox_flags = kNoSandboxFlags;
+ 
+     std::vector<unique_fd> sandbox_expose_ro;
++    unique_fd app_fd;
+ 
+     void ExposePathRo(cstring_view path);
+   };
+--- a/src/dbus/flatpak_portal_proxy.cc
++++ b/src/dbus/flatpak_portal_proxy.cc
+@@ -140,6 +140,13 @@
+ 
+     MessageWriter options_writer = writer.EnterContainer<TypeCode::kArray>("{sv}");
+ 
++    if (!spawn.options.app_fd.invalid()) {
++      MessageWriter pair_writer = options_writer.EnterContainer<TypeCode::kDictEntry>();
++      pair_writer.Write<TypeCode::kString>("app-fd");
++      MessageWriter value_writer = pair_writer.EnterContainer<TypeCode::kVariant>("h");
++      value_writer.Write<TypeCode::kHandle>(spawn.options.app_fd.get());
++    }
++
+     if (spawn.options.sandbox_flags != SpawnOptions::kNoSandboxFlags) {
+       MessageWriter pair_writer = options_writer.EnterContainer<TypeCode::kDictEntry>();
+       pair_writer.Write<TypeCode::kString>(kOptionSandboxFlags);
+--- a/src/preload/host/spawn_strategy/spawn_launcher_delegate.cc
++++ b/src/preload/host/spawn_strategy/spawn_launcher_delegate.cc
+@@ -5,6 +5,11 @@
+ #include "preload/host/spawn_strategy/spawn_launcher_delegate.h"
+ 
+ #include <nickle.h>
++#include <fcntl.h>
++#include <sys/stat.h>
++
++#include <cstdlib>
++#include <cstring>
+ 
+ #include "base/container_util.h"
+ #include "base/debug.h"
+@@ -25,6 +30,30 @@
+ 
+   dbus::FlatpakPortalProxy::SpawnCall spawn;
+   spawn.cwd = kSpawnDirectory;
++  const char* app_path = std::getenv("FONTREAL_ZYPAK_APP_PATH");
++  if (app_path == nullptr || app_path[0] != '/') {
++    Log() << "Missing or non-absolute application view";
++    return false;
++  }
++  unique_fd current_app(HANDLE_EINTR(
++      open("/app", O_PATH | O_NOFOLLOW | O_DIRECTORY | O_CLOEXEC)));
++  spawn.options.app_fd = unique_fd(HANDLE_EINTR(
++      open(app_path, O_PATH | O_NOFOLLOW | O_DIRECTORY | O_CLOEXEC)));
++  if (current_app.invalid() || spawn.options.app_fd.invalid()) {
++    Errno() << "Failed to retain the current application view";
++    return false;
++  }
++  struct stat current_stat, selected_stat;
++  if (fstat(current_app.get(), &current_stat) == -1 ||
++      fstat(spawn.options.app_fd.get(), &selected_stat) == -1) {
++    Errno() << "Failed to identify the application view";
++    return false;
++  }
++  if (current_stat.st_dev != selected_stat.st_dev ||
++      current_stat.st_ino != selected_stat.st_ino) {
++    Log() << "Application view alias does not match /app";
++    return false;
++  }
+ 
+   // Since we map the descriptors ourselves via the portal API, there's no need for zypak-helper to
+   // adjust them as well.
+@@ -35,6 +64,10 @@
+ 
+   for (const auto& [var, value] : env) {
+     spawn.env.emplace(var, value);
++  }
++  if (const char* trace = std::getenv("FONTREAL_SKIA_TRACE");
++      trace != nullptr && std::strcmp(trace, "1") == 0) {
++    spawn.env.emplace("FONTREAL_SKIA_TRACE", "1");
+   }
+ 
+   for (const auto& path : exposed_paths) {

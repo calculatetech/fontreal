@@ -39,11 +39,13 @@ Fontreal contains a comparison viewer, rendering patches, and tools that build m
 
 The private FreeType builder supports exact Debian 13 and Ubuntu 26.04 source revisions on amd64. It builds the original and modified libraries together. Version checks prevent an override from loading after an incompatible update.
 
-KDE system packages currently contain the earlier raw profile. Updating that package workflow to the selected method is separate work. Chromium browsers, Electron applications, and Flatpak applications also need their own integration. The [engine workflow](docs/experiments/chromium-flatpak.md) inspects Edge, Teams, Bitwarden and Telegram, then checks stock, traced and experimental selected builds of the Teams engine in isolated fixtures. It does not activate application support. See the [roadmap](docs/roadmap.md).
+KDE system packages currently contain the earlier raw profile. Updating that package workflow to the selected method is separate work. The [Teams workflow](docs/experiments/chromium-flatpak.md#teams-application-qualification) builds and checks the exact supported Flatpak application before enabling its ordinary launchers. Edge, Bitwarden and Telegram remain unqualified. See the [roadmap](docs/roadmap.md).
 
 ## Try it
 
 For a supported Firefox or Floorp installation, follow the [browser guide](docs/experiments/browser-masks.md). Build requirements include Python 3, C and C++17 compilers, make, pkg-config, patch, dpkg-source, and APT download access.
+
+The [app-specific scenarios](docs/app-scenarios.md) link the exact requirements, commands, expected results, update behavior, and recovery steps for each integration. Use these recipes when repeating a test on another machine.
 
 ```sh
 python3 tools/browser.py enable firefox
