@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-019: Carry the selected profile into native KDE packages.** Update the matching native FreeType capability and coherent Qt/FreeType package bundle to the finalized native-normal and weighted-stem method. Retain coinstalled architecture handling, package/update/rollback checks and disposable full-session proof before host deployment. Preserve chosen fonts and sizes. Native authorization and normal user logout/login follow the reviewed bundle. The earlier nearest-50% raw package method remains available until this update passes. See the [native package specification](plans/FR-019-native-selected.md) and [build guide](build-system.md).
+No task is active.
 
 ## Planned next
 
@@ -42,6 +42,7 @@ No task is declined. Non-native LCD resolution remains outside the project scope
 
 ## Completed
 
+- **FR-019: Carry the selected profile into native KDE packages.** Matching Debian 13 and Ubuntu 26.04 FreeType and Qt packages deliver the selected native-normal and weighted-stem method. Package, independent-update, full Plasma session, browser-helper and offline rollback checks pass. The installed host passes fresh-login environment, library and widget/Quick pixel checks. Chosen fonts and sizes stay intact. See the [native package specification](plans/FR-019-native-selected.md) and [build guide](build-system.md).
 - **FR-018: Deliver the selected native rendering profile.** The accepted native-normal and generic weighted-stem method works in ordinary Firefox and Floorp without copying working profiles. Actual raster, window, upgrade, restoration, desktop-action and fallback checks preserve the browser lifecycle and earlier diagnostics. The README compares genuine stock Qt and Fontreal at all six supplied KDE font roles and sizes, in both palettes. Native KDE package deployment remains FR-019. See the [browser guide](experiments/browser-masks.md), [handoff](research/handoff.md) and [integration specification](plans/FR-018-axis-study.md).
 - **FR-015: Support Firefox-based browsers.** The approved automatic monochrome hints, grayscale masks, mild contrast, and Mozilla sRGB preblend work in existing Firefox and Floorp profiles. Reversible per-user activation preserves account data, unrelated preferences, native launches, and accepted Qt output. Normal browser startup and the disposable comparison are verified. Mozilla's background approximation and unverified toolbar-font equality remain stated limits. See the [browser specification](plans/FR-015-browser-masks.md) and [rendering investigation](research/non-qt-rendering.md).
 - **FR-011: Package a KDE desktop pilot.** On-demand builds support Debian 13/Qt 6.8.2 and Ubuntu 26.04/Qt 6.10.2 amd64 using exact distro sources and rules. Separate per-user activation starts disabled. Native package and complete-session checks cover enabling, disabling, independent Qt updates, font preservation, guarded installation, and offline official-package rollback. The host-matching bundle passes installation simulation. See the [build and deployment guide](build-system.md) and [package specification](plans/FR-011-system-builds.md).
