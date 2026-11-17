@@ -63,3 +63,38 @@ The focused check runs both studies and verifies actual provider properties, ind
 The check also runs the original exporter from `ff63a7f` in a temporary private build tree. That commit must exist in local Git history. Every original glyph capture, outline, mask, advance and placement, plus all 378 original native crop hashes, must match. Temporary reference trees are removed after use. The original seven columns retain their behavior.
 
 The earlier stock subpixel study remains in Git at `60fed5e`. Its unused rendering paths are removed from the current implementation. The installed profile and appearance selection do not change automatically.
+
+## Native MONO-gray and stem cleanup
+
+The next experiment uses the selected native 1× MONO hints with grayscale edges. MONO here selects hinting. The raster still contains gray coverage values. This differs from a black-or-white mono bitmap and from reducing a 4× image.
+
+Use the same paired build record and three regular fonts:
+
+```sh
+python3 -B tools/native_stems.py --record FREETYPE_BUILD_JSON
+```
+
+Open the printed directory's `gallery` folder in Gwenview at 100% zoom. Arrow keys move between 54 native comparisons and six numbered coverage grids. The samples cover 8–16pt on both backgrounds. The grids focus on H, n, m, 8, W, colon and exclamation at 11pt and 12pt.
+
+| Column | Rendering |
+| --- | --- |
+| A | Native 1× MONO hints with untouched grayscale coverage |
+| B | Existing conservative stem cleanup, without other Fontreal passes |
+| C | The same cleanup with a trial for near-equal split stems |
+| D | Column C plus weighted darkening of each selected core and its blend |
+
+Columns B and C move existing coverage between two pixels of a stable straight run. Every changed pair and complete glyph keeps its original total coverage. Other pixels, bitmap bounds, advances and line breaks stay unchanged. This can shift the stroke's center toward one pixel. Conservation does not guarantee the same perceived softness.
+
+The existing cleanup requires a coverage difference of at least 16. Column C removes that difference guard and chooses one side from the original coverage summed along the run. A run with a zero vote stays unchanged. An equal pair within a nonzero-vote run follows the run's winner. Both methods require three stable positions, isolated pairs with total coverage 192–384, and weak outside neighbors. Intersecting runs and already strong pairs remain protected. Short, unstable or excluded stems can remain unchanged. Stable segments of curved glyphs can qualify numerically.
+
+Column D deliberately adds coverage. Its target is the existing coverage-weighted average of the strongest quarter of positive baseline pixels, including ties at the cutoff. It raises only cores selected by C. Each adjoining blended pixel receives the same proportional lift, rounded to an integer. This preserves the local blend ratio within 8-bit rounding instead of darkening the core alone. Pixels outside those pairs stay unchanged. The samples test whether this avoids visible jaggies. They do not establish that result automatically.
+
+All columns share the native MONO baseline's whole-pixel spacing and encoded blend. FreeType stem darkening stays on, as in the accepted native baseline. There is no Fontreal bridge, general gain, coverage floor or curve-darkening pass. This command does not change the installed profile or the earlier supersampling commands.
+
+The manifest records actual provider, font and source hashes, capture properties, masks, selected pairs and exact image coordinates. Build data and results remain in the configured ignored roots. The focused check compares the baseline with an independent native provider reference and checks every saved mask, crop and grid:
+
+```sh
+python3 -B tests/native_stems_test.py --record FREETYPE_BUILD_JSON
+```
+
+The comparison uses regular faces only. Broader font and weight checks follow visual selection. Human assessment remains necessary for softness, geometry and readability.

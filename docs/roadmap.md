@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Compare supersampled fonts at native resolution.** Compare scalar 4× hinting and monochrome sources with FreeType stem darkening off/on. Every row starts with untreated 1× and Fontreal 1× references. Remove the subpixel and vertical LCD settings. Keep the original seven-column study available. Use 8–16pt, both polarities, the recommended UI and terminal fonts, and a CFF control. Preserve installed rendering, current app-support decisions and font recommendations. Human comparison chooses whether any candidate warrants further work. See the [supersampling experiment](plans/FR-021-supersampling.md).
+- **FR-021: Compare native font geometry and conservative stem cleanup.** Use the selected native 1× MONO hints with grayscale edges as the new experimental baseline. Compare existing stem concentration and a bounded near-tie trial without adding coverage. Add a separate weighted-darkening comparison that lifts adjoining blended pixels with its core. Preserve softer pixels outside selected runs and generic handling. Use 8–16pt, both polarities, the UI and terminal fonts, and a CFF control. Keep earlier supersampling commands and installed rendering unchanged. Human comparison selects the next treatment. See the [native stem experiment](plans/FR-021-supersampling.md).
 
 ## Planned next
 

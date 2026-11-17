@@ -17,7 +17,7 @@ static void check(FT_Error error) {
 
 static QJsonObject stockCapture(FT_Library library, const char *font, int points,
                                const QString &name, const QString &policy, int target,
-                               FT_Render_Mode render, int interpreter, bool darkening, int engine=1) {
+                               FT_Render_Mode render, int interpreter, bool darkening, int engine=1, int scale=4) {
     FT_UInt version=interpreter, hintingEngine=engine, effective=0;
     check(FT_Property_Set(library,"truetype","interpreter-version",&version));
     check(FT_Property_Get(library,"truetype","interpreter-version",&effective));
@@ -39,7 +39,7 @@ static QJsonObject stockCapture(FT_Library library, const char *font, int points
     FT_Int32 flags=FT_LOAD_NO_BITMAP | (target<<16);
     flags |= policy=="auto" ? FT_LOAD_FORCE_AUTOHINT : FT_LOAD_NO_AUTOHINT;
     if (policy=="off") flags |= FT_LOAD_NO_HINTING;
-    check(FT_Set_Char_Size(face,0,points*64,384,384));
+    check(FT_Set_Char_Size(face,0,points*64,96*scale,96*scale));
     QJsonArray glyphs;
     for (int code=32;code<=126;++code) {
         FT_UInt index=FT_Get_Char_Index(face,code);
@@ -69,7 +69,7 @@ static QJsonObject stockCapture(FT_Library library, const char *font, int points
     }
     int ppem=face->size->metrics.x_ppem;
     check(FT_Done_Face(face));
-    return {{"mode",name},{"scale",4},{"hint_dpi",384},{"x_ppem",ppem},
+    return {{"mode",name},{"scale",scale},{"hint_dpi",96*scale},{"x_ppem",ppem},
         {"policy",policy},{"target",target},{"render",int(render)},
         {"interpreter",interpreter},{"effective_interpreter",int(effective)},
         {"cff_hinting_engine",int(hintingEngine)},{"stem_darkening",darkening},
@@ -122,7 +122,9 @@ int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
     try {
         bool stock=argc==4 && QString::fromLocal8Bit(argv[3])=="--stock4x";
-        if (argc!=3 && !stock) throw std::runtime_error("usage: supersampling-probe FONT POINTS [--stock4x]");
+        bool nativeMono=argc==4 && QString::fromLocal8Bit(argv[3])=="--native-mono";
+        if (argc!=3 && !stock && !nativeMono)
+            throw std::runtime_error("usage: supersampling-probe FONT POINTS [--stock4x|--native-mono]");
         bool valid=false;
         int points=QString::fromLocal8Bit(argv[2]).toInt(&valid);
         if (!valid || points<8 || points>16) throw std::runtime_error("points must be 8 through 16");
@@ -182,6 +184,11 @@ int main(int argc, char **argv) {
             {"format",FT_Get_Font_Format(face)},{"points",points},{"target_dpi",96},{"captures",captures}};
         if (stock) {
             result.insert("capabilities",stockOptions(library,argv[1],points,captures));
+            result.insert("captures",captures);
+        }
+        if (nativeMono) {
+            captures.append(stockCapture(library,argv[1],points,"native_mono1","native",2,
+                                         FT_RENDER_MODE_NORMAL,40,true,1,1));
             result.insert("captures",captures);
         }
         QFile output;
