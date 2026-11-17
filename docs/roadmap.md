@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Study Arial hinting and reference coherence.** The user leans toward U generally but prefers profile O on Arial. Compare genuine Arial/Noto Sans10/11pt raw native, automatic and unhinted sources at96DPI. Preserve exact A/D/O/L/U controls. Test3×3 and5×5 local contrast-energy references with U's unchanged half-edge treatment across the approved retained matrix. Include the glyph O, both parentheses and i/8/!/W. Keep old commands and installed rendering unchanged. Human comparison judges geometry, detail and jaggies. See the [Arial and coherence study](plans/FR-021-supersampling.md).
+- **FR-021: Compare treatments on native NORMAL hints.** The user selects untreated native NORMAL as the source and O as the comparison point. Show historical MONO-based O beside raw NORMAL and NORMAL-based O, U, K3 and K5. Omit a separate L column. Use the same five Regular fonts at 8, 10, 11 and 12pt, both backgrounds, the full specimen and the exact curve/detail focus. Preserve the existing formulas, native geometry, historical commands and installed rendering. Human comparison judges softness, shape and useful detail. See the [NORMAL source comparison](plans/FR-021-supersampling.md).
 
 ## Planned next
 

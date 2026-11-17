@@ -202,7 +202,7 @@ The check runs the real entry point with fail guards at native compilation, capt
 
 ## Arial hinting and local phase coherence
 
-The user tentatively prefers U overall, while profile O still works best for Arial. Arial Regular at 10pt and 11pt needs a separate source check. The capital glyph O can look poor across several treatments. Both parentheses expose the curved-edge jaggies. This study separates native hinting evidence from two new reference trials.
+This earlier study compares hinting sources and local coherence on the historical MONO-based reference. Arial Regular at 10pt and 11pt needs a separate source check. The capital glyph O can look poor across several treatments. Both parentheses expose the curved-edge jaggies. This study separates native hinting evidence from two new reference trials.
 
 Use the paired build record and the retained matrix manifest from the commands above. Keep the matrix directory and matching fonts and producer sources available.
 
@@ -233,3 +233,31 @@ python3 -B tests/arial_coherence_test.py --record FREETYPE_BUILD_JSON --source-m
 ```
 
 The check independently verifies all 1520 focused captures and 1900 retained trials, including native and eight-times outline rasters. A non-mutating observer ties each numerical argument to the actual hashed retained loader by object identity. Equal newly allocated data must fail that origin check. The check also reconstructs every native image, geometry view and phase grid. Existing commands and installed rendering stay unchanged. This study selects no production profile and makes no performance claim.
+
+## Treatments on native NORMAL
+
+The user selects raw native NORMAL hints as the next source. Historical O remains the comparison point. This study applies the existing treatments to NORMAL without changing their formulas. It does not display a separate local-cores-only L column.
+
+Use the same paired build record and complete retained matrix manifest. Their actual FreeType provider hashes must match. Keep the five original Regular fonts, matrix files and matching historical producer sources available.
+
+```sh
+python3 -B tools/normal_treatments.py --record FREETYPE_BUILD_JSON --source-manifest MATRIX_MANIFEST
+```
+
+Open the printed directory's `gallery` folder in Gwenview at 100% zoom. Its forty sheets cover Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack at 8, 10, 11 and 12pt. Each condition has both backgrounds, the full specimen and the exact `() O O i8! W` focus strip. The six columns are Historical O (MONO), Raw NORMAL, O NORMAL, U NORMAL, K3 NORMAL and K5 NORMAL.
+
+The separate probe freshly captures all 1900 NORMAL glyphs. It uses native NORMAL target zero, grayscale rendering, 96 DPI, scale one, interpreter 40, CFF engine one and stem darkening off. Historical O uses MONO hints with grayscale rendering and darkening on. For CFF fonts such as Nimbus Sans, this changes both the target and the darkening setting. It is not a target-only comparison. Retained native1 captures cannot substitute for this selected CFF-off source.
+
+Each NORMAL mask and its own outline first pass through the unchanged D, reference, U and K3/K5 calculations. L remains an internal input. The numerical work finishes in that glyph's original NORMAL frame. Historical O is loaded exactly from its retained record, with its original frame and advance. No historical treatment is reconstructed.
+
+The driver then places both sources in a common display frame using their absolute bearings and zero padding. It does not recenter, resize or alter coverage. That display frame never feeds the numerical calculations. All columns share retained MONO spacing, wrapping, focus advances and baseline. Actual NORMAL advances are recorded separately. The wider canvas preserves wider NORMAL glyphs. The original 252-pixel historical O body region remains identical to its source PNG; its focus is independently composed from retained data.
+
+The output retains fresh captures, own-frame NORMAL numerical records, display registrations, native body/focus crops and a complete hashed manifest. Relative source links support different source directories and manifest filenames. Existing commands, numerical definitions and installed rendering remain unchanged. Human comparison must select the preferred geometry, softness and detail. This experiment selects no production profile or performance target.
+
+Run its composed check with the same inputs:
+
+```sh
+python3 -B tests/normal_treatments_test.py --record FREETYPE_BUILD_JSON --source-manifest MATRIX_MANIFEST
+```
+
+The check independently rasterizes all NORMAL outlines and reconstructs every reference, trial, display mapping and image. It verifies historical O body and focus pixels, explicit CFF-off properties, complete collection admission and rejection of a different genuine provider. All historical producers and source files must remain unchanged.
