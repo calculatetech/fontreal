@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Soften L's jagged edge transitions.** O is the preferred general treatment. Keep exact O/L and A/D controls while comparing quarter and half strength of the existing bounded S edge lift. Use both parentheses as the main jaggy controls, with i/8/!/W for details and diagonals. Reuse the approved five Regular fonts at 8, 10, 11 and 12pt on both backgrounds. Preserve L's strengthened cores, all old commands and installed rendering. Human comparison judges softness and weight. See the [edge-lift study](plans/FR-021-supersampling.md).
+- **FR-021: Study Arial hinting and reference coherence.** The user leans toward U generally but prefers profile O on Arial. Compare genuine Arial/Noto Sans10/11pt raw native, automatic and unhinted sources at96DPI. Preserve exact A/D/O/L/U controls. Test3×3 and5×5 local contrast-energy references with U's unchanged half-edge treatment across the approved retained matrix. Include the glyph O, both parentheses and i/8/!/W. Keep old commands and installed rendering unchanged. Human comparison judges geometry, detail and jaggies. See the [Arial and coherence study](plans/FR-021-supersampling.md).
 
 ## Planned next
 

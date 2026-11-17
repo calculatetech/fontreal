@@ -152,7 +152,7 @@ The check uses actual native inputs and independent analytic geometry. It verifi
 
 ## Broader O and L comparison
 
-O is the preferred general treatment. The broader comparison keeps L for assessment across more fonts and sizes. It excludes S because its edge lifting added unwanted jaggies. This changes the comparison scope, not the numerical treatment.
+The broader comparison tests O and L across more fonts and sizes. It excludes S because its edge lifting added unwanted jaggies. This changes the comparison scope, not the numerical treatment.
 
 Install genuine Regular faces of Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack. The exporter rejects unrelated family fallbacks and matches without Regular among their style aliases. Genuine Arial can list Regular with other language aliases.
 
@@ -176,7 +176,7 @@ It independently checks all twenty conditions and all native image pixels. Retai
 
 ## Gentler edges for L
 
-O remains the preferred general treatment. L usefully fills weak details, especially for white-on-black terminals, but can add jaggies. This separate study compares two smaller fractions of the existing S edge lift. It preserves all L core values.
+L usefully fills weak details, especially for white-on-black terminals, but can add jaggies. This separate study compares two smaller fractions of the existing S edge lift. It preserves all L core values.
 
 First run the matrix command above. Keep that complete results directory and use its `manifest.json` as `MATRIX_MANIFEST`. The retained producer sources and original font files must still match their recorded hashes. The new command reads these records without capturing, compiling or rasterizing the measured glyphs again. Fontconfig and image-font drawing supply labels.
 
@@ -199,3 +199,37 @@ python3 -B tests/pixel_reference_smoothing_test.py --source-manifest MATRIX_MANI
 ```
 
 The check runs the real entry point with fail guards at native compilation, capture and outline-raster boundaries. It independently reconstructs all trials, native images, sheets and coverage grids, and rehashes the source afterward. Existing focused and matrix commands remain unchanged. This experiment selects no production profile and makes no production performance claim.
+
+## Arial hinting and local phase coherence
+
+The user tentatively prefers U overall, while profile O still works best for Arial. Arial Regular at 10pt and 11pt needs a separate source check. The capital glyph O can look poor across several treatments. Both parentheses expose the curved-edge jaggies. This study separates native hinting evidence from two new reference trials.
+
+Use the paired build record and the retained matrix manifest from the commands above. Keep the matrix directory and matching fonts and producer sources available.
+
+```sh
+python3 -B tools/arial_coherence.py --record FREETYPE_BUILD_JSON --source-manifest MATRIX_MANIFEST
+```
+
+Open the printed directory's `gallery` folder at 100% zoom. Its sixty sheets contain eight raw-source comparisons, twelve fixed-outline geometry views and forty retained-trial comparisons. Both native branches show the complete specimen and the exact `() O O i8! W` focus strip. Profile O means the rendering treatment. Glyph O means the capital letter.
+
+The raw study covers Noto Sans and Arial Regular at 10pt and 11pt. Its separate probe reuses the unchanged FreeType capture implementation. Four policies compare native MONO, native NORMAL, automatic MONO and unhinted MONO targets. All render grayscale at 96 DPI with scale one, interpreter 40 and stem darkening off. No coverage profile processes these source masks. The panels share retained MONO spacing and baseline. Actual advances are recorded separately, and wider sources are not recentered or resized.
+
+The captured Arial O changes width between native targets: NORMAL/MONO gives 10/8 pixels at 10pt and 11/10 at 11pt. Corresponding points move horizontally by up to 64/64 and 30/64 pixels. The checked Noto Sans O and parentheses retain identical outlines between these two targets at both sizes. Identical outlines here do not mean that the font lacks native instructions. These measurements identify a source difference without proving that hinting explains every visual defect.
+
+The geometry sheets rasterize the captured outline coordinates at eight times their size. They are explicitly non-native geometry evidence. They do not resize a native bitmap or reload the font at a higher DPI. Bearings, common frames, baselines and point differences against the unhinted outline remain recorded. Curve types use FreeType's tag semantics while all original hint-tag bits remain intact. These views do not rank beauty or define an ideal opacity.
+
+The retained branch uses the unchanged twenty-condition matrix and all 1900 glyph records. It shows exact A, profile O, L and U controls beside K3 and K5. D stays exact in the numerical records. K3 uses a 3×3 neighborhood, and K5 uses 5×5. Each primary pixel considers only positive D pixels in its own connected component. A nearby disconnected dot cannot lend support.
+
+For each neighborhood, the trial scores the existing phase footprints by squared coverage. It considers only the shifts permitted by that pixel's original local axis. Deterministic ties use shift distance, then vertical and horizontal position. The selected phase supplies that pixel's reference. The new core is at least D. Both trials add the same half-edge increment as U. Other pixels match U exactly.
+
+K3 and K5 can reduce L's primary-core values. This is a change in reference selection, unlike T/U's preserved L cores. Both trials stay between D and U and within the existing reference bound. They add no blur, clamp, new raster or recursive update. Local phase changes can still produce jaggies. Human comparison must select the preferred balance.
+
+The `diagnostics` folder contains Arial 10pt and 11pt phase grids for both parentheses and glyph O. They expose component-wide C, per-pixel E and the K3/K5 choices, with actual coverage, coordinates and neighborhood audits. Native body controls preserve the source pixels. Source records and input trees remain unchanged, and relative links require the retained matrix to stay available.
+
+Run the composed check with the same inputs:
+
+```sh
+python3 -B tests/arial_coherence_test.py --record FREETYPE_BUILD_JSON --source-manifest MATRIX_MANIFEST
+```
+
+The check independently verifies all 1520 focused captures and 1900 retained trials, including native and eight-times outline rasters. A non-mutating observer ties each numerical argument to the actual hashed retained loader by object identity. Equal newly allocated data must fail that origin check. The check also reconstructs every native image, geometry view and phase grid. Existing commands and installed rendering stay unchanged. This study selects no production profile and makes no performance claim.
