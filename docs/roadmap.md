@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Compare treatments on native NORMAL hints.** The user selects untreated native NORMAL as the source and O as the comparison point. Show historical MONO-based O beside raw NORMAL and NORMAL-based O, U, K3 and K5. Omit a separate L column. Use the same five Regular fonts at 8, 10, 11 and 12pt, both backgrounds, the full specimen and the exact curve/detail focus. Preserve the existing formulas, native geometry, historical commands and installed rendering. Human comparison judges softness, shape and useful detail. See the [NORMAL source comparison](plans/FR-021-supersampling.md).
+- **FR-021: Compare O NORMAL with native KDE and the shipped profile.** O NORMAL is the general preference; K3 NORMAL is the user's alternative. Future integration must offer these choices per user. First show Noto Sans at 8, 10, 11 and 12pt on both backgrounds against genuine stock Qt and the last approved native-normal weighted-stem renderer. The O prototype uses actual approved Qt geometry and unchanged coverage formulas. Omit L. Preserve historical commands and installed rendering. See the [native Noto comparison](plans/FR-021-supersampling.md).
 
 ## Planned next
 

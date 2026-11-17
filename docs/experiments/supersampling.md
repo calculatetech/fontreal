@@ -236,7 +236,7 @@ The check independently verifies all 1520 focused captures and 1900 retained tri
 
 ## Treatments on native NORMAL
 
-The user selects raw native NORMAL hints as the next source. Historical O remains the comparison point. This study applies the existing treatments to NORMAL without changing their formulas. It does not display a separate local-cores-only L column.
+This study uses raw native NORMAL hints as its source. Historical O remains the comparison point. It applies the existing treatments to NORMAL without changing their formulas. It does not display a separate local-cores-only L column.
 
 Use the same paired build record and complete retained matrix manifest. Their actual FreeType provider hashes must match. Keep the five original Regular fonts, matrix files and matching historical producer sources available.
 
@@ -261,3 +261,35 @@ python3 -B tests/normal_treatments_test.py --record FREETYPE_BUILD_JSON --source
 ```
 
 The check independently rasterizes all NORMAL outlines and reconstructs every reference, trial, display mapping and image. It verifies historical O body and focus pixels, explicit CFF-off properties, complete collection admission and rejection of a different genuine provider. All historical producers and source files must remain unchanged.
+
+## Noto Sans against native KDE text
+
+O NORMAL is the general preference from the NORMAL study. K3 NORMAL is the user's alternative. A future integration must offer both choices per user. This comparison does not install a selector or replace the live renderer.
+
+The separate comparison shows Noto Sans Regular at 8, 10, 11 and 12pt on both backgrounds. Its eight sheets have exactly three columns: Stock KDE / Qt, Last approved profile, and O NORMAL / Qt-layout prototype. Each includes printable ASCII, the pangram, repeated spaces, `AV To office fi fl` and the `() O O i8! W` focus strip.
+
+Supply the paired FreeType build record, two complete Qt library directories and an independently qualified KDE baseline manifest:
+
+```sh
+python3 -B tools/noto_kde_comparison.py --record FREETYPE_BUILD_JSON --stock-qt STOCK_QT_LIBDIR --approved-qt APPROVED_QT_LIBDIR --baseline-manifest KDE_BASELINE_JSON
+```
+
+The repository's qualification example is `docs/images/kde-selected/manifest.json`. It identifies the last approved native NORMAL profile with weighted stems. Its exact FreeType, Qt and Noto Sans hashes must match the supplied inputs. A later candidate with the same coverage-core hash cannot substitute for that approved artifact. Another system needs corresponding qualified inputs.
+
+Each Qt directory must resolve its qualified Core and Gui libraries. The genuine QWidget paint device also needs the matching Widgets library. The directory can provide that library, or the system copy must match the baseline. An isolated directory of library symlinks can combine these inputs without changing the original artifacts. The comparison rejects mismatched roles or font bytes before capture and checks actual loaded libraries afterward.
+
+Stock and approved columns are genuine Qt text captures. The stock column preserves native RGB subpixel output. The approved column uses its established grayscale weighted-stem profile and encoded blending. The third column is a Python prototype with Qt's approved text layout. It is not a deployed Qt backend or a KWin comparison.
+
+The prototype uses actual shaped glyph IDs, positions and raster sizes from the approved control. Ligatures and repeated spaces retain their native placements. Here, Qt resolves 10pt to 13 pixels. A separate 10pt FreeType capture at 96 DPI uses a different fractional size and cannot replace that source.
+
+For each shaped glyph, the independent stock reference captures native NORMAL outlines and grayscale coverage at the resolved Qt size. Darkening is off. The unchanged shipped coverage reference must match actual approved Qt alpha masks. The complete approved native image must also match a reconstruction within the existing bound for rounding and overlapping glyphs.
+
+The unchanged D and same-outline O calculations then process that glyph's own NORMAL source. The prototype places O at the same approved Qt positions and bearings. All three body and focus crops enter the sheets without resizing or recentering. Open the printed `gallery` folder at 100% zoom for visual comparison.
+
+Run the composed check with the same inputs:
+
+```sh
+python3 -B tests/noto_kde_comparison_test.py --record FREETYPE_BUILD_JSON --stock-qt STOCK_QT_LIBDIR --approved-qt APPROVED_QT_LIBDIR --baseline-manifest KDE_BASELINE_JSON
+```
+
+The check covers native library roles, source rasters, selected alpha, complete approved reconstruction, O references and every saved image. It also checks early rejection of mismatched inputs and preserves the baseline and older sources. The output retains native layouts, masks, loaded-library evidence, crop boxes and hashes. This study changes no installed application and makes no performance claim.
