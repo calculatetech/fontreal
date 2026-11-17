@@ -121,27 +121,92 @@ def benchmark(oracle, inputs, records):
                 application='one retained S byte overlay, addition only; no cache framework or production speed claim')
 
 
-def export(record_path,output):
+def prepare(record_path):
     record=json.loads(record_path.read_text());stock=record['libraries']['stock'];provider=Path(stock['library']).resolve(strict=True)
     if shared.sha(provider)!=stock['sha256']:raise ValueError('stock provider differs from paired record')
     for key,path in (('processor','src/fontreal_coverage.cpp'),('declaration','src/fontreal_coverage.h')):
         if shared.sha(ROOT/path)!=record['spec'][key]:raise ValueError('processor differs from paired record')
-    match=subprocess.check_output(['fc-match','-f','%{file}\n%{family}\n%{style}\n%{fontversion}\n','Noto Sans:style=Regular'],text=True).splitlines()
+    env=dict(os.environ);env.pop('LD_PRELOAD',None);env.pop('FREETYPE_PROPERTIES',None);env['LD_LIBRARY_PATH']=str(provider.parent)
+    return provider,env
+
+
+def match_font(family):
+    match=subprocess.check_output(['fc-match','-f','%{file}\n%{family}\n%{style}\n%{fontversion}\n',family+':style=Regular'],text=True).splitlines()
     font=Path(match[0]).resolve(strict=True)
-    if 'Noto Sans' not in match[1].split(',') or 'Regular' not in match[2].split(','):raise ValueError('genuine Noto Sans Regular required')
-    probe,_=shared.compile_tools();env=dict(os.environ);env.pop('LD_PRELOAD',None);env.pop('FREETYPE_PROPERTIES',None);env['LD_LIBRARY_PATH']=str(provider.parent)
-    capture=json.loads(subprocess.check_output([str(probe),str(font),'12','--native-mono'],env=env))
+    if family not in match[1].split(',') or 'Regular' not in match[2].split(','):raise ValueError(f'genuine {family} Regular required')
+    return font,dict(family=family,matched_family=match[1],file=font.name,sha256=shared.sha(font),style=match[2],revision=match[3])
+
+
+def condition(probe,provider,env,font,points,oracle):
+    capture=json.loads(subprocess.check_output([str(probe),str(font),str(points),'--native-mono'],env=env))
     if Path(capture['provider']).resolve()!=provider:raise ValueError('capture loaded a different provider')
     source=next(c for c in capture['captures'] if c['mode']=='native_mono1')
+    inputs=[];records=[]
+    for glyph in source['glyphs']:
+        raw=shared.decode_bitmap(glyph);d=native_stems.treatments(bytes(raw['pixels']),raw['width'])[0]['D']
+        item=dict(code=glyph['code'],advance_pixels=int(glyph['advance']+.5),snapshot=numerical.snapshot(glyph),raw=raw)
+        value=process(oracle,item['snapshot'],raw,d);value['code']=glyph['code'];value['advance_pixels']=item['advance_pixels'];records.append(value);inputs.append(item)
+    return capture,inputs,records
+
+
+def images(output,inputs,records,font,family,points,methods,prefix='',matrix=False):
+    label=ImageFont.truetype(str(font),14)
+    glyphs={i['code']:i for i in inputs};places,lines=shared.layout(glyphs,240);crops={};cropmeta=[]
+    for key,title in methods:
+        image=shared.compose({r['code']:{'final':{**r['frame'],'pixels':r['masks'][key]}} for r in records},places,lines,points)
+        for polarity in ('light','dark'):
+            crop=ImageChops.invert(image) if polarity=='light' else image;name=f'crops/{prefix}{key}_{polarity}.png';crop.save(output/name);crops[key,polarity]=crop
+            cropmeta.append(dict(method=key,polarity=polarity,file=name,sha256=shared.sha(output/name),size=list(crop.size)))
+    sheets=[]
+    for polarity in ('light','dark'):
+        bg,fg=(255,0) if polarity=='light' else (0,255);image=Image.new('L',(268*len(methods)+20,crops['A',polarity].height+116),bg);draw=ImageDraw.Draw(image)
+        draw.text((12,10),f'{family} Regular | {points}pt | 96 DPI | same native hinted outline at 4x',font=label,fill=fg)
+        subtitle='A/D controls. O coherent and L local weak-core offsets. Local envelope can add excess ink. View at 100%.' if matrix else 'A/D controls. R reference only. O/L/S weak-only overlays. Local envelope can add excess ink. View at 100%.'
+        draw.text((12,32),subtitle,font=label,fill=fg)
+        boxes=[];headings=[]
+        for col,(key,title) in enumerate(methods):
+            x=12+268*col;draw.text((x,64),f'{key}: {title}',font=label,fill=fg);headings.append(dict(text=f'{key}: {title}',position=[x,64]))
+            crop=crops[key,polarity];image.paste(crop,(x,92));boxes.append(dict(method=key,box=[x,92,x+crop.width,92+crop.height],file=f'crops/{prefix}{key}_{polarity}.png'))
+        number=prefix.split('_')[0] if matrix else '01'
+        name=f'gallery/{number}_{family.replace(" ","-")}_{points:02}pt_{polarity}.png';image.save(output/name);sheets.append(dict(file=name,sha256=shared.sha(output/name),size=list(image.size),polarity=polarity,crops=boxes,headings=headings))
+    return places,lines,cropmeta,sheets
+
+
+def export_matrix(record_path,output):
+    provider,env=prepare(record_path)
+    fonts=[match_font(family) for family in native_stems.FONTS]
+    probe,_=shared.compile_tools()
+    output.mkdir(parents=True,exist_ok=False)
+    for name in ('gallery','crops','masks','sources'):(output/name).mkdir()
+    methods=tuple(m for m in METHODS if m[0] in 'ADOL')
+    manifest=dict(study='pixel-references-matrix',base_git='ff5a8fe9e7508e932935b094104b3f349c5f928a',
+                  methods=list(methods),points=list(native_stems.POINTS),target_dpi=96,
+                  fonts=[meta for font,meta in fonts],provider=dict(file=provider.name,sha256=shared.sha(provider)),
+                  record_sha256=shared.sha(record_path),sources={p:shared.sha(ROOT/p) for p in SOURCES},
+                  specimen=shared.SPECIMEN,placement='native MONO whole-pixel advances',blend='encoded',cases=[])
+    oracle=Oracle(provider)
+    try:
+        for fi,(font,meta) in enumerate(fonts):
+            for points in native_stems.POINTS:
+                capture,inputs,records=condition(probe,provider,env,font,points,oracle)
+                files={}
+                for key,name,value in (('capture',f'sources/{fi}_{points}_capture.json',capture),('inputs',f'sources/{fi}_{points}_inputs.json',inputs),('masks',f'masks/{fi}_{points}.json',records)):
+                    shared.write_json(output/name,value);files[key]=dict(file=name,sha256=shared.sha(output/name))
+                places,lines,crops,sheets=images(output,inputs,records,font,meta['family'],points,methods,prefix=f'{fi+1:02}_{points}_',matrix=True)
+                manifest['cases'].append(dict(font=fi,points=points,**files,placements=places,lines=lines,crops=crops,sheets=sheets))
+        shared.write_json(output/'manifest.json',manifest)
+    finally:oracle.close()
+    return output
+
+
+def export(record_path,output):
+    provider,env=prepare(record_path);font,font_meta=match_font('Noto Sans');probe,_=shared.compile_tools()
     output.mkdir(parents=True,exist_ok=False)
     for name in ('gallery','crops','masks','sources','diagnostics'):(output/name).mkdir()
-    shared.write_json(output/'sources/capture.json',capture)
-    inputs=[];records=[];oracle=Oracle(provider)
+    oracle=Oracle(provider)
     try:
-        for glyph in source['glyphs']:
-            raw=shared.decode_bitmap(glyph);d=native_stems.treatments(bytes(raw['pixels']),raw['width'])[0]['D']
-            item=dict(code=glyph['code'],advance_pixels=int(glyph['advance']+.5),snapshot=numerical.snapshot(glyph),raw=raw)
-            value=process(oracle,item['snapshot'],raw,d);value['code']=glyph['code'];value['advance_pixels']=item['advance_pixels'];records.append(value);inputs.append(item)
+        capture,inputs,records=condition(probe,provider,env,font,12,oracle)
+        shared.write_json(output/'sources/capture.json',capture)
         fixture=json.loads(FIXTURE.read_text());diagnostics=[]
         for index,item in enumerate(fixture['synthetic']):
             value=process(oracle,item['snapshot'],item['raw'],item['D']);value['name']=item['name'];value['note']=item['note'];diagnostics.append(value)
@@ -149,22 +214,7 @@ def export(record_path,output):
     finally:oracle.close()
     shared.write_json(output/'sources/inputs.json',inputs);shared.write_json(output/'masks/native.json',records);shared.write_json(output/'diagnostics/masks.json',diagnostics);shared.write_json(output/'benchmark.json',timing)
     label=ImageFont.truetype(str(font),14);small=ImageFont.truetype(str(font),9)
-    glyphs={i['code']:i for i in inputs};places,lines=shared.layout(glyphs,240);crops={};cropmeta=[]
-    for key,title in METHODS:
-        image=shared.compose({r['code']:{'final':{**r['frame'],'pixels':r['masks'][key]}} for r in records},places,lines,12)
-        for polarity in ('light','dark'):
-            crop=ImageChops.invert(image) if polarity=='light' else image;name=f'crops/{key}_{polarity}.png';crop.save(output/name);crops[key,polarity]=crop
-            cropmeta.append(dict(method=key,polarity=polarity,file=name,sha256=shared.sha(output/name),size=list(crop.size)))
-    sheets=[]
-    for polarity in ('light','dark'):
-        bg,fg=(255,0) if polarity=='light' else (0,255);image=Image.new('L',(1628,crops['A',polarity].height+116),bg);draw=ImageDraw.Draw(image)
-        draw.text((12,10),'Noto Sans Regular | 12pt | 96 DPI | same native hinted outline at 4x',font=label,fill=fg)
-        draw.text((12,32),'A/D controls. R reference only. O/L/S weak-only overlays. Local envelope can add excess ink. View at 100%.',font=label,fill=fg)
-        boxes=[];headings=[]
-        for col,(key,title) in enumerate(METHODS):
-            x=12+268*col;draw.text((x,64),f'{key}: {title}',font=label,fill=fg);headings.append(dict(text=f'{key}: {title}',position=[x,64]))
-            crop=crops[key,polarity];image.paste(crop,(x,92));boxes.append(dict(method=key,box=[x,92,x+crop.width,92+crop.height],file=f'crops/{key}_{polarity}.png'))
-        name=f'gallery/01_Noto-Sans_12pt_{polarity}.png';image.save(output/name);sheets.append(dict(file=name,sha256=shared.sha(output/name),size=list(image.size),polarity=polarity,crops=boxes,headings=headings))
+    places,lines,cropmeta,sheets=images(output,inputs,records,font,'Noto Sans',12,METHODS)
     grids=[]
     for code in map(ord,'i8!'):
         item=next(r for r in records if r['code']==code);grids.append(numbered(output,f'gallery/02_{code}_grid.png',f'Noto Sans Regular / 12pt / {chr(code)} / registered pixel references',item,label,small))
@@ -172,15 +222,15 @@ def export(record_path,output):
     for index,item in enumerate(diagnostics):
         name=f'gallery/03_{index:02}_{item["name"]}.png'
         diagnostic_grids.append(numbered(output,name,'Analytic outline / '+item['name'],item,label,small,item['note']))
-    manifest=dict(study='pixel-references',base_git='ccc3707a0be25ca081f90f1415c7789fbedd6956',font=dict(family='Noto Sans',matched_family=match[1],file=font.name,sha256=shared.sha(font),style=match[2],revision=match[3]),points=12,target_dpi=96,provider=dict(file=provider.name,sha256=shared.sha(provider),version=capture['version']),record_sha256=shared.sha(record_path),methods=list(METHODS),specimen=shared.SPECIMEN,placement='native MONO whole-pixel advances',blend='encoded',sources={p:shared.sha(ROOT/p) for p in SOURCES},capture=dict(file='sources/capture.json',sha256=shared.sha(output/'sources/capture.json')),inputs=dict(file='sources/inputs.json',sha256=shared.sha(output/'sources/inputs.json')),masks=dict(file='masks/native.json',sha256=shared.sha(output/'masks/native.json')),diagnostics=dict(file='diagnostics/masks.json',sha256=shared.sha(output/'diagnostics/masks.json'),grids=diagnostic_grids),benchmark=dict(file='benchmark.json',sha256=shared.sha(output/'benchmark.json')),placements=places,lines=lines,crops=cropmeta,sheets=sheets,grids=grids)
+    manifest=dict(study='pixel-references',base_git='ccc3707a0be25ca081f90f1415c7789fbedd6956',font=font_meta,points=12,target_dpi=96,provider=dict(file=provider.name,sha256=shared.sha(provider),version=capture['version']),record_sha256=shared.sha(record_path),methods=list(METHODS),specimen=shared.SPECIMEN,placement='native MONO whole-pixel advances',blend='encoded',sources={p:shared.sha(ROOT/p) for p in SOURCES},capture=dict(file='sources/capture.json',sha256=shared.sha(output/'sources/capture.json')),inputs=dict(file='sources/inputs.json',sha256=shared.sha(output/'sources/inputs.json')),masks=dict(file='masks/native.json',sha256=shared.sha(output/'masks/native.json')),diagnostics=dict(file='diagnostics/masks.json',sha256=shared.sha(output/'diagnostics/masks.json'),grids=diagnostic_grids),benchmark=dict(file='benchmark.json',sha256=shared.sha(output/'benchmark.json')),placements=places,lines=lines,crops=cropmeta,sheets=sheets,grids=grids)
     shared.write_json(output/'manifest.json',manifest)
     return output
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--record',required=True,type=Path);args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--record',required=True,type=Path);parser.add_argument('--matrix',action='store_true',help='compare five Regular fonts at 8,10,11,12pt');args=parser.parse_args()
     output=ROOT/'results/pixel-references'/datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
-    print(export(args.record.resolve(strict=True),output))
+    print((export_matrix if args.matrix else export)(args.record.resolve(strict=True),output))
 
 
 if __name__=='__main__':main()

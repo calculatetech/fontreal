@@ -149,3 +149,27 @@ python3 -B tests/pixel_references_test.py --record FREETYPE_BUILD_JSON
 ```
 
 The check uses actual native inputs and independent analytic geometry. It verifies registration, every phase footprint, component choices, local axes, offsets, timing associations and final exported pixels. Human comparison must still assess softness, weight and readability. The local reference is an experimental geometric hypothesis, not proof of a font author's intended opacity.
+
+## Broader O and L comparison
+
+O is the leading optical candidate. The broader comparison keeps L for assessment across more fonts and sizes. It excludes S because its edge lifting added unwanted jaggies. This changes the comparison scope, not the numerical treatment.
+
+Install genuine Regular faces of Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack. The exporter rejects unrelated family fallbacks and matches without Regular among their style aliases. Genuine Arial can list Regular with other language aliases.
+
+```sh
+python3 -B tools/pixel_references.py --record FREETYPE_BUILD_JSON --matrix
+```
+
+Open the printed directory's `gallery` folder in Gwenview at 100% zoom. Arrow keys move through forty overview sheets. Each family appears at 8, 10, 11 and 12pt on both backgrounds. Every sheet shows exactly A native raw, D accepted baseline, O coherent weak-core offsets and L local weak-core offsets. Each condition uses the complete specimen, its own native spacing and its actual point size. Crops are pasted without resizing.
+
+The matrix compiles the shared probe once. It retains all 95 ASCII records per condition, including outlines, controls, high-resolution sources, references and offset audits. Distinct capture, input, mask and image paths bind every result to its condition. Detailed numerical files stay outside the gallery. The matrix exports 160 native crops without duplicating the focused grids, analytic diagnostics or benchmark.
+
+The no-selector command above still produces the original six-column Noto Sans 12pt study and its diagnostic and performance evidence. The numerical kernel, native matrix and installed rendering stay unchanged. The local envelope still can add excess ink. Human comparison must select the preferred softness and readability.
+
+Run the broader check separately from the focused check:
+
+```sh
+python3 -B tests/pixel_references_test.py --record FREETYPE_BUILD_JSON --matrix
+```
+
+It independently checks all twenty conditions and all native image pixels. Retained Noto Sans 12pt pins preserve exact overlap with the focused study. The check also exercises family and style rejection through the real command while retaining a genuine font file.

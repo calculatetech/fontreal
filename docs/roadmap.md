@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Study supersampled per-pixel references.** Focus on Noto Sans Regular12pt i, 8 and exclamation, with W as a diagonal control. Keep A/D exact. Compare the same native outline at4× with coherent and local pixel-phase references, weak-only offset overlays and bounded edge lifting. Measure reference construction, overlay application and byte payloads separately. Preserve the existing matrix and installed rendering. No shared glyph-wide intensity or separate smoothing. Human comparison selects the next direction. See the [pixel-reference study](plans/FR-021-supersampling.md).
+- **FR-021: Compare per-pixel references across fonts.** O coherent alignment is the leading candidate; retain L local references and A/D controls. Compare genuine Regular Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack at 8, 10, 11 and 12pt on both backgrounds. Keep the exact numerical kernel, focused diagnostic/performance command and previous matrix unchanged. S adds too many jaggies and is excluded from this broader gallery. Preserve installed rendering. Human comparison selects the next direction. See the [pixel-reference study](plans/FR-021-supersampling.md).
 
 ## Planned next
 

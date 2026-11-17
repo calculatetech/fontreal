@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Check the real same-outline reference export and its independent numerical evidence."""
 import argparse
+import ast
+import os
+import tempfile
 from collections import Counter
 import hashlib
 import json
@@ -145,8 +148,136 @@ def verify_grid(output,grid,record,font):
     assert shared.sha(output/grid['file'])==grid['sha256']
 
 
+MATRIX_BASE='ff5a8fe9e7508e932935b094104b3f349c5f928a'
+OVERLAP_INPUTS='bde36b2ff327b1a682f3860e21c551234cbab4ef5c1df160756a1403800ddb56'
+OVERLAP_RECORDS='f1ea1da468167f733ed01f969d8086d7b2e152b71c820974cf176080e13718a1'
+OVERLAP_CROPS={
+ 'A_light':'cda6ab0d16dec12a562abd0103e888508fd0b177727a39b267fb72acc6265807',
+ 'A_dark':'adfe009d2e60707a45d7b63a3385bbe1f1cbb336d95fbad75b6b8a254abd4764',
+ 'D_light':'d0571c090133af757bc53654041f4e3997b9550f7b6ca59032e013fafae57103',
+ 'D_dark':'cd2c346c5849cd3cf3831dd7175620d658d5260bbf8bd75a687f958c62ccaa2d',
+ 'O_light':'293ecf62afd533dfea9a21504a5035c18defdd28270909065f2e2ca46dd89e64',
+ 'O_dark':'2a219a95667df520ffbe6fc7129a51d54c7265f8e5b6752ef511676e100aeae0',
+ 'L_light':'b4b351fa7c28e45e17fbb712b882498e12949be97e32c303e969519452af1c63',
+ 'L_dark':'474d3aa75caac6a83b8d417b0a01743c168ca7968d1241436f6f0109479320dd'}
+
+
+def canonical(value):
+    return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+
+
+def specimen_layout(inputs):
+    advances={i['code']:i['advance_pixels'] for i in inputs}
+    result=[];row=0
+    for paragraph in shared.SPECIMEN:
+        cursor=0
+        for word in paragraph.split(' '):
+            codes=list(map(ord,word+' '))
+            if cursor and cursor+sum(advances[c] for c in codes)>240:row+=1;cursor=0
+            for code in codes:
+                if cursor and cursor+advances[code]>240:row+=1;cursor=0
+                result.append(dict(code=code,x=cursor,line=row));cursor+=advances[code]
+        row+=1
+    return result,row
+
+
+def matrix_check(record_path):
+    run=subprocess.run([sys.executable,'-B',str(ROOT/'tools/pixel_references.py'),'--record',str(record_path.resolve()),'--matrix'],text=True,capture_output=True,check=True,cwd=ROOT)
+    output=Path(run.stdout.strip().splitlines()[-1]);manifest=json.loads((output/'manifest.json').read_text());print('retained matrix export:',output,flush=True)
+    families=('Noto Sans','Nimbus Sans','Inconsolata Nerd Font','Arial','Hack');points=(8,10,11,12)
+    methods=[['A','Native raw'],['D','Accepted baseline'],['O','Coherent weak cores'],['L','Local weak cores']]
+    assert tuple(native_stems.FONTS)==families and tuple(native_stems.POINTS)==points
+    assert manifest['study']=='pixel-references-matrix' and manifest['base_git']==MATRIX_BASE
+    assert manifest['methods']==methods and manifest['points']==list(points) and manifest['target_dpi']==96
+    assert [(c['font'],c['points']) for c in manifest['cases']]==[(f,p) for f in range(5) for p in points]
+    assert [f['family'] for f in manifest['fonts']]==list(families)
+    assert set(manifest['sources'])==set(driver.SOURCES)
+    for path,sha in manifest['sources'].items():
+        assert sha==shared.sha(ROOT/path)
+        if path not in ('tools/pixel_references.py','tests/pixel_references_test.py'):
+            assert sha==hashlib.sha256(subprocess.check_output(['git','show',MATRIX_BASE+':'+path],cwd=ROOT)).hexdigest(),path
+    old=ast.parse(subprocess.check_output(['git','show',MATRIX_BASE+':tools/pixel_references.py'],cwd=ROOT,text=True));current=ast.parse((ROOT/'tools/pixel_references.py').read_text())
+    for name in ('process','numbered','benchmark'):
+        before=next(n for n in old.body if isinstance(n,ast.FunctionDef) and n.name==name);after=next(n for n in current.body if isinstance(n,ast.FunctionDef) and n.name==name)
+        assert ast.dump(before,include_attributes=False)==ast.dump(after,include_attributes=False),name
+    paired=json.loads(record_path.read_text());provider=Path(paired['libraries']['stock']['library']).resolve();assert manifest['provider']==dict(file=provider.name,sha256=shared.sha(provider))
+    assert manifest['record_sha256']==shared.sha(record_path)
+    assert manifest['provider']['sha256']==paired['libraries']['stock']['sha256']
+    fixture=json.loads(driver.FIXTURE.read_text());expected_files={'manifest.json'};overviews=[];crops=[];native_count=0;oracle=Oracle(provider);matches=[]
+    for family,meta in zip(families,manifest['fonts']):
+        match=subprocess.check_output(['fc-match','-f','%{file}\n%{family}\n%{style}\n%{fontversion}\n',family+':style=Regular'],text=True).splitlines();font=Path(match[0]);matches.append(match)
+        assert family in match[1].split(',') and 'Regular' in match[2].split(',')
+        assert meta==dict(family=family,matched_family=match[1],file=font.name,sha256=shared.sha(font),style=match[2],revision=match[3])
+    try:
+        for case in manifest['cases']:
+            fi,pt=case['font'],case['points'];family=families[fi];font=Path(matches[fi][0]);label=ImageFont.truetype(str(font),14)
+            for key in ('capture','inputs','masks'):
+                meta=case[key];assert shared.sha(output/meta['file'])==meta['sha256'];assert meta['file'] not in expected_files;expected_files.add(meta['file'])
+            cap=json.loads((output/case['capture']['file']).read_text());inputs=json.loads((output/case['inputs']['file']).read_text());records=json.loads((output/case['masks']['file']).read_text())
+            assert family in cap['family'].split(',') and cap['style']=='Regular' and cap['points']==pt and cap['target_dpi']==96
+            assert Path(cap['provider']).resolve()==provider and cap['version']==fixture['provider']['version']
+            source=next(c for c in cap['captures'] if c['mode']=='native_mono1');properties={k:v for k,v in source.items() if k!='glyphs'};expected_properties={**fixture['properties'],'x_ppem':(pt*4+1)//3};assert properties==expected_properties
+            assert [g['code'] for g in source['glyphs']]==[i['code'] for i in inputs]==[r['code'] for r in records]==list(range(32,127))
+            for glyph,item,r in zip(source['glyphs'],inputs,records):
+                # Independent bitmap decode from the actual pitch and row bytes.
+                bm=glyph['bitmap'];rawbytes=bytes.fromhex(bm['rows_hex']);assert bm['pixel_mode']==2
+                raw=dict(left=glyph['left'],top=glyph['top'],width=bm['width'],height=bm['rows'],pixels=[rawbytes[y*abs(bm['pitch'])+x] for y in range(bm['rows']) for x in range(bm['width'])])
+                assert raw==item['raw'];assert item['snapshot']==dict(outline=[[*xy,t] for xy,t in zip(glyph['outline'],glyph['tags'])],contours=glyph['contours'])
+                assert item['advance_pixels']==int(glyph['advance']+.5)==r['advance_pixels']
+                frame=dict(left=raw['left']-2,top=raw['top']-2,width=raw['width']+4,height=raw['height']+4);assert frame==r['frame']
+                assert registered(raw,frame)==r['masks']['A']==registered(oracle_mask(oracle,item['snapshot']),frame)
+                d=native_stems.treatments(bytes(raw['pixels']),raw['width'])[0]['D'];assert registered({**raw,'pixels':list(d)},frame)==r['masks']['D']
+                highframe=dict(left=(raw['left']-3)*4,top=(raw['top']-3)*4,width=(raw['width']+6)*4,height=(raw['height']+6)*4)
+                assert {k:v for k,v in r['high'].items() if k!='pixels'}==highframe
+                assert registered(oracle_mask(oracle,item['snapshot'],4),highframe)==r['high']['pixels'];assert_record(r);native_count+=1
+            assert records[0]['advance_pixels']>0 and not any(records[0]['masks']['S'])
+            places,lines=specimen_layout(inputs);assert case['placements']==places and case['lines']==lines
+            size=(252,lines*((pt*4+2)//3+6)+14);assert len(case['crops'])==8 and len(case['sheets'])==2
+            assert [(c['method'],c['polarity']) for c in case['crops']]==[(k,p) for k,title in methods for p in ('light','dark')]
+            for crop in case['crops']:
+                key,polarity=crop['method'],crop['polarity'];glyphs={r['code']:{'final':{**r['frame'],'pixels':r['masks'][key]}} for r in records}
+                pixels=composed_bytes(glyphs,places,pt,size)
+                if polarity=='light':pixels=bytes(255-v for v in pixels)
+                image=Image.open(output/crop['file']);assert image.size==size==tuple(crop['size']) and image.mode=='L' and image.tobytes()==pixels
+                assert shared.sha(output/crop['file'])==crop['sha256'];assert crop['file'] not in expected_files;expected_files.add(crop['file']);crops.append(crop)
+                if fi==0 and pt==12:assert crop['sha256']==OVERLAP_CROPS[key+'_'+polarity]
+            for sheet in case['sheets']:
+                polarity=sheet['polarity'];bg,fg=(255,0) if polarity=='light' else (0,255);sheet_size=(1092,size[1]+116);assert tuple(sheet['size'])==sheet_size
+                image=Image.new('L',sheet_size,bg);draw=ImageDraw.Draw(image)
+                draw.text((12,10),f'{family} Regular | {pt}pt | 96 DPI | same native hinted outline at 4x',font=label,fill=fg)
+                draw.text((12,32),'A/D controls. O coherent and L local weak-core offsets. Local envelope can add excess ink. View at 100%.',font=label,fill=fg)
+                assert len(sheet['headings'])==len(sheet['crops'])==4
+                for col,((key,title),heading,box) in enumerate(zip(methods,sheet['headings'],sheet['crops'])):
+                    x,y=12+col*268,92;assert heading==dict(text=f'{key}: {title}',position=[x,64]);draw.text((x,64),heading['text'],font=label,fill=fg)
+                    crop=next(c for c in case['crops'] if c['method']==key and c['polarity']==polarity);patch=Image.open(output/crop['file'])
+                    assert box==dict(method=key,box=[x,y,x+patch.width,y+patch.height],file=crop['file']);image.paste(patch,(x,y))
+                assert Image.open(output/sheet['file']).tobytes()==image.tobytes() and shared.sha(output/sheet['file'])==sheet['sha256']
+                assert sheet['file'] not in expected_files;expected_files.add(sheet['file']);overviews.append(sheet)
+            assert {s['polarity'] for s in case['sheets']}=={'light','dark'}
+            if fi==0 and pt==12:assert canonical(inputs)==OVERLAP_INPUTS and canonical(records)==OVERLAP_RECORDS
+            print(f'checked {family} {pt}pt:95 records,8 crops,2 sheets',flush=True)
+    finally:oracle.close()
+    assert native_count==1900 and len(crops)==160 and len(overviews)==40
+    assert {str(p.relative_to(output)) for p in output.rglob('*') if p.is_file()}==expected_files
+    assert {p.name for p in (output/'gallery').iterdir()}=={Path(p['file']).name for p in overviews}
+    assert not (output/'diagnostics').exists() and not (output/'benchmark.json').exists()
+    # Real CLI rejection changes only the opaque fc-match metadata, retaining the real font file.
+    response=matches[0]
+    for family,style in [('Unrelated Family',response[2]),(response[1],'Bold')]:
+        with tempfile.TemporaryDirectory(prefix='admission-',dir=output) as directory:
+            script=Path(directory)/'fc-match';payload='\n'.join((response[0],family,style,response[3]))+'\n'
+            script.write_text('#!'+sys.executable+'\nimport sys\nsys.stdout.write('+repr(payload)+')\n');script.chmod(0o755)
+            env=dict(os.environ);env['PATH']=directory+os.pathsep+env['PATH']
+            rejected=subprocess.run([sys.executable,'-B',str(ROOT/'tools/pixel_references.py'),'--record',str(record_path.resolve()),'--matrix'],cwd=ROOT,env=env,text=True,capture_output=True)
+            assert rejected.returncode!=0 and 'genuine Noto Sans Regular required' in rejected.stderr and not rejected.stdout.strip()
+            assert payload.splitlines()[0]==response[0] and shared.sha(Path(response[0]))==manifest['fonts'][0]['sha256']
+    print('PASS matrix:20 genuine conditions,1900 independently checked glyphs,160 crops,40 sheets,SS7 overlap and real admission rejection',flush=True)
+    print('gallery:',output/'gallery',flush=True)
+
+
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--record',required=True,type=Path);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--record',required=True,type=Path);parser.add_argument('--matrix',action='store_true');args=parser.parse_args()
+    if args.matrix:return matrix_check(args.record)
     # The real CLI is the only exporter entry used for the composed proof.
     run=subprocess.run([sys.executable,'-B',str(ROOT/'tools/pixel_references.py'),'--record',str(args.record.resolve())],text=True,capture_output=True,check=True,cwd=ROOT)
     output=Path(run.stdout.strip().splitlines()[-1]);manifest=json.loads((output/'manifest.json').read_text());fixture=json.loads(driver.FIXTURE.read_text())
@@ -165,6 +296,7 @@ def main():
     for key in ('capture','inputs','masks','diagnostics','benchmark'):assert shared.sha(output/manifest[key]['file'])==manifest[key]['sha256']
     inputs=json.loads((output/manifest['inputs']['file']).read_text());records=json.loads((output/manifest['masks']['file']).read_text());diagnostics=json.loads((output/manifest['diagnostics']['file']).read_text())
     assert [r['code'] for r in records]==list(range(32,127));assert [i['code'] for i in inputs]==list(range(32,127))
+    assert canonical(inputs)==OVERLAP_INPUTS and canonical(records)==OVERLAP_RECORDS
     cap=json.loads((output/manifest['capture']['file']).read_text());source=next(c for c in cap['captures'] if c['mode']=='native_mono1')
     assert cap['family']=='Noto Sans' and cap['style']=='Regular' and cap['points']==12 and cap['target_dpi']==96
     assert {k:v for k,v in source.items() if k!='glyphs'}==fixture['properties']
@@ -273,6 +405,7 @@ def main():
         image=Image.frombytes('L',size,composed_bytes(glyphs,places,12,size))
         if meta['polarity']=='light':image=ImageChops.invert(image)
         saved=Image.open(output/meta['file']);assert saved.size==tuple(meta['size']) and saved.tobytes()==image.tobytes() and shared.sha(output/meta['file'])==meta['sha256']
+        if meta['method'] in 'ADOL':assert meta['sha256']==OVERLAP_CROPS[meta['method']+'_'+meta['polarity']]
     for sheet in manifest['sheets']:
         bg,fg=(255,0) if sheet['polarity']=='light' else (0,255);image=Image.new('L',tuple(sheet['size']),bg);draw=ImageDraw.Draw(image);label=ImageFont.truetype(str(font),14)
         draw.text((12,10),'Noto Sans Regular | 12pt | 96 DPI | same native hinted outline at 4x',font=label,fill=fg)
