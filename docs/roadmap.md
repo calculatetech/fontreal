@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Compare accepted D with compact-feature darkening.** Keep native 1× MONO hints with grayscale edges and exact accepted D geometry. Compare peak-only and proportional darkening of small connected components. Keep larger connected strokes and W unchanged. Use Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack Regular at 8, 10, 11 and 12pt, with both polarities. Preserve generic handling, earlier supersampling commands and installed rendering. Human comparison selects dot strength and softness. See the [native stem experiment](plans/FR-021-supersampling.md).
+- **FR-021: Study supersampled per-pixel references.** Focus on Noto Sans Regular12pt i, 8 and exclamation, with W as a diagonal control. Keep A/D exact. Compare the same native outline at4× with coherent and local pixel-phase references, weak-only offset overlays and bounded edge lifting. Measure reference construction, overlay application and byte payloads separately. Preserve the existing matrix and installed rendering. No shared glyph-wide intensity or separate smoothing. Human comparison selects the next direction. See the [pixel-reference study](plans/FR-021-supersampling.md).
 
 ## Planned next
 

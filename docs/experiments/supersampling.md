@@ -102,3 +102,50 @@ python3 -B tests/native_stems_test.py --record FREETYPE_BUILD_JSON
 ```
 
 The prior connected study remains in Git at `1ba7c1d`. This experiment covers Regular only and does not select production presets. Intensity changes can alter apparent weight even when pixel support stays fixed. Human assessment remains necessary for softness and readability.
+
+## Same-glyph pixel references
+
+This focused study compares Noto Sans Regular at 12pt and 96 DPI. It measures a reference for each pixel from the same hinted outline. It does not use a shared intensity target. The existing native matrix, production renderer and installed applications stay unchanged.
+
+Install genuine Noto Sans Regular and use the paired build record described above:
+
+```sh
+python3 -B tools/pixel_references.py --record FREETYPE_BUILD_JSON
+```
+
+Open the printed directory's `gallery` folder in Gwenview at 100% zoom. The two overview sheets share native whole-pixel advances, wrapping and encoded blending. Both backgrounds use identical coverage masks. Numbered i, 8 and exclamation grids show input coverage, references, offsets and final values. Analytic diagnostics use supplied numerical outlines and explicitly identified upstream masks. They have no font or point-size claim.
+
+| Column | Rendering |
+| --- | --- |
+| A | Untouched native MONO hints with grayscale coverage |
+| D | Exact accepted native baseline, without the compact filter |
+| R | Same native hinted outline at 4×, reduced at its original position |
+| O | D plus weak-core offsets from a coherent component reference |
+| L | D plus weak-core offsets from a local pixel reference |
+| S | L plus reference-bounded edge offsets |
+
+The exporter first reproduces all 95 native ASCII masks through an independent public FreeType outline call. It requires exact equality with A. It then multiplies those same native outline coordinates by four and rasterizes once. It does not reload the font at a higher DPI or recalculate hints. Explicit bearings and padding keep every method on one coordinate frame.
+
+The reference search tests 25 placements, from −0.5 to +0.5 native pixels in quarter-pixel steps on each axis. Each reference value is the rounded coverage of a 4×4 footprint. R uses the original placement. Curve rasterization precision can make R slightly different from A. The results record that difference without treating it as an error.
+
+The coherent reference C chooses one placement for each whole connected component in D. Its score measures squared coverage, with deterministic ties. Disconnected regions choose independently. The local reference E considers placement across each pixel's shorter positive run. Equal run lengths allow both axes. This preserves the row position of a vertical taper. The numbered grids retain both C and E, although they are not additional overview columns.
+
+A primary pixel must have at least 128 coverage and form a local ridge across that shorter run. Equal run lengths require a ridge on both axes. Tied ridges can both qualify. O adds the positive difference between C and D at primary pixels. L does the same with E. A pixel already as strong as its own reference stays unchanged. Zero pixels never acquire ink. There is no collected intensity average or saturation clamp.
+
+S also considers positive neighbors of lifted primary pixels. It scales each eligible neighbor by that core's final-to-original ratio, with half-up rounding. Its proposal cannot exceed that neighbor's own E value. Multiple proposals use their maximum, from frozen inputs. No proposal feeds another proposal. All three stored overlays contain only positive byte offsets. Adding an overlay to D produces the saved final mask directly.
+
+The local envelope is not one simultaneously realizable placement. The tied-stem diagnostic makes this limitation visible. This provider produces 127/127 native coverage for its exact half-pixel rectangle, and the native D recipe keeps those values. A separate, explicitly supplied analytic D of 128/128 exercises the majority gate. L raises both columns to 255 using opposite phases. O raises only one, retaining the other at 128. The extra local coverage can overdraw an undecided stem. No clipping does not imply no excess weight. The native 127/127 contrast remains unchanged because it falls below the gate.
+
+The results retain source outlines, the padded high-resolution raster, all phase sums and component scores, local axes, coverage totals and positive overlays. The manifest binds provider, font, contributor and fixture hashes to exact masks, crops, grids and labels. Public fixtures use filenames and hashes. Generated data stays in the configured ignored build and results roots.
+
+`benchmark.json` reports three numerical repetitions over all 95 actual glyphs. It separates native rasterization, one 4× raster and placement, reference construction from that raster, overlay construction and stored-overlay addition. Each stage records median, 95th percentile and total time, with byte checksums and exact payload sizes. Compilation, font lookup, provider capture and image export are excluded. Byte counts exclude Python object overhead.
+
+These are Python prototype and FreeType call timings. They do not forecast a production frame time. A renderer can retain the final mask instead of supersampling at every repaint. This study adds no cache framework and makes no measured cache-speed claim.
+
+Run the focused numerical and image check with the same record:
+
+```sh
+python3 -B tests/pixel_references_test.py --record FREETYPE_BUILD_JSON
+```
+
+The check uses actual native inputs and independent analytic geometry. It verifies registration, every phase footprint, component choices, local axes, offsets, timing associations and final exported pixels. Human comparison must still assess softness, weight and readability. The local reference is an experimental geometric hypothesis, not proof of a font author's intended opacity.
