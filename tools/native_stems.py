@@ -15,10 +15,14 @@ ROOT = shared.ROOT
 sys.path.insert(0, str(ROOT / 'tests'))
 from stem_core_test import concentrate
 from weighted_stroke_profiles import darken
+from stroke_profiles import refine
 
+FONTS = ('Noto Sans', 'Nimbus Sans', 'Inconsolata Nerd Font', 'Arial', 'Hack')
+POINTS = (8, 10, 11, 12)
+FIXTURE = ROOT / 'tests/fixtures/native-connected-stems.json'
 METHODS = (('A', 'Native 1x MONO-gray'), ('B', 'Existing stem cleanup'),
-           ('C', 'Cleanup + near ties'), ('D', 'C + weighted blend lift'))
-GRID_CHARS = 'Hnm8W:!'
+           ('C', 'Cleanup + near ties'), ('D', 'Connected profiles'), ('E', 'D + weighted blend lift'))
+GRID_CHARS = 'Hinm8W:!'
 
 
 def weighted_blend(raw, cleaned, pairs, width):
@@ -34,19 +38,39 @@ def weighted_blend(raw, cleaned, pairs, width):
     return bytes(result), {k: detail[k] for k in ('target', 'reference_cutoff', 'reference_count', 'numerator', 'denominator')}
 
 
+def weighted_pairs(concentrated, profile):
+    candidates = {(p['core'], p['fringe']) for p in concentrated}
+    candidates.update((p['core'], p['fringe']) for run in profile['runs'] for p in run['pairs'])
+    candidates.update((p['core'], p['fringe']) for p in profile['steps'])
+    roles = {}
+    for core, fringe in candidates:
+        roles.setdefault(core,set()).add(('core',fringe))
+        roles.setdefault(fringe,set()).add(('fringe',core))
+    return [dict(core=c,fringe=f) for c,f in sorted(candidates) if len(roles[c])==len(roles[f])==1]
+
+
 def treatments(raw, width):
     b, bp = concentrate(raw, raw, width)
     c, cp = concentrate(raw, raw, width, near_ties=True)
-    d, weighted = weighted_blend(raw, c['native-area'], cp, width)
-    return dict(A=raw, B=b['native-area'], C=c['native-area'], D=d), dict(B=bp, C=cp), weighted
+    d, profile = refine(raw, c['native-area'], width, connected=True)
+    cleaned = d['corners']
+    selected = [p for p in weighted_pairs(cp, profile) if cleaned[p['core']] > cleaned[p['fringe']]]
+    e, weighted = weighted_blend(raw, cleaned, selected, width)
+    return dict(A=raw, B=b['native-area'], C=c['native-area'], D=cleaned, E=e), dict(B=bp, C=cp, E=selected), weighted, profile
 
 
-def grid(output, case, records, family, label, small):
-    selected = [next(r for r in records if r['code'] == ord(ch)) for ch in GRID_CHARS]
+def mask_record(code, advance, raw):
+    masks,pairs,weighted,profile = treatments(bytes(raw['pixels']),raw['width'])
+    return dict(code=code,advance_pixels=advance,raw=raw,masks={k:list(v) for k,v in masks.items()},
+                pairs=pairs,weighted=weighted,profile=profile,coverage_delta_D=sum(masks['D'])-sum(raw['pixels']))
+
+
+def grid(output, case, records, family, label, small, characters=GRID_CHARS, name=None):
+    selected = [next(r for r in records if r['code'] == ord(ch)) for ch in characters]
     cell = 22
     column = max(242, max(r['raw']['width'] for r in selected)*cell+48)
     heights = [r['raw']['height']*cell+100 for r in selected]
-    sheet = Image.new('RGB', (column*4+16, 90+sum(heights)), (24,24,24))
+    sheet = Image.new('RGB', (column*len(METHODS)+16, 90+sum(heights)), (24,24,24))
     draw = ImageDraw.Draw(sheet)
     draw.text((12,10), f'{family} Regular | {case["points"]}pt | 1x native MONO-gray coverage', font=label, fill='white')
     draw.text((12,32), '0 = no ink, 255 = full ink. Orange borders mark changes from A. Native glyph previews are not resized.', font=label, fill='white')
@@ -77,7 +101,7 @@ def grid(output, case, records, family, label, small):
                     cells.append(dict(code=r['code'],method=key,index=i,value=value,
                                       box=[left,top,left+cell,top+cell],text_position=[left+2,top+4],border=list(edge)))
         y+=height
-    name=f'gallery/{case["font"]+1}_{family.replace(" ","-")}_{case["points"]:02}pt_grids.png'
+    if name is None:name=f'gallery/{case["font"]+1}_{family.replace(" ","-")}_{case["points"]:02}pt_grids.png'
     sheet.save(output/name)
     return dict(file=name,sha256=shared.sha(output/name),size=list(sheet.size),font=case['font'],points=case['points'],
                 cells=cells,previews=previews,headings=headings,cell_size=cell)
@@ -95,21 +119,23 @@ def export(record_path, output):
     env=dict(os.environ);env.pop('LD_PRELOAD',None);env.pop('FREETYPE_PROPERTIES',None)
     env['LD_LIBRARY_PATH']=str(provider.parent)
     output.mkdir(parents=True,exist_ok=False)
-    for name in ('captures','masks','crops','gallery'):(output/name).mkdir()
+    for name in ('captures','masks','crops','gallery','diagnostics'):(output/name).mkdir()
     sources=['tools/native_stems.py','tools/supersampling.py','tests/supersampling_probe.cpp',
              'tests/stem_core_test.py','tests/weighted_stroke_profiles.py','tests/thin_stroke_profiles.py',
+             'tests/stroke_profiles.py','tests/fixtures/native-connected-stems.json',
              'src/fontreal_coverage.cpp','src/fontreal_coverage.h','tests/selected_mask_probe.cpp']
-    manifest=dict(study='native-stems',target_dpi=96,points=list(range(8,17)),methods=list(METHODS),
+    manifest=dict(study='native-stems',target_dpi=96,points=list(POINTS),methods=list(METHODS),
                   specimen=shared.SPECIMEN,blend='encoded',placement='native MONO whole-pixel advances',
                   record_sha256=shared.sha(record_path),provider_sha256=shared.sha(provider),
                   sources={p:shared.sha(ROOT/p) for p in sources},fonts=[],cases=[],sheets=[],grids=[])
-    for fi,family in enumerate(shared.FONTS):
+    for fi,family in enumerate(FONTS):
         match=subprocess.check_output(['fc-match','-f','%{file}\n%{family}\n%{style}\n%{fontversion}\n',family+':style=Regular'],text=True).splitlines()
         font=Path(match[0]).resolve(strict=True)
         if family not in match[1].split(','):raise ValueError(f'required font missing: {family}')
-        manifest['fonts'].append(dict(family=family,file=str(font),sha256=shared.sha(font),style=match[2],revision=match[3]))
+        if 'Regular' not in match[2].split(','):raise ValueError(f'required Regular style missing: {family}')
+        manifest['fonts'].append(dict(family=family,matched_family=match[1],file=str(font),sha256=shared.sha(font),style=match[2],revision=match[3]))
         label=ImageFont.truetype(str(font),14);small=ImageFont.truetype(str(font),9)
-        for points in range(8,17):
+        for points in POINTS:
             cap=json.loads(subprocess.check_output([str(probe),str(font),str(points),'--native-mono'],env=env))
             if Path(cap['provider']).resolve()!=provider or shared.sha(Path(cap['provider']).resolve())!=stock['sha256']:
                 raise ValueError('capture loaded a different provider')
@@ -119,9 +145,7 @@ def export(record_path, output):
             places,lines=shared.layout(glyphs,240)
             records=[]
             for g in native['glyphs']:
-                raw=shared.decode_bitmap(g);masks,pairs,weighted=treatments(bytes(raw['pixels']),raw['width'])
-                records.append(dict(code=g['code'],advance_pixels=glyphs[g['code']]['advance_pixels'],
-                                    raw=raw,masks={k:list(v) for k,v in masks.items()},pairs=pairs,weighted=weighted))
+                records.append(mask_record(g['code'],glyphs[g['code']]['advance_pixels'],shared.decode_bitmap(g)))
             mask_file=f'masks/{fi}_{points}.json';shared.write_json(output/mask_file,records)
             case=dict(font=fi,points=points,capture=capture_file,capture_sha256=shared.sha(output/capture_file),
                       masks=mask_file,masks_sha256=shared.sha(output/mask_file),placements=places,lines=lines,methods=[])
@@ -137,9 +161,9 @@ def export(record_path, output):
                 case['methods'].append(method)
             for polarity in ('light','dark'):
                 bg,fg=(255,0) if polarity=='light' else (0,255)
-                sheet=Image.new('L',(1092,crops['A',polarity].height+116),bg);draw=ImageDraw.Draw(sheet)
+                sheet=Image.new('L',(1360,crops['A',polarity].height+116),bg);draw=ImageDraw.Draw(sheet)
                 draw.text((12,10),f'{family} Regular | {points}pt | 96 DPI | 1x native MONO hints / gray edges',font=label,fill=fg)
-                draw.text((12,32),'A: baseline. B/C: redistribute existing ink. D: weighted core and blend lift. View at 100%.',font=label,fill=fg)
+                draw.text((12,32),'A: baseline. B/C: conserve ink. D: connected profiles. E: weighted blend lift. View at 100%.',font=label,fill=fg)
                 boxes=[];headings=[]
                 for col,(key,title) in enumerate(METHODS):
                     x=12+col*268
@@ -151,6 +175,12 @@ def export(record_path, output):
                 manifest['sheets'].append(dict(file=name,sha256=shared.sha(output/name),size=list(sheet.size),font=fi,points=points,polarity=polarity,crops=boxes,headings=headings))
             if points in (11,12):manifest['grids'].append(grid(output,case,records,family,label,small))
             manifest['cases'].append(case)
+    fixture=json.loads(FIXTURE.read_text())
+    retained=[mask_record(r['code'],r['advance_pixels'],r['raw']) for r in fixture['records']]
+    retained_file='diagnostics/retained-masks.json';shared.write_json(output/retained_file,retained)
+    label=ImageFont.truetype(manifest['fonts'][0]['file'],14);small=ImageFont.truetype(manifest['fonts'][0]['file'],9)
+    diagnostic=grid(output,dict(font=None,points=fixture['points']),retained,fixture['font']['family']+' (retained masks)',label,small,characters='Hi',name='diagnostics/retained-grids.png')
+    manifest['diagnostic']=dict(fixture='tests/fixtures/native-connected-stems.json',fixture_sha256=shared.sha(FIXTURE),masks=retained_file,masks_sha256=shared.sha(output/retained_file),grid=diagnostic)
     shared.write_json(output/'manifest.json',manifest)
     return output
 

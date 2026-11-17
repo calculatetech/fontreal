@@ -4,7 +4,7 @@ from math import floor
 from statistics import median
 
 
-def refine(raw,accepted,width):
+def refine(raw,accepted,width,connected=False):
     assert isinstance(raw,bytes) and isinstance(accepted,bytes) and len(raw)==len(accepted)
     assert width>=0 and (not raw if width==0 else len(raw)%width==0)
     if not raw:return dict(profiles=accepted,corners=accepted),dict(runs=[],steps=[],corners=[])
@@ -45,6 +45,7 @@ def refine(raw,accepted,width):
                     if len(anchors)<2:continue
                     native=sum(raw[rows[b]['core']]-raw[rows[b]['fringe']] for b,_,_ in anchors)
                     chosen=sum(accepted[rows[b]['core']]-accepted[rows[b]['fringe']] for b,_,_ in anchors)
+                    if connected and native==0 and chosen==0:continue
                     if (native,chosen,side)<(0,0,0):continue
                     phase=floor(median(v-raw[rows[b]['fringe']] for b,_,v in anchors)+.5)
                     fixed={b:(peak,v) for b,peak,v in anchors};proposals={};cores=set();pairs=[]

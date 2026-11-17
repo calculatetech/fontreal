@@ -64,37 +64,42 @@ The check also runs the original exporter from `ff63a7f` in a temporary private 
 
 The earlier stock subpixel study remains in Git at `60fed5e`. Its unused rendering paths are removed from the current implementation. The installed profile and appearance selection do not change automatically.
 
-## Native MONO-gray and stem cleanup
+## Native MONO-gray and connected stems
 
-The next experiment uses the selected native 1× MONO hints with grayscale edges. MONO here selects hinting. The raster still contains gray coverage values. This differs from a black-or-white mono bitmap and from reducing a 4× image.
+The current native study compares the preferred existing cleanup with the near-tie trial and the previous connected-profile correction. It uses native 1× MONO hinting with grayscale edges. MONO selects the hints, not a black-or-white bitmap.
 
-Use the same paired build record and three regular fonts:
+Install Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack Regular. The native command requires these genuine families. It stops on a missing face instead of accepting an unrelated fallback. Arial can list Regular among several language aliases. The tool retains the actual style metadata.
+
+Use the same paired build record:
 
 ```sh
 python3 -B tools/native_stems.py --record FREETYPE_BUILD_JSON
 ```
 
-Open the printed directory's `gallery` folder in Gwenview at 100% zoom. Arrow keys move between 54 native comparisons and six numbered coverage grids. The samples cover 8–16pt on both backgrounds. The grids focus on H, n, m, 8, W, colon and exclamation at 11pt and 12pt.
+Open the printed directory's `gallery` folder in Gwenview at 100% zoom. Arrow keys move between 40 native comparisons and ten numbered coverage grids. The main samples show the five requested families at exactly 8, 10, 11 and 12pt on both backgrounds. Grids include H, i, n, m, 8, W, colon and exclamation at 11pt and 12pt.
 
 | Column | Rendering |
 | --- | --- |
 | A | Native 1× MONO hints with untouched grayscale coverage |
-| B | Existing conservative stem cleanup, without other Fontreal passes |
-| C | The same cleanup with a trial for near-equal split stems |
-| D | Column C plus weighted darkening of each selected core and its blend |
+| B | Unchanged conservative stem cleanup |
+| C | Unchanged near-tie cleanup trial |
+| D | Previous profiles, joins and corner treatment with connected-stem correction |
+| E | Column D plus weighted core and proportional blend lift |
 
-Columns B and C move existing coverage between two pixels of a stable straight run. Every changed pair and complete glyph keeps its original total coverage. Other pixels, bitmap bounds, advances and line breaks stay unchanged. This can shift the stroke's center toward one pixel. Conservation does not guarantee the same perceived softness.
+B and C move existing coverage between two pixels of a stable straight run. Each changed pair and complete glyph keeps its original total coverage. The existing cleanup requires a difference of at least 16. C removes that difference guard and uses one winner along a stable run. These methods remain visible because the connected-profile correction can change ink quantity.
 
-The existing cleanup requires a coverage difference of at least 16. Column C removes that difference guard and chooses one side from the original coverage summed along the run. A run with a zero vote stays unchanged. An equal pair within a nonzero-vote run follows the run's winner. Both methods require three stable positions, isolated pairs with total coverage 192–384, and weak outside neighbors. Intersecting runs and already strong pairs remain protected. Short, unstable or excluded stems can remain unchanged. Stable segments of curved glyphs can qualify numerically.
+D applies the earlier profile, join, step and native corner-fringe treatment to C. It rejects local profiles with no original or accepted winner before they can oppose a supported connected profile. Positive raw support connects the profile. A gap stops propagation. Supporting anchors, geometric windows, crossing checks and conflict guards remain in place. D preserves bitmap support and bounds, but can add or remove coverage at joins. The manifest records its exact changes and glyph coverage delta.
 
-Column D deliberately adds coverage. Its target is the existing coverage-weighted average of the strongest quarter of positive baseline pixels, including ties at the cutoff. It raises only cores selected by C. Each adjoining blended pixel receives the same proportional lift, rounded to an integer. This preserves the local blend ratio within 8-bit rounding instead of darkening the core alone. Pixels outside those pairs stay unchanged. The samples test whether this avoids visible jaggies. They do not establish that result automatically.
+E uses the existing coverage-weighted average of the strongest quarter of positive baseline pixels, including cutoff ties. It forms pairs from C and the accepted D profiles and steps. Identical pairs collapse to one. Any conflicting partner or pixel role excludes the affected pairs. E lifts each selected core and its adjoining blended pixel together from the frozen D mask. Rounding uses integer coverage values. E never reduces D coverage, and unselected values stay unchanged. The comparison tests perceived smoothness rather than guaranteeing that jaggies disappear.
 
-All columns share the native MONO baseline's whole-pixel spacing and encoded blend. FreeType stem darkening stays on, as in the accepted native baseline. There is no Fontreal bridge, general gain, coverage floor or curve-darkening pass. This command does not change the installed profile or the earlier supersampling commands.
+All five columns share the native MONO baseline's geometry, whole-pixel advances, line breaks and encoded blend. FreeType stem darkening stays on. No general Fontreal gain or coverage floor runs. The command does not change the installed profile or earlier supersampling commands.
 
-The manifest records actual provider, font and source hashes, capture properties, masks, selected pairs and exact image coordinates. Build data and results remain in the configured ignored roots. The focused check compares the baseline with an independent native provider reference and checks every saved mask, crop and grid:
+A portable numerical fixture preserves the reported Noto Sans Display 12pt H and i. The same treatment path exports its masks and numbered grid under `diagnostics`, outside the main gallery. It requires no installed Display face. H checks consistent phase through a connected crossbar. The i checks a long stem separated from its dot. These retained masks are regression inputs, not font or character exceptions in the algorithm.
+
+The manifest records provider, font, code and fixture hashes, capture properties, masks, selected pairs, profile audits and exact image coordinates. Build data and results stay in the configured ignored roots. The focused check uses immutable provider and earlier algorithm references, independently pinned H/i expectations and exact saved-pixel checks:
 
 ```sh
 python3 -B tests/native_stems_test.py --record FREETYPE_BUILD_JSON
 ```
 
-The comparison uses regular faces only. Broader font and weight checks follow visual selection. Human assessment remains necessary for softness, geometry and readability.
+The previous four-column native study remains in Git at `02e27d1`. The current comparison uses Regular only. Other weights and sizes remain outside this focused study. Coverage conservation does not preserve the stroke center or establish perceived softness. Human assessment remains necessary for geometry and readability.
