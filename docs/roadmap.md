@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Compare native font geometry and connected-stem cleanup.** Keep native 1× MONO hints with grayscale edges. Compare the preferred existing cleanup, near ties, restored connected profiles and weighted blend lifting. Use Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack Regular at 8, 10, 11 and 12pt, with both polarities. Keep the reported Noto Sans Display H/i as numerical regressions. Preserve generic handling, earlier supersampling commands and installed rendering. Human comparison selects the next treatment. See the [native stem experiment](plans/FR-021-supersampling.md).
+- **FR-021: Compare accepted D with compact-feature darkening.** Keep native 1× MONO hints with grayscale edges and exact accepted D geometry. Compare peak-only and proportional darkening of small connected components. Keep larger connected strokes and W unchanged. Use Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack Regular at 8, 10, 11 and 12pt, with both polarities. Preserve generic handling, earlier supersampling commands and installed rendering. Human comparison selects dot strength and softness. See the [native stem experiment](plans/FR-021-supersampling.md).
 
 ## Planned next
 

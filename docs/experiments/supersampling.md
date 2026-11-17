@@ -64,42 +64,41 @@ The check also runs the original exporter from `ff63a7f` in a temporary private 
 
 The earlier stock subpixel study remains in Git at `60fed5e`. Its unused rendering paths are removed from the current implementation. The installed profile and appearance selection do not change automatically.
 
-## Native MONO-gray and connected stems
+## Accepted D with compact-feature darkening
 
-The current native study compares the preferred existing cleanup with the near-tie trial and the previous connected-profile correction. It uses native 1× MONO hinting with grayscale edges. MONO selects the hints, not a black-or-white bitmap.
+The current native study keeps the exact accepted D rendering and adds two compact-feature treatments. Larger connected strokes keep their accepted appearance. This replaces the rejected broad weighted-stem and crown trial.
 
-Install Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack Regular. The native command requires these genuine families. It stops on a missing face instead of accepting an unrelated fallback. Arial can list Regular among several language aliases. The tool retains the actual style metadata.
-
-Use the same paired build record:
+Install genuine Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack Regular faces. The native command checks family identity instead of accepting an unrelated Fontconfig fallback. Arial can list Regular among several language aliases. The manifest retains actual face metadata.
 
 ```sh
 python3 -B tools/native_stems.py --record FREETYPE_BUILD_JSON
 ```
 
-Open the printed directory's `gallery` folder in Gwenview at 100% zoom. Arrow keys move between 40 native comparisons and ten numbered coverage grids. The main samples show the five requested families at exactly 8, 10, 11 and 12pt on both backgrounds. Grids include H, i, n, m, 8, W, colon and exclamation at 11pt and 12pt.
+Open the printed directory's `gallery` folder in Gwenview at 100% zoom. Its 40 native sheets and 20 numbered grids cover all five families at 8, 10, 11 and 12pt. Both backgrounds use the same masks. The grids show H, i, n, m, 8, W, colon and exclamation at every requested size.
 
 | Column | Rendering |
 | --- | --- |
-| A | Native 1× MONO hints with untouched grayscale coverage |
-| B | Unchanged conservative stem cleanup |
-| C | Unchanged near-tie cleanup trial |
-| D | Previous profiles, joins and corner treatment with connected-stem correction |
-| E | Column D plus weighted core and proportional blend lift |
+| A | Untouched native 1× MONO hints with grayscale coverage |
+| D | The exact accepted connected rendering from `1ba7c1d` |
+| F | D with compact peaks raised toward the raw weighted target |
+| G | D with proportional intensity across each eligible compact component |
 
-B and C move existing coverage between two pixels of a stable straight run. Each changed pair and complete glyph keeps its original total coverage. The existing cleanup requires a difference of at least 16. C removes that difference guard and uses one winner along a stable run. These methods remain visible because the connected-profile correction can change ink quantity.
+The target is the existing coverage-weighted average of the strongest quarter of positive raw pixels, including cutoff ties. D retains the committed near-tie concentration, connected profiles and native corner-fringe selection. Its geometry and values stay exact. No new stem targeting, crown pass or geometry-pair lifting runs.
 
-D applies the earlier profile, join, step and native corner-fringe treatment to C. It rejects local profiles with no original or accepted winner before they can oppose a supported connected profile. Positive raw support connects the profile. A gap stops propagation. Supporting anchors, geometric windows, crossing checks and conflict guards remain in place. D preserves bitmap support and bounds, but can add or remove coverage at joins. The manifest records its exact changes and glyph coverage delta.
+The compact filter finds whole positive components in frozen D. Pixels connect across shared edges or corners. Only components with bounds at most 3×3 can qualify. If a component's peak is below the target, F raises every tied peak to that target. G scales all its positive pixels by the same target-to-peak ratio, with integer rounding. If the peak is already at or above the target, both treatments leave the entire component unchanged.
 
-E uses the existing coverage-weighted average of the strongest quarter of positive baseline pixels, including cutoff ties. It forms pairs from C and the accepted D profiles and steps. Identical pairs collapse to one. Any conflicting partner or pixel role excludes the affected pairs. E lifts each selected core and its adjoining blended pixel together from the frozen D mask. Rounding uses integer coverage values. E never reduces D coverage, and unselected values stay unchanged. The comparison tests perceived smoothness rather than guaranteeing that jaggies disappear.
+The filter uses D for membership, eligibility and proportional values. It never rescales raw fringes after D already fits them. Zero pixels stay zero. Disconnected components cannot borrow support across a gap. Proposals do not feed later proposals. Every pixel outside eligible compact components remains exactly D.
 
-All five columns share the native MONO baseline's geometry, whole-pixel advances, line breaks and encoded blend. FreeType stem darkening stays on. No general Fontreal gain or coverage floor runs. The command does not change the installed profile or earlier supersampling commands.
+This same rule can affect other small connected marks. It does not select weak subsets inside larger strokes. W, V and Y remain D throughout the current font and size matrix. Longer weak connected strokes remain outside this trial. Human comparison selects the preferred dot strength and softness.
 
-A portable numerical fixture preserves the reported Noto Sans Display 12pt H and i. The same treatment path exports its masks and numbered grid under `diagnostics`, outside the main gallery. It requires no installed Display face. H checks consistent phase through a connected crossbar. The i checks a long stem separated from its dot. These retained masks are regression inputs, not font or character exceptions in the algorithm.
+All four columns share native glyph bounds, whole-pixel advances, wrapping and encoded blend. FreeType stem darkening stays on. Earlier supersampling commands, production processing and installed applications remain unchanged.
 
-The manifest records provider, font, code and fixture hashes, capture properties, masks, selected pairs, profile audits and exact image coordinates. Build data and results stay in the configured ignored roots. The focused check uses immutable provider and earlier algorithm references, independently pinned H/i expectations and exact saved-pixel checks:
+The `diagnostics` directory separates historical Noto Sans Display 12pt masks, actual small-font inputs and explicitly labeled synthetic masks. The Regular 10pt i keeps D's 240/60 stem and faint tail. Its 202/66 dot becomes 220/66 in F or 220/72 in G. A fitted 240/28 compact component becomes 255/28 in F or 255/30 in G. Retained contrasts also cover tied peaks, saturation, gaps, repeated components and components exceeding the width or height limit by one. Synthetic masks have no font or point-size claim.
+
+The manifest records actual provider, font, source and fixture hashes, native controls, frozen D, all component decisions, exact output masks and image coordinates. Build data and results stay in the configured ignored roots. The focused check follows actual export through native pixels, grids and all retained synthetic contrasts:
 
 ```sh
 python3 -B tests/native_stems_test.py --record FREETYPE_BUILD_JSON
 ```
 
-The previous four-column native study remains in Git at `02e27d1`. The current comparison uses Regular only. Other weights and sizes remain outside this focused study. Coverage conservation does not preserve the stroke center or establish perceived softness. Human assessment remains necessary for geometry and readability.
+The prior connected study remains in Git at `1ba7c1d`. This experiment covers Regular only and does not select production presets. Intensity changes can alter apparent weight even when pixel support stays fixed. Human assessment remains necessary for softness and readability.

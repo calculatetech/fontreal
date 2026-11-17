@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Check the native MONO baseline, conservative cleanup and weighted blend export."""
+"""Check exact accepted D with compact-only peak and proportional treatments."""
 import argparse
 import ast
-import hashlib
 from collections import Counter, defaultdict
-from math import floor
+import hashlib
+from math import ceil,floor
 from statistics import median
 import json
 import os
@@ -20,18 +20,102 @@ sys.path.insert(0,str(ROOT/'tools'))
 import native_stems as study
 from supersampling_test import composed_bytes
 
-BASE='02e27d14ba52f0b474b9dea65b07674d852fbf84'
+BASE='1ba7c1dde889613cc08c2ae115e70c9b7328d592'
 PROBE_BASE='29d3fec5c929bad39e60d3ffbb23aeeb263169a3'
 FONTS=('Noto Sans','Nimbus Sans','Inconsolata Nerd Font','Arial','Hack')
 POINTS=(8,10,11,12)
+KEYS='ADFG'
+TITLES=['Native 1x MONO-gray','Accepted baseline','D + compact peaks','D + compact blend']
 CHARS='Hinm8W:!'
-TITLES=['Native 1x MONO-gray','Existing stem cleanup','Cleanup + near ties','Connected profiles','D + weighted blend lift']
 
 
+def old_function(path,name):
+    source=subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT,text=True)
+    node=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name==name)
+    env=dict(Counter=Counter,defaultdict=defaultdict,floor=floor,median=median,MODES=('baseline','native-area','gain-area'))
+    exec(compile(ast.Module(body=[node],type_ignores=[]),'<immutable accepted recipe>','exec'),env)
+    return env[name]
+
+
+def components(values,w):
+    remaining={i for i,v in enumerate(values) if v};groups=[];h=len(values)//w if w else 0
+    while remaining:
+        first=min(remaining);remaining.remove(first);group={first};queue=[first]
+        while queue:
+            i=queue.pop();y,x=divmod(i,w)
+            for yy in range(max(0,y-1),min(h,y+2)):
+                for xx in range(max(0,x-1),min(w,x+2)):
+                    j=yy*w+xx
+                    if j in remaining:remaining.remove(j);group.add(j);queue.append(j)
+        groups.append(group)
+    return groups
+
+
+def compact_oracle(d,w,target):
+    f=bytearray(d);g=bytearray(d);audit=[]
+    for group in components(d,w):
+        left=min(i%w for i in group);right=max(i%w for i in group)+1
+        top=min(i//w for i in group);bottom=max(i//w for i in group)+1
+        peak=max(d[i] for i in group);eligible=right-left<=3 and bottom-top<=3 and peak<target
+        selected=sorted(i for i in group if d[i]==peak) if eligible else []
+        audit.append(dict(pixels=sorted(group),box=[left,top,right,bottom],peak=peak,eligible=eligible,peaks=selected))
+        if eligible:
+            for i in selected:f[i]=target
+            for i in group:g[i]=max(d[i],(2*d[i]*target+peak)//(2*peak))
+    return bytes(f),bytes(g),dict(components=audit)
+
+
+def expected(raw,w,recipe):
+    concentrate,refine=recipe
+    fitted,pairs=concentrate(raw,raw,w,near_ties=True)
+    fitted,profile=refine(raw,fitted['native-area'],w,connected=True)
+    d=fitted['corners'];weight=target_oracle(raw)
+    f,g,audit=compact_oracle(d,w,weight['target'])
+    return dict(A=raw,D=d,F=f,G=g),dict(D=pairs),weight,dict(D=profile,compact=audit)
+
+
+def verify_record(record,recipe):
+    raw=bytes(record['raw']['pixels']);w=record['raw']['width']
+    masks,pairs,weight,stage=expected(raw,w,recipe)
+    assert record['masks']=={k:list(v) for k,v in masks.items()}
+    assert record['pairs']==pairs and record['weighted']==weight and record['profile']==stage
+    assert record['coverage_deltas']=={k:sum(v)-sum(raw) for k,v in masks.items()}
+    assert record['coverage_delta_D']==sum(masks['D'])-sum(raw)
+    for data in masks.values():assert len(data)==len(raw) and all(bool(a)==bool(b) for a,b in zip(raw,data))
+    selected={i for group in stage['compact']['components'] if group['eligible'] for i in group['pixels']}
+    assert all(masks[k][i]==masks['D'][i] for k in 'FG' for i in range(len(raw)) if i not in selected)
+    assert all(masks[k][i]>=masks['D'][i] for k in 'FG' for i in range(len(raw)))
+    return masks,stage
+
+
+def pinned_fixtures(recipe):
+    fixture=read(study.COMPACT_FIXTURE);assert fixture['source_commit']==BASE
+    for path,digest in fixture['sources'].items():
+        assert hashlib.sha256(subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT)).hexdigest()==digest
+    for r in fixture['records']:
+        actual=study.mask_record(r['code'],r['advance_pixels'],r['raw']);verify_record(actual,recipe)
+        assert all(actual['masks'][k]==v for k,v in r['expected'].items())
+    for case in fixture['synthetic']:
+        actual=study.mask_record(88,0,dict(left=0,top=0,width=case['width'],height=case['height'],pixels=case['raw']))
+        verify_record(actual,recipe)
+        assert actual['weighted']['target']==case['target']
+        assert all(actual['masks'][k]==v for k,v in case['expected'].items()),case['name']
+        selected=actual['profile']['compact']['components']
+        if case['name']=='duplicate-prefix-later':
+            assert [g['pixels'] for g in selected if g['eligible']]==[[0,1],[3,4],[6,7]]
+        if case['name'] in ('width-three-four','height-three-four'):
+            assert [g['eligible'] for g in selected]==[True,False,True,False]
+    historical=read(study.FIXTURE)
+    assert study.shared.sha(study.FIXTURE)=='1a1a6ef25df345010d86aad1b2ccf892993278233fd1f80ed1ca8d41a5a29466'
+    for r in historical['records']:
+        actual=study.mask_record(r['code'],r['advance_pixels'],r['raw']);verify_record(actual,recipe)
+        assert actual['masks']['D']==r['expected']['D']
+    for raw,w in ((b'',0),(bytes([77]),1),(bytes([0,0]),2)):
+        assert study.treatments(raw,w)==expected(raw,w,recipe)
+    print('PASS pinned actual dots/D, frozen-D overlap, tied/saturated/disconnected/oversized/later components and weighted targets',flush=True)
 def read(path,digest=None):
     if digest:assert study.shared.sha(path)==digest,path
     return json.loads(path.read_text())
-
 
 def decoded(g):
     b=g['bitmap'];assert b['pixel_mode']==2
@@ -40,79 +124,14 @@ def decoded(g):
     return dict(left=g['left'],top=g['top'],width=b['width'],height=b['rows'],
                 pixels=list(b''.join(data[y*stride:y*stride+b['width']] for y in range(b['rows']))))
 
-
-def near_oracle(raw,w):
-    if not raw:return raw
-    h=len(raw)//w; proposals=[]
-    for across,along,index in ((w,h,lambda a,b:b*w+a),(h,w,lambda a,b:a*w+b)):
-        for a in range(across-1):
-            rows=[]
-            for b in range(along):
-                i,j=index(a,b),index(a+1,b)
-                outer=[raw[index(c,b)] if 0<=c<across else 0 for c in (a-1,a+2)]
-                rows.append((i,j) if raw[i] and raw[j] and 192<=raw[i]+raw[j]<=384 and max(outer)<=32 else None)
-            cursor=0
-            while cursor<along:
-                if rows[cursor] is None:cursor+=1;continue
-                run=[rows[cursor]];first=[raw[i] for i in run[0]];cursor+=1
-                while cursor<along and rows[cursor] is not None and all(abs(raw[i]-v)<=8 for i,v in zip(rows[cursor],first)):
-                    run.append(rows[cursor]);cursor+=1
-                if len(run)>=3:proposals.append(run)
-    counts=Counter(i for run in proposals for pair in run for i in pair)
-    out=bytearray(raw)
-    for run in proposals:
-        if any(counts[i]!=1 for pair in run for i in pair):continue
-        vote=sum(raw[i]-raw[j] for i,j in run)
-        if not vote:continue
-        for pair in run:
-            i,j=pair if vote>0 else pair[::-1]
-            if max(raw[i],raw[j])>=230:continue
-            peak=min(240,raw[i]+raw[j]-1)
-            if peak>raw[i]:out[i],out[j]=peak,raw[i]+raw[j]-peak
-    return bytes(out)
-
-
-def weighted_oracle(raw,cleaned,pairs):
+def target_oracle(raw):
     positive=sorted((v for v in raw if v),reverse=True)
     if positive:
         cutoff=positive[(len(positive)+3)//4-1];refs=[v for v in positive if v>=cutoff]
         numerator=sum(v*v for v in refs);denominator=sum(refs)
         target=(2*numerator+denominator)//(2*denominator)
     else:cutoff=target=numerator=denominator=0;refs=[]
-    result=bytearray(cleaned)
-    for p in pairs:
-        i,j=p['core'],p['fringe'];peak=max(cleaned[i],target)
-        result[i]=peak;result[j]=(2*cleaned[j]*peak+cleaned[i])//(2*cleaned[i])
-    return bytes(result),dict(target=target,reference_cutoff=cutoff,reference_count=len(refs),numerator=numerator,denominator=denominator)
-
-
-def frozen_concentrate():
-    source=subprocess.check_output(['git','show',f'{BASE}:tests/stem_core_test.py'],cwd=ROOT,text=True)
-    node=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name=='concentrate')
-    namespace=dict(Counter=Counter,MODES=('baseline','native-area','gain-area'))
-    exec(compile(ast.Module(body=[node],type_ignores=[]),'<immutable concentration>','exec'),namespace)
-    return namespace['concentrate']
-
-
-def frozen_refine(connected=False):
-    source=subprocess.check_output(['git','show',f'{BASE}:tests/stroke_profiles.py'],cwd=ROOT,text=True)
-    if connected:
-        guard='                    if (native,chosen,side)<(0,0,0):continue'
-        assert source.count(guard)==1
-        source=source.replace(guard,'                    if native==0 and chosen==0:continue\n'+guard)
-    node=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name=='refine')
-    namespace=dict(defaultdict=defaultdict,floor=floor,median=median)
-    exec(compile(ast.Module(body=[node],type_ignores=[]),'<immutable profile reference>','exec'),namespace)
-    return namespace['refine']
-
-
-def pair_oracle(concentrated,profile):
-    unique={(p['core'],p['fringe']) for p in concentrated}
-    unique|={(p['core'],p['fringe']) for run in profile['runs'] for p in run['pairs']}
-    unique|={(p['core'],p['fringe']) for p in profile['steps']}
-    count=Counter(i for pair in unique for i in pair)
-    return [dict(core=c,fringe=f) for c,f in sorted(unique) if count[c]==count[f]==1]
-
+    return dict(target=target,reference_cutoff=cutoff,reference_count=len(refs),numerator=numerator,denominator=denominator)
 
 def frozen_layout():
     source=subprocess.check_output(['git','show',f'{BASE}:tools/supersampling.py'],cwd=ROOT,text=True)
@@ -122,109 +141,6 @@ def frozen_layout():
     namespace=dict(SPECIMEN=ast.literal_eval(specimen))
     exec(compile(ast.Module(body=[node],type_ignores=[]),'<immutable layout>','exec'),namespace)
     return namespace['layout'],namespace['SPECIMEN']
-
-
-def fixtures():
-    def check(raw,w,b,c):
-        got,pairs,_,_=study.treatments(raw,w)
-        assert got['A']==raw and got['B']==b and got['C']==c,(list(raw),w,list(got['B']),list(got['C']))
-        assert c==near_oracle(raw,w)
-        for k in ('B','C'):
-            assert sum(got[k])==sum(raw)
-            assert all(bool(a)==bool(b) for a,b in zip(raw,got[k]))
-        assert got['E']==weighted_oracle(raw,got['D'],pairs['E'])[0]
-    check(bytes([144,124]*3),2,bytes([240,28]*3),bytes([240,28]*3))
-    check(bytes([172,164]*3),2,bytes([172,164]*3),bytes([240,96]*3))
-    check(bytes([144,129]*3),2,bytes([144,129]*3),bytes([240,33]*3))
-    check(bytes([144,124,32]*3),3,bytes([240,28,32]*3),bytes([240,28,32]*3))
-    check(bytes([144,124,152,132,144,124]),2,bytes([240,28,240,44,240,28]),bytes([240,28,240,44,240,28]))
-    check(bytes([172,164,168,168,172,164]),2,bytes([172,164,168,168,172,164]),bytes([240,96]*3))
-    check(bytes([170,166,166,170,170,166]),2,bytes([170,166,166,170,170,166]),bytes([240,96]*3))
-    raw=bytes([172,164,0,0,164,172]*3)
-    check(raw,6,raw,bytes([240,96,0,0,96,240]*3))
-    for raw,w in [(b'',0),(bytes([168,168]*3),2),(bytes([144,124]*2),2),
-                  (bytes([100,91]*3),2),(bytes([200,185]*3),2),(bytes([230,120]*3),2),
-                  (bytes([144,124,33]*3),3),(bytes([172,164,181,164,172,164]),2),
-                  (bytes([100]*9),3),(bytes([20,200,20]*3),3),(bytes([200,0]*3),2)]:check(raw,w,raw,raw)
-    for row in ([104,88],[144,128],[176,208]):
-        raw=bytes(row*3);c=bytes([min(240,sum(row)-1),sum(row)-min(240,sum(row)-1)]*3)
-        if row[0]<row[1]:c=bytes(sum(([sum(row)-min(240,sum(row)-1),min(240,sum(row)-1)] for _ in range(3)),[]))
-        check(raw,2,c,c)
-    raw=bytes([172,164]*4)
-    transpose=lambda x,w:bytes(x[y*w+a] for a in range(w) for y in range(len(x)//w))
-    c=study.treatments(raw,2)[0]['C']
-    assert study.treatments(transpose(raw,2),4)[0]['C']==transpose(c,2)
-    flip=lambda x:b''.join(x[i:i+2][::-1] for i in range(0,len(x),2))
-    assert study.treatments(flip(raw),2)[0]['C']==flip(c)
-    raw=bytes([100,92,0,0,0,0]*3+[0,0,255,200,200,200])
-    masks,pairs,weighted,_=study.treatments(raw,6)
-    assert weighted['target']==216 and weighted['reference_count']==4
-    assert masks['C']==bytes([191,1,0,0,0,0]*3+[0,0,255,200,200,200])
-    assert masks['E']==bytes([216,1,0,0,0,0]*3+[0,0,255,200,200,200])
-    # Explicit fractional fringe lift and identity when the target is below the core.
-    clean=bytes([240,96,0,248]);pairs=[dict(core=0,fringe=1)]
-    out,detail=study.weighted_blend(bytes([172,164,0,248]),clean,pairs,4)
-    assert detail['target']==248 and out==bytes([248,99,0,248])
-    out,detail=study.weighted_blend(bytes([100,92,0,180]),clean,pairs,4)
-    assert detail['target']==180 and out==clean
-    print('PASS exact conservative/near-tie guards, coherent mixed ties, later opposing run, weighted cutoff ties and blend lift',flush=True)
-
-
-def connected_fixtures(prior,reference):
-    fixture=read(study.FIXTURE)
-    assert fixture['source_commit']==BASE and fixture['points']==12 and fixture['target_dpi']==96
-    assert fixture['font']['family']=='Noto Sans Display' and fixture['font']['file']=='NotoSansDisplay-Regular.ttf'
-    assert fixture['provider']['version']=='2.14.2' and fixture['controls']['target']==2 and fixture['controls']['render']==0
-    assert fixture['controls']['scale']==1 and fixture['controls']['hint_dpi']==96
-    assert fixture['controls']['load_flags']==(32768|8|(2<<16))
-    assert fixture['controls']['stem_darkening'] and fixture['controls']['effective_interpreter']==40
-    assert all(v==dict(set_error=0,get_error=0,no_stem_darkening=False) for v in fixture['controls']['darkening_properties'].values())
-    assert '/' not in fixture['font']['file'] and '/' not in fixture['provider']['file'] and '/' not in fixture['capture']['file']
-    for path,digest in fixture['sources'].items():
-        original=subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT)
-        assert hashlib.sha256(original).hexdigest()==digest
-    for r in fixture['records']:
-        raw=bytes(r['raw']['pixels']);w=r['raw']['width'];m,p,_,detail=study.treatments(raw,w)
-        assert all(list(m[k])==r['expected'][k] for k in 'ABCD')
-        assert sum(m['D'])==(10349 if r['code']==72 else 3769)
-        assert study.refine(raw,m['C'],w,connected=True)==reference(raw,m['C'],w)
-        assert detail==reference(raw,m['C'],w)[1]
-        for chosen in ('A','B','C'):
-            assert study.refine(raw,m[chosen],w)==prior(raw,m[chosen],w)
-        flip=lambda data:b''.join(data[i:i+w][::-1] for i in range(0,len(data),w))
-        trans=lambda data:bytes(data[y*w+x] for x in range(w) for y in range(len(data)//w))
-        assert study.refine(flip(raw),flip(m['C']),w,connected=True)[0]['corners']==flip(m['D'])
-        assert study.refine(trans(raw),trans(m['C']),r['raw']['height'],connected=True)[0]['corners']==trans(m['D'])
-    h=fixture['records'][0];gap=bytearray(h['raw']['pixels']);gap[6*9+7:6*9+9]=bytes([0,0])
-    m,_,_,_=study.treatments(bytes(gap),9)
-    assert all(m['D'][y*9+7:y*9+9]==bytes([184,184]) for y in range(7,12))
-    assert m['D'][6*9+7:6*9+9]==bytes([0,0])
-    raw=bytes([160,160]*4);m,_,_,_=study.treatments(raw,2)
-    assert m['C']==m['D']==raw
-    conflict=bytes([180,160]*3+[168,168]*3+[160,180]*3)
-    m,_,_,detail=study.treatments(conflict,2)
-    assert m['C']==m['D']==bytes([240,100]*3+[168,168]*3+[100,240]*3) and not detail['runs']
-    raw=bytes([121,120]*2+[105,125]*3+[121,120]*2+[0,0]+[255,255]*5)
-    masks,pairs,weighted,_=study.treatments(raw,2)
-    assert masks['D']==bytes([240,1]*2+[240,229]*3+[240,1]*2+[0,0]+[255,255]*5)
-    assert masks['E']==bytes([255,1]*2+[240,229]*3+[255,1]*2+[0,0]+[255,255]*5)
-    assert weighted['target']==255
-    assert {(p['core'],p['fringe']) for p in pairs['E']}=={(0,1),(2,3),(10,11),(12,13)}
-    raw=bytes([172,164]*3+[248]*4);clean=bytes([240,96]*3+[248]*4)
-    pair=lambda a,b:dict(core=a,fringe=b)
-    cases=[([],[],[],[],clean),
-      ([pair(0,1)],[],[],[pair(0,1)],bytes([248,99,240,96,240,96]+[248]*4)),
-      ([pair(0,1),pair(0,1)],[pair(0,3)],[pair(4,5)],[pair(4,5)],bytes([240,96,240,96,248,99]+[248]*4)),
-      ([pair(0,1),pair(0,1)],[pair(1,0)],[pair(4,5)],[pair(4,5)],bytes([240,96,240,96,248,99]+[248]*4)),
-      ([pair(0,1),pair(0,1)],[],[pair(2,3)],[pair(0,1),pair(2,3)],bytes([248,99,248,99,240,96]+[248]*4))]
-    for cp,runs,steps,expected,result in cases:
-        profile=dict(runs=[dict(pairs=runs)],steps=steps)
-        selected=study.weighted_pairs(cp,profile)
-        assert selected==expected==pair_oracle(cp,profile)
-        actual,detail=study.weighted_blend(raw,clean,selected,10)
-        assert actual==result==weighted_oracle(raw,clean,expected)[0] and detail['target']==248
-    print('PASS retained H/i, broken connection, zero-vote/conflict guards, transforms and complete weighted-pair composition',flush=True)
-
 
 def reference_probe(work,provider):
     source=subprocess.check_output(['git','show',f'{PROBE_BASE}:tests/supersampling_probe.cpp'],cwd=ROOT,text=True)
@@ -237,7 +153,6 @@ def reference_probe(work,provider):
     env=dict(os.environ);env.pop('LD_PRELOAD',None);env.pop('FREETYPE_PROPERTIES',None);env['LD_LIBRARY_PATH']=str(provider.parent)
     return probe,env
 
-
 def check_grid(directory,grid,records,font_file,characters):
     assert study.shared.sha(directory/grid['file'])==grid['sha256'];im=Image.open(directory/grid['file'])
     assert list(im.size)==grid['size'] and im.mode=='RGB'
@@ -246,22 +161,22 @@ def check_grid(directory,grid,records,font_file,characters):
     tops={};y=90
     for ch in characters:
         tops[ord(ch)]=y;y+=rs[ord(ch)]['raw']['height']*22+100
-    assert grid['cell_size']==22 and list(im.size)==[column*5+16,y]
+    assert grid['cell_size']==22 and list(im.size)==[column*4+16,y]
     small=ImageFont.truetype(font_file,9)
     label=ImageFont.truetype(font_file,14)
-    assert len(grid['headings'])==5
+    assert len(grid['headings'])==4
     for col,heading in enumerate(grid['headings']):
-        key=chr(65+col);assert heading['method']==key and heading['text']==f'{key}: {TITLES[col]}'
+        key='ADFG'[col];assert heading['method']==key and heading['text']==f'{key}: {TITLES[col]}'
         x,y=heading['position'];width=column
         assert [x,y]==[12+col*width,60]
         patch=Image.new('RGB',(width,24),(24,24,24))
         ImageDraw.Draw(patch).text((0,0),heading['text'],font=label,fill='white')
         assert im.crop((x,y,x+width,y+24)).tobytes()==patch.tobytes()
-    expected_cells={(ord(ch),key,i) for ch in characters for key in 'ABCDE' for i in range(len(rs[ord(ch)]['raw']['pixels']))}
+    expected_cells={(ord(ch),key,i) for ch in characters for key in 'ADFG' for i in range(len(rs[ord(ch)]['raw']['pixels']))}
     assert {(c['code'],c['method'],c['index']) for c in grid['cells']}==expected_cells and len(grid['cells'])==len(expected_cells)
     for cell in grid['cells']:
         r=rs[cell['code']];v=r['masks'][cell['method']][cell['index']];assert cell['value']==v
-        col='ABCDE'.index(cell['method']);yy,xx=divmod(cell['index'],r['raw']['width'])
+        col='ADFG'.index(cell['method']);yy,xx=divmod(cell['index'],r['raw']['width'])
         x=12+col*column+28+xx*22;y=tops[cell['code']]+46+yy*22
         assert cell['box']==[x,y,x+22,y+22] and cell['text_position']==[x+2,y+4]
         border=(255,170,55) if v!=r['raw']['pixels'][cell['index']] else (75,75,75)
@@ -270,176 +185,162 @@ def check_grid(directory,grid,records,font_file,characters):
         draw.rectangle((0,0,21,21),fill=(v,)*3,outline=border)
         draw.text((2,4),str(v),font=small,fill='black' if v>=145 else 'white')
         assert im.crop(tuple(cell['box'])).tobytes()==patch.tobytes()
-    expected_previews={(ord(ch),key) for ch in characters for key in 'ABCDE'}
+    expected_previews={(ord(ch),key) for ch in characters for key in 'ADFG'}
     assert {(p['code'],p['method']) for p in grid['previews']}==expected_previews
     assert len(grid['previews'])==len(expected_previews)
     for preview in grid['previews']:
         r=rs[preview['code']];expected_im=Image.frombytes('L',(r['raw']['width'],r['raw']['height']),bytes(r['masks'][preview['method']])).convert('RGB')
-        x=12+'ABCDE'.index(preview['method'])*column+30;y=tops[preview['code']]
+        x=12+'ADFG'.index(preview['method'])*column+30;y=tops[preview['code']]
         assert preview['box']==[x,y,x+r['raw']['width'],y+r['raw']['height']]
         assert im.crop(tuple(preview['box'])).tobytes()==expected_im.tobytes()
 
+def dot_region(g):
+    contours=[];start=0
+    for end in g['contours']:
+        contours.append(g['outline'][start:end+1]);start=end+1
+    dot=max(contours,key=lambda ps:min(p[1] for p in ps))
+    top=-ceil(max(p[1] for p in dot)/64);bottom=-floor(min(p[1] for p in dot)/64)
+    mask=decoded(g)
+    return {i for i,v in enumerate(mask['pixels']) if v and top<=mask['top']+i//mask['width']<bottom},[top,bottom]
 
-def diagnostic_check(directory,manifest,prior,reference):
-    diagnostic=manifest['diagnostic'];fixture=read(study.FIXTURE)
-    assert diagnostic['fixture']=='tests/fixtures/native-connected-stems.json'
-    assert diagnostic['fixture_sha256']==study.shared.sha(study.FIXTURE)
+
+def diagnostic_check(directory,manifest,recipe):
+    diagnostic=manifest['diagnostic'];historical=read(study.FIXTURE)
+    assert diagnostic['fixture']=='tests/fixtures/native-connected-stems.json' and diagnostic['fixture_sha256']==study.shared.sha(study.FIXTURE)
     assert diagnostic['masks']=='diagnostics/retained-masks.json'
-    records=read(directory/diagnostic['masks'],diagnostic['masks_sha256'])
-    assert [r['code'] for r in records]==[72,105]
-    for r,f in zip(records,fixture['records']):
-        assert r['raw']==f['raw'] and r['advance_pixels']==f['advance_pixels']
-        assert all(r['masks'][key]==f['expected'][key] for key in 'ABCD')
-        raw=bytes(r['raw']['pixels']);w=r['raw']['width'];c=bytes(r['masks']['C'])
-        assert r['profile']==reference(raw,c,w)[1]
-        assert r['coverage_delta_D']==sum(r['masks']['D'])-sum(raw)
-        for chosen in 'ABC':assert study.refine(raw,bytes(r['masks'][chosen]),w)==prior(raw,bytes(r['masks'][chosen]),w)
-        selected=[p for p in pair_oracle(r['pairs']['C'],r['profile']) if r['masks']['D'][p['core']]>r['masks']['D'][p['fringe']]]
-        assert selected==r['pairs']['E']
-        expected,detail=weighted_oracle(raw,bytes(r['masks']['D']),selected)
-        assert list(expected)==r['masks']['E'] and detail==r['weighted']
-    h=records[0]
-    lower={(y*9+7,y*9+8) for y in range(7,12)}
-    assert lower<={(p['core'],p['fringe']) for p in h['pairs']['E']}
-    assert not lower&{(p['core'],p['fringe']) for p in h['pairs']['C']}
-    grid=diagnostic['grid']
-    assert grid['file']=='diagnostics/retained-grids.png' and grid['font'] is None and grid['points']==12
-    check_grid(directory,grid,records,manifest['fonts'][0]['file'],'Hi')
-    assert {p.name for p in (directory/'diagnostics').iterdir()}=={'retained-masks.json','retained-grids.png'}
+    rows=read(directory/diagnostic['masks'],diagnostic['masks_sha256']);assert [r['code'] for r in rows]==[72,105]
+    for r,source in zip(rows,historical['records']):
+        assert r['raw']==source['raw'];verify_record(r,recipe);assert r['masks']['D']==source['expected']['D']
+    assert diagnostic['grid']['file']=='diagnostics/retained-grids.png'
+    check_grid(directory,diagnostic['grid'],rows,manifest['fonts'][0]['file'],'Hi')
+    compact=manifest['compact_diagnostics'];fixture=read(study.COMPACT_FIXTURE)
+    assert compact['fixture']=='tests/fixtures/native-compact-features.json' and compact['fixture_sha256']==study.shared.sha(study.COMPACT_FIXTURE)
+    assert [(g['font'],g['points']) for g in compact['cases']]==[(0,8),(0,10),(2,8),(4,8)]
+    expected_files={'retained-masks.json','retained-grids.png'}
+    for case in compact['cases']:
+        stem=f'diagnostics/actual-{case["font"]}-{case["points"]}'
+        assert case['masks']==stem+'.json' and case['grid']['file']==stem+'.png'
+        rows=read(directory/case['masks'],case['masks_sha256'])
+        source=[r for r in fixture['records'] if (r['font'],r['points'])==(case['font'],case['points'])]
+        assert [r['code'] for r in rows]==[r['code'] for r in source]
+        for r,s in zip(rows,source):
+            assert r['raw']==s['raw'];verify_record(r,recipe)
+            assert all(r['masks'][k]==v for k,v in s['expected'].items())
+        check_grid(directory,case['grid'],rows,manifest['fonts'][0]['file'],''.join(chr(r['code']) for r in source))
+        expected_files|={Path(case['masks']).name,Path(case['grid']['file']).name}
+    assert [c['name'] for c in compact['synthetic']]==[c['name'] for c in fixture['synthetic']]
+    for case,source in zip(compact['synthetic'],fixture['synthetic']):
+        stem='diagnostics/compact-'+source['name']
+        assert case['masks']==stem+'.json' and case['grid']['file']==stem+'.png'
+        rows=read(directory/case['masks'],case['masks_sha256']);assert len(rows)==1 and rows[0]['code']==88
+        record=rows[0];assert record['raw']==dict(left=0,top=0,width=source['width'],height=source['height'],pixels=source['raw'])
+        verify_record(record,recipe)
+        assert record['weighted']['target']==source['target'] and all(record['masks'][k]==v for k,v in source['expected'].items())
+        assert case['grid']['font'] is None and case['grid']['points']==0
+        check_grid(directory,case['grid'],rows,manifest['fonts'][0]['file'],'X')
+        image=Image.open(directory/case['grid']['file']);header=Image.new('RGB',(image.width,24),(24,24,24))
+        ImageDraw.Draw(header).text((12,0),'Synthetic '+source['name']+' | numerical coverage mask',font=ImageFont.truetype(manifest['fonts'][0]['file'],14),fill='white')
+        assert image.crop((0,10,image.width,34)).tobytes()==header.tobytes()
+        expected_files|={Path(case['masks']).name,Path(case['grid']['file']).name}
+    assert {p.name for p in (directory/'diagnostics').iterdir()}==expected_files
 
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--record',required=True,type=Path);args=parser.parse_args()
-    fixtures();frozen=frozen_concentrate();layout,specimen=frozen_layout();prior_refine=frozen_refine();connected_refine=frozen_refine(True)
-    connected_fixtures(prior_refine,connected_refine)
-    record=read(args.record);provider=Path(record['libraries']['stock']['library']).resolve()
+    recipe=(old_function('tests/stem_core_test.py','concentrate'),old_function('tests/stroke_profiles.py','refine'))
+    pinned_fixtures(recipe);layout,specimen=frozen_layout();record=read(args.record);provider=Path(record['libraries']['stock']['library']).resolve()
     output=subprocess.check_output([sys.executable,'-B',str(ROOT/'tools/native_stems.py'),'--record',str(args.record.resolve())],text=True)
     directory=Path(output.strip().splitlines()[-1]);manifest=read(directory/'manifest.json')
     assert directory.parent.resolve()==(ROOT/'results/native-stems').resolve()
     assert manifest['study']=='native-stems' and manifest['target_dpi']==96 and manifest['blend']=='encoded'
+    assert manifest['methods']==[[k,t] for k,t in zip(KEYS,TITLES)] and manifest['points']==list(POINTS)
     assert manifest['specimen']==list(specimen) and manifest['placement']=='native MONO whole-pixel advances'
-    assert manifest['methods']==[[k,t] for k,t in zip('ABCDE',TITLES)]
-    assert manifest['points']==list(POINTS) and manifest['record_sha256']==study.shared.sha(args.record)
-    assert manifest['provider_sha256']==study.shared.sha(provider)==record['libraries']['stock']['sha256']
-    assert set(manifest['sources'])=={'tools/native_stems.py','tools/supersampling.py',
-        'tests/supersampling_probe.cpp','tests/stem_core_test.py','tests/weighted_stroke_profiles.py',
-        'tests/thin_stroke_profiles.py','tests/stroke_profiles.py','tests/fixtures/native-connected-stems.json','src/fontreal_coverage.cpp','src/fontreal_coverage.h',
-        'tests/selected_mask_probe.cpp'}
-    for p,digest in manifest['sources'].items():assert study.shared.sha(ROOT/p)==digest
-    assert {p:(manifest['sources'][p]) for p in ('src/fontreal_coverage.cpp','src/fontreal_coverage.h')}=={
-        'src/fontreal_coverage.cpp':record['spec']['processor'],'src/fontreal_coverage.h':record['spec']['declaration']}
+    assert manifest['record_sha256']==study.shared.sha(args.record) and manifest['provider_sha256']==study.shared.sha(provider)==record['libraries']['stock']['sha256']
+    sources={'tools/native_stems.py','tools/supersampling.py','tests/supersampling_probe.cpp','tests/stem_core_test.py',
+        'tests/weighted_stroke_profiles.py','tests/thin_stroke_profiles.py','tests/stroke_profiles.py','tests/small_feature_profiles.py',
+        'tests/bridge_coverage_test.py','tests/neighbor_coverage_test.py','tests/fixtures/native-connected-stems.json',
+        'tests/fixtures/native-compact-features.json','src/fontreal_coverage.cpp','src/fontreal_coverage.h','tests/selected_mask_probe.cpp'}
+    assert set(manifest['sources'])==sources
+    for path,digest in manifest['sources'].items():assert study.shared.sha(ROOT/path)==digest
+    for path in sources-{'tools/native_stems.py','tests/small_feature_profiles.py','tests/fixtures/native-compact-features.json'}:
+        assert study.shared.sha(ROOT/path)==hashlib.sha256(subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT)).hexdigest()
+    assert manifest['sources']['src/fontreal_coverage.cpp']==record['spec']['processor'] and manifest['sources']['src/fontreal_coverage.h']==record['spec']['declaration']
     assert [f['family'] for f in manifest['fonts']]==list(FONTS)
     assert all('Regular' in f['style'].split(',') and f['family'] in f['matched_family'].split(',') for f in manifest['fonts'])
-    assert {(c['font'],c['points']) for c in manifest['cases']}=={(f,p) for f in range(5) for p in POINTS}
-    assert len(manifest['cases'])==20
-    by_case={};witness=Counter()
-    with tempfile.TemporaryDirectory(prefix='native-stems-reference-',dir=ROOT/'build/supersampling') as temporary:
+    assert len(manifest['cases'])==20 and {(c['font'],c['points']) for c in manifest['cases']}=={(fi,p) for fi in range(5) for p in POINTS}
+    by_case={};witness=Counter();dots=set();regions=read(study.COMPACT_FIXTURE)['dot_regions']
+    with tempfile.TemporaryDirectory(prefix='compact-features-reference-',dir=ROOT/'build/supersampling') as temporary:
         probe,env=reference_probe(Path(temporary),provider)
         for case in manifest['cases']:
             fi,pt=case['font'],case['points'];font=manifest['fonts'][fi]
             matched=subprocess.check_output(['fc-match','-f','%{file}',font['family']+':style=Regular'],text=True)
             assert Path(matched).resolve()==Path(font['file']).resolve() and study.shared.sha(Path(font['file']))==font['sha256']
-            cap=read(directory/case['capture'],case['capture_sha256']);native=next(c for c in cap['captures'] if c['mode']=='native_mono1')
-            assert cap['style']=='Regular'
-            ref=json.loads(subprocess.check_output([str(probe),font['file'],str(pt),'--stock4x'],env=env))
-            refs={r['mode']:r for r in ref['captures']};expected=refs['native_mono_gray_dark_on']
-            assert Path(cap['provider']).resolve()==Path(ref['provider']).resolve()==provider
-            assert {k:v for k,v in native.items() if k!='mode'}=={k:v for k,v in expected.items() if k!='mode'}
+            cap=read(directory/case['capture'],case['capture_sha256']);assert cap['style']=='Regular'
+            native=next(c for c in cap['captures'] if c['mode']=='native_mono1')
+            reference=json.loads(subprocess.check_output([str(probe),font['file'],str(pt),'--stock4x'],env=env))
+            captures={c['mode']:c for c in reference['captures']};expected_native=captures['native_mono_gray_dark_on']
+            assert Path(cap['provider']).resolve()==Path(reference['provider']).resolve()==provider
+            assert {k:v for k,v in native.items() if k!='mode'}=={k:v for k,v in expected_native.items() if k!='mode'}
             assert native['target']==2 and native['render']==0 and native['scale']==1 and native['hint_dpi']==96
             assert native['load_flags']==(32768|8|(2<<16)) and native['effective_interpreter']==40
-            assert native['stem_darkening'] and all(x==dict(set_error=0,get_error=0,no_stem_darkening=False) for x in native['darkening_properties'].values())
-            placements,lines=layout({g['code']:{'advance_pixels':int(g['advance']+.5)} for g in expected['glyphs']},240)
-            assert case['placements']==placements and case['lines']==lines
-            records=read(directory/case['masks'],case['masks_sha256']);by_case[fi,pt]=(case,records)
-            assert [r['code'] for r in records]==list(range(32,127))==[g['code'] for g in expected['glyphs']]
-            glyphs={}
-            for r,g in zip(records,expected['glyphs']):
-                raw=decoded(g);assert r['raw']==raw and r['masks']['A']==raw['pixels']
-                original=bytes(raw['pixels']);assert r['advance_pixels']==int(g['advance']+.5)
-                assert bytes(r['masks']['B'])==frozen(original,original,raw['width'])[0]['native-area']
-                assert bytes(r['masks']['C'])==frozen(original,original,raw['width'],near_ties=True)[0]['native-area']
-                assert r['pairs']['B']==frozen(original,original,raw['width'])[1] and r['pairs']['C']==frozen(original,original,raw['width'],near_ties=True)[1]
-                for chosen in ('A','B','C'):
-                    assert study.refine(original,bytes(r['masks'][chosen]),raw['width'])==prior_refine(original,bytes(r['masks'][chosen]),raw['width'])
-                connected,profile=connected_refine(original,bytes(r['masks']['C']),raw['width'])
-                assert bytes(r['masks']['D'])==connected['corners'] and r['profile']==profile
-                assert r['coverage_delta_D']==sum(r['masks']['D'])-sum(original)
-                assert all(bool(a)==bool(b) for a,b in zip(original,r['masks']['D']))
-                expected_pairs=[p for p in pair_oracle(r['pairs']['C'],profile) if connected['corners'][p['core']]>connected['corners'][p['fringe']]]
-                assert r['pairs']['E']==expected_pairs
-                weighted,detail=weighted_oracle(original,bytes(r['masks']['D']),expected_pairs)
-                assert bytes(r['masks']['E'])==weighted and r['weighted']==detail
-                for key in 'BC':
-                    values=r['masks'][key];pairs=r['pairs'][key]
-                    assert len(values)==len(original) and sum(values)==sum(original)
-                    assert all(bool(a)==bool(b) for a,b in zip(original,values))
-                    selected=[i for p in pairs for i in (p['core'],p['fringe'])]
-                    assert len(selected)==len(set(selected))
-                    assert set(selected)=={i for i,v in enumerate(values) if v!=original[i]}
-                    assert all(v==original[i] for i,v in enumerate(values) if i not in selected)
-                    for p in pairs:
-                        i,j=p['core'],p['fringe'];assert values[i]+values[j]==original[i]+original[j] and values[i]>values[j]>0
-                        assert values[i]>original[i] and values[j]<original[j]
-                        assert values[i]==min(240,original[i]+original[j]-1)
-                        assert p['axis'] in ('vertical','horizontal')
-                        assert abs(i-j)==(1 if p['axis']=='vertical' else raw['width'])
-                        if p['axis']=='vertical':assert i//raw['width']==j//raw['width']
-                c,d=r['masks']['D'],r['masks']['E'];selected={i for p in expected_pairs for i in (p['core'],p['fringe'])}
-                assert all(d[i]>=c[i] and bool(d[i])==bool(c[i]) and (i in selected or d[i]==c[i]) for i in range(len(c)))
-                witness['cleanup']+=r['masks']['A']!=r['masks']['B'];witness['near']+=r['masks']['B']!=r['masks']['C']
-                witness['fringe']+=sum(d[p['fringe']]>c[p['fringe']] for p in expected_pairs)
-                witness['connected']+=r['masks']['D']!=r['masks']['C']
-                witness['new_pairs']+=bool({(p['core'],p['fringe']) for p in expected_pairs}-{(p['core'],p['fringe']) for p in r['pairs']['C']})
-                previous_pairs={(p['core'],p['fringe']) for p in r['pairs']['C']}
-                witness['connected_fringe']+=sum((p['core'],p['fringe']) not in previous_pairs and
-                    (r['masks']['D'][p['core']]!=r['masks']['C'][p['core']] or r['masks']['D'][p['fringe']]!=r['masks']['C'][p['fringe']]) and
-                    r['masks']['E'][p['fringe']]>r['masks']['D'][p['fringe']] for p in expected_pairs)
-                glyphs[r['code']]=r
-            witness['normal']+=any(decoded(a)!=decoded(b) for a,b in zip(native['glyphs'],refs['native_normal_gray_dark_on']['glyphs']))
-            assert glyphs[32]['raw']['pixels']==[] and glyphs[32]['advance_pixels']>0
-            codes=''.join(chr(p['code']) for p in case['placements']);assert 'AAAAB' in codes and 90 in glyphs
-            rendered_dark={}
-            for method in case['methods']:
-                key=method['key'];assert key in 'ABCDE' and method['title']==TITLES[ord(key)-65]
-                masks={r['code']:{'final':{**r['raw'],'pixels':r['masks'][key]}} for r in records}
+            assert native['stem_darkening'] and all(p==dict(set_error=0,get_error=0,no_stem_darkening=False) for p in native['darkening_properties'].values())
+            places,lines=layout({g['code']:{'advance_pixels':int(g['advance']+.5)} for g in native['glyphs']},240)
+            assert case['placements']==places and case['lines']==lines
+            rows=read(directory/case['masks'],case['masks_sha256']);by_case[fi,pt]=(case,rows)
+            assert [r['code'] for r in rows]==list(range(32,127))==[g['code'] for g in expected_native['glyphs']]
+            for r,g in zip(rows,expected_native['glyphs']):
+                assert r['raw']==decoded(g) and r['advance_pixels']==int(g['advance']+.5)
+                masks,stage=verify_record(r,recipe);witness['D_control']+=1
+                assert all(a<=b for a,b in zip(masks['F'],masks['G']))
+                if r['code'] in (86,87,89):assert masks['F']==masks['G']==masks['D'];witness['VWY']+=1
+                if r['code']==105:
+                    dot,bounds=dot_region(g);pinned=next(x for x in regions if (x['font'],x['points'])==(fi,pt))
+                    assert sorted(dot)==pinned['indices'] and bounds==pinned['bounds'] and hashlib.sha256(bytes(r['raw']['pixels'])).hexdigest()==pinned['raw_sha256']
+                    if fi in (0,2,4) and pt in (8,10):
+                        assert any(masks['F'][i]>masks['D'][i] for i in dot);dots.add((fi,pt))
+                    if fi==3:assert all(masks[k][i]==masks['A'][i]==255 for k in 'DFG' for i in dot)
+                    if fi==1 and pt==8:
+                        assert not any(not any(r['raw']['pixels'][y*r['raw']['width']:(y+1)*r['raw']['width']]) for y in range(r['raw']['height']))
+                witness['changed']+=masks['F']!=masks['D'];witness['proportional']+=masks['G']!=masks['F']
+            assert rows[0]['raw']['pixels']==[] and rows[0]['advance_pixels']>0
+            assert 'AAAAB' in ''.join(chr(p['code']) for p in places) and any(r['code']==90 for r in rows)
+            assert [m['key'] for m in case['methods']]==list(KEYS)
+            for col,method in enumerate(case['methods']):
+                key=KEYS[col];assert method['title']==TITLES[col]
+                glyphs={r['code']:{'final':{**r['raw'],'pixels':r['masks'][key]}} for r in rows}
                 for polarity in ('light','dark'):
                     crop=method['crops'][polarity];image=Image.open(directory/crop['file'])
+                    assert crop['file']==f'crops/{fi}_{pt}_{key}_{polarity}.png'
                     assert study.shared.sha(directory/crop['file'])==crop['sha256'] and list(image.size)==crop['size'] and image.mode=='L'
-                    expected_bytes=composed_bytes(masks,case['placements'],pt,image.size)
-                    if polarity=='light':expected_bytes=bytes(255-v for v in expected_bytes)
-                    assert image.tobytes()==expected_bytes
-                    if polarity=='dark':rendered_dark[key]=image.tobytes()
-            assert [m['key'] for m in case['methods']]==list('ABCDE')
-            witness['near_crop']+=rendered_dark['B']!=rendered_dark['C']
-            witness['weighted_crop']+=rendered_dark['D']!=rendered_dark['E']
-    assert all(witness[k] for k in ('cleanup','near','fringe','normal','near_crop','weighted_crop','connected','new_pairs','connected_fringe')),witness
-    assert len(manifest['sheets'])==40 and len(manifest['grids'])==10
-    assert {(s['font'],s['points'],s['polarity']) for s in manifest['sheets']}=={(f,p,b) for f in range(5) for p in POINTS for b in ('light','dark')}
+                    expected_pixels=composed_bytes(glyphs,places,pt,image.size)
+                    if polarity=='light':expected_pixels=bytes(255-v for v in expected_pixels)
+                    assert image.tobytes()==expected_pixels
+            witness['normal']+=any(decoded(a)!=decoded(b) for a,b in zip(native['glyphs'],captures['native_normal_gray_dark_on']['glyphs']))
+    assert dots=={(fi,pt) for fi in (0,2,4) for pt in (8,10)}
+    assert all(witness[k]>0 for k in ('normal','changed','proportional')) and witness['VWY']==60
+    assert len(manifest['sheets'])==40 and len(manifest['grids'])==20
+    assert {(s['font'],s['points'],s['polarity']) for s in manifest['sheets']}=={(fi,p,b) for fi in range(5) for p in POINTS for b in ('light','dark')}
     for sheet in manifest['sheets']:
-        path=directory/sheet['file'];assert study.shared.sha(path)==sheet['sha256'];image=Image.open(path)
-        assert list(image.size)==sheet['size'] and image.width==1360
-        fi=sheet['font'];label=ImageFont.truetype(manifest['fonts'][fi]['file'],14)
-        case,_=by_case[fi,sheet['points']]
-        assert [r['method'] for r in sheet['crops']]==list('ABCDE')
-        assert [h['method'] for h in sheet['headings']]==list('ABCDE')
-        for col,(region,head) in enumerate(zip(sheet['crops'],sheet['headings'])):
-            key=chr(65+col);assert region['method']==head['method']==key and head['text']==f'{key}: {TITLES[col]}'
-            assert head['position']==[12+col*268,64]
+        assert study.shared.sha(directory/sheet['file'])==sheet['sha256'];image=Image.open(directory/sheet['file'])
+        assert list(image.size)==sheet['size'] and image.width==1092
+        case,_=by_case[sheet['font'],sheet['points']];label=ImageFont.truetype(manifest['fonts'][sheet['font']]['file'],14)
+        assert [p['method'] for p in sheet['crops']]==[h['method'] for h in sheet['headings']]==list(KEYS)
+        for col,(p,h) in enumerate(zip(sheet['crops'],sheet['headings'])):
+            key=KEYS[col];x=12+col*268
+            assert h==dict(method=key,text=f'{key}: {TITLES[col]}',position=[x,64])
             fg,bg=(0,255) if sheet['polarity']=='light' else (255,0)
-            header=Image.new('L',(252,24),bg);ImageDraw.Draw(header).text((0,0),head['text'],font=label,fill=fg)
-            x,y=head['position'];assert image.crop((x,y,x+252,y+24)).tobytes()==header.tobytes()
-            expected_file=case['methods'][col]['crops'][sheet['polarity']]['file']
-            assert region['file']==expected_file
-            crop=Image.open(directory/expected_file)
-            assert region['box']==[12+col*268,92,12+col*268+crop.width,92+crop.height]
-            assert image.crop(tuple(region['box'])).tobytes()==crop.tobytes()
-    assert {(g['font'],g['points']) for g in manifest['grids']}=={(f,p) for f in range(5) for p in (11,12)}
+            header=Image.new('L',(252,24),bg);ImageDraw.Draw(header).text((0,0),h['text'],font=label,fill=fg)
+            assert image.crop((x,64,x+252,88)).tobytes()==header.tobytes()
+            expected_file=case['methods'][col]['crops'][sheet['polarity']]['file'];crop=Image.open(directory/expected_file)
+            assert p['file']==expected_file and p['box']==[x,92,x+crop.width,92+crop.height]
+            assert image.crop(tuple(p['box'])).tobytes()==crop.tobytes()
+    assert {(g['font'],g['points']) for g in manifest['grids']}=={(fi,p) for fi in range(5) for p in POINTS}
     for grid in manifest['grids']:
-        _,records=by_case[grid['font'],grid['points']]
-        check_grid(directory,grid,records,manifest['fonts'][grid['font']]['file'],CHARS)
-    assert {p.name for p in (directory/'gallery').glob('*.png')}=={Path(s['file']).name for s in manifest['sheets']+manifest['grids']}
-    diagnostic_check(directory,manifest,prior_refine,connected_refine)
-    print('PASS B-CS1..8: independent native baseline, frozen A/B/C/default profiles, connected D/weighted E, all 20 conditions/95 glyphs/50 main images and retained diagnostic; witnesses',dict(witness))
+        _,rows=by_case[grid['font'],grid['points']]
+        check_grid(directory,grid,rows,manifest['fonts'][grid['font']]['file'],CHARS)
+    assert {p.name for p in (directory/'gallery').glob('*.png')}=={Path(g['file']).name for g in manifest['sheets']+manifest['grids']}
+    diagnostic_check(directory,manifest,recipe)
+    print('PASS B-CD1..5: exact A/D, compact-only F/G, all20 dots/60VWY controls/60main images and complete saved synthetic contrasts; witnesses',dict(witness),flush=True)
     print(directory)
 
 
