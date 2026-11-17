@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Compare supersampled fonts at native resolution.** Render at 2× and 4× resolution, reduce coverage to the native pixel grid, and compare with the accepted Fontreal baseline. Separate changes in hint geometry from changes in sampling. Use 8–16pt, both polarities, the recommended UI and terminal fonts, and a CFF control. Preserve installed rendering, current app-support decisions and font recommendations. Human comparison chooses whether any candidate warrants further work. See the [supersampling experiment](plans/FR-021-supersampling.md).
+- **FR-021: Compare supersampled fonts at native resolution.** Render at 2× and 4× resolution, reduce coverage to the native pixel grid, and compare with the accepted Fontreal baseline. Add untreated 4× output and explore stock hinting, monochrome and LCD options at 4×. Separate changes in hint geometry from changes in sampling. Use 8–16pt, both polarities, the recommended UI and terminal fonts, and a CFF control. Preserve installed rendering, current app-support decisions and font recommendations. Human comparison chooses whether any candidate warrants further work. See the [supersampling experiment](plans/FR-021-supersampling.md).
 
 ## Planned next
 

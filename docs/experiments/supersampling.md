@@ -37,3 +37,29 @@ python3 -B tests/supersampling_test.py --record FREETYPE_BUILD_JSON
 ```
 
 The check compares reductions with independent references, preserves the accepted native baseline, and checks exported pixels. It does not choose a preferred appearance.
+
+## Stock hinting and LCD at 4×
+
+Use the same build record and fonts for the second study:
+
+```sh
+python3 -B tools/supersampling.py --record FREETYPE_BUILD_JSON --stock4x
+```
+
+Open its `gallery` folder in Gwenview at 100% zoom. Each font, point size, and background has one sheet. Scroll down for more panels. Arrow keys change the condition. All 54 sheets cover regular faces from 8–16pt. The earlier command still produces the original A–G comparison.
+
+The overview includes untreated 1×, untreated 2×, untreated 4×, and current Fontreal at 1×. The new 4× rows receive no Fontreal correction. All rows retain the original native spacing and encoded blending. Area reduction averages each block of 4×4 high-resolution pixels before blending.
+
+The next panels compare native and automatic hinting with all five stock targets: normal, light, mono, LCD, and vertical LCD. These panels use grayscale output to isolate hinting. Native drivers can ignore a requested target. Separate panels compare unhinted, native, and automatic monochrome source rendering. A monochrome 4× source becomes grayscale after reduction.
+
+The manifest records availability, API return codes, and effective driver values. Unavailable presets receive no substituted output. Interpreter 38 is recorded as an alias when it selects version 40. Version 35 rows apply to TrueType fonts. The CFF control retains its own driver. Extra panels appear only when a distinct older interpreter or CFF engine is available.
+
+LCD means separate coverage for the red, green, and blue channels. The LCD panels compare horizontal and vertical layouts, RGB and BGR channel order, and the available built-in filters. Each panel starts with a grayscale reference using the same hint target. Each decoded coverage channel is reduced independently on the logical pixel grid. The exporter does not resize the packed subpixel strip as a grayscale image. RGB and BGR reverse the red and blue coverage channels. The resulting colors assume the labeled order and orientation of the display panel.
+
+This sweep's LCD panels require FreeType's LCD-filter API. A Harmony-only build's default geometry is not represented. The manifest records unavailable presets without substituting a different filter. It also records effective interpreter values. Version 38 can alias version 40. The version 35 comparisons apply to TrueType fonts and do not change the CFF control. An old CFF engine appears only when the provider actually supports it.
+
+The manifest records actual API results for the none, default, light, and legacy LCD filters. It also records TrueType interpreter and CFF engine availability. Unsupported choices have no substituted image. Version 38 can be an alias of version 40. Version 35 supplies separate grayscale and monochrome comparisons when available. Interpreter choices affect TrueType fonts, not the CFF control. The old CFF engine gets a comparison only when the provider supports it. Custom filter weights and other driver tuning are outside this study.
+
+The focused check now runs both studies. It independently decodes raw grayscale, monochrome and LCD bitmap rows, reduces coverage, and composes native RGB pixels. It also runs the original exporter from commit `ff63a7f` in a temporary private build tree. This requires that commit in local Git history. The check compares every original glyph capture, outline, mask, advance and placement, plus all 378 original native crops. It removes the temporary reference tree after use. The first study's seven columns retain their behavior.
+
+The implementation follows the [FreeType hint-target contract](https://freetype.org/freetype2/docs/reference/ft2-glyph_retrieval.html#ft_load_target_xxx), [bitmap format contract](https://freetype.org/freetype2/docs/reference/ft2-basic_types.html#ft_bitmap), and [LCD contract](https://freetype.org/freetype2/docs/reference/ft2-lcd_rendering.html). The recorded provider's API results decide which presets are available. No appearance winner or installed profile changes follow from these numerical checks.

@@ -147,7 +147,141 @@ def compose(glyphs, placements, lines, points, width=240):
     return mask
 
 
-def export(record_path, output):
+def decode_bitmap(glyph):
+    bitmap = glyph['bitmap']
+    width, height, mode = bitmap['width'], bitmap['rows'], bitmap['pixel_mode']
+    stride = abs(bitmap['pitch'])
+    raw = bytes.fromhex(bitmap['rows_hex'])
+    if len(raw) != stride * height:
+        raise ValueError('raw bitmap length does not match its pitch')
+    channels = 3 if mode in (5, 6) else 1
+    if mode == 5:
+        if width % 3:
+            raise ValueError('horizontal LCD sample width is not divisible by three')
+        width //= 3
+    if mode == 6:
+        if height % 3:
+            raise ValueError('vertical LCD sample height is not divisible by three')
+        height //= 3
+    if mode not in (1, 2, 5, 6):
+        raise ValueError(f'unsupported stock pixel mode: {mode}')
+    pixels = []
+    for y in range(height):
+        for x in range(width):
+            if mode == 1:
+                pixels.append(255 if raw[y * stride + x // 8] & (128 >> (x % 8)) else 0)
+            elif mode == 2:
+                pixels.append(raw[y * stride + x])
+            elif mode == 5:
+                pixels.extend(raw[y * stride + x * 3:y * stride + x * 3 + 3])
+            else:
+                pixels.extend(raw[(y * 3 + c) * stride + x] for c in range(3))
+    return {'left': glyph['left'], 'top': glyph['top'], 'width': width, 'height': height,
+            'channels': channels, 'pixels': pixels}
+
+
+def reduce_stock(glyph, scale):
+    if glyph.get('channels', 1) == 1:
+        return reduce_mask(glyph, scale, 'area')
+    if not glyph['pixels']:
+        return {'left': 0, 'top': 0, 'width': 0, 'height': 0, 'channels': 3, 'pixels': []}
+    left, top = glyph['left'] // scale, glyph['top'] // scale
+    right = -(-(glyph['left'] + glyph['width']) // scale)
+    bottom = -(-(glyph['top'] + glyph['height']) // scale)
+    width, height = right - left, bottom - top
+    high = Image.new('RGB', (width * scale, height * scale))
+    high.paste(Image.frombytes('RGB', (glyph['width'], glyph['height']), bytes(glyph['pixels'])),
+               (glyph['left'] - left * scale, glyph['top'] - top * scale))
+    data, count = high.tobytes(), scale * scale
+    means = [(sum(data[((y * scale + dy) * high.width + x * scale + dx) * 3 + c]
+                  for dy in range(scale) for dx in range(scale)) + count // 2) // count
+             for y in range(height) for x in range(width) for c in range(3)]
+    return {**trim(Image.frombytes('RGB', (width, height), bytes(means)), left, top), 'channels': 3}
+
+
+def compose_stock(glyphs, placements, lines, points):
+    planes = []
+    for channel in range(3):
+        plane = {}
+        for code, glyph in glyphs.items():
+            final = glyph['final']
+            pixels = final['pixels'][channel::3] if final.get('channels', 1) == 3 else final['pixels']
+            plane[code] = {'final': {**final, 'pixels': pixels}}
+        planes.append(compose(plane, placements, lines, points))
+    return Image.merge('RGB', planes)
+
+
+def stock_methods(capture):
+    methods = [(*definition, 'gray') for definition in METHODS[:3]]
+    for source in capture['captures'][4:]:
+        mode = source['mode']
+        title = '4x ' + mode.replace('_source', '').replace('_', ' ')
+        if mode.startswith('tt'):
+            title += ' (TT only)'
+        if mode == 'cff_old_gray':
+            title += ' (CFF only)'
+        for order in (('RGB', 'BGR') if source['render'] in (3, 4) else ('gray',)):
+            key = mode + ('_' + order if order != 'gray' else '')
+            methods.append((key, title + (' ' + order if order != 'gray' else ''),
+                            mode, 'area', False, order))
+    return methods
+
+
+def stock_sheets(output, manifest, case, family, label):
+    methods = {m['key']: m for m in case['methods']}
+    panels = [('Overview: native 1x, Fontreal, 2x and untreated 4x',
+               ['A', 'B', 'C', 'native_normal_gray', 'auto_normal_gray', 'off_gray', 'tt35_gray']),
+              ('4x native hint targets rendered as grayscale',
+               ['A', 'B'] + ['native_' + t + '_gray' for t in ('normal', 'light', 'mono', 'lcd', 'lcd_v')]),
+              ('4x automatic hint targets rendered as grayscale',
+               ['A', 'B'] + ['auto_' + t + '_gray' for t in ('normal', 'light', 'mono', 'lcd', 'lcd_v')]),
+              ('4x monochrome source, then area reduction',
+               ['A', 'B', 'off_mono_source', 'native_mono_source', 'auto_mono_source', 'tt35_mono_source'])]
+    for policy in ('off', 'native', 'auto'):
+        for axis in ('lcd', 'lcd_v'):
+            reference = 'off_gray' if policy == 'off' else f'{policy}_{axis}_gray'
+            candidates = [f'{policy}_{axis}_{f}_{order}'
+                          for f in ('none', 'default', 'light', 'legacy1', 'legacy')
+                          for order in ('RGB', 'BGR') if f'{policy}_{axis}_{f}_{order}' in methods]
+            for start in range(0, len(candidates), 6):
+                panels.append((f'4x {policy} {axis}: gray reference, LCD filter and panel order',
+                               [reference] + candidates[start:start + 6]))
+    extras = [k for k in ('tt38_gray', 'tt38_mono_source', 'cff_old_gray') if k in methods]
+    if extras:
+        panels.append(('Additional available driver settings (TT or CFF only)', ['A', 'B'] + extras))
+    panels = [(title, [key for key in keys if key in methods]) for title, keys in panels]
+    crop_height = Image.open(output / case['methods'][0]['crops']['light']['file']).height
+    panel_height = crop_height + 72
+    for polarity in ('light', 'dark'):
+        bg, fg = ((255, 255, 255), (0, 0, 0)) if polarity == 'light' else ((0, 0, 0), (255, 255, 255))
+        sheet = Image.new('RGB', (1896, 96 + panel_height * len(panels)), bg)
+        draw = ImageDraw.Draw(sheet)
+        draw.text((12, 10), f'{family} Regular | {case["points"]}pt | stock 4x to 96 DPI | {polarity} background',
+                  font=label, fill=fg)
+        draw.text((12, 32), 'View at 100%. Scroll panels; arrows change condition. Stock rows are untreated. Encoded blend.',
+                  font=label, fill=fg)
+        draw.text((12, 54), 'LCD colors assume the labeled panel order/orientation. Unavailable settings and aliases: manifest.json.',
+                  font=label, fill=fg)
+        crops = []
+        for panel, (title, keys) in enumerate(panels):
+            y = 96 + panel * panel_height
+            draw.text((12, y), title, font=label, fill=fg)
+            for column, key in enumerate(keys):
+                x = 12 + column * 268
+                treatment = methods[key]
+                draw.text((x, y + 23), treatment['title'], font=label, fill=fg)
+                image = Image.open(output / treatment['crops'][polarity]['file'])
+                sheet.paste(image, (x, y + 48))
+                crops.append({'panel': panel, 'method': key, 'box': [x, y + 48, x + image.width, y + 48 + image.height],
+                              'file': treatment['crops'][polarity]['file']})
+        name = f'gallery/{case["font"] + 1}_{family.replace(" ", "-")}_{case["points"]:02}pt_{polarity}.png'
+        sheet.save(output / name)
+        manifest['sheets'].append({'file': name, 'sha256': sha(output / name), 'size': list(sheet.size),
+            'font': case['font'], 'points': case['points'], 'polarity': polarity,
+            'panels': [{'title': title, 'methods': keys} for title, keys in panels], 'crops': crops})
+
+
+def export(record_path, output, stock4x=False):
     record = json.loads(record_path.read_text())
     stock = record['libraries']['stock']
     provider = Path(stock['library']).resolve(strict=True)
@@ -170,6 +304,8 @@ def export(record_path, output):
                 'record_sha256': sha(record_path), 'provider_sha256': sha(provider), 'cases': [], 'sheets': [],
                 'sources': {p: sha(ROOT / p) for p in ('tools/supersampling.py', 'tests/supersampling_probe.cpp',
                            'tests/selected_mask_probe.cpp', 'src/fontreal_coverage.cpp', 'src/fontreal_coverage.h')}}
+    if stock4x:
+        manifest['study'] = 'stock4x'
     for font_index, family in enumerate(FONTS):
         match = subprocess.check_output(['fc-match', '-f', '%{file}\n%{family}\n%{style}\n%{fontversion}\n',
                                          family + ':style=Regular'], text=True).splitlines()
@@ -181,7 +317,8 @@ def export(record_path, output):
                                   'matched_family': match[1], 'style': match[2], 'revision': match[3]})
         font_cases = []
         for points in range(8, 17):
-            capture = json.loads(subprocess.check_output([str(probe), str(font), str(points)], env=env))
+            command = [str(probe), str(font), str(points)] + (['--stock4x'] if stock4x else [])
+            capture = json.loads(subprocess.check_output(command, env=env))
             actual = Path(capture['provider']).resolve(strict=True)
             if actual != provider or sha(actual) != stock['sha256']:
                 raise ValueError('probe loaded a different FreeType provider')
@@ -193,21 +330,39 @@ def export(record_path, output):
             placements, lines = layout(native, 240)
             case = {'font': font_index, 'points': points, 'capture': capture_name,
                     'capture_sha256': sha(output / capture_name), 'placements': placements, 'methods': []}
-            for key, title, mode, kernel, corrected in METHODS:
+            definitions = stock_methods(capture) if stock4x else [(*m, 'gray') for m in METHODS]
+            if stock4x:
+                manifest['methods'] = definitions
+                case['capabilities'] = capture['capabilities']
+            reductions = {}
+            for key, title, mode, kernel, corrected, order in definitions:
                 glyphs = []
                 for glyph in modes[mode]['glyphs']:
-                    reduced = reduce_mask(glyph, modes[mode]['scale'], kernel)
+                    if stock4x and 'bitmap' in glyph:
+                        identity = (mode, glyph['code'])
+                        if identity not in reductions:
+                            reductions[identity] = reduce_stock(decode_bitmap(glyph), modes[mode]['scale'])
+                        reduced = reductions[identity]
+                    else:
+                        reduced = reduce_mask(glyph, modes[mode]['scale'], kernel)
+                    if order == 'BGR':
+                        pixels = reduced['pixels']
+                        reduced = {**reduced, 'pixels': [v for i in range(0, len(pixels), 3)
+                                                       for v in pixels[i:i + 3][::-1]]}
                     final = apply(reduced) if corrected else dict(reduced)
                     baseline = native[glyph['code']]
                     glyphs.append({'code': glyph['code'], 'advance_pixels': baseline['advance_pixels'],
                         'normalized_advance': glyph['advance'] / modes[mode]['scale'],
                         'pre_core': reduced, 'final': final,
-                        'coverage_delta_native': sum(final['pixels']) - sum(baseline['pixels'])})
+                        'coverage_delta_native': sum(final['pixels']) - sum(baseline['pixels']) * final.get('channels', 1)})
                 mask_name = f'masks/{font_index}_{points}_{key}.json'
                 write_json(output / mask_name, glyphs)
-                rendered = compose({g['code']: g for g in glyphs}, placements, lines, points)
+                compositor = compose_stock if stock4x else compose
+                rendered = compositor({g['code']: g for g in glyphs}, placements, lines, points)
                 treatment = {'key': key, 'mode': mode, 'kernel': kernel, 'corrected': corrected,
                              'masks': mask_name, 'masks_sha256': sha(output / mask_name), 'crops': {}}
+                if stock4x:
+                    treatment.update(title=title, order=order)
                 for polarity in ('light', 'dark'):
                     image = ImageChops.invert(rendered) if polarity == 'light' else rendered
                     crop_name = f'crops/{font_index}_{points}_{key}_{polarity}.png'
@@ -217,6 +372,10 @@ def export(record_path, output):
                 case['methods'].append(treatment)
             manifest['cases'].append(case)
             font_cases.append(case)
+            if stock4x:
+                stock_sheets(output, manifest, case, family, label)
+        if stock4x:
+            continue
         for start, end in ((8, 12), (13, 16)):
             group = [c for c in font_cases if start <= c['points'] <= end]
             heights = [Image.open(output / c['methods'][0]['crops']['light']['file']).height + 28 for c in group]
@@ -253,9 +412,10 @@ def export(record_path, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--record', required=True, type=Path, help='paired FreeType build.json')
+    parser.add_argument('--stock4x', action='store_true', help='explore untreated stock hinting and LCD options at 4x')
     args = parser.parse_args()
     output = ROOT / 'results/supersampling' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
-    print(export(args.record.resolve(strict=True), output.resolve()))
+    print(export(args.record.resolve(strict=True), output.resolve(), args.stock4x))
 
 
 if __name__ == '__main__':
