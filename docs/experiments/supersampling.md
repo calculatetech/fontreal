@@ -38,28 +38,28 @@ python3 -B tests/supersampling_test.py --record FREETYPE_BUILD_JSON
 
 The check compares reductions with independent references, preserves the accepted native baseline, and checks exported pixels. It does not choose a preferred appearance.
 
-## Stock hinting and LCD at 4×
+## Scalar 4× and stem darkening
 
-Use the same build record and fonts for the second study:
+Use the same build record and fonts for the current stock study:
 
 ```sh
 python3 -B tools/supersampling.py --record FREETYPE_BUILD_JSON --stock4x
 ```
 
-Open its `gallery` folder in Gwenview at 100% zoom. Each font, point size, and background has one sheet. Scroll down for more panels. Arrow keys change the condition. All 54 sheets cover regular faces from 8–16pt. The earlier command still produces the original A–G comparison.
+Open its `gallery` folder in Gwenview at 100% zoom. Each of the 54 sheets covers one regular font, point size and background. Scroll down for more panels. Arrow keys change the condition. The range remains 8–16pt.
 
-The overview includes untreated 1×, untreated 2×, untreated 4×, and current Fontreal at 1×. The new 4× rows receive no Fontreal correction. All rows retain the original native spacing and encoded blending. Area reduction averages each block of 4×4 high-resolution pixels before blending.
+Every panel starts with untreated 1× and current Fontreal 1×. The remaining columns pair each 4× setting with stem darkening Off and On. The stock study has no 2× column, subpixel settings or vertical LCD settings. The original A–G command still retains its earlier 2× and 4× comparisons.
 
-The next panels compare native and automatic hinting with all five stock targets: normal, light, mono, LCD, and vertical LCD. These panels use grayscale output to isolate hinting. Native drivers can ignore a requested target. Separate panels compare unhinted, native, and automatic monochrome source rendering. A monochrome 4× source becomes grayscale after reduction.
+The retained 4× settings cover unhinted grayscale, native and automatic NORMAL/LIGHT/MONO hint targets, and monochrome sources. Available distinct older TrueType interpreters and CFF engines have labeled comparisons. The manifest records actual availability and effective values. Aliases and unavailable choices receive no substituted image.
 
-The manifest records availability, API return codes, and effective driver values. Unavailable presets receive no substituted output. Interpreter 38 is recorded as an alias when it selects version 40. Version 35 rows apply to TrueType fonts. The CFF control retains its own driver. Extra panels appear only when a distinct older interpreter or CFF engine is available.
+Stem darkening uses FreeType's existing boolean property. The probe sets `no-stem-darkening` to the inverse of the requested state on both the CFF driver and auto-hinter. It records actual set/get results before opening a fresh face and loading glyphs. Custom darkening amounts are not used.
 
-LCD means separate coverage for the red, green, and blue channels. The LCD panels compare horizontal and vertical layouts, RGB and BGR channel order, and the available built-in filters. Each panel starts with a grayscale reference using the same hint target. Each decoded coverage channel is reduced independently on the logical pixel grid. The exporter does not resize the packed subpixel strip as a grayscale image. RGB and BGR reverse the red and blue coverage channels. The resulting colors assume the labeled order and orientation of the display panel.
+The switch applies to automatic hinting and the native Adobe CFF engine. Native TrueType can remain unchanged. FreeType calculates darkening from raster stroke width, so 4× strokes can receive little or no extra width. Identical Off/On pixels are valid results. See the [FreeType property contract](https://freetype.org/freetype2/docs/reference/ft2-properties.html#no-stem-darkening) and [darkening curve](https://freetype.org/freetype2/docs/reference/ft2-properties.html#darkening-parameters).
 
-This sweep's LCD panels require FreeType's LCD-filter API. A Harmony-only build's default geometry is not represented. The manifest records unavailable presets without substituting a different filter. It also records effective interpreter values. Version 38 can alias version 40. The version 35 comparisons apply to TrueType fonts and do not change the CFF control. An old CFF engine appears only when the provider actually supports it.
+All 4× rows remain untreated by Fontreal. The exporter decodes grayscale bytes or packed monochrome bits, then averages coverage in exact 4×4 blocks. It uses the original native spacing and encoded blending. The output is grayscale at native pixel dimensions.
 
-The manifest records actual API results for the none, default, light, and legacy LCD filters. It also records TrueType interpreter and CFF engine availability. Unsupported choices have no substituted image. Version 38 can be an alias of version 40. Version 35 supplies separate grayscale and monochrome comparisons when available. Interpreter choices affect TrueType fonts, not the CFF control. The old CFF engine gets a comparison only when the provider supports it. Custom filter weights and other driver tuning are outside this study.
+The focused check runs both studies and verifies actual provider properties, independent raw decoding, area means, native pixels, and every panel's two fixed references. Independent probes from immutable `ff63a7f` use `FREETYPE_PROPERTIES` for both states. They compare native CFF and automatic 4× captures with the real stock export. A lower-density capture verifies that the provider can apply darkening when 4× pairs are identical. This diagnostic is not another gallery treatment.
 
-The focused check now runs both studies. It independently decodes raw grayscale, monochrome and LCD bitmap rows, reduces coverage, and composes native RGB pixels. It also runs the original exporter from commit `ff63a7f` in a temporary private build tree. This requires that commit in local Git history. The check compares every original glyph capture, outline, mask, advance and placement, plus all 378 original native crops. It removes the temporary reference tree after use. The first study's seven columns retain their behavior.
+The check also runs the original exporter from `ff63a7f` in a temporary private build tree. That commit must exist in local Git history. Every original glyph capture, outline, mask, advance and placement, plus all 378 original native crop hashes, must match. Temporary reference trees are removed after use. The original seven columns retain their behavior.
 
-The implementation follows the [FreeType hint-target contract](https://freetype.org/freetype2/docs/reference/ft2-glyph_retrieval.html#ft_load_target_xxx), [bitmap format contract](https://freetype.org/freetype2/docs/reference/ft2-basic_types.html#ft_bitmap), and [LCD contract](https://freetype.org/freetype2/docs/reference/ft2-lcd_rendering.html). The recorded provider's API results decide which presets are available. No appearance winner or installed profile changes follow from these numerical checks.
+The earlier stock subpixel study remains in Git at `60fed5e`. Its unused rendering paths are removed from the current implementation. The installed profile and appearance selection do not change automatically.

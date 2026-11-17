@@ -8,7 +8,6 @@
 #include FT_FREETYPE_H
 #include FT_MODULE_H
 #include FT_FONT_FORMATS_H
-#include FT_LCD_FILTER_H
 #include <dlfcn.h>
 #include <stdexcept>
 
@@ -16,19 +15,31 @@ static void check(FT_Error error) {
     if (error) throw std::runtime_error("FreeType error " + std::to_string(error));
 }
 
-static QJsonObject stockCapture(FT_Face face, int points, const QString &name,
-                               const QString &policy, int target, FT_Render_Mode render,
-                               const QString &filter, int interpreter) {
-    FT_UInt version=interpreter;
-    check(FT_Property_Set(face->glyph->library,"truetype","interpreter-version",&version));
-    FT_UInt effective=0,engine=0;
-    check(FT_Property_Get(face->glyph->library,"truetype","interpreter-version",&effective));
-    check(FT_Property_Get(face->glyph->library,"cff","hinting-engine",&engine));
+static QJsonObject stockCapture(FT_Library library, const char *font, int points,
+                               const QString &name, const QString &policy, int target,
+                               FT_Render_Mode render, int interpreter, bool darkening, int engine=1) {
+    FT_UInt version=interpreter, hintingEngine=engine, effective=0;
+    check(FT_Property_Set(library,"truetype","interpreter-version",&version));
+    check(FT_Property_Get(library,"truetype","interpreter-version",&effective));
+    check(FT_Property_Set(library,"cff","hinting-engine",&hintingEngine));
+    check(FT_Property_Get(library,"cff","hinting-engine",&hintingEngine));
+    QJsonObject properties;
+    for (const char *module : {"cff","autofitter"}) {
+        FT_Bool disabled=!darkening, actual=false;
+        int set=FT_Property_Set(library,module,"no-stem-darkening",&disabled);
+        check(set);
+        int get=FT_Property_Get(library,module,"no-stem-darkening",&actual);
+        check(get);
+        properties.insert(module,QJsonObject{{"set_error",set},{"get_error",get},
+                                             {"no_stem_darkening",bool(actual)}});
+    }
+    // Each variant starts with the same font input and explicit driver properties.
+    FT_Face face;
+    check(FT_New_Face(library,font,0,&face));
     FT_Int32 flags=FT_LOAD_NO_BITMAP | (target<<16);
     flags |= policy=="auto" ? FT_LOAD_FORCE_AUTOHINT : FT_LOAD_NO_AUTOHINT;
     if (policy=="off") flags |= FT_LOAD_NO_HINTING;
     check(FT_Set_Char_Size(face,0,points*64,384,384));
-    FT_Set_Transform(face,nullptr,nullptr);
     QJsonArray glyphs;
     for (int code=32;code<=126;++code) {
         FT_UInt index=FT_Get_Char_Index(face,code);
@@ -44,6 +55,8 @@ static QJsonObject stockCapture(FT_Face face, int points, const QString &name,
         double advance=double(slot->advance.x)/64;
         check(FT_Render_Glyph(slot,render));
         const FT_Bitmap &bitmap=slot->bitmap;
+        if (bitmap.pixel_mode!=FT_PIXEL_MODE_GRAY && bitmap.pixel_mode!=FT_PIXEL_MODE_MONO)
+            throw std::runtime_error("expected scalar bitmap");
         QByteArray bytes;
         int stride=std::abs(bitmap.pitch);
         for (unsigned y=0;y<bitmap.rows;++y)
@@ -54,18 +67,16 @@ static QJsonObject stockCapture(FT_Face face, int points, const QString &name,
         glyphs.append(QJsonObject{{"code",code},{"left",slot->bitmap_left},{"top",-slot->bitmap_top},
             {"advance",advance},{"bitmap",raw},{"outline",outline},{"tags",tags},{"contours",contours}});
     }
-    return {{"mode",name},{"scale",4},{"hint_dpi",384},{"x_ppem",int(face->size->metrics.x_ppem)},
-        {"policy",policy},{"target",target},{"render",int(render)},{"filter",filter},
+    int ppem=face->size->metrics.x_ppem;
+    check(FT_Done_Face(face));
+    return {{"mode",name},{"scale",4},{"hint_dpi",384},{"x_ppem",ppem},
+        {"policy",policy},{"target",target},{"render",int(render)},
         {"interpreter",interpreter},{"effective_interpreter",int(effective)},
-        {"cff_hinting_engine",int(engine)},{"load_flags",int(flags)},{"glyphs",glyphs}};
+        {"cff_hinting_engine",int(hintingEngine)},{"stem_darkening",darkening},
+        {"darkening_properties",properties},{"load_flags",int(flags)},{"glyphs",glyphs}};
 }
 
-static QJsonObject stockOptions(FT_Library library, FT_Face face, int points, QJsonArray &captures) {
-    QJsonObject filters;
-    const char *filterNames[]={"none","default","light","legacy1","legacy"};
-    const int filterValues[]={0,1,2,3,16};
-    for (int i=0;i<5;++i)
-        filters.insert(filterNames[i],FT_Library_SetLcdFilter(library,FT_LcdFilter(filterValues[i])));
+static QJsonObject stockOptions(FT_Library library, const char *font, int points, QJsonArray &captures) {
     QJsonArray versions,engines;
     for (FT_UInt requested : {35u,38u,40u}) {
         FT_UInt effective=0;
@@ -81,42 +92,30 @@ static QJsonObject stockOptions(FT_Library library, FT_Face face, int points, QJ
         engines.append(QJsonObject{{"requested",int(requested)},{"set_error",error},
             {"get_error",get},{"effective",int(effective)}});
     }
-    FT_UInt version=40;
-    check(FT_Property_Set(library,"truetype","interpreter-version",&version));
-    FT_Bool cff=false,automatic=true;
-    check(FT_Property_Get(library,"cff","no-stem-darkening",&cff));
-    check(FT_Property_Get(library,"autofitter","no-stem-darkening",&automatic));
-    const char *targets[]={"normal","light","mono","lcd","lcd_v"};
-    captures.append(stockCapture(face,points,"off_gray","off",0,FT_RENDER_MODE_NORMAL,"n/a",40));
+    auto pair=[&](const QString &name,const QString &policy,int target,FT_Render_Mode render,
+                  int interpreter=40,int engine=1) {
+        for (bool darkening : {false,true})
+            captures.append(stockCapture(library,font,points,name+(darkening ? "_dark_on" : "_dark_off"),
+                policy,target,render,interpreter,darkening,engine));
+    };
+    const char *targets[]={"normal","light","mono"};
+    pair("off_gray","off",0,FT_RENDER_MODE_NORMAL);
     for (const QString &policy : {QString("native"),QString("auto")})
-        for (int target=0;target<5;++target)
-            captures.append(stockCapture(face,points,policy+"_"+targets[target]+"_gray",policy,
-                                         target,FT_RENDER_MODE_NORMAL,"n/a",40));
-    for (const QString &policy : {QString("off"),QString("native"),QString("auto")}) {
-        captures.append(stockCapture(face,points,policy+"_mono_source",policy,2,FT_RENDER_MODE_MONO,"n/a",40));
-        for (int target : {3,4})
-            for (int i=0;i<5;++i) {
-                if (filters[filterNames[i]].toInt()!=0) continue;
-                check(FT_Library_SetLcdFilter(library,FT_LcdFilter(filterValues[i])));
-                captures.append(stockCapture(face,points,policy+"_"+targets[target]+"_"+filterNames[i],
-                    policy,target,FT_Render_Mode(target),filterNames[i],40));
-            }
-    }
+        for (int target=0;target<3;++target)
+            pair(policy+"_"+targets[target]+"_gray",policy,target,FT_RENDER_MODE_NORMAL);
+    for (const QString &policy : {QString("off"),QString("native"),QString("auto")})
+        pair(policy+"_mono_source",policy,2,FT_RENDER_MODE_MONO);
     if (versions[0].toObject()["set_error"].toInt()==0) {
-        captures.append(stockCapture(face,points,"tt35_gray","native",0,FT_RENDER_MODE_NORMAL,"n/a",35));
-        captures.append(stockCapture(face,points,"tt35_mono_source","native",2,FT_RENDER_MODE_MONO,"n/a",35));
+        pair("tt35_gray","native",0,FT_RENDER_MODE_NORMAL,35);
+        pair("tt35_mono_source","native",2,FT_RENDER_MODE_MONO,35);
     }
     if (versions[1].toObject()["set_error"].toInt()==0 && versions[1].toObject()["effective"].toInt()!=40) {
-        captures.append(stockCapture(face,points,"tt38_gray","native",0,FT_RENDER_MODE_NORMAL,"n/a",38));
-        captures.append(stockCapture(face,points,"tt38_mono_source","native",2,FT_RENDER_MODE_MONO,"n/a",38));
+        pair("tt38_gray","native",0,FT_RENDER_MODE_NORMAL,38);
+        pair("tt38_mono_source","native",2,FT_RENDER_MODE_MONO,38);
     }
-    if (engines[0].toObject()["set_error"].toInt()==0 && engines[0].toObject()["effective"].toInt()==0) {
-        FT_UInt old=0;
-        check(FT_Property_Set(library,"cff","hinting-engine",&old));
-        captures.append(stockCapture(face,points,"cff_old_gray","native",0,FT_RENDER_MODE_NORMAL,"n/a",40));
-    }
-    return {{"lcd_filters",filters},{"interpreters",versions},{"cff_engines",engines},
-        {"cff_no_stem_darkening",bool(cff)},{"auto_no_stem_darkening",bool(automatic)}};
+    if (engines[0].toObject()["set_error"].toInt()==0 && engines[0].toObject()["effective"].toInt()==0)
+        pair("cff_old_gray","native",0,FT_RENDER_MODE_NORMAL,40,0);
+    return {{"interpreters",versions},{"cff_engines",engines}};
 }
 
 int main(int argc, char **argv) {
@@ -182,7 +181,7 @@ int main(int argc, char **argv) {
             {"family",QString::fromUtf8(face->family_name)},{"style",QString::fromUtf8(face->style_name)},
             {"format",FT_Get_Font_Format(face)},{"points",points},{"target_dpi",96},{"captures",captures}};
         if (stock) {
-            result.insert("capabilities",stockOptions(library,face,points,captures));
+            result.insert("capabilities",stockOptions(library,argv[1],points,captures));
             result.insert("captures",captures);
         }
         QFile output;
