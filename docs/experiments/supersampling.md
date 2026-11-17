@@ -152,7 +152,7 @@ The check uses actual native inputs and independent analytic geometry. It verifi
 
 ## Broader O and L comparison
 
-O is the leading optical candidate. The broader comparison keeps L for assessment across more fonts and sizes. It excludes S because its edge lifting added unwanted jaggies. This changes the comparison scope, not the numerical treatment.
+O is the preferred general treatment. The broader comparison keeps L for assessment across more fonts and sizes. It excludes S because its edge lifting added unwanted jaggies. This changes the comparison scope, not the numerical treatment.
 
 Install genuine Regular faces of Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack. The exporter rejects unrelated family fallbacks and matches without Regular among their style aliases. Genuine Arial can list Regular with other language aliases.
 
@@ -173,3 +173,29 @@ python3 -B tests/pixel_references_test.py --record FREETYPE_BUILD_JSON --matrix
 ```
 
 It independently checks all twenty conditions and all native image pixels. Retained Noto Sans 12pt pins preserve exact overlap with the focused study. The check also exercises family and style rejection through the real command while retaining a genuine font file.
+
+## Gentler edges for L
+
+O remains the preferred general treatment. L usefully fills weak details, especially for white-on-black terminals, but can add jaggies. This separate study compares two smaller fractions of the existing S edge lift. It preserves all L core values.
+
+First run the matrix command above. Keep that complete results directory and use its `manifest.json` as `MATRIX_MANIFEST`. The retained producer sources and original font files must still match their recorded hashes. The new command reads these records without capturing, compiling or rasterizing the measured glyphs again. Fontconfig and image-font drawing supply labels.
+
+```sh
+python3 -B tools/pixel_reference_smoothing.py --source-manifest MATRIX_MANIFEST
+```
+
+Open the printed directory's `gallery` folder in Gwenview at 100% zoom. Its forty sheets cover the same five Regular families and four sizes on both backgrounds. Each sheet shows A/D/O/L/T/U. A separate native `() () i8! W` strip provides curve, detail, taper and diagonal controls. The complete source specimen follows below. Original A/D/O/L body crops remain byte-identical to the source images.
+
+For each pixel, the existing edge increment is `e=S-L`. T adds `(e+2)//4` to L. U adds `(e+1)//2`. These quarter and half increments use nonnegative half-up rounding. Each result uses frozen L/S inputs once. Neither trial weakens L or changes its primary cores. Zeros and pixels without an edge increment remain unchanged. Both trials stay within S and its existing reference bound.
+
+For example, an L fringe of 125 with an S value of 225 becomes 150 in T or 175 in U. A one-byte increment contributes zero to T and one to U. A two-byte increment contributes one to both. This changes edge amplitude without a blur, new reference, clamp or cascading update. Added fringe coverage can still make a stroke heavier. Human comparison must determine whether it reduces the unwanted jaggies.
+
+The `diagnostics` folder contains forty numbered O/L/T/U grids for both parentheses in every condition. Native previews are not resized. Orange borders identify T/U fringe additions to L. Saved cells retain original L/S values, final coverage and row/column coordinates. Numerical records cover all 1900 retained glyphs, with their own geometry, advances and source hashes. Relative source links require the original matrix directory to remain available.
+
+Run the focused check against that same source manifest:
+
+```sh
+python3 -B tests/pixel_reference_smoothing_test.py --source-manifest MATRIX_MANIFEST
+```
+
+The check runs the real entry point with fail guards at native compilation, capture and outline-raster boundaries. It independently reconstructs all trials, native images, sheets and coverage grids, and rehashes the source afterward. Existing focused and matrix commands remain unchanged. This experiment selects no production profile and makes no production performance claim.

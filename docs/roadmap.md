@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Compare per-pixel references across fonts.** O coherent alignment is the leading candidate; retain L local references and A/D controls. Compare genuine Regular Noto Sans, Nimbus Sans, Inconsolata Nerd Font, Arial and Hack at 8, 10, 11 and 12pt on both backgrounds. Keep the exact numerical kernel, focused diagnostic/performance command and previous matrix unchanged. S adds too many jaggies and is excluded from this broader gallery. Preserve installed rendering. Human comparison selects the next direction. See the [pixel-reference study](plans/FR-021-supersampling.md).
+- **FR-021: Soften L's jagged edge transitions.** O is the preferred general treatment. Keep exact O/L and A/D controls while comparing quarter and half strength of the existing bounded S edge lift. Use both parentheses as the main jaggy controls, with i/8/!/W for details and diagonals. Reuse the approved five Regular fonts at 8, 10, 11 and 12pt on both backgrounds. Preserve L's strengthened cores, all old commands and installed rendering. Human comparison judges softness and weight. See the [edge-lift study](plans/FR-021-supersampling.md).
 
 ## Planned next
 
