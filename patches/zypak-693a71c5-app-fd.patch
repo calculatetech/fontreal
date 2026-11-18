@@ -69,7 +69,7 @@
  
    // Since we map the descriptors ourselves via the portal API, there's no need for zypak-helper to
    // adjust them as well.
-@@ -35,6 +64,10 @@
+@@ -35,6 +64,15 @@
  
    for (const auto& [var, value] : env) {
      spawn.env.emplace(var, value);
@@ -77,6 +77,11 @@
 +  if (const char* trace = std::getenv("FONTREAL_SKIA_TRACE");
 +      trace != nullptr && std::strcmp(trace, "1") == 0) {
 +    spawn.env.emplace("FONTREAL_SKIA_TRACE", "1");
++  }
++  if (const char* profile = std::getenv("FONTREAL_PROFILE");
++      profile != nullptr &&
++      (std::strcmp(profile, "o") == 0 || std::strcmp(profile, "k3") == 0)) {
++    spawn.env.insert_or_assign("FONTREAL_PROFILE", profile);
    }
  
    for (const auto& path : exposed_paths) {

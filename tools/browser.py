@@ -154,6 +154,15 @@ def paths(browser):
             data / "applications" / f"{browser}.desktop")
 
 
+def rendering_profile():
+    path = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "fontreal/profile"
+    try:
+        value = path.read_bytes()
+    except FileNotFoundError:
+        return "o"
+    return "k3" if value in (b"k3", b"k3\n") else "o"
+
+
 def desktop_arg(value):
     # Desktop entries unescape strings before parsing their quoted Exec arguments.
     quoted = "".join("\\" + c if c in '\\"`$' else "%%" if c == "%" else c for c in str(value))
@@ -271,7 +280,7 @@ def run(browser, arguments):
     state, _, _ = paths(browser)
     record = json.loads(state.read_text()) if state.exists() else None
     env = os.environ.copy()
-    for key in ("FONTREAL_FT_RENDERING", "FONTREAL_FT_CONTRAST", "FONTREAL_FT_EXECUTABLE"):
+    for key in ("FONTREAL_FT_RENDERING", "FONTREAL_FT_CONTRAST", "FONTREAL_FT_EXECUTABLE", "FONTREAL_PROFILE"):
         env.pop(key, None)
     if record:
         directory = str(Path(record["library"]).parent)
@@ -286,6 +295,7 @@ def run(browser, arguments):
             print(f"Fontreal inactive: {reason}; using the installed browser library. Re-enable after rebuilding.", file=sys.stderr)
         else:
             env.update(FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST=record.get("contrast", "mild"),
+                       FONTREAL_PROFILE=rendering_profile(),
                        FONTREAL_FT_EXECUTABLE=":".join(record["scope"]),
                        LD_LIBRARY_PATH=":".join([directory, *inherited]))
     os.execve(binary(browser), [str(binary(browser)), *arguments], env)
@@ -303,11 +313,13 @@ def status(browser):
         maps = Path(f"/proc/{pid}/maps").read_text()
         environment = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
         expected = [b"FONTREAL_FT_RENDERING=1",
+                    ("FONTREAL_PROFILE=" + rendering_profile()).encode(),
                     ("FONTREAL_FT_CONTRAST=" + record.get("contrast", "mild")).encode(),
                     ("FONTREAL_FT_EXECUTABLE=" + ":".join(record["scope"])).encode()]
         (active if record["library"] in maps and all(v in environment for v in expected) else pending).append(pid)
     print(json.dumps(dict(browser=browser, enabled=True, profile=record["profile"],
         active_pids=active, restart_required_pids=pending, contrast=record.get("contrast", "mild"),
+        rendering_profile=rendering_profile(),
         compatibility=compatibility(browser, record))))
 
 

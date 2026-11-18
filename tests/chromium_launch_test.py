@@ -89,7 +89,9 @@ if paths:
     assert os.get_inheritable(fd)
     assert (os.fstat(fd).st_dev,os.fstat(fd).st_ino)==(view.stat().st_dev,view.stat().st_ino)
     assert '--env=FONTREAL_ZYPAK_APP_PATH='+str(view) in args
-    observed.update(selected=True,view=str(view),fd_valid=True)
+    profiles=[x.split('=',2)[2] for x in args if x.startswith('--env=FONTREAL_PROFILE=')]
+    assert len(profiles)<=1 and (not profiles or profiles[0] in ('o','k3')),profiles
+    observed.update(selected=True,view=str(view),fd_valid=True,profile=profiles[0] if profiles else None)
 else:assert directories==[],directories
 note(observed)
 if os.environ.get('LAUNCH_STDIO_PROBE')=='1':
@@ -189,14 +191,18 @@ def main():
             assert len(actual)==1,new
             observed=actual[0];observations.append(observed)
             assert observed['selected']==chosen,(command,observed,result.stderr)
-            stripped=[a for a in observed['argv'][1:] if not a.startswith(('--app-path=','--ro-bind-fd=','--env=FONTREAL_ZYPAK_APP_PATH='))]
+            stripped=[a for a in observed['argv'][1:] if not a.startswith(('--app-path=','--ro-bind-fd=','--env=FONTREAL_ZYPAK_APP_PATH=','--env=FONTREAL_PROFILE='))]
             assert stripped==argv,(stripped,argv)
             if chosen:
                 index=next(i for i,a in enumerate(argv) if a in (delivery.APPS[name],delivery.APPS[name]+'/x86_64',
                     delivery.APPS[name]+'/x86_64/stable','app/'+delivery.APPS[name]+'/x86_64/stable'))
-                options=observed['argv'][1+index:1+index+3]
-                assert [a.split('=',1)[0] for a in options]==['--app-path','--ro-bind-fd','--env']
+                count=3 if command[0]==sys.executable else 4
+                options=observed['argv'][1+index:1+index+count]
+                assert [a.split('=',1)[0] for a in options]==['--app-path','--ro-bind-fd','--env']+(['--env'] if count==4 else [])
                 assert observed['argv']==['/usr/bin/flatpak',*argv[:index],*options,*argv[index:]]
+                if count==4:
+                    profile=home/'config/fontreal/profile'
+                    assert observed['profile']==(profile.read_text().strip() if profile.exists() else 'o')
             assert snapshot()==state
             assert not any(e['kind']=='qualification' for e in new),new
             if chosen:
@@ -271,7 +277,8 @@ def main():
         refused('enable','bitwarden','--record',builds['bitwarden']);foreign.unlink()
         enable('bitwarden');assert not oldstate.exists()
         state=json.loads(registry.read_text());assert len(state['hooks'])==9
-        assert state['apps']['teams']=={k:v for k,v in legacy_state.items() if k!='hooks'}
+        assert state['apps']['teams']==dict({k:v for k,v in legacy_state.items() if k!='hooks'},tool_sha256=delivery.target.sha(controller))
+        assert all(entry['tool_sha256']==delivery.target.sha(controller) for entry in state['apps'].values())
         for name in delivery.APPS:
             for key in ('flatpak','command','application'):
                 text=hooks(name)[key].read_text();assert str(controller) in text and str(legacy) not in text
@@ -287,6 +294,10 @@ def main():
             first,_=adapter(['run',app,*payload],name=name);first_views[name]=first['view']
             cached,new=adapter(['run',app,*payload],name=name)
             assert cached['view']==first['view'] and not any(e['kind']=='copy' for e in new)
+            for profile,inherited in [('k3','o'),('o','k3')]:
+                put(home/'config/fontreal/profile',profile+'\n');env['FONTREAL_PROFILE']=inherited
+                same,new=adapter(['run',app,*payload],name=name)
+                assert same['profile']==profile and same['view']==first['view'] and not any(e['kind']=='copy' for e in new)
             allowed={str(p) for p in [registry,builds[name],*[Path(h['path']) for h in json.loads(registry.read_text())['hooks']]]}
             assert all(e['path'] in allowed for e in new if e['kind']=='hash'),new
             uri='https://example.invalid/a%20b?x=1&y=2';command=delivery.builder.LAYOUTS[app][2]
@@ -320,6 +331,22 @@ def main():
                 adapter(argv,False)
 
         # Full ownership validation before re-enable or either disable.
+        # A previous controller is migrated only by explicit setup, for every survivor.
+        previous=root/'previous/controller'
+        shutil.copytree(isolated/'tools',previous/'tools')
+        old_controller=previous/'tools/chromium_delivery.py'
+        call('enable','teams','--record',builds['teams'],tool=old_controller)
+        for name in delivery.APPS:
+            for key in ('flatpak','command','application'):assert str(old_controller) in hooks(name)[key].read_text()
+        before=snapshot();status('teams',True);status('bitwarden',True)
+        assert snapshot()==before
+        enable('bitwarden')
+        migrated=json.loads(registry.read_text())
+        assert all(entry['tool_sha256']==delivery.target.sha(controller) for entry in migrated['apps'].values())
+        for name in delivery.APPS:
+            for key in ('flatpak','command','application'):
+                assert str(controller) in hooks(name)[key].read_text() and str(old_controller) not in hooks(name)[key].read_text()
+                launch([hooks(name)[key],*(['run',delivery.APPS[name]] if key=='flatpak' else [])],['run',delivery.APPS[name]],True,name=name,variant='B')
         foreign=hooks('bitwarden')['autostart'];saved=foreign.read_bytes();foreign.write_text('foreign last shared-registry hook')
         refused('enable','teams','--record',builds['teams']);refused('disable','teams');refused('disable','bitwarden');foreign.write_bytes(saved)
         # Missing saved engine gives exact ordinary native fallback for either target.

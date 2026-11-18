@@ -29,7 +29,8 @@ SUBJECTS=(('Segoe UI','a'),('Noto Sans','m'),('Segoe UI','0'),('Noto Sans','3'),
 
 
 def self_test():
-    assert tuple(inspect.signature(refine).parameters)==('raw','accepted','width')
+    assert tuple(inspect.signature(refine).parameters)==('raw','accepted','width','connected')
+    assert inspect.signature(refine).parameters['connected'].default is False
     tree=ast.parse((ROOT/'tests/stroke_profiles.py').read_text())
     assert {n.module for n in ast.walk(tree) if isinstance(n,ast.ImportFrom)}=={'collections','math','statistics'}
     assert not any(isinstance(n,ast.Name) and n.id in ('open','ord','chr','font','family','glyph','codepoint') for n in ast.walk(tree))

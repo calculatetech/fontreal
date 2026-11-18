@@ -122,7 +122,7 @@ def http(port,path):
         return json.load(response)
 
 
-def native_stock(destination,view=None,observe=None,display=None,trace_address=None,passive=False):
+def native_stock(destination,view=None,observe=None,display=None,trace_address=None,passive=False,hook=None,environment=None,private_data=None):
     before=original_state();original_instances=working_instances()
     (destination/'original-instances.json').write_text(json.dumps(original_instances,indent=2)+'\n')
     location=Path(run(['/usr/bin/flatpak','info','--show-location',APPLICATION]))
@@ -139,26 +139,38 @@ def native_stock(destination,view=None,observe=None,display=None,trace_address=N
     assert '/app/bin/libprocess_isolation.so' in wrapper
     for path in ('bin/bitwarden','Bitwarden/resources/app.asar','Bitwarden/libprocess_isolation.so'):
         assert sha(files/path)==sha(native/path), 'Native application resources or isolation files changed'
-    data=destination/'data';data.mkdir()
-    (data/'data.json').write_text(json.dumps({'global_desktopSettings_openAtLogin':before['openAtLogin']})+'\n')
+    data=destination/'data' if private_data is None else private_data;data.mkdir(exist_ok=True)
+    if private_data is not None:(data/'DevToolsActivePort').unlink(missing_ok=True)
+    if private_data is None:(data/'data.json').write_text(json.dumps({'global_desktopSettings_openAtLogin':before['openAtLogin']})+'\n')
     unit='fontreal-bitwarden-proof-'+secrets.token_hex(6)+'.service'
     arguments=['run','--filesystem='+str(data)+':rw',
                '--env=BITWARDEN_APPDATA_DIR='+str(data),APPLICATION,'--remote-debugging-port=0']
     if passive:arguments.insert(1,'--env=FONTREAL_SKIA_TRACE=1')
+    if hook is not None:arguments=['run','--user',APPLICATION,'--remote-debugging-port=0']
     launch=['/usr/bin/flatpak',*arguments]
     if view is not None or trace_address is not None:
         argv_file=destination/'native-arguments.json';argv_file.write_text(json.dumps(arguments)+'\n')
         launch=[sys.executable,'-B',str(Path(__file__).resolve()),'--case','exec-view','--native-arguments',str(argv_file)]
-        if view is not None:launch+=['--view',str(files)]
+        if hook is not None:launch+=['--launch-hook',str(hook)]
+        elif view is not None:launch+=['--view',str(files)]
         if trace_address is not None:launch+=['--trace-address',trace_address]
     command=['systemd-run','--user','--collect','--unit='+unit,'--property=Type=exec',
              '--property=StandardOutput=null','--property=StandardError=null',
              *launch]
     if display is not None:command.insert(3,'--setenv=DISPLAY='+display)
+    if environment is not None:
+        for key in ('HOME','FLATPAK_USER_DIR','XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_RUNTIME_DIR','DBUS_SESSION_BUS_ADDRESS'):
+            if key in environment:command.insert(3,'--setenv='+key+'='+environment[key])
     (destination/'command.json').write_text(json.dumps(command,indent=2)+'\n')
     browser=None;port=None;quit_completed=False
     try:
         subprocess.run(command,check=True)
+        if hook is not None:
+            from types import SimpleNamespace
+            pid=int(run(['systemctl','--user','show',unit,'--property=MainPID','--value']))
+            observer=SimpleNamespace(pid=pid,poll=lambda:None if active_state(unit) in ('active','activating') else 0)
+            entry=shared.native_entry(observer,arguments,files,destination/'native-entry.json')
+            assert '--env=FONTREAL_PROFILE='+environment['EXPECTED_FONTREAL_PROFILE'] in entry['selectedOptions']
         deadline=time.monotonic()+60
         active=data/'DevToolsActivePort'
         while not active.is_file():
@@ -206,10 +218,10 @@ def native_stock(destination,view=None,observe=None,display=None,trace_address=N
         if quit_completed:
             assert original_state()==before, 'Private teardown changed native startup configuration'
             assert original_instances.items()<=working_instances().items(), 'An original Bitwarden instance disappeared'
-            shutil.rmtree(data)
+            if private_data is None:shutil.rmtree(data)
         else:
             (destination/'pending-cleanup.json').write_text(json.dumps(dict(unit=unit,privateData=str(data),forceCloseAttempted=False))+'\n')
-    result['normalQuit']=True;result['privateDataRemoved']=True
+    result['normalQuit']=True;result['privateDataRemoved']=private_data is None
     (destination/'result.json').write_text(json.dumps(result,indent=2)+'\n')
 
 
@@ -274,7 +286,8 @@ def outer_instances(env):
             main=main_pid(dict(instance=instance))
             if main is None:continue
             result.append(dict(instance=instance,launcherPid=int(launcher),mainPid=main,
-                               appPath=info['Instance']['app-path'],ownerEnvironment={key:environment.get(key) for key in OWNER_KEYS}))
+                               appPath=info['Instance']['app-path'],renderingProfile=environment.get('FONTREAL_PROFILE'),
+                               ownerEnvironment={key:environment.get(key) for key in OWNER_KEYS}))
         except FileNotFoundError:continue
     return result
 
@@ -285,9 +298,13 @@ def lifecycle(engine_record,destination,env):
     built=subprocess.check_output(command,env=env,text=True);application_record=Path(built.splitlines()[-1]).resolve(strict=True)
     record=json.loads(application_record.read_text());assert record['spec']['application']==APPLICATION
     assert record['spec']['build_record']==str(engine_record.resolve()) and record['spec']['build_sha256']==sha(engine_record)
-    proof=json.loads((application_record.parent/'qualification.json').read_text())
+    v2='src/fontreal_v2_coverage.cpp' in json.loads(engine_record.read_text())['spec'].get('inputs',{})
+    proof=json.loads((application_record.parent/('activation-check.json' if v2 else 'qualification.json')).read_text())
     assert proof['passed'] is True and proof['build_sha256']==sha(application_record),'Actual packaged pixel qualification must precede working-profile actions'
-    assert proof['engine_sha256']==sha(engine_record) and all(sha(ROOT/name)==digest for name,digest in proof['test_inputs'].items())
+    # Activation receipts bind production inputs; unrelated lifecycle test edits do not invalidate the child proof.
+    inputs={name:digest for name,digest in proof.get('test_inputs',{}).items() if not v2 or not name.startswith('tests/')}
+    assert proof['engine_sha256']==sha(engine_record) and all(sha(ROOT/name)==digest for name,digest in inputs.items())
+    if v2:assert proof['childWitness'] and proof['profiles']==['o','k3']
     state,_=shared.delivery.read_state();assert 'bitwarden' not in state['apps'],'Begin with Bitwarden delivery disabled'
     if state['apps']:shared.delivery.require_owned(state)
     teams=state['apps'].get('teams');before=original_state()
@@ -313,7 +330,8 @@ def lifecycle(engine_record,destination,env):
     def ownership():
         current,_=shared.delivery.read_state()
         if current['apps']:shared.delivery.require_owned(current)
-        assert current['apps'].get('teams')==teams,'Existing Teams qualified entry changed'
+        current_teams=current['apps'].get('teams')
+        assert (None if current_teams is None else {k:v for k,v in current_teams.items() if k!='tool_sha256'})==(None if teams is None else {k:v for k,v in teams.items() if k!='tool_sha256'}),'Existing Teams engine identity changed'
         state_path=shared.delivery.paths()[0]
         if not state_path.exists():state_path=state_path.with_name('teams.json')
         return (state_path.read_bytes() if state_path.exists() else None,{row['path']:sha(Path(row['path'])) for row in current['hooks']})
@@ -345,6 +363,8 @@ def lifecycle(engine_record,destination,env):
     def launch(label,argv,expected):
         frozen=ownership();child=subprocess.Popen(list(map(str,argv)),env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);drivers.append(child)
         observed=ready(expected,child);assert ownership()==frozen,'Ordinary launch changed hook ownership'
+        if v2 and expected==selected:
+            assert observed['renderingProfile']==shared.delivery.rendering_profile(),'Ordinary launch did not use the current saved choice'
         observations.append(dict(route=label,arguments=list(map(str,argv)),instance=observed,profileSame=True))
 
     tool=[sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py')]
@@ -363,6 +383,10 @@ def lifecycle(engine_record,destination,env):
             assert source==str(autostart),'No existing native startup unit for the original eligible entry'
             routes.append(('native-autostart',['systemctl','--user','start',unit]))
         for label,argv in routes:launch(label,argv,selected);quit_current()
+        if v2:
+            subprocess.run(['sh',str(ROOT/'packaging/session/fontreal-session'),'profile','k3'],env=env,check=True)
+            launch('profile-k3',[hooks['command']],selected);quit_current()
+            subprocess.run(['sh',str(ROOT/'packaging/session/fontreal-session'),'profile','o'],env=env,check=True)
         launch('absolute-stock-escape',['/usr/bin/flatpak','run',APPLICATION],native);quit_current()
         subprocess.run([*tool,'disable','bitwarden'],env=env,check=True);ownership()
         desktop=native.parent/'export/share/applications'/(APPLICATION+'.desktop')
@@ -387,7 +411,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--case',choices=['native-stock','readiness','exec-view'],required=True)
     parser.add_argument('--build-record',type=Path);parser.add_argument('--view',type=Path)
-    parser.add_argument('--native-arguments',type=Path);parser.add_argument('--trace-address');args=parser.parse_args()
+    parser.add_argument('--native-arguments',type=Path);parser.add_argument('--trace-address');parser.add_argument('--launch-hook',type=Path);args=parser.parse_args()
     if args.case=='exec-view':
         assert args.native_arguments is not None
         arguments=json.loads(args.native_arguments.read_text())
@@ -399,7 +423,8 @@ def main():
         if args.view is not None:
             options,fd=shared.delivery.view_options(args.view.resolve());os.set_inheritable(fd,True)
             arguments=['run',*options,*arguments[1:]]
-        try:os.execv('/usr/bin/flatpak',['/usr/bin/flatpak',*arguments])
+        program=str(args.launch_hook) if args.launch_hook is not None else '/usr/bin/flatpak'
+        try:os.execv(program,[program,*arguments])
         finally:
             if fd is not None:os.close(fd)
     if args.case=='readiness':assert args.build_record is not None

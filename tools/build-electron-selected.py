@@ -24,7 +24,7 @@ UPSTREAM=dict(electron='44.9.1',commit='e02265be96c5e13ae43644ef482b718e1e800499
               node_base='f2bc3c738a0873ecb23e8a09e5c074e412c4c42f')
 RENDER_INPUTS=('patches/skia-747cf654-fontreal-selected.patch','patches/chromium-152-fontreal-selected-gn.patch',
                'integrations/chromium/fontreal_selected.h','integrations/chromium/fontreal_bridge.cpp',
-               'src/fontreal_coverage.cpp','src/fontreal_coverage.h','tests/chromium_selected_probe.cpp')
+               'src/fontreal_coverage.cpp','src/fontreal_coverage.h','src/fontreal_v2_coverage.cpp','src/fontreal_v2_coverage.h','tests/chromium_selected_probe.cpp')
 INPUTS=('tools/build-electron-selected.py',*RENDER_INPUTS)
 PRODUCER=ROOT/'tools/build-electron.py'
 SKIA_PATCH=ROOT/RENDER_INPUTS[0]
@@ -103,6 +103,7 @@ def render(spec,previous,env):
         saved=json.loads(record.read_text());assert saved['spec']==spec
         for package in saved['packages'].values():c1.verify(package)
         assert c1.sha(Path(saved['probe']['executable']))==saved['probe']['sha256']
+        for selected_probe in saved['selected_probes'].values():assert c1.sha(Path(selected_probe['executable']))==selected_probe['sha256']
         return record,saved
     artifact.mkdir(parents=True,exist_ok=True)
     view=artifact/'source-view';view.mkdir(exist_ok=True)
@@ -151,17 +152,24 @@ def render(spec,previous,env):
         shutil.rmtree(view/folder);shutil.copytree(skia/folder,view/folder,symlinks=True)
     for name in spec['original_files']:os.utime(view/name,None)
     c1.invoke(['patch','--batch','--fuzz=0','-p1','-i',SKIA_PATCH],view,env,'selected-source-patch')
-    for name in ('fontreal_coverage.cpp','fontreal_coverage.h'):shutil.copyfile(ROOT/'src'/name,view/'src/core'/name)
+    for name in ('fontreal_coverage.cpp','fontreal_coverage.h','fontreal_v2_coverage.cpp','fontreal_v2_coverage.h'):shutil.copyfile(ROOT/'src'/name,view/'src/core'/name)
     for name in ('fontreal_selected.h','fontreal_bridge.cpp'):shutil.copyfile(ROOT/'integrations/chromium'/name,view/'src/core'/name)
     (gn_view/'fontreal_build.gni').write_text('fontreal_selected_enabled = true\n')
-    packages={}
+    packages={};selected_probes={}
     for role,trace in (('normal',0),('trace',1)):
         (view/'src/core/fontreal_build.h').write_text(f'#define FONTREAL_SELECTED_TRACE {trace}\n')
         invoke(gn,role+'-gn');invoke([*ninja,'electron:electron_dist_zip'],role+'-build')
         packages[role]=c1.package(out/'dist.zip',artifact/role)
+        invoke([*ninja,'skia:fontreal_native_probe'],role+'-native-probe')
+        selected_probe=artifact/('fontreal-'+role+'-probe')
+        shutil.copyfile(out/'fontreal_native_probe',selected_probe);selected_probe.chmod(0o755)
+        selected_probes[role]=dict(executable=str(selected_probe),sha256=c1.sha(selected_probe))
+        probe_commands=subprocess.check_output([*ninja,'-t','commands','skia:fontreal_native_probe'],cwd=source,env=env)
+        (artifact/(role+'-probe-commands.txt')).write_bytes(probe_commands)
+        selected_probes[role]['commands_sha256']=c1.sha(artifact/(role+'-probe-commands.txt'))
         commands=subprocess.check_output([*ninja,'-t','commands','electron:electron_dist_zip'],cwd=source,env=env)
         (artifact/(role+'-commands.txt')).write_bytes(commands)
-    saved=dict(spec=spec,source=str(source),source_view=str(view),probe=probe_identity,packages=packages,
+    saved=dict(spec=spec,source=str(source),source_view=str(view),probe=probe_identity,selected_probes=selected_probes,packages=packages,
                baseline_packages=dict(stock=stock,instrumented=passive),
                upstream_identity=upstream_identity,upstream_views=[list(map(str,pair)) for pair in upstream_views],
                cache_environment={name:env[name] for name in c1.CACHE_DIRECTORIES},
@@ -252,7 +260,7 @@ def build():
               runtime_recipe=hashlib.sha256((inspect.getsource(render)+inspect.getsource(release_sources)).encode()).hexdigest(),
               original_files={name:c1.sha(skia/name) for name in (*c1.BASE_FILES,'src/core/SkScalerContext.h')},
               original_gn=c1.sha(source/'skia/BUILD.gn'),
-              runtime_sources={name:c1.sha(source/name) for name in ('third_party/libc++/src/src/memory_resource.cpp','buildtools/third_party/libc++/BUILD.gn')})
+              runtime_sources={name:c1.sha(source/name) for name in ('third_party/libc++/src/src/memory_resource.cpp','buildtools/third_party/libc++/BUILD.gn','base/test/test_discardable_memory_allocator.cc','base/test/test_discardable_memory_allocator.h')})
     runtime_record,runtime=render(runtime_spec,previous,env)
     notice,html,depfile=credits(source,env,[(Path(a),Path(b)) for a,b in runtime['upstream_views']],runtime_record.parent/'credits')
     node_license=ROOT/'LICENSES/Node.txt' if PRODUCER.name=='build-electron.py' else source/'third_party/electron_node/LICENSE'
@@ -264,11 +272,12 @@ def build():
         saved=json.loads(record.read_text());assert saved['spec']==spec
         for package in saved['packages'].values():c1.verify(package)
         assert c1.sha(Path(saved['probe']['executable']))==saved['probe']['sha256']
+        for selected_probe in saved['selected_probes'].values():assert c1.sha(Path(selected_probe['executable']))==selected_probe['sha256']
         print(record);return
     artifact.mkdir(parents=True,exist_ok=True)
     llvm=source/'third_party/libc++/src/LICENSE.TXT'
     packages={role:package_with_notices(package,artifact/role,html,llvm,ROOT/'LICENSE',node_license) for role,package in runtime['packages'].items()}
-    for name in ('probe-commands.txt','normal-commands.txt','trace-commands.txt'):
+    for name in ('probe-commands.txt','normal-commands.txt','trace-commands.txt','normal-probe-commands.txt','trace-probe-commands.txt'):
         shutil.copyfile(runtime_record.parent/name,artifact/name)
     probe=dict(runtime['probe']);probe_path=artifact/'fontreal-native-probe'
     shutil.copyfile(Path(probe['executable']),probe_path);probe_path.chmod(0o755);probe['executable']=str(probe_path)

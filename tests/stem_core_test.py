@@ -30,7 +30,7 @@ TEXTS = ['The quick brown fox jumps over the lazy dog.',
          'minimum un nu uuuu  oeas  VvWwYy  S A Y']
 
 
-def concentrate(raw, chosen, width):
+def concentrate(raw, chosen, width, near_ties=False):
     """Select stable axis-aligned profiles from originals; reject intersecting runs."""
     assert isinstance(raw, bytes) and isinstance(chosen, bytes) and len(raw) == len(chosen)
     assert width >= 0 and (not raw if width == 0 else len(raw) % width == 0)
@@ -49,7 +49,7 @@ def concentrate(raw, chosen, width):
                 x, y = (raw[i] for i in pair)
                 left = raw[index(a-1, b)] if a else 0
                 right = raw[index(a+2, b)] if a+2 < across else 0
-                eligible = x > 0 and y > 0 and 192 <= x+y <= 384 and abs(x-y) >= 16 and max(left, right) <= 32
+                eligible = x > 0 and y > 0 and 192 <= x+y <= 384 and (near_ties or abs(x-y) >= 16) and max(left, right) <= 32
                 profiles.append((pair, (x, y)) if eligible else None)
             start = 0
             while start < along:
@@ -69,8 +69,11 @@ def concentrate(raw, chosen, width):
     outputs = {m: bytearray(chosen) for m in MODES}
     changed = []
     for run in accepted:
+        vote = sum(raw[a]-raw[b] for a,b in run['pairs'])
+        if near_ties and not vote:
+            continue
         for pair in run['pairs']:
-            core, fringe = sorted(pair, key=lambda i: raw[i], reverse=True)
+            core, fringe = (pair if vote > 0 else pair[::-1]) if near_ties else sorted(pair, key=lambda i: raw[i], reverse=True)
             if max(chosen[i] for i in pair) >= 230:
                 continue
             changes = {}

@@ -22,6 +22,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-This package contains Fontreal activation scripts and build records.
+This package contains Fontreal activation scripts, the per-user O/K3
+preference command, and build records. The preference does not enable
+treatment or upgrade a saved renderer. The startup hook exports the
+choice only after the existing enabled-marker and exact-runtime checks.
 It does not include Qt libraries or font files. Patched Qt packages retain
 their upstream licenses and corresponding-source obligations.

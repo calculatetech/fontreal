@@ -26,12 +26,14 @@ def run(library, stock, output, fonts, foreign=False):
     config.write_text(json.dumps(jobs))
     environment = {k: v for k, v in os.environ.items()
                    if not k.startswith(("FONTREAL_", "QT_")) and k not in ("LD_LIBRARY_PATH", "LD_PRELOAD", "FREETYPE_PROPERTIES")}
-    def probe(role, provider, typed=None, scoped=False, properties=True):
+    def probe(role, provider, typed=None, scoped=False, properties=True, profile=None):
         folder = output / role
         env = dict(environment, LD_LIBRARY_PATH=str(provider.parent), FONTREAL_FT_RENDERING="1" if scoped else "0",
                    FONTREAL_FT_CONTRAST="weighted", FONTREAL_FT_EXECUTABLE=str(binary.resolve()),
                    FONTREAL_TEST_QT_DRIVER_PROPERTIES="1" if properties else "0",
                    FREETYPE_PROPERTIES="autofitter:fontreal-selected-v1=1")
+        if profile is not None:
+            env["FONTREAL_PROFILE"] = profile
         if typed is not None:
             env["FONTREAL_TEST_SELECTED_PROPERTY"] = "1" if typed else "0"
         subprocess.run([str(binary), str(config), str(folder)], env=env, check=True)
@@ -45,6 +47,8 @@ def run(library, stock, output, fonts, foreign=False):
                for a, b in zip(raw[key]["glyphs"], fresh[key]["glyphs"], strict=True)), "Missing CFF driver-property discriminator"
     variants = {"neither": probe("neither", library, False), "typed": probe("typed", library, True),
                 "environment": probe("environment", library, False, True), "both": probe("both", library, True, True)}
+    assert probe("invalid-profile", library, True, profile="O") == variants["typed"]
+    assert probe("invalid-profile", library, True, profile="O") == variants["typed"]
     changed = twice_different = count = 0
     def selected(snapshot):
         mask = bytes.fromhex(snapshot["mask"])
@@ -94,29 +98,119 @@ def run(library, stock, output, fonts, foreign=False):
         assert observations[0] == observations[1], (font, load)
         gates.append(dict(font=font.name, codepoint=character, flags=load, passed=True))
     links = []
-    if foreign:
-        link_source = ROOT / "tests/freetype_selected_link_probe.c"
-        includes = shlex.split(subprocess.check_output(["pkg-config", "--cflags", "freetype2"], text=True))
-        dependencies = shlex.split(subprocess.check_output(["pkg-config", "--static", "--libs", "freetype2"], text=True))
-        assert "-lstdc++" in dependencies and "-lm" in dependencies
-        expected = next(row["rendered"] for row in variants["typed"][jobs[0]["id"]]["glyphs"] if row["codepoint"] == ord('n'))
-        for role, compiler, linker in (
-            ("static", "cc", ["/usr/lib/x86_64-linux-gnu/libfreetype.a", *[flag for flag in dependencies if flag != "-lfreetype"]]),
-            ("i386", "i686-linux-gnu-gcc", ["/usr/lib/i386-linux-gnu/libfreetype.so.6", "-lm"])):
-            program = output / ("link-" + role)
-            subprocess.run([compiler, str(link_source), *includes, *linker, "-o", str(program)], check=True)
-            dynamic = subprocess.check_output(["readelf", "-d", str(program)], text=True)
-            if role == "static":
-                assert "libfreetype.so" not in dynamic and "libstdc++.so" in dynamic
-            else:
-                assert "ELF32" in subprocess.check_output(["readelf", "-h", str(program)], text=True)
-            text = subprocess.check_output([str(program), str(fonts[0]), str(jobs[0]["pixels"]), str(ord('n'))], text=True).splitlines()
-            assert list(map(int, text[0].split())) == [expected[key] for key in ("width", "height", "left", "top")]
-            assert text[1] == expected["mask"], role
-            links.append(dict(role=role, passed=True, binary_sha256=hashlib.sha256(program.read_bytes()).hexdigest()))
+    link_source = ROOT / "tests/freetype_selected_link_probe.c"
+    includes = shlex.split(subprocess.check_output(["pkg-config", "--cflags", "freetype2"], text=True))
+    dependencies = shlex.split(subprocess.check_output(["pkg-config", "--static", "--libs", "freetype2"], text=True))
+    assert "-lstdc++" in dependencies and "-lm" in dependencies
+    expected = next(row["rendered"] for row in variants["typed"][jobs[0]["id"]]["glyphs"] if row["codepoint"] == ord('n'))
+    for role, compiler, linker in (
+        ("static", "cc", ["/usr/lib/x86_64-linux-gnu/libfreetype.a", *[flag for flag in dependencies if flag != "-lfreetype"]]),
+        *([("i386", "i686-linux-gnu-gcc", ["/usr/lib/i386-linux-gnu/libfreetype.so.6", "-lm"])] if foreign else [])):
+        program = output / ("link-" + role)
+        subprocess.run([compiler, str(link_source), *includes, *linker, "-o", str(program)], check=True)
+        dynamic = subprocess.check_output(["readelf", "-d", str(program)], text=True)
+        if role == "static":
+            assert "libfreetype.so" not in dynamic and "libstdc++.so" in dynamic
+        else:
+            assert "ELF32" in subprocess.check_output(["readelf", "-h", str(program)], text=True)
+        text = subprocess.check_output([str(program), str(fonts[0]), str(jobs[0]["pixels"]), str(ord('n'))], text=True).splitlines()
+        assert list(map(int, text[0].split())) == [expected[key] for key in ("width", "height", "left", "top")]
+        assert text[1] == expected["mask"], role
+        links.append(dict(role=role, passed=True, binary_sha256=hashlib.sha256(program.read_bytes()).hexdigest()))
     result = dict(passed=True, glyphs=count, changed=changed, once_twice_discriminators=twice_different,
-                  selectors=list(variants), qt_driver_discriminator=True, gates=gates, links=links,
+                  selectors=list(variants), unsupported_profile_retains_v1=True, qt_driver_discriminator=True, gates=gates, links=links,
                   source_sha256=hashlib.sha256(source.read_bytes()).hexdigest())
+    (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+    return result
+
+
+def run_v2(library, stock, output, fonts, foreign=False):
+    """Check the installed objects against matching stock and frozen arithmetic."""
+    import ctypes as C
+    from types import SimpleNamespace
+    from v2_freetype_test import Library, environment, snapshot, mask, high_raster, expected, canonical, NORMAL
+    output.mkdir()
+    helper = SimpleNamespace(fontreal_test_load_flags=lambda slot: 0)
+    environment(active=False)
+    reference = Library(stock, helper)
+    assert not reference.property("no-stem-darkening", 1, module="cff")[0]
+    sources = []
+    for font in fonts:
+        face = reference.face(font)
+        for character in "nnWg8 ":
+            assert not reference.api.FT_Load_Char(face, ord(character), NORMAL)
+            source = snapshot(face, helper)
+            assert not reference.api.FT_Render_Glyph(face.contents.glyph, 0)
+            raw = snapshot(face, helper)
+            raster = mask(raw)
+            high = high_raster(reference, source["outline"], raster)
+            sources.append(dict(font=str(font), character=character, source=source, raw=raw,
+                                high=high, expected={p: expected(raster, high, p) for p in ("o", "k3")}))
+    assert any(row["expected"]["o"] != row["expected"]["k3"] for row in sources)
+    rows = []
+    for pref in ("o", "k3"):
+        for activation in ("none", "typed", "environment", "both"):
+            environment(pref, active=activation in ("environment", "both"))
+            actual = Library(library, helper)
+            assert actual.property("fontreal-selected-v1") == (0, 0)
+            if activation in ("typed", "both"):
+                assert actual.property("fontreal-selected-v1", 1) == (0, 1)
+            assert actual.property("fontreal-profile-v2", kind=C.c_uint) == (0, 1 if pref == "o" else 2)
+            assert not actual.property("no-stem-darkening", 1, module="cff")[0]
+            for row in sources:
+                face = actual.face(row["font"])
+                assert not actual.api.FT_Load_Char(face, ord(row["character"]), NORMAL)
+                assert snapshot(face, helper) == row["source"]
+                assert not actual.api.FT_Render_Glyph(face.contents.glyph, 0)
+                rendered = snapshot(face, helper)
+                want = row["raw"] if activation == "none" else dict(row["raw"], bitmap=dict(
+                    row["raw"]["bitmap"], pixels=bytes(row["expected"][pref]).hex()))
+                assert rendered == want, (pref, activation, row["font"], row["character"], rendered, want)
+                assert not actual.api.FT_Render_Glyph(face.contents.glyph, 0)
+                assert snapshot(face, helper) == rendered
+                assert not actual.api.FT_Load_Char(face, ord(row["character"]), NORMAL | 4)
+                assert snapshot(face, helper) == rendered
+                rows.append(dict(profile=pref, activation=activation, font=Path(row["font"]).name,
+                                 character=row["character"], output=canonical(rendered)))
+            actual.close()
+    reference.close()
+    environment(active=False)
+    links = []
+    includes = shlex.split(subprocess.check_output(["pkg-config", "--cflags", "freetype2"], text=True))
+    dependencies = shlex.split(subprocess.check_output(["pkg-config", "--static", "--libs", "freetype2"], text=True))
+    assert "-lstdc++" in dependencies and "-lm" in dependencies
+    targets = [("static", "cc", Path("/usr/lib/x86_64-linux-gnu/libfreetype.a"), dependencies)]
+    if foreign:
+        targets.append(("i386", "i686-linux-gnu-gcc", Path("/usr/lib/i386-linux-gnu/libfreetype.so.6"), ["-lm"]))
+        archive = Path("/usr/lib/i386-linux-gnu/libfreetype.a")
+        if archive.exists():
+            env = dict(os.environ, PKG_CONFIG_LIBDIR="/usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig")
+            flags = shlex.split(subprocess.check_output(["pkg-config", "--static", "--libs", "freetype2"], env=env, text=True))
+            targets.append(("i386-static", "i686-linux-gnu-gcc", archive, flags))
+    link_sources = [row for row in sources if row["character"] == "n"]
+    for role, compiler, provider, dependencies in targets:
+        program = output / ("link-" + role)
+        subprocess.run([compiler, str(ROOT / "tests/freetype_selected_link_probe.c"), *includes, str(provider),
+                        *[f for f in dependencies if f != "-lfreetype"], "-o", str(program)], check=True)
+        dynamic = subprocess.check_output(["readelf", "-d", str(program)], text=True)
+        if "static" in role:
+            assert "libfreetype.so" not in dynamic
+        if "i386" in role:
+            assert "ELF32" in subprocess.check_output(["readelf", "-h", str(program)], text=True)
+        for pref in ("o", "k3"):
+            for row in link_sources:
+                env = dict(os.environ, FONTREAL_PROFILE=pref, FONTREAL_FT_RENDERING="0")
+                text = subprocess.check_output([str(program), row["font"], "13", str(ord("n"))], env=env, text=True).splitlines()
+                b = row["raw"]["bitmap"]
+                assert list(map(int, text[0].split())) == [b["width"], b["rows"], row["raw"]["left"], row["raw"]["top"]]
+                assert text[1] == bytes(row["expected"][pref]).hex(), (role, pref, row["font"])
+        links.append(dict(role=role, binary_sha256=hashlib.sha256(program.read_bytes()).hexdigest(), passed=True))
+    result = dict(passed=True, rows=rows, links=links, profile_difference=True,
+                  library_sha256=hashlib.sha256(library.read_bytes()).hexdigest(),
+                  stock_sha256=hashlib.sha256(stock.read_bytes()).hexdigest(),
+                  source_bindings=[dict(font=Path(r["font"]).name, character=r["character"],
+                                        source=canonical(r["source"]), raw=canonical(r["raw"]),
+                                        high=canonical(r["high"]), expected={p: canonical(v) for p,v in r["expected"].items()}) for r in sources])
     (output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 

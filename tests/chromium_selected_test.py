@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Compare the exact selected engine with a pristine provider and real windows."""
 import argparse
+from functools import lru_cache
 import ctypes
 import importlib.util
 import io
@@ -19,12 +20,37 @@ from PIL import Image,ImageDraw
 import browser_masks_test as masks
 import chromium_flatpak_test as c1
 from selected_profile_test import expected_mask
+from v2_coverage_test import d_reference
+from pixel_references_test import reference, registered
+from arial_coherence_test import independent
 
 ROOT=c1.ROOT
 WORK=c1.WORK
 OUT=(ROOT/'results/chromium-selected').resolve()
 STAGES=('empty','one','prefix','repaint','later','later-repaint','matrix')
 SIZES=(8*4/3,11*4/3,12*4/3,16*4/3)
+
+
+
+@lru_cache(maxsize=None)
+def numerical_outputs(serialized):
+    """Memoize only equal complete independent source requests."""
+    row=json.loads(serialized);width,height=row['width'],row['height']
+    raw=bytes.fromhex(row['mask'])
+    if not raw:return dict(v1=b'',o=b'',k3=b'')
+    source=dict(left=row['left'],top=row['top'],width=width,height=height,pixels=list(raw))
+    frame=dict(left=row['left']-2,top=row['top']-2,width=width+4,height=height+4)
+    d=registered(dict(source,pixels=d_reference(source)),frame)
+    high=dict(width=row['highWidth'],height=row['highHeight'],pixels=list(bytes.fromhex(row['high'])))
+    masks,audit=reference(high,d,frame['width'])
+    sums=[dict(phase=list(phase),values=values) for phase,values in sorted(audit['sums'].items())]
+    k3=independent(d,masks['L'],masks['S'],sums,audit['axes'],audit['primary'],audit['components'],frame['width'])[0]['K3']
+    def crop(values):return bytes(values[(y+2)*frame['width']+x+2] for y in range(height) for x in range(width))
+    return dict(v1=bytes(expected_mask(raw,width)),o=crop(masks['O']),k3=crop(k3))
+
+
+def processed(row,profile):
+    return numerical_outputs(json.dumps(row,sort_keys=True,separators=(',',':')))[profile if profile in ('o','k3') else 'v1']
 
 
 def write_json(path,value):
@@ -80,9 +106,17 @@ def selected_build(requested,destination,target='teams'):
     assert b'FONTREAL_SKIA ' not in image and b'fontreal_selected_coverage failed' not in image,'Provider oracle linked an instrumented/selected port'
     assert probe['pristine_files']==spec['original_files']
     commands=path.parent/'probe-commands.txt';assert c1.target.sha(commands)==probe['commands_sha256']
+    assert 'fontreal_v2_coverage.cpp' not in commands.read_text(errors='backslashreplace')
     assert 'fontreal_coverage.cpp' not in commands.read_text(errors='backslashreplace') and 'fontreal_selected_processor' not in commands.read_text(errors='backslashreplace')
     for role in ('normal','trace'):
         assert c1.target.sha(path.parent/(role+'-commands.txt'))==record['commands'][role]
+        graph=(path.parent/(role+'-commands.txt')).read_text(errors='backslashreplace')
+        assert all(name in graph for name in ('fontreal_coverage.cpp','fontreal_v2_coverage.cpp','fontreal_bridge.cpp'))
+        selected_probe=record['selected_probes'][role]
+        assert c1.target.sha(Path(selected_probe['executable']))==selected_probe['sha256']
+        commands=path.parent/(role+'-probe-commands.txt')
+        assert c1.target.sha(commands)==selected_probe['commands_sha256']
+        assert all(name in commands.read_text(errors='backslashreplace') for name in ('fontreal_v2_coverage.cpp','SkTypeface_fontations.cpp','SkScalerContext.cpp'))
     baseline_sha=c1.target.sha(path);license_sha=c1.target.sha(ROOT/'LICENSE')
     private=destination/'identity-contrast';private.mkdir()
     license_copy=private/'LICENSE';license_copy.write_bytes((ROOT/'LICENSE').read_bytes()+b'\n')
@@ -232,6 +266,7 @@ def fixture_config(case,palette,files):
         matrix.append(cell('8',len(matrix),15,unhinted=True))
         matrix.append(cell('g',len(matrix),15,transform=[1,.1,.2,1,0,0],native_transform=True))
         matrix.append(cell('.',len(matrix),300,x=800,y=490,native_path=True))
+        matrix.append(cell('g',len(matrix),17))
     return dict(width=1100,height=520,fonts=fonts,foreground=foreground,background=background,
                 stages=dict(empty=[],one=prefix[:1],prefix=prefix,repaint=prefix,later=later,**{'later-repaint':later},matrix=matrix))
 
@@ -280,7 +315,7 @@ def capture_window(env,identity,destination,stage,background,collector,empty_pri
         time.sleep(.1)
 
 
-def run_fixture(package,case,palette,destination,state,env,electron):
+def run_fixture(package,case,palette,destination,state,env,electron,profile=None):
     destination.mkdir();state.mkdir();fontdir=state/'fonts';fontdir.mkdir();files=[]
     source_files=[case['file']]+([c1.FONTS['Noto Sans']] if case.get('excluded') else [])
     for index,source in enumerate(source_files):
@@ -309,6 +344,7 @@ def run_fixture(package,case,palette,destination,state,env,electron):
         assert native=='False False' and exposed=='True False','Synthetic bitmap metadata exposure changed native outline facts'
         write_json(destination/'bitmap-metadata.json',dict(default=native,default_scalable_matches=default_matches,native_fontconfig_sha256=c1.target.sha(native_config),fixture=exposed,font_sha256=c1.target.sha(files[0]),fontconfig_sha256=c1.target.sha(fontconfig),scope='synthetic test metadata only; default browser local lookup excludes this face'))
     launch['FONTCONFIG_FILE']=str(fontconfig)
+    if profile is not None:launch['FONTREAL_PROFILE']=profile
     helper=Path('/opt/microsoft/msedge/msedge-sandbox')
     if helper.is_file() and helper.stat().st_uid==0 and helper.stat().st_mode&0o4777==0o4755:launch['CHROME_DEVEL_SANDBOX']=str(helper)
     else:launch.pop('CHROME_DEVEL_SANDBOX',None)
@@ -346,7 +382,7 @@ def run_fixture(package,case,palette,destination,state,env,electron):
                     except subprocess.TimeoutExpired:child.kill();child.wait(timeout=5)
     write_json(destination/'identities.json',identities)
     rows=c1.renderer_rows(collector.rows,sandbox['hostPid'],sandbox['tracePid'])
-    result=dict(case=case['id'],palette=palette,sandbox=sandbox,observations=observations,selected=selected,rows=rows)
+    result=dict(case=case['id'],palette=palette,profile=profile,sandbox=sandbox,observations=observations,selected=selected,rows=rows)
     write_json(destination/'fixture.json',result)
     return result
 
@@ -431,7 +467,7 @@ def oracle_for(cell,oracles):
     return oracles[(cell['id'],cell['font'],cell['pixels'],tuple(cell.get('transform',[1,0,0,1,0,0])),cell.get('stroke',-1))]
 
 
-def check_trace(case,fixture,oracles,ids):
+def check_trace(case,fixture,oracles,ids,profile=None):
     transitions=[row for row in fixture['rows'] if row['owner']=='selected']
     targets=[row for row in fixture['rows'] if row['owner']=='selected-target']
     assert transitions and targets,'Selected renderer emitted no actual glyph transitions or target observations'
@@ -465,12 +501,20 @@ def check_trace(case,fixture,oracles,ids):
                  and all(value[field]==row[field] for field in ('width','height','left','top','advance')) and value['mask']==row['raw']]
         assert matches,f'No independent native-normal path/metrics/raw mask for {case["id"]}: {row}'
         raw=bytes.fromhex(row['raw']);actual=bytes.fromhex(row['mask']);assert len(raw)==row['width']*row['height']
-        wanted=expected_mask(raw,row['width']) if raw else b''
+        wanted=processed(matches[0],profile)
+        assert row['profile']=={None:0,'unsupported':0,'o':1,'k3':2}[profile]
+        for key in ('hairline',):assert row[key]==matches[0][key]
+        if profile in ('o','k3'):
+            assert all(row[key]==matches[0][key] for key in ('high','highBounds','highWidth','highHeight')),'Actual high raster or registration differs from independent same-source Skia'
+        else:assert row['high']=='' and row['highWidth']==row['highHeight']==0,'V1 generated high support'
         assert actual==wanted,'Actual selected mask differs from unchanged immutable numerical oracle'
-        changed+=wanted!=raw;double_changed+=bool(raw) and expected_mask(wanted,row['width'])!=wanted
+        changed+=wanted!=raw;double_changed+=bool(raw) and processed(dict(matches[0],mask=wanted.hex()),profile)!=wanted
         direct+=row['direct']
-    assert changed and double_changed,'Cases do not distinguish identity and repeated processing'
-    if not case.get('excluded'):assert direct,'Real canvas stroke did not reach the direct base path route'
+    image_keys=[(row['font'],row['descriptor'],row['packed']) for row in transitions]
+    assert len(image_keys)==len(set(image_keys)),'A selected image was processed again'
+    if not case.get('excluded'):
+        assert direct,'Real canvas stroke did not reach the direct base path route'
+        assert transitions[-1]['glyph']==ids[0]['g'] and transitions[-1]['size']==17,'Eligible work did not resume after the native request controls'
     for target in targets:
         family=bytes.fromhex(target['family']).decode()
         if target['eligible']:
@@ -492,7 +536,7 @@ def check_trace(case,fixture,oracles,ids):
                 stageRasterCounts=counts,targets=len(targets),hintingReliant=any(row['hintingReliant'] for row in targets))
 
 
-def compose_expected(stock,configuration,cells,oracles,case):
+def compose_expected(stock,configuration,cells,oracles,case,profile=None):
     expected=stock.copy();background=tuple(int(configuration['background'][i:i+2],16) for i in (1,3,5));foreground=tuple(int(configuration['foreground'][i:i+2],16) for i in (1,3,5))
     ImageDraw.Draw(expected).rectangle((8,50,1094,509),fill=background)
     for cell in cells:
@@ -503,18 +547,18 @@ def compose_expected(stock,configuration,cells,oracles,case):
             else:box=(math.floor(origin[0])-3,math.floor(origin[1])-30,math.floor(origin[0])+25,math.floor(origin[1])+10)
             expected.paste(stock.crop(box),box[:2]);continue
         row=oracle_for(cell,oracles);raw=bytes.fromhex(row['mask'])
-        processed=expected_mask(raw,row['width']) if raw else b''
+        output=processed(row,profile)
         left=math.floor(origin[0]+.5)+row['left'];top=math.floor(origin[1]+.5)+row['top']
         assert 0<=left and 0<=top and left+row['width']<=expected.width and top+row['height']<=expected.height
         for y in range(row['height']):
             for x in range(row['width']):
-                alpha=processed[y*row['width']+x]
+                alpha=output[y*row['width']+x]
                 # Pinned SkBlitMask opaque A8 uses two SkVx approx_scale(x,y)=(x*y+x)//256 terms.
                 expected.putpixel((left+x,top+y),tuple((f*(alpha+1)//256)+(b*(256-alpha)//256) for f,b in zip(foreground,background)))
     return expected
 
 
-def check_images(case,palette,condition,fixtures,oracles):
+def check_images(case,palette,condition,fixtures,oracles,profile=None):
     configuration=fixtures['normal']['selected'];checks=[]
     for stage in STAGES:
         with Image.open(condition/'stock'/(stage+'-window.png')) as stock,Image.open(condition/'normal'/(stage+'-window.png')) as normal,Image.open(condition/'trace'/(stage+'-window.png')) as trace:
@@ -534,7 +578,7 @@ def check_images(case,palette,condition,fixtures,oracles):
                 for cell in configuration['stages'][stage]:
                     if cell['font']==0:
                         assert set(stock.crop((cell['x']-1,cell['y']-24,cell['x']+24,cell['y']+2)).getdata())=={background},'Unsupported named face painted a fallback glyph'
-            expected=compose_expected(stock,configuration,configuration['stages'][stage],oracles,case)
+            expected=compose_expected(stock,configuration,configuration['stages'][stage],oracles,case,profile)
             expected.save(condition/(stage+'-expected.png'))
             assert expected.tobytes()==normal.tobytes(),f'{case["id"]} {palette} {stage}: actual OS pixels differ from independently composed selected masks'
         assert (condition/'normal'/(stage+'-native.png')).read_bytes()==(condition/'trace'/(stage+'-native.png')).read_bytes(),f'{stage}: native-domain PNGs differ'
@@ -542,9 +586,9 @@ def check_images(case,palette,condition,fixtures,oracles):
     return checks
 
 
-def check_outline_pair(destination,palette,capability):
+def check_outline_pair(destination,palette,capability,profile=None):
     """One face differs only in strike tables; selected NO_BITMAP always agrees."""
-    strike=destination/('gray-strike-'+palette);outline=destination/('gray-outline-'+palette)
+    strike=destination/('gray-strike-'+str(profile)+'-'+palette);outline=destination/('gray-outline-'+str(profile)+'-'+palette)
     roles=('normal','trace') if capability['hasBitmap'] else ('stock','normal','trace')
     checks=[]
     for role in roles:
@@ -562,6 +606,93 @@ def check_outline_pair(destination,palette,capability):
     return result
 
 
+
+def native_api(record,destination):
+    """Real selected SkStrikeSpec/SkGlyph image work, including native hairlines."""
+    destination.mkdir();results=[];witnesses=dict(hairline=False,shift=False,upscale=False,rehint=False,profiles=False)
+    env={key:value for key,value in os.environ.items() if not key.startswith('FONTREAL_')}
+    env.update(PYTHONDONTWRITEBYTECODE='1',TMPDIR=str(WORK/'cache/tmp'))
+    def invoke(executable,label,stroke,first=32,last=126,profile=None,filtered=False,expected=None,size=15):
+        command=[str(executable),str(c1.FONTS['Noto Sans']),str(size),str(first),str(last),'2','0','1','0','0','1',str(stroke)]
+        launch=dict(env,FONTREAL_PROBE_LATE_PROFILE='k3' if profile!='k3' else 'o')
+        if profile is not None:launch['FONTREAL_PROFILE']=profile
+        if filtered:launch['FONTREAL_PROBE_FILTER']='1'
+        if expected is not None:launch['FONTREAL_PROBE_EXPECTED_MASK']=str(expected)
+        write_json(destination/(label+'-command.json'),dict(command=command,environment={key:value for key,value in launch.items() if key.startswith('FONTREAL_')}))
+        output=destination/(label+'.json');error=destination/(label+'-stderr.log')
+        with output.open('w') as stdout,error.open('w') as stderr:subprocess.run(command,env=launch,stdout=stdout,stderr=stderr,check=True)
+        rows=json.loads(output.read_text())
+        trace=[json.loads(line.split('FONTREAL_SKIA ',1)[1]) for line in error.read_text().splitlines() if 'FONTREAL_SKIA ' in line]
+        if trace:
+            targets=[row for row in trace if row['owner']=='selected-target' and row['eligible']]
+            assert len(targets)>=2,'Late environment change did not create the second actual scaler context'
+        return rows,[row for row in trace if row['owner']=='selected']
+    for stroke,filtered in ((-1,False),(0,False),(1,False),(1,True)):
+        key=str(stroke)+('-filtered' if filtered else '')
+        first,last=(109,109) if filtered else (32,126)
+        pristine,_=invoke(record['probe']['executable'],key+'-pristine',stroke,first,last,filtered=filtered)
+        for profile in (None,'unsupported','o','k3'):
+            expected=[processed(row,profile) for row in pristine]
+            if not filtered:
+                for row,wanted in zip(pristine,expected,strict=True):
+                    if stroke==0 and row['mask']:
+                        assert row['nativeHairline'] and row['native']['path']==row['path']
+                        assert all(row['native'][field]==row[field] for field in ('width','height','left','top','advance','mask'))
+                        thin=dict(row,high=row['thinHigh'])
+                        witnesses['hairline']|=processed(thin,profile)!=wanted
+            filtered_expected=None
+            if filtered:
+                maskfile=destination/(key+'-'+str(profile)+'-expected-mask.bin');maskfile.write_bytes(expected[0])
+                filtered_expected=invoke(record['probe']['executable'],key+'-'+str(profile)+'-filtered-oracle',stroke,first,last,filtered=True,expected=maskfile)[0][0]['filtered']
+            for role in ('normal','trace'):
+                label=key+'-'+str(profile)+'-'+role
+                actual,trace=invoke(record['selected_probes'][role]['executable'],label,stroke,first,last,profile,filtered)
+                assert len(actual)==len(pristine)
+                for source,observed,wanted in zip(pristine,actual,expected,strict=True):
+                    assert {k:v for k,v in observed.items() if k not in ('native','filtered')}=={k:v for k,v in source.items() if k not in ('native','filtered')}
+                    native=observed['native'];geometry=filtered_expected if filtered else source
+                    assert all(native[field]==geometry[field] for field in ('width','height','left','top'))
+                    assert native['advance']==source['native']['advance'] and native['path']==source['native']['path']
+                    assert native['mask']==(filtered_expected['mask'] if filtered else wanted.hex()),'Native selected API final image differs from independent provider/core/filter'
+                if role=='normal':assert not trace
+                else:
+                    nonempty=[row for row in pristine if row['width'] and row['height']]
+                    assert len(trace)==len(nonempty),'Native setImage repeated treatment or omitted a later glyph'
+                    for row,source in zip(trace,nonempty,strict=True):
+                        assert row['profile']=={None:0,'unsupported':0,'o':1,'k3':2}[profile]
+                        assert row['raw']==source['mask'] and row['path']==source['path']
+                        assert row['hairline']==(stroke==0)
+                        assert all(row[field]==source[field] for field in ('width','height','left','top','advance'))
+                        if profile in ('o','k3'):assert all(row[field]==source[field] for field in ('high','highWidth','highHeight','highBounds'))
+                        else:assert not row['high']
+                        assert bytes.fromhex(row['mask'])==processed(source,profile)
+                        if stroke>=0:assert row['direct']
+                results.append(dict(stroke=stroke,filtered=filtered,profile=profile,role=role,glyphs=len(actual),actualTransitions=len(trace),output_sha256=c1.target.sha(destination/(label+'.json'))))
+        if stroke==-1:
+            # Full terminal masks must reject wrong registered support, raw upscaling and rehinting.
+            rehint,_=invoke(record['probe']['executable'],'four-times-rehint',-1,size=60)
+            for row,large in zip(pristine,rehint,strict=True):
+                if not row['mask']:continue
+                hw,hh=row['highWidth'],row['highHeight'];high=bytes.fromhex(row['high'])
+                shifted=b''.join(bytes([0])+high[y*hw:y*hw+hw-1] for y in range(hh))
+                raw=bytes.fromhex(row['mask']);upscaled=bytearray(hw*hh)
+                for y in range(row['height']):
+                    for x in range(row['width']):
+                        for dy in range(4):
+                            for dx in range(4):upscaled[(12+4*y+dy)*hw+12+4*x+dx]=raw[y*row['width']+x]
+                large_source=dict(left=large['left'],top=large['top'],width=large['width'],height=large['height'],pixels=list(bytes.fromhex(large['mask'])))
+                wrongframe=dict(left=row['highBounds'][0],top=row['highBounds'][1],width=hw,height=hh)
+                rehinted=bytes(registered(large_source,wrongframe))
+                for mode in ('o','k3'):
+                    wanted=processed(row,mode)
+                    for label,wrong in (('shift',shifted),('upscale',upscaled),('rehint',rehinted)):
+                        witnesses[label]|=processed(dict(row,high=bytes(wrong).hex()),mode)!=wanted
+                outputs=[processed(row,mode) for mode in (None,'o','k3')]
+                witnesses['profiles']|=len(set(outputs))==3
+    assert all(witnesses.values()),witnesses
+    result=dict(checks=results,witnesses=witnesses);write_json(destination/'native-api.json',result);return result
+
+
 def main():
     global WORK
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--build-record',type=Path)
@@ -570,7 +701,14 @@ def main():
     WORK.mkdir(parents=True,exist_ok=True);OUT.mkdir(parents=True,exist_ok=True)
     destination=Path(tempfile.mkdtemp(prefix='selected-fixture-',dir=OUT));print('results: '+str(destination),flush=True)
     record_path,record,original,contrast=selected_build(args.build_record,destination,args.target)
+    receipt=ROOT/'build/v2-coverage/tested-sources.json'
+    assert c1.target.sha(receipt)=='d57cee29e7e972b59de57eb239ac1f90522924cf27110ad6a8bdf429a98a0f4a'
+    numerical=json.loads(receipt.read_text())
+    for name in ('src/fontreal_v2_coverage.cpp','src/fontreal_v2_coverage.h'):
+        assert c1.target.sha(ROOT/name)==numerical['sources'][name]
+    for name,digest in numerical['opaque_sources'].items():assert c1.target.sha(ROOT/name)==digest
     c1.collector_selfcheck(destination/'sender-selfcheck')
+    native=native_api(record,destination/'native-api')
     source=Path(original['source'])
     vx='third_party/skia/src/base/SkVx.h' if args.target=='bitwarden' else 'third_party/skia/src/core/SkVx.h'
     observer_sources={name:c1.target.sha(source/name) for name in (
@@ -586,31 +724,35 @@ def main():
         with masks.nested_display() as env:
             for case in matrix:
                 if case['id']=='png-bitmap' and all(row['capability']['hasBitmap'] for row in results if row['case']=='bitmap-only'):
-                    assert sum(row['case']=='bitmap-only' for row in results)==2
+                    assert sum(row['case']=='bitmap-only' for row in results)==6
                     continue
-                for palette in ('light','dark'):
-                    condition=destination/(case['id']+'-'+palette);condition.mkdir();fixtures={}
-                    configuration=fixture_config(case,palette,[case['file'],c1.FONTS['Noto Sans']])
-                    oracles,ids,queries=provider(record,case,condition/'provider',configuration)
-                    for role in ('stock','normal','trace'):
-                        package=original['packages']['stock'] if role=='stock' else record['packages'][role]
-                        electron=c1.PINS['electron'] if role=='stock' else record['spec']['upstream']['electron']
-                        fixtures[role]=run_fixture(package,case,palette,condition/role,Path(temporary)/(case['id']+'-'+palette+'-'+role),env,electron)
-                    assert not fixtures['stock']['rows'] and not fixtures['normal']['rows'],'Stock or normal artifact emitted selected observation'
-                    traced=check_trace(case,fixtures['trace'],oracles,ids)
-                    images=check_images(case,palette,condition,fixtures,oracles)
-                    result=dict(case=case['id'],palette=palette,source=str(case['file']),sha256=c1.target.sha(case['file']),trace=traced,images=images)
-                    if 'capability' in case:result['capability']=case['capability']
-                    if case['id']=='gray-outline':
-                        capability=next(row['capability'] for row in results if row['case']=='gray-strike' and row['palette']==palette)
-                        result['outline_pair']=check_outline_pair(destination,palette,capability)
-                    results.append(result)
-                    print(f'PASS selected {case["id"]} {palette}: native provider, numerical oracle, lifecycle, gates and exact OS composition',flush=True)
+                for profile in (None,'o','k3',*(['unsupported'] if case['id']=='noto-regular' else [])):
+                    for palette in ('light','dark'):
+                        condition=destination/(case['id']+'-'+str(profile)+'-'+palette);condition.mkdir();fixtures={}
+                        configuration=fixture_config(case,palette,[case['file'],c1.FONTS['Noto Sans']])
+                        oracles,ids,queries=provider(record,case,condition/'provider',configuration)
+                        for role in ('stock','normal','trace'):
+                            package=original['packages']['stock'] if role=='stock' else record['packages'][role]
+                            electron=c1.PINS['electron'] if role=='stock' else record['spec']['upstream']['electron']
+                            fixtures[role]=run_fixture(package,case,palette,condition/role,Path(temporary)/(case['id']+'-'+str(profile)+'-'+palette+'-'+role),env,electron,profile)
+                        assert not fixtures['stock']['rows'] and not fixtures['normal']['rows'],'Stock or normal artifact emitted selected observation'
+                        traced=check_trace(case,fixtures['trace'],oracles,ids,profile)
+                        images=check_images(case,palette,condition,fixtures,oracles,profile)
+                        result=dict(case=case['id'],palette=palette,profile=profile,source=str(case['file']),sha256=c1.target.sha(case['file']),trace=traced,images=images)
+                        if 'capability' in case:result['capability']=case['capability']
+                        if case['id']=='gray-outline':
+                            capability=next(row['capability'] for row in results if row['case']=='gray-strike' and row['palette']==palette and row['profile']==profile)
+                            result['outline_pair']=check_outline_pair(destination,palette,capability,profile)
+                        results.append(result)
+                        print(f'PASS selected {case["id"]} {palette}: native provider, numerical oracle, lifecycle, gates and exact OS composition',flush=True)
+    for profile in (None,'o','k3','unsupported'):
+        traces=[row['trace'] for row in results if row['profile']==profile]
+        assert traces and sum(row['changedMasks'] for row in traces) and sum(row['doubleProcessingDiscriminators'] for row in traces),f'Profile {profile} lacks identity and repeated-processing pixel witnesses'
     regression=[sys.executable,str(ROOT/'tests/chromium_flatpak_test.py'),'--target',args.target,'--case','stock-fixture','--build-record',record['spec']['c1_record']]
     with (destination/'c1-stdout.log').open('w') as stdout,(destination/'c1-stderr.log').open('w') as stderr:
         subprocess.run(regression,stdout=stdout,stderr=stderr,check=True,env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',TMPDIR=str(WORK/'cache/tmp')))
-    report=dict(builder_identity_contrast=contrast,build_record=str(record_path),build_sha256=c1.target.sha(record_path),scope='exact-engine selected fixture only; actual application and daily activation remain deferred',
-                scenarios={name:'passed' for name in ('S3a','S3b','S3c','S3d','S3e','S4a','S4b')},conditions=results,
+    report=dict(native_api=native,builder_identity_contrast=contrast,build_record=str(record_path),build_sha256=c1.target.sha(record_path),scope='exact-engine selected fixture only; actual application and daily activation remain deferred',
+                scenarios={name:'passed' for name in ('S-SK1','S-SK2','S-SK3','S-SK4','S-SK5','S-SK6','S-SK7','S-SK8')},conditions=results,
                 c1_regression=(destination/'c1-stdout.log').read_text().splitlines()[-1],
                 observer_sources=observer_sources,fixture_inputs={name:c1.target.sha(ROOT/name) for name in ('tests/chromium_selected_test.py','tests/electron_owner_fixture/main.js','tests/electron_owner_fixture/preload.js','tests/electron_owner_fixture/selected.html')})
     write_json(destination/'selected-fixture.json',report);print(destination/'selected-fixture.json',flush=True)

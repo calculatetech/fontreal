@@ -38,6 +38,19 @@ def fixture(os_name, release, upstream, base, declarative):
                 installed=copy.deepcopy(original), original=original, sources=sources)
 
 
+def retained_selected_plan(plan):
+    """Synthetic bundle metadata with the literal installed V1 selected record."""
+    previous = copy.deepcopy(plan)
+    installed_v1 = dict(profile="native-normal-weighted-stems-v1",
+        declaration="5ed19c2cca3ac825b18260517e6b80a26e1836dd382a4c980c05eb824ae5b80f",
+        license="1db7408f61b5173cb6e1c5d94ab8cf998f546f280e3777847f1c3d4f5ac0bade",
+        processor="125c39efdc3e1003b533add69af082b3318323d71f1e15713322deae33d7cc59",
+        render="241b0484634db999a40f5e6009bab8cc6ab62bcce9bbed35b310d05b5c958f91")
+    previous["sources"]["freetype"]["selected"] = installed_v1
+    previous["sources"]["freetype"]["capability_sha256"] = "f47c267b191a7f49588a0e94b9c8059e6695fd1b53b4f620e600c4cd42b0ca3a"
+    return previous
+
+
 def retained_plan(plan):
     # The retained schema-1 producer at 6ae8559 recorded exactly the two Qt families.
     previous = copy.deepcopy(plan)
@@ -167,11 +180,17 @@ def main():
             ("foreign-ft", lambda p: p["original"][1].update(arch="arm64")),
             ("empty", lambda p: p.update(original=[])),
             ("duplicate", lambda p: p["original"].append(dict(p["original"][0]))),
+            ("duplicate-hides-late", lambda p: p.update(original=[*p["original"][:-1], dict(p["original"][0])])),
             ("late-source-mismatch", lambda p: p["original"][-1].update(source_version="6.8.2+dfsg-8")),
             ("wrong-qt", lambda p: p["sources"]["qt6-base"].update(version="6.10.2+dfsg-7")),
             ("stale-patch", lambda p: p["sources"]["qt6-declarative"].update(patch_sha256="0" * 64)),
             ("stale-selected-core", lambda p: p["sources"]["freetype"]["selected"].update(processor="0" * 64)),
             ("missing-selected-core", lambda p: p["sources"]["freetype"]["selected"].pop("processor")),
+            ("missing-v2-core", lambda p: p["sources"]["freetype"]["selected"].pop("v2_processor")),
+            ("stale-v2-core", lambda p: p["sources"]["freetype"]["selected"].update(v2_processor="0" * 64)),
+            ("missing-v2-header", lambda p: p["sources"]["freetype"]["selected"].pop("v2_declaration")),
+            ("stale-v2-header", lambda p: p["sources"]["freetype"]["selected"].update(v2_declaration="0" * 64)),
+            ("unknown-selected", lambda p: p["sources"]["freetype"]["selected"].update(profile="unknown")),
             ("wrong-version", lambda p: p["sources"]["qt6-base"].update(build_version="6.8.2+dfsg-9+deb13u2+fontreal1")),
         ]:
             plan = copy.deepcopy(cases[0])
@@ -191,7 +210,25 @@ def main():
         old.mkdir()
         bundle(old, previous)
         verify(old, True)
+        # Literal installed V1 metadata proves schema compatibility only, not historical rendering.
         for plan in cases:
+            v1 = retained_selected_plan(plan)
+            assert build.check_plan(v1, current_patches=False)
+            assert build.selected_plan(v1)
+            rejected(v1, root, "literal-v1-new-build-" + plan["os"])
+            v1_directory = root / ("synthetic-v1-" + plan["os"])
+            v1_directory.mkdir()
+            bundle(v1_directory, v1)
+            verify(v1_directory, True)
+            for key in ("v2_processor", "v2_declaration"):
+                incomplete = copy.deepcopy(plan)
+                incomplete["sources"]["freetype"]["selected"].pop(key)
+                try:
+                    build.check_plan(incomplete, current_patches=False)
+                except ValueError:
+                    pass
+                else:
+                    raise AssertionError("Incomplete recorded V2 input accepted")
             retained = retained_plan(plan)
             assert build.check_plan(retained, current_patches=False) == build.PROFILES[(plan["os"], plan["release"])]
             rejected(retained, root, "retained-new-build-" + plan["os"])
@@ -236,7 +273,8 @@ def main():
         late.write_bytes(before)
         for role in ("packages", "original"):
             files = sorted((target / role).glob("*.deb"))
-            for label, removed in (("empty", files), ("one", files[1:]), ("late", [target / role / "libqt6quick6.deb"])):
+            for label, removed in (("empty", files), ("one", files[1:]), ("late", [target / role / "libqt6quick6.deb"]),
+                                   ("late-i386", [target / role / "libfreetype6_i386.deb"])):
                 saved = {path: path.read_bytes() for path in removed}
                 for path in removed:
                     path.unlink()

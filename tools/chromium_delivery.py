@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 import chromium_flatpak as target
-from browser import desktop_arg
+from browser import desktop_arg, rendering_profile
 
 ROOT=Path(__file__).resolve().parents[1]
 APPLICATION='com.github.IsmaelMartinez.teams_for_linux'
@@ -119,6 +119,7 @@ def enable(name,build_path):
         if key not in owned and (p.exists() or p.is_symlink()):
             raise ValueError('Existing per-user launch customizations were left untouched: '+str(p))
     texts={p:value for app in apps for p,value in hook_texts(app).items()}
+    for entry in apps.values():entry['tool_sha256']=target.sha(Path(__file__))
     for p,(text,mode) in texts.items():
         p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text);p.chmod(mode)
     save_state(dict(apps=apps))
@@ -163,6 +164,7 @@ def selected(arguments,state):
     if reason:
         print('Fontreal '+name+': '+reason+'; using the current native application.',file=sys.stderr);return None
     options,fd=view_options(builder.current_view(record,selectors))
+    options.append('--env=FONTREAL_PROFILE='+rendering_profile())
     return [*arguments[:index],*options,*arguments[index:]],fd
 
 

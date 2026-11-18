@@ -11,6 +11,7 @@ import io
 import json
 import os
 from pathlib import Path
+import pwd
 import re
 import shlex
 import socket
@@ -321,7 +322,7 @@ def discovery(root):
                 current_directory = str(Path(incompatible["library"]).parent)
                 with ExitStack() as stack:
                     stack.enter_context(patch.object(os, "execve", side_effect=lambda *args: captured.append(args)))
-                    stack.enter_context(patch.dict(os.environ, LD_LIBRARY_PATH=f":/fixture/loader::{current_directory}:/fixture/tail:", FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="ramp217", FONTREAL_FT_EXECUTABLE="bad"))
+                    stack.enter_context(patch.dict(os.environ, LD_LIBRARY_PATH=f":/fixture/loader::{current_directory}:/fixture/tail:", FONTREAL_FT_RENDERING="1", FONTREAL_FT_CONTRAST="ramp217", FONTREAL_FT_EXECUTABLE="bad", FONTREAL_PROFILE="k3"))
                     err = io.StringIO()
                     with patch.object(sys, "argv", [str(ROOT / "tools/browser.py"), "run", browser, "--", "https://example.invalid/a b?$=&"]), redirect_stderr(err):
                         browser_tool.main()
@@ -332,6 +333,7 @@ def discovery(root):
                 assert executable == Path("/usr/bin") / browser and argv == [str(executable), "https://example.invalid/a b?$=&"]
                 assert env["LD_LIBRARY_PATH"] == ":/fixture/loader::/fixture/tail:"
                 assert not any(k.startswith("FONTREAL_FT_") for k in env)
+                assert 'FONTREAL_PROFILE' not in env
                 assert tree(profile) == fallback_before
             valid_build = Path(upgraded["build"])
             bad_build = json.loads(valid_build.read_text())
@@ -436,6 +438,27 @@ def process_observation(root):
                     main_call("enable", browser)
                     state, _, _ = browser_tool.paths(browser)
                     assert json.loads(state.read_text())["profile"] == str(profile)
+                    activation = json.loads(state.read_text())
+                    preference = home / "config/fontreal/profile"
+                    preference.write_text("k3\n")
+                    read_text, read_bytes = Path.read_text, Path.read_bytes
+                    observed_profile = "o"
+                    def observed_text(path, *args, **kwargs):
+                        if str(path) == f"/proc/{os.getpid()}/maps":return activation["library"]
+                        return read_text(path, *args, **kwargs)
+                    def observed_bytes(path, *args, **kwargs):
+                        if str(path) == f"/proc/{os.getpid()}/environ":
+                            return ("FONTREAL_FT_RENDERING=1\0FONTREAL_FT_CONTRAST=weighted\0FONTREAL_FT_EXECUTABLE=" +
+                                    ":".join(activation["scope"]) + "\0FONTREAL_PROFILE=" + observed_profile + "\0").encode()
+                        return read_bytes(path, *args, **kwargs)
+                    with patch.object(browser_tool, "running_profiles", return_value={os.getpid(): profile}), \
+                            patch.object(Path, "read_text", observed_text), patch.object(Path, "read_bytes", observed_bytes):
+                        pending = json.loads(main_call("status", browser))
+                        assert pending["restart_required_pids"] == [os.getpid()] and not pending["active_pids"]
+                        observed_profile = "k3"
+                        current = json.loads(main_call("status", browser))
+                        assert current["active_pids"] == [os.getpid()] and not current["restart_required_pids"]
+                        assert current["rendering_profile"] == "k3"
                     late_lock = agreeing[-1] / "fd/7"
                     late_lock.unlink()
                     late_lock.symlink_to(unused / ".parentlock")
@@ -520,7 +543,12 @@ os.execve = record
             capture = home / "exec.json"
             env = dict(os.environ, PYTHONPATH=str(bootstrap), FONTREAL_TEST_HOME=str(home),
                        FONTREAL_TEST_CAPTURE=str(capture), LD_LIBRARY_PATH=":/fixture/head::/fixture/tail:",
-                       FONTREAL_TEST_UNRELATED="retained $ & value")
+                       FONTREAL_TEST_UNRELATED="retained $ & value", FONTREAL_PROFILE="o")
+            preference = home / "config/fontreal/profile"
+            preference.write_text("k3\n")
+            inactive = home / ".config/fontreal/profile"
+            inactive.parent.mkdir(parents=True)
+            inactive.write_text("o\n")
             url = "https://example.invalid/a space?$literal=one&two=three"
             def check(arguments):
                 for _ in range(100):
@@ -537,8 +565,9 @@ os.execve = record
                 assert child_env["LD_LIBRARY_PATH"] == library_dir + ":" + env["LD_LIBRARY_PATH"]
                 assert child_env["FONTREAL_FT_EXECUTABLE"].split(":") == record["scope"]
                 assert child_env["FONTREAL_FT_RENDERING"] == "1" and child_env["FONTREAL_FT_CONTRAST"] == "weighted"
+                assert child_env["FONTREAL_PROFILE"] == preference.read_text().strip()
                 for key, value in env.items():
-                    if key != "LD_LIBRARY_PATH":
+                    if key not in ("LD_LIBRARY_PATH", "FONTREAL_PROFILE"):
                         assert child_env.get(key) == value, (key, child_env.get(key), value)
             masks.run([wrapper, "--new-tab", url], env=env)
             check(["--new-tab", url])
@@ -565,6 +594,32 @@ else:
                 masks.run(["/usr/bin/python3", "-c", gio, desktop, action], env=env)
                 check(expected)
                 results.append([browser, action, expected])
+            preference.write_text("o\n")
+            env["FONTREAL_PROFILE"] = "k3"
+            masks.run([wrapper, "--new-tab", url], env=env)
+            check(["--new-tab", url])
+            preference.unlink()
+            env.pop("XDG_CONFIG_HOME")
+            # The HOME root is a distinct reader route, with the same saved activation.
+            fallback_state = home / ".config/fontreal/browsers" / state.name
+            fallback_state.parent.mkdir(parents=True, exist_ok=True)
+            fallback_state.write_bytes(state.read_bytes())
+            preference = inactive
+            masks.run([wrapper, "--new-tab", url], env=env)
+            check(["--new-tab", url])
+            saved = fallback_state.read_bytes()
+            fallback_state.write_text(json.dumps(dict(record, library_sha256="0" * 64)))
+            fixed = tree(profile), index.read_bytes()
+            result = masks.run([wrapper, "--new-tab", url], env=dict(env,
+                LD_LIBRARY_PATH=env["LD_LIBRARY_PATH"] + ":" + str(Path(record["library"]).parent)))
+            assert "private library is missing or changed" in result.stderr
+            got = json.loads(capture.read_text());capture.unlink()
+            assert got["argv"] == [f"/usr/bin/{browser}", "--new-tab", url]
+            assert got["env"]["LD_LIBRARY_PATH"] == env["LD_LIBRARY_PATH"]
+            assert not any(key in got["env"] for key in ("FONTREAL_PROFILE", "FONTREAL_FT_RENDERING",
+                           "FONTREAL_FT_CONTRAST", "FONTREAL_FT_EXECUTABLE"))
+            assert (tree(profile), index.read_bytes()) == fixed
+            fallback_state.write_bytes(saved)
             main_call("disable", browser)
     return results
 
@@ -617,6 +672,37 @@ def process_scope(record):
     return dict(public_masks=results, qt_masks=len(normal["masks"]), qt_images=len(normal["images"]), fontconfig=fontconfig)
 
 
+def root_namespace(home):
+    """Keep real package ownership while mounting only test-owned browser data."""
+    if ROOT.is_relative_to(Path.home()):(home / ROOT.relative_to(Path.home())).mkdir(parents=True,exist_ok=True)
+    setup = '''exec 3<"$1"
+/usr/bin/mount --bind "$2" "$3"
+/usr/bin/mount --no-canonicalize --bind /proc/self/fd/3 "$1"
+cd "$1"
+exec 3<&-
+target_uid=$4
+target_gid=$5
+shift 5
+exec /usr/bin/setpriv --reuid "$target_uid" --regid "$target_gid" --init-groups --no-new-privs "$@"
+'''
+    uid, gid = os.getuid(), os.getgid()
+    assert uid != 0
+    user = pwd.getpwuid(uid).pw_name
+    values = dict(HOME=str(Path.home()), USER=user, LOGNAME=user)
+    for key in ("PATH", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR", "PYTHONDONTWRITEBYTECODE",
+                "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_STATE_HOME", "XDG_RUNTIME_DIR",
+                "XDG_CONFIG_DIRS", "XDG_DATA_DIRS", "XDG_SESSION_TYPE", "XDG_CURRENT_DESKTOP",
+                "DISPLAY", "WAYLAND_DISPLAY", "XAUTHORITY", "DBUS_SESSION_BUS_ADDRESS"):
+        if key in os.environ:values[key] = os.environ[key]
+    launch_env = {key:value for key,value in os.environ.items() if not key.startswith("LD_")}
+    values.update({key:value for key,value in os.environ.items() if key.startswith("LD_")})
+    command = ["sudo", "-n", "--", "/usr/bin/unshare", "--mount", "--propagation", "private",
+               "/usr/bin/sh", "-eu", "-c", setup, "fontreal-browser-namespace", str(ROOT),
+               str(home.resolve()), str(Path.home()), str(uid), str(gid), "/usr/bin/env",
+               *[key + "=" + value for key,value in values.items()]]
+    return command, launch_env
+
+
 def lifecycle(root, record):
     root.mkdir(parents=True)
     real_home = Path.home()
@@ -655,6 +741,9 @@ def lifecycle(root, record):
                                  bases=observed)
     namespace = [] if native_bundle else ["bwrap", "--bind", "/", "/", "--bind", str(home), str(real_home),
                  "--bind", str(ROOT), str(ROOT), "--proc", "/proc", "--dev-bind", "/dev", "/dev"]
+    launch_env = os.environ.copy()
+    if not native_bundle and os.environ.get("FONTREAL_TEST_ROOT_NAMESPACE") == "1":
+        namespace, launch_env = root_namespace(home)
     output = root / "lifecycle.json"
     metadata_path = root / "installation-identities.json"
     metadata_path.write_text(json.dumps(metadata))
@@ -663,7 +752,10 @@ def lifecycle(root, record):
     if native_bundle:
         (OUT / "native-unrelated-trees.json").write_text(json.dumps(dict(
             phase="before", before={str(path): contents for path, contents in unrelated.items()}), indent=2))
-    runner = """import json, sys
+    runner = f"import os\nassert os.getuid()=={os.getuid()} and os.getgid()=={os.getgid()}, 'The browser test must run as its original user'\n" + """from pathlib import Path
+status = dict(line.split(':', 1) for line in Path('/proc/self/status').read_text().splitlines() if ':' in line)
+assert all(int(status[key].strip(), 16) == 0 for key in ('CapEff', 'CapPrm', 'CapAmb'))
+import json, sys
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
 import browser_delivery_test as test
@@ -672,7 +764,7 @@ results = test.lifecycle_inside(root, json.loads((root/'build.json').read_text()
 (root/'lifecycle.json').write_text(json.dumps(results))
 """
     try:
-        subprocess.run([*namespace, sys.executable, "-c", runner, str(ROOT / "tests"), str(root)], check=True,
+        subprocess.run([*namespace, sys.executable, "-c", runner, str(ROOT / "tests"), str(root)], check=True, env=launch_env,
                        timeout=1200 if native_bundle else 300)
     finally:
         if native_bundle:
@@ -1043,6 +1135,23 @@ else: app.launch_action(sys.argv[2],None)
                         assert {k:v["value"] for k,v in effective.items()} == browser_tool.PREFS
                         assert all(v["user"] for v in effective.values())
                         assert json.loads(tool("status"))["active_pids"] == [treated["pid"]]
+                        preference = configuration / "fontreal/profile"
+                        preference.parent.mkdir(parents=True, exist_ok=True)
+                        subprocess.run(["sh", ROOT / "packaging/session/fontreal-session", "profile", "k3"], env=env, check=True)
+                        pending = json.loads(tool("status"))
+                        assert pending["restart_required_pids"] == [treated["pid"]] and not pending["active_pids"]
+                        assert storage() == {"cookie": "fontreal=early", "stored": "early"}
+                        quit()
+                        treated = launch("profile-k3")
+                        process_env = Path(f"/proc/{treated['pid']}/environ").read_bytes().split(b"\0")
+                        assert b"FONTREAL_PROFILE=k3" in process_env
+                        assert json.loads(tool("status"))["active_pids"] == [treated["pid"]]
+                        # Keep the existing pixel and native-helper observations at their initial choice.
+                        subprocess.run(["sh", ROOT / "packaging/session/fontreal-session", "profile", "o"], env=env, check=True)
+                        quit()
+                        treated = launch("profile-o")
+                        assert b"FONTREAL_PROFILE=o" in Path(f"/proc/{treated['pid']}/environ").read_bytes().split(b"\0")
+                        assert json.loads(tool("status"))["active_pids"] == [treated["pid"]]
                         inherited_helper, inherited_helper_env, inherited_fc = browser_helper("treated")
                         assert inherited_helper_env[:3] == ["1", "weighted", ":".join(activation["scope"])]
                         assert str(Path(library).parent) in inherited_helper_env[3].split(":")
@@ -1070,7 +1179,13 @@ else: app.launch_action(sys.argv[2],None)
                         raw = masks.probe(record, masks.NOTO / "NotoSans-Regular.ttf", flags=32776,
                                           char='m', enabled=False, variant='stock')
                         reference = dict(raw['rendered'][0])
-                        reference['mask'] = expected_mask(bytes.fromhex(reference['mask']), reference['width']).hex()
+                        if record['spec'].get('v2_processor'):
+                            # Reuse the qualified adapter as an activation witness, without another numerical qualification.
+                            with patch.dict(os.environ, FONTREAL_PROFILE='o', FONTREAL_FT_EXECUTABLE=''):
+                                reference = masks.probe(record, masks.NOTO / 'NotoSans-Regular.ttf',
+                                                        flags=32776, char='m', contrast='weighted')['rendered'][0]
+                        else:
+                            reference['mask'] = expected_mask(bytes.fromhex(reference['mask']), reference['width']).hex()
                         error = masks.fit(glyph, reference["width"], reference["height"], masks.blend(bytes.fromhex(reference["mask"]), (0,0,0), (255,255,255), False))
                         assert error["error"] <= 1, (browser, error)
                         launch_paths = []

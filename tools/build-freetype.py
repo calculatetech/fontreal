@@ -21,6 +21,9 @@ GEOMETRY = ROOT / "patches/freetype-nearest-property.patch"
 TRACE = ROOT / "tests/freetype_browser_trace.h"
 PROCESSOR = ROOT / "src/fontreal_coverage.cpp"
 DECLARATION = ROOT / "src/fontreal_coverage.h"
+V2_PROCESSOR = ROOT / "src/fontreal_v2_coverage.cpp"
+V2_DECLARATION = ROOT / "src/fontreal_v2_coverage.h"
+V2_OBSERVER = ROOT / "tests/v2_freetype_observe.h"
 # These exact archives were checked against Ubuntu's authenticated source index.
 ARCHIVES = {
     "freetype_2.14.2+dfsg-1ubuntu0.2.dsc": "37305c65f89ccfdbfdaafba675a203865603180eedd44578fb30a3b38dc6ae0c",
@@ -76,6 +79,7 @@ def source_configuration(version, machine):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trace", action="store_true", help="Observe real browser masks in test builds")
+    parser.add_argument("--v2-observe", action="store_true", help="Observe private V2 adapter inputs in test builds")
     args = parser.parse_args()
     try:
         version = official_version(installed("libfreetype6"))
@@ -87,6 +91,9 @@ def main():
     spec = dict(source=version, archives=archives, headers=headers, patch=sha(PATCH), harfbuzz=harfbuzz,
                 geometry=sha(GEOMETRY), provider_recipe=sha(ROOT / "tools/freetype_provider.py"),
                 processor=sha(PROCESSOR), declaration=sha(DECLARATION),
+                v2_processor=sha(V2_PROCESSOR), v2_declaration=sha(V2_DECLARATION),
+                fontreal_license=sha(ROOT / "LICENSE"),
+                v2_observer=sha(V2_OBSERVER) if args.v2_observe else None,
                 mask_compiler=output(["c++", "--version"]).splitlines()[0],
                 recipe=sha(Path(__file__)),
                 trace=sha(TRACE) if args.trace else None,
@@ -139,21 +146,29 @@ def main():
     shutil.copytree(stock_source, candidate_source, symlinks=True)
     for patch in (GEOMETRY, PATCH):
         subprocess.run(["patch", "--batch", "--fuzz=0", "-p1", "-i", str(patch)], cwd=candidate_source, env=env, check=True)
-    for source in (PROCESSOR, DECLARATION):
+    for source in (PROCESSOR, DECLARATION, V2_PROCESSOR, V2_DECLARATION):
         shutil.copyfile(source, candidate_source / "src/base" / source.name)
-    processor = destination / "coverage.o"
-    subprocess.run(["c++", "-std=c++17", "-O2", "-fPIC", "-fvisibility=hidden", "-fvisibility-inlines-hidden",
-                    "-I" + str(prefix / "include/freetype2"), "-c", str(candidate_source / "src/base" / PROCESSOR.name),
-                    "-o", str(processor)], env=env, check=True)
+    if args.v2_observe:
+        shutil.copyfile(V2_OBSERVER, candidate_source / "src/base" / V2_OBSERVER.name)
+    shutil.copyfile(ROOT / "LICENSE", candidate_source / "FONTREAL-LICENSE.txt")
+    processors = []
+    for source, name in ((PROCESSOR, "coverage.o"), (V2_PROCESSOR, "v2-coverage.o")):
+        processor = destination / name
+        subprocess.run(["c++", "-std=c++17", "-O2", "-fPIC", "-fvisibility=hidden", "-fvisibility-inlines-hidden",
+                        "-I" + str(prefix / "include/freetype2"), "-c", str(candidate_source / "src/base" / source.name),
+                        "-o", str(processor)], env=env, check=True)
+        processors.append(processor)
     env["PKG_CONFIG_PATH"] = str(prefix / "lib/x86_64-linux-gnu/pkgconfig")
     env["CC"] = "cc"
     env["CFLAGS"] = "-O2" + (f" -DFONTREAL_TEST_TRACE -include {TRACE}" if args.trace else "")
+    if args.v2_observe:
+        env["CFLAGS"] += " -DFONTREAL_V2_TEST_OBSERVE"
     libraries = {}
     for mode, source in (("stock", stock_source), ("candidate", candidate_source)):
         build_env = dict(env)
         if mode == "candidate":
             # FreeType's own export list also hides the private C++ implementation.
-            build_env["LDFLAGS"] = f"{processor} -lstdc++ -lm"
+            build_env["LDFLAGS"] = " ".join(map(str, processors)) + " -lstdc++ -lm"
         build = destination / mode
         build.mkdir()
         command = [str(source / "configure"), f"--prefix={destination / (mode + '-install')}",
@@ -180,10 +195,12 @@ def main():
     if exports[0] != exports[1]:
         raise SystemExit("Private FreeType public exports differ from the stock control.")
     shutil.copyfile(stock_source / "docs/FTL.TXT", destination / "FTL.TXT")
+    shutil.copyfile(ROOT / "LICENSE", destination / "FONTREAL-LICENSE.txt")
     (destination / "NOTICE").write_text(
         "Based in part on the work of the FreeType Team.\n"
         "Portions are copyright The FreeType Project (https://freetype.org).\n"
-        "The candidate adds the selected native-normal weighted-stem profile and retained diagnostic modes.\n"
+        "The candidate adds the selected native-normal V1 and V2 profiles and retained diagnostic modes.\n"
+        "The Fontreal coverage implementations use the MIT license in FONTREAL-LICENSE.txt.\n"
         "See FTL.TXT, the retained source notices, and the Fontreal patch.\n")
     record.write_text(json.dumps(dict(spec=spec, libraries=libraries,
                                     header_packages={d.name: sha(d) for d in debs}), indent=2) + "\n")

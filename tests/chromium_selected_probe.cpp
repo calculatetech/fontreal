@@ -1,10 +1,13 @@
 // Independent oracle: pristine Fontations interpreter paths and stock Skia A8 raster.
 #include "include/core/SkData.h"
 #include "base/compiler_specific.h"
-#include "base/memory/madv_free_discardable_memory_allocator_posix.h"
+#include "base/test/test_discardable_memory_allocator.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPathBuilder.h"
 #include "include/core/SkPaint.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkBlurTypes.h"
+#include "src/core/SkMaskFilterBase.h"
 #include "include/core/SkFont.h"
 #include "include/core/SkFontTypes.h"
 #include "include/core/SkFontArguments.h"
@@ -43,7 +46,7 @@ static void hex(const void* data, size_t length) {
 int main(int argc,char** argv) {
     if (argc<12 || (argc-12)%2) return 2;
     // Electron supplies this allocator; the standalone PNG oracle must do so too.
-    static base::MadvFreeDiscardableMemoryAllocatorPosix allocator;
+    static base::TestDiscardableMemoryAllocator allocator;
     base::DiscardableMemoryAllocator::SetInstance(&allocator);
     auto data=SkData::MakeFromFileName(argv[1]);
     if (!data) return 3;
@@ -78,6 +81,8 @@ int main(int argc,char** argv) {
     nativeFont.setSubpixel(false);nativeFont.setForceAutoHinting(false);nativeFont.setLinearMetrics(false);
     SkPaint paint;
     if (stroke>=0) {paint.setStyle(SkPaint::kStroke_Style);paint.setStrokeWidth(stroke);paint.setStrokeMiter(10);}
+    const bool filtered=std::getenv("FONTREAL_PROBE_FILTER")!=nullptr;
+    if (filtered) paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle,1.2f));
     SkScalerContextRec record;SkScalerContextEffects effects;
     SkScalerContext::MakeRecAndEffects(nativeFont,paint,SkSurfaceProps(),SkScalerContextFlags::kNone,post,&record,&effects);
     SkVector scale;SkMatrix matrix;
@@ -102,7 +107,7 @@ int main(int argc,char** argv) {
         float advance=fontations_ffi::unhinted_advance_width_or_zero(*face,scale.y(),*coords,id);
         if (metrics.has_adjusted_advance && std::round(metrics.adjusted_advance)!=0) advance=std::round(metrics.adjusted_advance);
         SkPoint translatedAdvance=matrix.mapPoint({advance,0});
-        if (stroke>=0) {
+        if (stroke>0) {
             auto inverse=post.invert();if (!inverse) return 9;
             path=path.makeTransform(*inverse);
             SkStrokeRec rec(SkStrokeRec::kFill_InitStyle);
@@ -112,28 +117,73 @@ int main(int argc,char** argv) {
             if (rec.applyToPath(&builder,path)) path=builder.detach();
             path=path.makeTransform(post);
         }
+        const bool hairline=stroke==0;
         SkIRect bounds=path.getBounds().roundOut();
+        if (hairline && !bounds.isEmpty()) bounds.outset(1,1);
         unsigned width=unsigned(bounds.width()),height=unsigned(bounds.height());
         std::vector<uint8_t> image(width*height);
         SkMaskBuilder mask(image.data(),bounds,width,SkMask::kA8_Format);
-        if (width && height) StockRaster::GenerateImageFromPath(mask,path,SkMaskGamma::PreBlend{},false,false,false,false);
+        if (width && height) StockRaster::GenerateImageFromPath(mask,path,SkMaskGamma::PreBlend{},false,false,false,hairline);
         auto serialized=path.serialize();
         std::printf("%s{\"char\":%u,\"glyph\":%u,\"size\":%.9g,\"advance\":[%.9g,%.9g],\"width\":%u,\"height\":%u,\"left\":%d,\"top\":%d,\"path\":\"",
                     codepoint==first?"":",",codepoint,unsigned(id),double(size),double(translatedAdvance.x()),double(translatedAdvance.y()),
                     width,height,bounds.left(),bounds.top());
         hex(serialized->data(),serialized->size());std::printf("\",\"mask\":\"");
         for (unsigned y=0;y<height;++y) hex(image.data()+y*width,width);
+        unsigned highWidth=width && height?4*(width+6):0,highHeight=width && height?4*(height+6):0;
+        SkIRect highBounds=width && height?SkIRect::MakeLTRB(4*(bounds.left()-3),4*(bounds.top()-3),4*(bounds.right()+3),4*(bounds.bottom()+3)):SkIRect::MakeEmpty();
+        std::vector<uint8_t> high(size_t(highWidth)*highHeight),thin(high.size());
+        if (!high.empty()) {
+            SkPath highPath=path;
+            if (hairline) {
+                SkPaint rawPaint;rawPaint.setStyle(SkPaint::kStroke_Style);rawPaint.setStrokeWidth(1);
+                SkStrokeRec physical(rawPaint);SkPathBuilder builder;
+                if (!physical.applyToPath(&builder,path)) return 10;
+                highPath=builder.detach();
+            }
+            SkMaskBuilder support(high.data(),highBounds,highWidth,SkMask::kA8_Format);
+            StockRaster::GenerateImageFromPath(support,highPath.makeScale(4,4),SkMaskGamma::PreBlend{},false,false,false,false);
+            if (hairline) {
+                SkMaskBuilder wrong(thin.data(),highBounds,highWidth,SkMask::kA8_Format);
+                StockRaster::GenerateImageFromPath(wrong,path.makeScale(4,4),SkMaskGamma::PreBlend{},false,false,false,true);
+            }
+        }
+        std::printf("\",\"hairline\":%s,\"highWidth\":%u,\"highHeight\":%u,\"highBounds\":[%d,%d,%d,%d],\"high\":\"",hairline?"true":"false",highWidth,highHeight,highBounds.left(),highBounds.top(),highBounds.right(),highBounds.bottom());
+        hex(high.data(),high.size());std::printf("\",\"thinHigh\":\"");
+        if (hairline) hex(thin.data(),thin.size());
         auto nativeGlyph=native->makeGlyph(SkPackedGlyphID(id),&arena);
-        nativeGlyph.setImage(&arena,native.get());nativeGlyph.setPath(&arena,native.get());
-        std::printf("\",\"hasOutlines\":%s,\"hasBitmap\":%s,\"nativeRepresentation\":%u,\"nativeFormat\":%d,\"hintingReliant\":%s,\"scale\":%.9g,\"matrix\":[%.9g,%.9g,%.9g,%.9g],\"native\":{\"width\":%u,\"height\":%u,\"left\":%d,\"top\":%d,\"advance\":[%.9g,%.9g],\"path\":\"",
-                    hasOutlines?"true":"false",fontations_ffi::has_bitmap_glyph(*face,id)?"true":"false",unsigned(nativeGlyph.extraBits()),int(nativeGlyph.maskFormat()),
+        nativeGlyph.setImage(&arena,native.get());nativeGlyph.setImage(&arena,native.get());nativeGlyph.setPath(&arena,native.get());
+        std::printf("\",\"hasOutlines\":%s,\"hasBitmap\":%s,\"nativeRepresentation\":%u,\"nativeFormat\":%d,\"nativeHairline\":%s,\"hintingReliant\":%s,\"scale\":%.9g,\"matrix\":[%.9g,%.9g,%.9g,%.9g],\"native\":{\"width\":%u,\"height\":%u,\"left\":%d,\"top\":%d,\"advance\":[%.9g,%.9g],\"path\":\"",
+                    hasOutlines?"true":"false",fontations_ffi::has_bitmap_glyph(*face,id)?"true":"false",unsigned(nativeGlyph.extraBits()),int(nativeGlyph.maskFormat()),nativeGlyph.pathIsHairline()?"true":"false",
                     reliant?"true":"false",double(scale.y()),double(matrix.getScaleX()),double(matrix.getSkewX()),double(matrix.getSkewY()),double(matrix.getScaleY()),
                     unsigned(nativeGlyph.width()),unsigned(nativeGlyph.height()),nativeGlyph.left(),nativeGlyph.top(),double(nativeGlyph.advanceX()),double(nativeGlyph.advanceY()));
         if (const auto* nativePath=nativeGlyph.path()) {auto bytes=nativePath->serialize();hex(bytes->data(),bytes->size());}
         std::printf("\",\"mask\":\"");
         if (const auto* bytes=static_cast<const uint8_t*>(nativeGlyph.image()))
             for (unsigned y=0;y<nativeGlyph.height();++y) hex(bytes+y*nativeGlyph.rowBytes(),nativeGlyph.width());
-        std::printf("\"}}");
+        std::printf("\"},\"filtered\":");
+        if (filtered && width && height) {
+            std::vector<uint8_t> expected=image;
+            if (const char* name=std::getenv("FONTREAL_PROBE_EXPECTED_MASK")) {
+                auto bytes=SkData::MakeFromFileName(name);
+                if (!bytes || bytes->size()!=expected.size()) return 11;
+                std::memcpy(expected.data(),bytes->data(),expected.size());
+            }
+            SkMaskBuilder source(expected.data(),bounds,width,SkMask::kA8_Format),result;
+            if (!as_MFB(paint.getMaskFilter())->filterMask(&result,source,post,nullptr)) return 12;
+            SkAutoMaskFreeImage owned(result.image());
+            std::printf("{\"width\":%d,\"height\":%d,\"left\":%d,\"top\":%d,\"mask\":\"",result.fBounds.width(),result.fBounds.height(),result.fBounds.left(),result.fBounds.top());
+            for (int y=0;y<result.fBounds.height();++y) hex(result.image()+y*result.fRowBytes,result.fBounds.width());
+            std::printf("\"}");
+        } else std::printf("null");
+        std::printf("}");
+        if (codepoint==first) {
+            if (const char* next=std::getenv("FONTREAL_PROBE_LATE_PROFILE")) {
+                setenv("FONTREAL_PROFILE",next,1);
+                native=SkStrikeSpec::MakeMask(nativeFont,paint,SkSurfaceProps(),SkScalerContextFlags::kNone,post).createScalerContext();
+                if (!native) return 13;
+            }
+        }
     }
     std::printf("]\n");
     return 0;

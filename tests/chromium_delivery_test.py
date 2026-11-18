@@ -93,21 +93,22 @@ def comparison_processes(main_pid,engine):
 
 
 @contextmanager
-def comparison(view,destination,env,arguments=(),collector=None,native_options=(),expected_failure=None,signal_inspector=False):
-    destination.mkdir(parents=True);state=Path(tempfile.mkdtemp(prefix='comparison-',dir=WORK));data=state/'data';data.mkdir()
+def comparison(view,destination,env,arguments=(),collector=None,native_options=(),expected_failure=None,signal_inspector=False,hook=None,private_data=None):
+    destination.mkdir(parents=True);state=Path(tempfile.mkdtemp(prefix='comparison-',dir=WORK));data=state/'data' if private_data is None else private_data;data.mkdir(exist_ok=True)
     with socket.socket() as listener:
         if signal_inspector:listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         listener.bind(('127.0.0.1',9229 if signal_inspector else 0));port=listener.getsockname()[1]
-    command=['/usr/bin/flatpak','run'];fd=None
+    command=['/usr/bin/flatpak' if hook is None else str(hook),'run'];fd=None
     try:
-        if view is not None:
+        if view is not None and hook is None:
             options,fd=delivery.view_options(view);command+=options
             stat=os.fstat(fd);chosen=Path(view).stat()
             assert (stat.st_dev,stat.st_ino)==(chosen.st_dev,chosen.st_ino)
             assert fcntl.fcntl(fd,fcntl.F_GETFL)&(os.O_PATH|os.O_NOFOLLOW|os.O_DIRECTORY)==(os.O_PATH|os.O_NOFOLLOW|os.O_DIRECTORY) and fcntl.fcntl(fd,fcntl.F_GETFD)&fcntl.FD_CLOEXEC
             write_json(destination/'host-alias-fd.json',dict(view=str(view),fd=fd,device=stat.st_dev,inode=stat.st_ino,
                        flags=fcntl.fcntl(fd,fcntl.F_GETFL),closeOnExec=True,options=options))
-        command+=[*native_options,'--filesystem='+str(data),'--env=E2E_USER_DATA_DIR='+str(data),APPLICATION,
+        command+=[*(native_options if hook is None else ['--user']),
+                  *(['--filesystem='+str(data),'--env=E2E_USER_DATA_DIR='+str(data)] if hook is None else []),APPLICATION,
                   *([] if signal_inspector else ['--inspect=127.0.0.1:'+str(port)]),*arguments]
         write_json(destination/'command.json',command)
         # Application stderr can contain account data. Diagnostics retain only explicit bounded observations.
@@ -181,6 +182,7 @@ def comparison(view,destination,env,arguments=(),collector=None,native_options=(
                 except ProcessLookupError:pass
     failed=False;activation=None
     try:
+        if hook is not None:native_entry(child,command[1:],view,destination/'native-entry.json')
         deadline=time.monotonic()+60
         while True:
             if collector is not None:collector.check()
@@ -907,13 +909,13 @@ print('first',flush=True);assert sys.stdin.readline()=='late\\n';os.write(2,line
     write_json(destination/'result.json',dict(result,passed=True,synthetic=True,knownChildPid=child.pid))
 
 
-def application_session(record,role,destination,env,trace_value=None,control_reference=None):
+def application_session(record,role,destination,env,trace_value=None,control_reference=None,hook=None,private_data=None):
     destination.mkdir();view=None if role=='official-stock' else Path(record['views'][role]['directory'])
     observations={};stages=(('empty','',False),('first','W',False),('prefix','WW',False),
                            ('prefix-repaint','WW',True),('later','WWg',False),('later-repaint','WWg',True))
     with c1.StderrCollector(destination,trace_only=True) as collector:
         options=[] if trace_value is None else ['--env=FONTREAL_SKIA_TRACE='+trace_value]
-        with comparison(view,destination/'app',env,collector=collector,native_options=options) as (inspector,child,data):
+        with comparison(view,destination/'app',env,collector=collector,native_options=options,hook=hook,private_data=private_data) as (inspector,child,data):
             identity=inspector.evaluate(IDENTITY);write_json(destination/'identity.json',identity)
             main_view=view or Path(subprocess.check_output(['/usr/bin/flatpak','info','--show-location',APPLICATION],env=env,text=True).strip())/'files'
             main=application_main(child.pid,main_view,identity);write_json(destination/'main.json',main)
@@ -1147,11 +1149,12 @@ def native_entry(process,arguments,view,destination):
             if (executable.st_dev,executable.st_ino)==(native.st_dev,native.st_ino):
                 argv=[part.decode() for part in (root/'cmdline').read_bytes().split(b'\0') if part]
                 after=(root/'exe').stat()
-                if (after.st_dev,after.st_ino)==(native.st_dev,native.st_ino):break
+                if argv and (after.st_dev,after.st_ino)==(native.st_dev,native.st_ino):break
         except FileNotFoundError:pass
         assert process.poll() is None and time.monotonic()<deadline,'Owned launch did not expose its native Flatpak exec phase'
         time.sleep(.001)
-    options=[arg for arg in argv[1:] if arg.startswith(('--app-path=','--ro-bind-fd=','--env=FONTREAL_ZYPAK_APP_PATH='))]
+    options=[arg for arg in argv[1:] if arg.startswith(('--app-path=','--ro-bind-fd=','--env=FONTREAL_ZYPAK_APP_PATH=','--env=FONTREAL_PROFILE='))]
+    write_json(destination.with_name(destination.stem+'-observation.json'),dict(argv=argv,expectedArguments=arguments,options=options))
     assert [arg for arg in argv[1:] if arg not in options]==arguments,'Real native Flatpak entry changed the original argv'
     view_fd=None
     if view is None:assert not options
@@ -1160,7 +1163,9 @@ def native_entry(process,arguments,view,destination):
         descriptors=[int(arg.split('=',1)[1]) for arg in options if arg.startswith('--ro-bind-fd=')];assert len(descriptors)==1
         stat=(root/'fd'/str(descriptors[0])).stat();chosen=Path(view).stat()
         assert (stat.st_dev,stat.st_ino)==(chosen.st_dev,chosen.st_ino),'Native Flatpak did not receive the chosen alias FD'
-        view_fd=dict(fd=descriptors[0],device=stat.st_dev,inode=stat.st_ino)
+        flags=fd_info(process.pid,descriptors[0])['flags']
+        assert flags&(os.O_PATH|os.O_NOFOLLOW|os.O_DIRECTORY)==(os.O_PATH|os.O_NOFOLLOW|os.O_DIRECTORY)
+        view_fd=dict(fd=descriptors[0],device=stat.st_dev,inode=stat.st_ino,flags=flags)
     assert process_status(process.pid)['startTicks']==before['startTicks']
     result=dict(hostPid=process.pid,startTicks=before['startTicks'],nativeExecutable=[native.st_dev,native.st_ino],
                 argv=argv,selectedOptions=options,view=str(view) if view is not None else None,viewFd=view_fd)
@@ -1250,9 +1255,11 @@ def working_text(inspector,destination,env,engine,proof,selected,baseline=None):
     destination.mkdir();dialog=open_dialog(inspector,compositor_env=env);observations={}
     record=delivery.load_build(Path(proof['build_record']))
     initial_package=package_identity(inspector,engine.parent.parent,record)
-    if initial_package['binding'].startswith('qualified '):assert initial_package['versions']==proof['engineVersions']
+    if initial_package['binding'].startswith('qualified ') and not proof.get('activation_profiles'):assert initial_package['versions']==proof['engineVersions']
     write_json(destination/'initial-package.json',initial_package)
-    provider=json.loads((Path(proof['report'])/'provider/provider.json').read_text());oracles={chr(r['char']):r for r in provider}
+    oracles={}
+    if not proof.get('activation_profiles'):
+        provider=json.loads((Path(proof['report'])/'provider/provider.json').read_text());oracles={chr(r['char']):r for r in provider}
     for stage,text in [('first','W'),('later','WWg')]:
         state=dialog_stage(inspector,dialog,text);write_json(destination/(stage+'-measurement.json'),state)
         row=renderer_identity(inspector,dialog['contentsId'],engine);pidfd=os.pidfd_open(row['hostPid'])
@@ -1264,7 +1271,7 @@ def working_text(inspector,destination,env,engine,proof,selected,baseline=None):
         if baseline is not None:
             stock_state=json.loads((baseline/(stage+'-measurement.json')).read_text())
             assert state['measure']==stock_state['measure'],'Working-data control style/layout differs from native baseline'
-        if selected:
+        if selected and not proof.get('activation_profiles'):
             assert baseline is not None
             with Image.open(baseline/(stage+'-window.png')) as stock:image=stock.copy()
             foreground,background=colors(state);image.paste(background,(8,8,85,30));advance=0
@@ -1275,7 +1282,7 @@ def working_text(inspector,destination,env,engine,proof,selected,baseline=None):
                 advance+=int(oracle['advance'][0])
             image.save(destination/(stage+'-expected.png'))
             with Image.open(destination/(stage+'-window.png')) as actual:assert actual.tobytes()==image.tobytes(),'Original-data selected pixels differ from independent expectation'
-        elif baseline is not None:same_domains(baseline,destination,stage)
+        elif not selected and baseline is not None:same_domains(baseline,destination,stage)
         observations[stage]=dict(state=state,capture=capture,renderer=row)
     final=inspector.evaluate(IDENTITY)
     active=[]
@@ -1295,7 +1302,8 @@ def lifecycle_build(build_record,destination,env):
     with (destination/'producer.stdout').open('w') as out,(destination/'producer.stderr').open('w') as err:
         subprocess.run(command,env=env,stdout=out,stderr=err,check=True)
     emitted=Path((destination/'producer.stdout').read_text().splitlines()[-1]).resolve();record=delivery.load_build(emitted)
-    proof=json.loads((emitted.parent/'qualification.json').read_text())
+    proof_path=emitted.parent/('activation-check.json' if 'src/fontreal_v2_coverage.cpp' in json.loads(build_record.read_text())['spec'].get('inputs',{}) else 'qualification.json')
+    proof=json.loads(proof_path.read_text())
     assert proof['passed'] and proof['build_sha256']==c1.target.sha(emitted) and record['spec']['build_sha256']==c1.target.sha(build_record)
     assert delivery.compatibility(record) is None
     return emitted,record,proof
@@ -1363,6 +1371,7 @@ def hook_checks(record,state_path,hooks,destination,env):
 
 def provider_contrasts(record_path,destination,env):
     destination.mkdir();private=dict(env);config=destination/'config'
+    home=destination/'home';home.mkdir();private['HOME']=str(home)
     for key,name in (('XDG_CONFIG_HOME','config'),('XDG_CONFIG_DIRS','config-dirs'),('XDG_DATA_HOME','data'),
                      ('XDG_DATA_DIRS','data-dirs'),('XDG_CACHE_HOME','cache')):
         path=destination/name;path.mkdir();private[key]=str(path)
@@ -1398,7 +1407,8 @@ def provider_contrasts(record_path,destination,env):
 def lifecycle(build_record,destination,env):
     destination.mkdir(parents=True,exist_ok=True);emitted,record,proof=lifecycle_build(build_record,destination,env)
     inspector_port_selfcheck(destination/'port-selfcheck');provider_contrasts(emitted,destination/'provider-contrasts',env)
-    state_path,hooks=delivery.paths();assert not state_path.exists() and not any(p.exists() or p.is_symlink() for p in hooks.values())
+    state_path,hooks=delivery.paths();initial_state,_=delivery.read_state();assert 'teams' not in initial_state['apps']
+    if initial_state['apps']:delivery.require_owned(initial_state)
     stock=Path(record['spec']['location'])/'files';stock_engine=stock/'teams-for-linux/teams-for-linux'
     user_data=None;marker=None;enabled=False;results={};autostart_before=portal_autostart()
     assert autostart_before['enabled'],'Preserve the existing disabled autostart intent; this enabled-autostart scenario is unavailable'
@@ -1432,6 +1442,13 @@ def lifecycle(build_record,destination,env):
                 assert c1.target.sha(marker)==data_identity['marker_sha256'] and [user_data.stat().st_dev,user_data.stat().st_ino]==[data_identity['device'],data_identity['inode']]
                 working_text(inspector,destination/name/'text',env,engine,proof,True,baseline);results[name]=dict(passed=True)
             print(name+': original data and selected pixels passed',flush=True)
+        if proof.get('activation_profiles'):
+            subprocess.run(['sh',str(ROOT/'packaging/session/fontreal-session'),'profile','k3'],env=env,check=True)
+            with ordinary_observer([str(hooks['command'])],destination/'profile-k3',env,engine,normal,user_data) as (inspector,identity,instance):
+                assert inspector.evaluate('process.env.FONTREAL_PROFILE')=='k3'
+                working_text(inspector,destination/'profile-k3/text',env,engine,proof,True,baseline)
+            assert any((destination/'command/text'/(stage+'-window.png')).read_bytes()!=(destination/'profile-k3/text'/(stage+'-window.png')).read_bytes() for stage in ('first','later')),'Original-data O/K3 child output does not differ'
+            subprocess.run(['sh',str(ROOT/'packaging/session/fontreal-session'),'profile','o'],env=env,check=True)
         deadline=time.monotonic()+35
         while portal_autostart()['mtime_ns']==autostart_before['mtime_ns']:
             assert time.monotonic()<deadline,'Original application did not regenerate its native portal autostart entry'
@@ -1516,7 +1533,7 @@ def asar_source(path,name):
         stream.seek(offset);return stream.read(entry['size']).decode('utf8')
 
 
-def private_launch_source(location,destination,env):
+def private_launch_source(location,destination,env,check_portal=True):
     asar=location/'files/teams-for-linux/resources/app.asar'
     index=asar_source(asar,'app/index.js');background=asar_source(asar,'app/backgroundPortal/index.js')
     pin=re.search(r"const (\w+) = app\.getPath\(['\"]userData['\"]\)",index)
@@ -1526,11 +1543,174 @@ def private_launch_source(location,destination,env):
     start=background.index('function isAutostartEnabled()');end=background.index('let contents',start);reader=background[start:end]
     assert re.search(r'os\.homedir\(\)\s*,\s*["\']\.config["\']\s*,\s*["\']autostart["\']',reader),'Updated native autostart intent reader changed'
     portal=portal_autostart();command=['/usr/bin/flatpak','run','--command=/usr/bin/stat',APPLICATION,'-Lc','%d %i',portal['path']]
-    observed=subprocess.check_output(command,env=env,text=True).strip();assert observed==str(portal['device'])+' '+str(portal['inode'])
+    observed=None
+    if check_portal:
+        observed=subprocess.check_output(command,env=env,text=True).strip();assert observed==str(portal['device'])+' '+str(portal['inode'])
     result=dict(asar=str(asar),asar_sha256=c1.target.sha(asar),index_sha256=hashlib.sha256(index.encode()).hexdigest(),
                 background_sha256=hashlib.sha256(background.encode()).hexdigest(),nativeDataPathPreserved=True,earlyPrivateE2E=e2e[0],
                 autostartReader=reader,autostart=portal,visibilityCommand=command,visibility=observed)
     write_json(destination,result);return result
+
+
+def profile_installation(application,destination,env):
+    """Install exact local provider bundles into a private native installation."""
+    private=dict(env,FLATPAK_USER_DIR=str(WORK/'profile-installation'))
+    cache=WORK/'profile-bundles';cache.mkdir(exist_ok=True)
+    location=Path(subprocess.check_output(['/usr/bin/flatpak','info','--show-location',application],env=env,text=True).strip())
+    metadata=configparser.ConfigParser(interpolation=None);metadata.read(location/'metadata')
+    runtime=metadata['Application']['runtime'];runtime_name,arch,branch=runtime.split('/')
+    providers=[]
+    for ref,is_runtime in ((runtime,True),(application+'/x86_64/stable',False)):
+        commit=subprocess.check_output(['/usr/bin/flatpak','info','--show-commit',ref],env=env,text=True).strip()
+        installed=subprocess.run(['/usr/bin/flatpak','info','--user','--show-commit',ref],env=private,text=True,capture_output=True)
+        if installed.returncode or installed.stdout.strip()!=commit:
+            source=Path(subprocess.check_output(['/usr/bin/flatpak','info','--show-location',ref],env=env,text=True).strip())
+            repository=source.parents[4]/'repo';name,arch,branch=ref.split('/')
+            bundle=cache/(name+'-'+commit+'.flatpak')
+            if not bundle.is_file():
+                subprocess.run(['/usr/bin/flatpak','build-bundle',*(['--runtime'] if is_runtime else []),
+                                '--arch='+arch,str(repository),str(bundle),name,branch],env=env,check=True)
+            subprocess.run(['/usr/bin/flatpak','install','--user','--noninteractive','--assumeyes','--no-related','--no-deps',
+                            '--reinstall',str(bundle)],env=private,check=True)
+        actual=subprocess.check_output(['/usr/bin/flatpak','info','--user','--show-commit',ref],env=private,text=True).strip()
+        assert actual==commit,'Private native installation differs from the actual provider'
+        providers.append(dict(ref=ref,commit=commit))
+    write_json(destination/'private-providers.json',providers)
+    return private
+
+
+def profile_actual_app(build_record,destination,env,name):
+    """Prove a real hook, selected view FD, and profile-specific child raster."""
+    application=delivery.APPS[name]
+    host_state,host_legacy=delivery.read_state()
+    if host_state['apps']:delivery.require_owned(host_state)
+    host_hooks={Path(row['path']):Path(row['path']).read_bytes() for row in host_state['hooks']}
+    command=[sys.executable,'-B',str(ROOT/'tools/build-chromium-delivery.py'),'--target',name,'--build-record',str(build_record)]
+    write_json(destination/'producer-command.json',command)
+    with (destination/'producer.stdout').open('w') as out,(destination/'producer.stderr').open('w') as err:
+        subprocess.run(command,env=env,stdout=out,stderr=err,check=True)
+    emitted=Path((destination/'producer.stdout').read_text().splitlines()[-1]).resolve();record=delivery.load_build(emitted,name)
+    private=profile_installation(application,destination,env)
+    home=destination/'home';home.mkdir()
+    private.update(HOME=str(home),XDG_CONFIG_HOME=str(home/'.config'),XDG_DATA_HOME=str(home/'.local/share'))
+    data=destination/'private-data';data.mkdir();marker=data/'synthetic-marker';marker.write_text(os.urandom(32).hex())
+    marker_sha=c1.target.sha(marker);variable='E2E_USER_DATA_DIR' if name=='teams' else 'BITWARDEN_APPDATA_DIR'
+    override=Path(private['FLATPAK_USER_DIR'])/'overrides'/application
+    assert not override.exists() and not override.is_symlink(),'A private override already exists'
+    host_overrides=[Path.home()/'.local/share/flatpak/overrides'/application,Path('/var/lib/flatpak/overrides')/application]
+    preserved={p:p.read_bytes() if p.is_file() else None for p in host_overrides}
+    startup=Path(env.get('XDG_CONFIG_HOME',Path.home()/'.config'))/'autostart'/(application+'.desktop')
+    assert not startup.is_symlink()
+    startup_bytes=startup.read_bytes() if startup.is_file() else None
+    startup_stat=startup.stat() if startup_bytes is not None else None
+    permission=subprocess.check_output(['/usr/bin/flatpak','permission-show',application],env=env,text=True)
+    original_instances=native_instances(env) if name=='teams' else __import__('bitwarden_delivery_test').working_instances()
+    write_json(destination/'startup-before.json',dict(path=str(startup),sha256=c1.target.sha(startup) if startup_bytes is not None else None,
+                mode=startup_stat.st_mode&0o777 if startup_stat else None,mtime_ns=startup_stat.st_mtime_ns if startup_stat else None,permission=permission))
+    if startup_bytes is not None:(destination/'original-autostart.desktop').write_bytes(startup_bytes)
+    tool=[sys.executable,'-B',str(ROOT/'tools/chromium_delivery.py')];enabled=False;observations={}
+    try:
+        subprocess.run(['/usr/bin/flatpak','override','--user','--filesystem='+str(data)+':rw','--env='+variable+'='+str(data),
+                        '--filesystem='+str(startup.parent)+':ro','--env=HOME='+str(Path.home()),
+                        '--env=FONTREAL_SKIA_TRACE=1',application],env=private,check=True)
+        early=subprocess.check_output(['/usr/bin/flatpak','run','--user','--command=/usr/bin/printenv',application,variable],env=private,text=True).strip()
+        assert early==str(data),'Private data selection did not precede native application startup'
+        write_json(destination/'prestart.json',dict(variable=variable,value=early,override_sha256=c1.target.sha(override)))
+        if name=='teams':
+            location=Path(subprocess.check_output(['/usr/bin/flatpak','info','--user','--show-location',application],env=private,text=True).strip())
+            private_launch_source(location,destination/'source-data-owner.json',private,check_portal=False)
+        else:
+            from bitwarden_delivery_test import original_state
+            (data/'data.json').write_text(json.dumps({'global_desktopSettings_openAtLogin':original_state()['openAtLogin']})+'\n')
+        with patch.dict(os.environ,private):
+            subprocess.run([*tool,'enable',name,'--record',str(emitted)],env=private,check=True);enabled=True
+            _,hooks=delivery.paths(name)
+            # The trace view uses the same saved engine identity and the actual rebuilt transport.
+            traced=dict(record,views=dict(normal=record['views']['trace']),fixture_role='trace',
+                        producer_record=str(emitted),producer_sha256=c1.target.sha(emitted))
+            trace_record=destination/'trace-build.json';write_json(trace_record,traced)
+            subprocess.run([*tool,'enable',name,'--record',str(trace_record)],env=private,check=True)
+            view=delivery.builder.current_view(traced,['--user'])
+        input_oracles={}
+        if name=='bitwarden':
+            from bitwarden_pixels_test import font_input, provider
+            input_oracles=provider(json.loads(build_record.read_text()),font_input(view,destination),destination)
+        for profile in ('o','k3',None,'unsupported'):
+            if profile in ('o','k3'):
+                subprocess.run(['sh',str(ROOT/'packaging/session/fontreal-session'),'profile',profile],env=private,check=True)
+            else:
+                subprocess.run(['/usr/bin/flatpak','override','--user',*(['--unset-env=FONTREAL_PROFILE'] if profile is None else ['--env=FONTREAL_PROFILE='+profile]),application],env=private,check=True)
+            folder=destination/str(profile);folder.mkdir()
+            if name=='teams':
+                with c1.StderrCollector(folder,trace_only=True) as collector:
+                    with comparison(view,folder/'app',private,collector=collector,hook=hooks['flatpak'] if profile in ('o','k3') else None,private_data=data) as (inspector,child,actual_data):
+                        identity=inspector.evaluate(IDENTITY);assert identity['data']==str(data)
+                        dialog=open_dialog(inspector);state=dialog_stage(inspector,dialog,'WWg')
+                        graph=trace_graph(collector,child.pid,view,identity,state['rendererPid'])
+                        rows=graph_rows(collector,graph)
+                        write_json(folder/'child.json',dict(identity=identity,graph=graph,rows=rows))
+                rows=[row['payload'] for row in collector.rows if row['hostPid']==graph['credentialSenderPid'] and row['payload']['pid']==graph['tracePid']]
+            else:
+                from bitwarden_delivery_test import native_stock
+                from bitwarden_pixels_test import collector as bitwarden_collector, capture
+                collector,address=bitwarden_collector(folder)
+                child_start=[]
+                def observe(endpoint,browser,instance,files,output):
+                    child_start.append(len(collector.rows))
+                    evidence=capture(endpoint,'Wg',output,private)
+                    return dict(actualChildPage=True,tracePrefix=child_start[0],text=evidence['measure']['text'],cachedTraceAllowed=True)
+                with collector:
+                    native_stock(folder,view,observe,private.get('DISPLAY'),address,True,
+                                 hook=hooks['flatpak'] if profile in ('o','k3') else None,
+                                 environment=dict(private,EXPECTED_FONTREAL_PROFILE=profile),private_data=data)
+                rows=[row['payload'] for row in collector.rows if row['payload'].get('size')==14 and
+                      row['payload'].get('family')=='496e746572205661726961626c65']
+            chosen=[row for row in rows if row.get('owner')=='selected']
+            if input_oracles:
+                actual=[]
+                for char,oracle in input_oracles.items():
+                    matches=[row for row in chosen if row['glyph']==oracle['glyph'] and row['raw']==oracle['mask'] and
+                             all(row[key]==oracle[key] for key in ('width','height','left','top','advance','path'))]
+                    assert matches,'The actual packaged input has no matching new or cached '+char+' raster identity'
+                    actual.extend(matches)
+                chosen=actual
+            assert chosen and all(row['profile']==({'o':1,'k3':2}.get(profile,0)) for row in chosen),'No exact profile-specific child raster witness'
+            if profile not in ('o','k3'):assert all(not row['high'] for row in chosen),'Direct legacy transport generated V2 support'
+            from chromium_selected_test import processed
+            for row in chosen:
+                wanted=processed(dict(row,mask=row['raw']),profile) if profile in ('o','k3') else bytes(expected_mask(bytes.fromhex(row['raw']),row['width']))
+                assert bytes.fromhex(row['mask'])==wanted,'Child output differs from the opaque existing mask owner'
+            assert c1.target.sha(marker)==marker_sha
+            observations[profile]=chosen;write_json(folder/'selected-child.json',chosen)
+        def key(row):return tuple(row.get(field) for field in ('family','glyph','size','width','height','left','top','raw','high'))
+        opposite={key(row):row['mask'] for row in observations['k3']}
+        assert any(key(row) in opposite and row['mask']!=opposite[key(row)] for row in observations['o']),'O and K3 child output witnesses do not differ'
+        result=dict(passed=True,activation_profiles=True,build_record=str(emitted),build_sha256=c1.target.sha(emitted),
+                    engine_record=str(build_record),engine_sha256=c1.target.sha(build_record),report=str(destination),
+                    privateData=str(data),marker_sha256=marker_sha,profiles=['o','k3'],childWitness=True,
+                    test_inputs={path:c1.target.sha(ROOT/path) for path in ('tools/browser.py','tools/chromium_delivery.py',
+                        'tools/build-chromium-delivery.py','patches/zypak-693a71c5-app-fd.patch','tests/chromium_delivery_test.py',
+                        'tests/bitwarden_delivery_test.py','packaging/session/fontreal-session')})
+        write_json(destination/'report.json',result);write_json(emitted.parent/'activation-check.json',result)
+        return result
+    finally:
+        try:
+            if enabled:subprocess.run([*tool,'disable',name],env=private,check=True)
+        finally:
+            try:
+                subprocess.run(['/usr/bin/flatpak','override','--user','--reset',application],env=private,check=True)
+                assert not override.exists() and all((p.read_bytes() if p.is_file() else None)==value for p,value in preserved.items())
+            finally:
+                if startup_bytes is None:startup.unlink(missing_ok=True)
+                else:
+                    startup.write_bytes(startup_bytes);startup.chmod(startup_stat.st_mode&0o777)
+                    os.utime(startup,ns=(startup_stat.st_atime_ns,startup_stat.st_mtime_ns))
+                assert subprocess.check_output(['/usr/bin/flatpak','permission-show',application],env=env,text=True)==permission
+                remaining=native_instances(env) if name=='teams' else __import__('bitwarden_delivery_test').working_instances()
+                assert all(row in remaining for row in original_instances) if name=='teams' else original_instances.items()<=remaining.items()
+                assert delivery.read_state()==(host_state,host_legacy) and all(p.read_bytes()==data for p,data in host_hooks.items())
+                subprocess.run(['systemctl','--user','daemon-reload'],env=env,check=True)
+                write_json(destination/'startup-restored.json',dict(passed=True,originalBytesAndModeRestored=True,permissionPreserved=True,workingInstancesPreserved=True,privateOverrideRemoved=True))
 
 
 def update_cycle(build_record,destination,env):
@@ -1679,6 +1859,14 @@ def main():
     destination=Path(tempfile.mkdtemp(prefix=args.case+'-',dir=OUT));print(destination,flush=True)
     env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',TMPDIR=str((ROOT/'build').resolve()))
     try:
+        engine=json.loads(args.build_record.read_text())
+        if args.case=='actual-app' and 'src/fontreal_v2_coverage.cpp' in engine['spec'].get('inputs',{}):
+            if args.target=='bitwarden':
+                with patch.object(masks,'OUT',destination/'display'):
+                    with masks.nested_display() as display:
+                        profile_actual_app(args.build_record.resolve(),destination,dict(env,DISPLAY=display['DISPLAY']),args.target)
+            else:profile_actual_app(args.build_record.resolve(),destination,env,args.target)
+            return
         if args.target=='bitwarden':
             from bitwarden_pixels_test import actual_app as bitwarden_actual_app
             from bitwarden_delivery_test import lifecycle as bitwarden_lifecycle

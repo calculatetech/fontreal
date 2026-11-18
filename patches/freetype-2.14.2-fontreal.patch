@@ -1,9 +1,9 @@
 --- a/src/base/ftobjs.c
 +++ b/src/base/ftobjs.c
-@@ -16,10 +16,18 @@
+@@ -16,13 +16,25 @@
   */
- 
- 
+
+
 +#ifdef __linux__
 +#include <sys/auxv.h>
 +#endif
@@ -15,14 +15,21 @@
 +#include <freetype/ftmm.h>
  #include <freetype/otsvg.h>
 +#include "fontreal_coverage.h"
++#include "fontreal_v2_coverage.h"
 +#include <freetype/ftmodapi.h>
- 
+
  #include <freetype/internal/ftvalid.h>
  #include <freetype/internal/ftobjs.h>
-@@ -910,6 +917,243 @@
++#ifdef FONTREAL_V2_TEST_OBSERVE
++#include "v2_freetype_observe.h"
++#endif
+ #include <freetype/internal/ftdebug.h>
+ #include <freetype/internal/ftrfork.h>
+ #include <freetype/internal/ftstream.h>
+@@ -910,6 +922,245 @@
  #endif /* GRID_FIT_METRICS */
- 
- 
+
+
 +  static FT_Bool
 +  ft_fontreal_selected( FT_Face face )
 +  {
@@ -57,7 +64,8 @@
 +    if ( !format ||
 +         ( ft_strcmp( format, "TrueType" ) &&
 +           ( ft_strcmp( format, "CFF" ) ||
-+             ( !selected && ( !contrast ||
++             ( !FT_FACE_LIBRARY( face )->fontreal_profile &&
++               !selected && ( !contrast ||
 +               ( ft_strcmp( contrast, "raw" ) &&
 +                 ft_strcmp( contrast, "weighted" ) ) ) ) ) ) )
 +      return FALSE;
@@ -98,7 +106,8 @@
 +  ft_fontreal_nearest( FT_Face face, FT_Int32 flags )
 +  {
 +    const char* contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
-+    return !ft_fontreal_selected( face ) && contrast &&
++    return !FT_FACE_LIBRARY( face )->fontreal_profile &&
++           !ft_fontreal_selected( face ) && contrast &&
 +           ( !ft_strcmp( contrast, "ramp217" ) ||
 +             !ft_strcmp( contrast, "raw" ) ) &&
 +           ft_fontreal_raster( face, flags );
@@ -261,18 +270,36 @@
 +
 +
    /* documentation is in freetype.h */
- 
+
    FT_EXPORT_DEF( FT_Error )
-@@ -959,6 +1188,26 @@
- 
+@@ -925,0 +1177,2 @@
++    FT_Char       fontreal_darkening = 0;
++    FT_Bool       fontreal_restore = FALSE;
+@@ -933,6 +1186,7 @@
+
+     slot = face->glyph;
+     ft_glyphslot_clear( slot );
++    slot->internal->fontreal_v2 = FALSE;
+
+     driver  = face->driver;
+     library = driver->root.library;
+@@ -959,6 +1213,33 @@
+
      if ( load_flags & FT_LOAD_BITMAP_METRICS_ONLY )
        load_flags &= ~FT_LOAD_RENDER;
 +
 +    if ( ft_fontreal_raster( face, load_flags ) )
 +    {
++      if ( library->fontreal_profile )
++      {
++        fontreal_darkening = face->internal->no_stem_darkening;
++        fontreal_restore = TRUE;
++        slot->internal->fontreal_v2 = TRUE;
++        face->internal->no_stem_darkening = TRUE;
++      }
 +      const char* contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
 +
-+      if ( ft_fontreal_selected( face ) ||
++      if ( library->fontreal_profile || ft_fontreal_selected( face ) ||
 +           ( contrast && !ft_strcmp( contrast, "weighted" ) ) )
 +      {
 +        load_flags &= ~( ( 15L << 16 ) | FT_LOAD_MONOCHROME |
@@ -287,10 +314,72 @@
 +                      FT_LOAD_NO_BITMAP;
 +      }
 +    }
- 
+
      /*
       * Determine whether we need to auto-hint or not.
-@@ -4992,15 +5240,91 @@
+@@ -1234,6 +1515,10 @@
+ #endif
+
+   Exit:
++    if ( fontreal_restore )
++      face->internal->no_stem_darkening = fontreal_darkening;
++    if ( error )
++      slot->internal->fontreal_v2 = FALSE;
+     return error;
+   }
+
+@@ -4988,19 +5273,176 @@
+
+   /* documentation is in freetype.h */
+
++  static FT_Error
++  ft_fontreal_high( FT_Library library, FT_GlyphSlot slot,
++                    FT_Outline* outline, FT_Bitmap* high )
++  {
++    FT_Memory memory = library->memory;
++    FT_Error error = FT_Err_Ok;
++    FT_Pos x, y;
++    FT_Int i;
++
++    if ( slot->bitmap.width > (FT_UInt)( FT_INT_MAX / 4 - 6 ) ||
++         slot->bitmap.rows > (FT_UInt)( FT_INT_MAX / 4 - 6 ) )
++      return FT_THROW( Raster_Overflow );
++    high->width = 4 * ( slot->bitmap.width + 6 );
++    high->rows = 4 * ( slot->bitmap.rows + 6 );
++    high->pitch = (FT_Int)high->width;
++    high->pixel_mode = FT_PIXEL_MODE_GRAY;
++    high->num_grays = 256;
++    if ( high->rows > (FT_ULong)FT_LONG_MAX / high->width )
++      return FT_THROW( Raster_Overflow );
++    if ( (FT_Pos)slot->bitmap_left < FT_LONG_MIN / 64 + 3 ||
++         (FT_Pos)slot->bitmap_left > FT_LONG_MAX / 64 ||
++         (FT_Pos)slot->bitmap_top < FT_LONG_MIN / 64 +
++                                   (FT_Pos)slot->bitmap.rows + 3 ||
++         (FT_Pos)slot->bitmap_top > FT_LONG_MAX / 64 )
++      return FT_THROW( Raster_Overflow );
++    x = ( (FT_Pos)slot->bitmap_left - 3 ) * 64;
++    y = ( (FT_Pos)slot->bitmap_top - (FT_Pos)slot->bitmap.rows - 3 ) * 64;
++    for ( i = 0; i < outline->n_points; i++ )
++    {
++      FT_Pos px = outline->points[i].x;
++      FT_Pos py = outline->points[i].y;
++
++      if ( px < FT_LONG_MIN / 8 || px > FT_LONG_MAX / 8 ||
++           py < FT_LONG_MIN / 8 || py > FT_LONG_MAX / 8 ||
++           x < FT_LONG_MIN / 8 || x > FT_LONG_MAX / 8 ||
++           y < FT_LONG_MIN / 8 || y > FT_LONG_MAX / 8 )
++        return FT_THROW( Raster_Overflow );
++      outline->points[i].x = ( px - x ) * 4;
++      outline->points[i].y = ( py - y ) * 4;
++    }
++    if ( FT_QALLOC( high->buffer, (FT_ULong)high->width * high->rows ) )
++      return error;
++    FT_MEM_ZERO( high->buffer, (FT_ULong)high->width * high->rows );
++    return FT_Outline_Get_Bitmap( library, outline, high );
++  }
++
++
+   FT_EXPORT_DEF( FT_Error )
    FT_Render_Glyph( FT_GlyphSlot    slot,
                     FT_Render_Mode  render_mode )
    {
@@ -299,25 +388,31 @@
 +    FT_Error         error;
 +    FT_Bool          fontreal, weighted, ramp, light = FALSE;
 +    FT_FontrealSupportRec support = { 0 };
++    FT_Outline       outline = { 0 };
++    FT_Bitmap        high = { 0 };
++    FT_UInt          profile;
 +    FT_Memory        memory;
 +    const char*      contrast;
 +#ifdef FONTREAL_TEST_TRACE
 +    FT_Glyph_Format  previous_format;
 +#endif
- 
- 
+
+
      if ( !slot || !slot->face )
        return FT_THROW( Invalid_Argument );
- 
+
      library = FT_FACE_LIBRARY( slot->face );
 -
 -    return FT_Render_Glyph_Internal( library, slot, render_mode );
 +    contrast = ft_getenv( "FONTREAL_FT_CONTRAST" );
 +
-+    weighted = ft_fontreal_selected( slot->face ) ||
++    profile = library->fontreal_profile;
++    weighted = profile || ft_fontreal_selected( slot->face ) ||
 +               ( contrast && !ft_strcmp( contrast, "weighted" ) );
 +    fontreal = slot->format == FT_GLYPH_FORMAT_OUTLINE &&
++               ( !profile || slot->internal->fontreal_v2 ) &&
 +               ft_fontreal_raster( slot->face, slot->internal->load_flags ) &&
++               ( !profile || ( slot->internal->load_flags & FT_LOAD_NO_BITMAP ) ) &&
 +               ( weighted
 +                 ? ( slot->internal->load_flags & FT_LOAD_NO_AUTOHINT ) &&
 +                   FT_LOAD_TARGET_MODE( slot->internal->load_flags ) ==
@@ -334,7 +429,14 @@
 +    memory = library->memory;
 +    ramp = fontreal && !weighted && contrast && !ft_strcmp( contrast, "ramp217" );
 +    error = FT_Err_Ok;
-+    if ( ramp )
++    if ( fontreal && profile )
++    {
++      error = FT_Outline_New( library, slot->outline.n_points,
++                              slot->outline.n_contours, &outline );
++      if ( !error )
++        error = FT_Outline_Copy( &slot->outline, &outline );
++    }
++    if ( !error && ramp )
 +    {
 +      error = ft_fontreal_light( slot->face, &light );
 +      if ( !error && !light )
@@ -345,7 +447,26 @@
 +
 +    if ( !error && fontreal && slot->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY )
 +    {
-+      if ( weighted && slot->bitmap.num_grays == 256 )
++      if ( profile && slot->bitmap.num_grays == 256 )
++      {
++        if ( slot->bitmap.width && slot->bitmap.rows )
++        {
++          error = ft_fontreal_high( library, slot, &outline, &high );
++          if ( !error )
++          {
++            int status;
++#ifdef FONTREAL_V2_TEST_OBSERVE
++            fontreal_v2_test_observe( slot, &high, profile );
++#endif
++            status = fontreal_v2_coverage( memory, &slot->bitmap, &high,
++                       profile == 1 ? FONTREAL_V2_O : FONTREAL_V2_K3 );
++            if ( status )
++              error = status == 1 ? FT_THROW( Out_Of_Memory )
++                                  : FT_THROW( Invalid_Argument );
++          }
++        }
++      }
++      else if ( weighted && slot->bitmap.num_grays == 256 )
 +      {
 +        int status = fontreal_selected_coverage( memory,
 +                       slot->bitmap.buffer, slot->bitmap.width,
@@ -375,6 +496,8 @@
 +    }
 +
 +    FT_FREE( support.bits );
++    FT_FREE( high.buffer );
++    FT_Outline_Done( library, &outline );
 +
 +#ifdef FONTREAL_TEST_TRACE
 +    /* Observe the browser's real final raster call in test builds. */
@@ -383,12 +506,32 @@
 +#endif
 +    return error;
    }
- 
- 
+
+
+@@ -5500,6 +5942,11 @@
+       return error;
+
+     library->memory = memory;
++    {
++      const char* profile = ft_getenv( "FONTREAL_PROFILE" );
++      library->fontreal_profile = profile && !ft_strcmp( profile, "o" ) ? 1 :
++                                  profile && !ft_strcmp( profile, "k3" ) ? 2 : 0;
++    }
+
+     library->version_major = FREETYPE_MAJOR;
+     library->version_minor = FREETYPE_MINOR;
 --- a/include/freetype/internal/ftobjs.h
 +++ b/include/freetype/internal/ftobjs.h
-@@ -702,6 +702,9 @@
- 
+@@ -443,6 +443,7 @@
+     void*           glyph_hints;
+
+     FT_Int32        load_flags;
++    FT_Bool         fontreal_v2; /* this load received the V2 source policy */
+
+   } FT_GlyphSlot_InternalRec;
+
+@@ -702,6 +703,9 @@
+
    /* Free the bitmap of a given glyphslot when needed (i.e., only when it */
    /* was allocated with ft_glyphslot_alloc_bitmap).                       */
 +  FT_BASE( FT_Bool )
@@ -396,19 +539,27 @@
 +
    FT_BASE( void )
    ft_glyphslot_free_bitmap( FT_GlyphSlot  slot );
- 
+
+@@ -916,6 +920,7 @@
+     FT_Vector                lcd_geometry[3];  /* RGB subpixel positions */
+ #endif
+
++    FT_UInt            fontreal_profile; /* startup preference, not activation */
+     FT_Int             refcount;
+
+   } FT_LibraryRec;
 --- a/src/autofit/afloader.c
 +++ b/src/autofit/afloader.c
 @@ -24,6 +24,7 @@
- 
+
  #include <freetype/internal/ftcalc.h>
  #include <freetype/ftfntfmt.h>
 +#include <freetype/internal/ftobjs.h>
- 
- 
+
+
    /* Initialize glyph loader. */
 @@ -286,6 +287,8 @@
- 
+
      scaler.render_mode = FT_LOAD_TARGET_MODE( load_flags );
      scaler.flags       = 0;
 +    if ( ft_fontreal_nearest( face, load_flags ) )
@@ -418,18 +569,16 @@
           FT_IS_SCALABLE( face ) && !FT_HAS_COLOR( face ) &&
 --- a/src/autofit/afmodule.h
 +++ b/src/autofit/afmodule.h
-@@ -40,4 +40,5 @@
-     FT_Bool       no_stem_darkening;
+@@ -42,2 +42,3 @@
      FT_Bool       fontreal_nearest_y;
 +    FT_Bool       fontreal_selected;
      FT_Int        darken_params[8];
- 
 --- a/src/autofit/afmodule.c
 +++ b/src/autofit/afmodule.c
 @@ -115,6 +115,16 @@
  #endif
- 
- 
+
+
 +    if ( !ft_strcmp( property_name, "fontreal-selected-v1" ) )
 +    {
 +#ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
@@ -443,10 +592,16 @@
      if ( !ft_strcmp( property_name, "fontreal-nearest-y-v2" ) )
      {
  #ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
-@@ -300,6 +311,12 @@
+@@ -300,6 +310,18 @@
      AF_Module  module         = (AF_Module)ft_module;
- 
- 
+
+
++    if ( !ft_strcmp( property_name, "fontreal-profile-v2" ) )
++    {
++      *(FT_UInt*)value = ft_module->library->fontreal_profile;
++      return error;
++    }
++
 +    if ( !ft_strcmp( property_name, "fontreal-selected-v1" ) )
 +    {
 +      *(FT_Bool*)value = module->fontreal_selected;
@@ -456,11 +611,11 @@
      if ( !ft_strcmp( property_name, "fontreal-nearest-y-v2" ) )
      {
        *(FT_Bool*)value = module->fontreal_nearest_y;
-@@ -416,6 +433,7 @@
+@@ -417,6 +439,7 @@
      module->default_script    = AF_SCRIPT_DEFAULT;
      module->no_stem_darkening = TRUE;
      module->fontreal_nearest_y = FALSE;
 +    module->fontreal_selected = FALSE;
- 
+
      module->darken_params[0]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1;
      module->darken_params[1]  = CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1;
