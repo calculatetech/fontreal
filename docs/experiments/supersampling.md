@@ -293,3 +293,23 @@ python3 -B tests/noto_kde_comparison_test.py --record FREETYPE_BUILD_JSON --stoc
 ```
 
 The check covers native library roles, source rasters, selected alpha, complete approved reconstruction, O references and every saved image. It also checks early rejection of mismatched inputs and preserves the baseline and older sources. The output retains native layouts, masks, loaded-library evidence, crop boxes and hashes. This study changes no installed application and makes no performance claim.
+
+## Native V2 numerical kernel
+
+V2 uses O NORMAL as the general profile and K3 NORMAL as the per-user alternative. The user accepts the current appearance. The prototype clearly improves text on dark backgrounds. Stock remains competitive and is sometimes preferred on light backgrounds. Ship the installable V2 before resuming separate optical experiments. This numerical kernel alone does not install V2 or change an application.
+
+The private C entry in `src/fontreal_v2_coverage.h` accepts a FreeType allocator, a mutable raw grayscale bitmap, a registered four-times bitmap and an explicit O/K3 choice. Both bitmaps use 256 gray levels. The high bitmap covers `4*(raw.width+6)` by `4*(raw.rows+6)` pixels. Its origin is `(raw.left-3, raw.top-3)*4`. The caller supplies that registration and retains the external bearings and advance. Raw and high use separate owned storage. Each buffer points to its first logical row. Its signed pitch gives the offset to the next row.
+
+The kernel calculates D in the original raw frame, then applies the frozen reference and O/K3 rules with two native pixels of padding. Only original raw pixels are written after calculation succeeds. The high bitmap, both metadata records and raw row padding stay unchanged. Temporary allocations use the supplied FreeType owner and are released before return. Status zero means success, one means allocation failure and two means invalid arguments. Empty input stays empty. Its normalized reference is a four-by-four zero frame, and the caller keeps the space advance.
+
+Keep the complete retained NORMAL and native Qt manifests with their original source files. Supply the stock FreeType build record that matches both providers. Run the single numerical proof:
+
+```sh
+python3 -B tests/v2_coverage_test.py --record FREETYPE_BUILD_JSON --normal-manifest NORMAL_MANIFEST --qt-manifest QT_MANIFEST
+```
+
+The command needs Python, the existing Python study dependencies, a C++17 compiler and FreeType headers through `pkg-config`. It compiles only the new kernel and test bridge. The default build directory is `build/v2-coverage`, and the default result root is `results/v2-coverage`. Use `--build-dir` and `--output` to change those locations.
+
+The proof calls ordinary and observed native builds for both profiles on all 1900 NORMAL rows and 784 native Qt rows. Duplicate light/dark identities remain separate calls. Independent scalar calculations check every D, O and K3 byte. A passive observer reads D from the same native call because final maxima can conceal an incorrect intermediate value. The ordinary build must return identical final bytes. Independent one-times and four-times outline rasters qualify the supplied provider and the original geometry, including Qt's actual 13-pixel size at 10pt.
+
+The proof also checks zero padding, empty spaces, independent signed strides, row guards, metadata, allocation balance, repeated calls and invalid arguments. It records terminal differences from incorrect component, phase, rounding and fringe alternatives. A labeled synthetic diagonal fixture exposes eight-connected versus four-connected selection. It supplements the genuine corpus and makes no font or provider claim. The result manifest retains every condition and glyph identity, source hashes and output hashes. Prior source receipts cover only unchanged historical owners. The new numerical path always runs through the native entry. No runtime Python hook, installed selector, application coverage or performance claim follows from this check.

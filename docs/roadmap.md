@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Compare O NORMAL with native KDE and the shipped profile.** O NORMAL is the general preference; K3 NORMAL is the user's alternative. Future integration must offer these choices per user. First show Noto Sans at 8, 10, 11 and 12pt on both backgrounds against genuine stock Qt and the last approved native-normal weighted-stem renderer. The O prototype uses actual approved Qt geometry and unchanged coverage formulas. Omit L. Preserve historical commands and installed rendering. See the [native Noto comparison](plans/FR-021-supersampling.md).
+- **FR-021: Deliver accepted V2 rendering.** The user accepts O NORMAL as the general profile and K3 NORMAL as the per-user alternative. The prototype clearly improves dark-background text; stock remains competitive and sometimes preferred on light backgrounds. First port the frozen formulas to a native kernel with exact numerical proof. Then integrate the user choice into covered renderers and prepare the release. Keep further optical experiments separate and preserve the stock escape. A kernel checkpoint alone is not an installed V2. See the [V2 specification](plans/FR-021-supersampling.md).
 
 ## Planned next
 
