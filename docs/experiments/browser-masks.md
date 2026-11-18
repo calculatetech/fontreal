@@ -19,6 +19,8 @@ python3 tools/browser.py enable firefox
 python3 tools/browser.py enable floorp
 ```
 
+Enabled launches read the [shared O/K3 preference](../build-system.md#choose-o-or-k3). O is the default. Use `sh packaging/session/fontreal-session profile k3` to choose K3, or `profile o` to restore O. The file overrides a stale inherited profile only on compatible enabled routes. A saved V1 library retains V1 until you rebuild and re-enable.
+
 Fully quit and reopen each browser to activate the treatment. An already running browser keeps its loaded library until that restart. The tool configures the ordinary Install-default profile and checks that any running profile agrees. If Firefox has different historical installation defaults, first open it normally. Activation can then use the declared default that all ordinary native parents select. Explicit profile, profile-manager and reset launches cannot resolve that ambiguity. A closed ambiguous installation still refuses activation. The tool does not create or copy browser profiles or change their indexes.
 
 Firefox indexes can live in `mozilla/firefox` below `XDG_CONFIG_HOME` or in the legacy `.mozilla/firefox` directory below your home directory. Floorp indexes can live in `floorp` below `XDG_CONFIG_HOME` or in the legacy `.floorp` directory below your home directory. When unset, `XDG_CONFIG_HOME` defaults to `.config` below your home directory. The tool checks all existing indexes in the active roots. Equivalent relative and absolute defaults count as one profile; distinct defaults cause refusal. Floorp has no Firefox historical-default exception. With a custom configuration root, an inactive `.config/floorp` index below your home directory does not select the working profile.
@@ -34,7 +36,7 @@ python3 tools/browser.py status firefox
 python3 tools/browser.py status floorp
 ```
 
-The status shows the configured working profile, treated parent processes, and processes that still need a restart. Browser updates do not disable Fontreal. Enabled launchers use the saved Fontreal build across browser and system-library updates, without rebuilding or checking installed versions. If the saved library is missing or changed, the wrapper warns and starts the installed browser without it. Disable restores the original rendering settings. After you rebuild Fontreal, run enable again to select that build and retain the original restoration values.
+The status shows the configured working profile, rendering choice, observed parent processes, and processes that still need a restart. A parent with an older choice needs a full restart. These environment and library observations do not prove V2 rendering. Browser updates do not disable Fontreal. Enabled launchers use the saved Fontreal build across browser and system-library updates, without rebuilding or checking installed versions. If the saved library is missing or changed, the wrapper warns and starts the installed browser without it. Disable restores the original rendering settings. After you rebuild Fontreal, run enable again to select that build and retain the original restoration values.
 
 ## When Nimbus Sans looks untreated
 
@@ -131,6 +133,15 @@ The selected and raw presets apply to explicitly enabled raster requests for sca
 ## Repeat the checks
 
 The checks need the installed fonts from the fixture, Qt 6 Core development files, Pillow, Xvfb, KWin Wayland, and the existing `build/qt-kde-probe` from the KDE checks. They use nested software-rendered browser windows and Mozilla's local test protocol. They do not disable the browser sandbox.
+
+An installed Fontreal FreeType provider requires genuine root ownership in the development namespace. Unprivileged `bwrap` maps that ownership away, so the existing trust gate refuses it. For this lifecycle case, authenticate in the same terminal and select the native mount namespace:
+
+```sh
+sudo -v
+FONTREAL_TEST_ROOT_NAMESPACE=1 python3 -B tests/browser_delivery_test.py --case lifecycle
+```
+
+Only the fixed mount setup uses root. The harness drops to the original user before it runs tests or browsers. The provider trust gate stays intact. This development case does not install packages or apply a daily profile.
 
 ```sh
 python3 tests/selected_profile_test.py --case native

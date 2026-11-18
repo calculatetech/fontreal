@@ -241,9 +241,6 @@ def update_checks(probe, graphics, font, reports, originals, candidates, referen
 
 
 def baseline_packages(originals, plan):
-    if any(p["arch"] == "i386" for p in plan["original"]):
-        build.run(["dpkg", "--add-architecture", "i386"])
-        build.run(["apt-get", "update"])
     versions = {p["source"]: p["version"] for p in plan["original"] if p["name"] in ("libqt6gui6", "libqt6quick6")}
     base, declarative = versions["qt6-base"], versions["qt6-declarative"]
     packages = ["build-essential", "python3-pil", "python3-fonttools", "cmake", "ninja-build", "libfreetype-dev", f"qt6-base-dev={base}", f"qt6-base-private-dev={base}",
@@ -253,7 +250,7 @@ def baseline_packages(originals, plan):
                 "plasma-desktoptheme", "qml6-module-org-kde-breeze", "qml6-module-org-kde-kirigami",
                 f"qml6-module-qtqml-workerscript={declarative}", f"qml6-module-qtquick-window={declarative}", "plasma-integration"]
     if any(p["arch"] == "i386" for p in plan["original"]):
-        packages.append("crossbuild-essential-i386")
+        packages += ["crossbuild-essential-i386", "libfreetype-dev:i386"]
     build.run(["apt-get", "install", "-y", "--no-install-recommends", "--allow-downgrades", "--no-remove",
                *packages, *sorted(originals.glob("*.deb"))])
 
@@ -261,7 +258,8 @@ def baseline_packages(originals, plan):
 def selected_source(target, entry, upstream_copyright):
     inputs = entry["selected"]
     files = {"processor": "src/base/fontreal_coverage.cpp", "declaration": "src/base/fontreal_coverage.h",
-             "render": "debian/patches/fontreal-render.patch", "license": "docs/FONTREAL-MIT.TXT"}
+             "render": "debian/patches/fontreal-render.patch", "license": "docs/FONTREAL-MIT.TXT",
+             "v2_processor": "src/base/fontreal_v2_coverage.cpp", "v2_declaration": "src/base/fontreal_v2_coverage.h"}
     actual = {name: build.sha(target / relative) for name, relative in files.items()}
     assert actual == {name: inputs[name] for name in files}, actual
     license_text = (ROOT / "LICENSE").read_text()
@@ -271,7 +269,7 @@ def selected_source(target, entry, upstream_copyright):
     paragraphs = [Parser().parsestr(p) for p in copyright_text.split("\n\n")]
     selected = [p for p in paragraphs if p.get("License", "").splitlines()[:1] == ["Fontreal-MIT"]]
     assert len(selected) == 1
-    assert set(selected[0]["Files"].split()) == {files[k] for k in ("processor", "declaration", "license")}
+    assert set(selected[0]["Files"].split()) == {files[k] for k in ("processor", "declaration", "v2_processor", "v2_declaration", "license")}
     lines = selected[0]["License"].splitlines()[1:]
     assert all(line.startswith(" ") for line in lines)
     notice = "\n".join("" if line == " ." else line[1:] for line in lines) + "\n"
@@ -305,7 +303,10 @@ def corresponding_sources(directory, plan):
             assert build.sha(target / "debian/patches/fontreal.patch") == plan["sources"][source]["patch_sha256"]
             if plan["sources"][source]["capability_sha256"] is not None:
                 assert build.sha(target / "debian/patches/fontreal-capability.patch") == plan["sources"][source]["capability_sha256"]
-            assert "fontreal.patch" in (target / "debian/patches/series").read_text().splitlines()
+            queue = (target / "debian/patches/series").read_text().splitlines()
+            assert "fontreal.patch" in queue
+            if source == "freetype":
+                assert {"fontreal-render.patch", "fontreal-capability.patch", "fontreal-processor.patch"} <= set(queue)
             assert (target / "debian/copyright").is_file()
             if source == "freetype":
                 original = Path(temporary) / "original"
@@ -317,6 +318,45 @@ def corresponding_sources(directory, plan):
     return selected
 
 
+def v2_qt_checks(native_probe, quick_probe, env, graphics, fonts, reports, official_widget, official_quick):
+    records = {}
+    for pref in ("o", "k3"):
+        selected = dict(env, FONTREAL_PROFILE=pref)
+        selected["FONTREAL_TEST_SELECTED_REFERENCE"] = str(ROOT / "tests/v2_package_reference.py")
+        # treatment selects the V1 helper by default; keep the V2 helper at its call boundary.
+        def v2_treatment(environment, mode):
+            result = treatment(environment, mode)
+            if mode == "selected":
+                result["FONTREAL_TEST_SELECTED_REFERENCE"] = str(ROOT / "tests/v2_package_reference.py")
+            return result
+        widget = []
+        for mode in ("selected", "stock"):
+            process = dict(v2_treatment(selected, mode), QT_QPA_PLATFORM="offscreen", QT_SCALE_FACTOR="1", QT_FONT_DPI="96")
+            widget.append(json.loads(capture([native_probe, "selected" if mode == "selected" else "raw-stock",
+                "none", "10", "1", *fonts, reports], process).stdout))
+        quick_records = []
+        for mode in ("selected", "stock"):
+            target = reports / ("v2-quick-" + pref + "-" + mode)
+            target.mkdir()
+            process = dict(v2_treatment(dict(graphics, FONTREAL_PROFILE=pref), mode), QT_SCALE_FACTOR="1")
+            result = capture([quick_probe, "quick", fonts[1], target, "0"], process)
+            (target / "runtime.log").write_text(result.stderr)
+            record = json.loads((target / "result.json").read_text())
+            assert record["graphicsApi"] == 3 and len(record["frames"]) == 5
+            assert record["frames"][0]["hash"] == record["frames"][1]["hash"]
+            for frame in record["frames"]:
+                assert len(frame["cells"]) == 54
+                if mode == "selected":
+                    assert all(cell["hypotheses"]["none/encoded"]["matches"] for cell in frame["cells"])
+            quick_records.append(record)
+        records[pref] = dict(widget=widget, quick=quick_records)
+    assert records["o"]["widget"][0]["images"] != records["k3"]["widget"][0]["images"]
+    assert records["o"]["widget"][1]["images"] == records["k3"]["widget"][1]["images"] == official_widget["images"]
+    assert [f["cellHash"] for f in records["o"]["quick"][0]["frames"]] != [f["cellHash"] for f in records["k3"]["quick"][0]["frames"]]
+    assert [f["cellHash"] for f in records["o"]["quick"][1]["frames"]] == [f["cellHash"] for f in records["k3"]["quick"][1]["frames"]] == [f["cellHash"] for f in official_quick["frames"]]
+    return records
+
+
 def inside(directory, reports, updates=False):
     assert Path("/.dockerenv").is_file() and os.geteuid() == 0, "This check installs packages only inside its disposable container."
     plan = build.verify_artifacts(directory, json.loads((directory / "bundle.json").read_text()))
@@ -324,6 +364,12 @@ def inside(directory, reports, updates=False):
     system_install.verify_activation(build, directory, deployment, plan)
     for name in ("FONTREAL_TEST_NEAREST_FREETYPE", "FONTREAL_TEST_STOCK_FREETYPE"):
         assert Path(os.environ[name]).is_file(), "Use actual independent FreeType references."
+    if any(p["arch"] == "i386" for p in plan["original"]):
+        build.run(["dpkg", "--add-architecture", "i386"])
+        build.run(["apt-get", "update"])
+    build.run(["apt-get", "install", "-y", "--no-install-recommends", "--no-remove",
+               *sorted((directory / "original").glob("*.deb"))])
+    build.run([sys.executable, "-B", ROOT / "tests/system_build_test.py", "--originals", directory / "original"])
     baseline_packages(directory / "original", plan)
     actual_originals = build.installed()
     assert all(p["source_version"] == plan["sources"][p["source"]]["version"] for p in actual_originals)
@@ -335,6 +381,9 @@ def inside(directory, reports, updates=False):
     source_checks = corresponding_sources(directory, plan)
     build.run(["cmake", "-S", ROOT, "-B", "/tmp/fontreal-probes", "-G", "Ninja"])
     build.run(["cmake", "--build", "/tmp/fontreal-probes", "--target", "qt-native-probe", "qt-kde-probe", "--parallel", "2"])
+    build.run(["cmake", "-S", ROOT, "-B", "/tmp/fontreal-v2-probes", "-G", "Ninja",
+               "-DCMAKE_PROJECT_INCLUDE=" + str(ROOT / "tests/v2_package_probes.cmake")])
+    build.run(["cmake", "--build", "/tmp/fontreal-v2-probes", "--target", "qt-native-probe", "qt-kde-probe", "--parallel", "2"])
     native_probe = Path("/tmp/fontreal-probes/qt-native-probe")
     quick_probe = Path("/tmp/fontreal-probes/qt-kde-probe")
     fonts = [build.output(["fc-match", "-f", "%{file}", family]) for family in ("Noto Sans", "DejaVu Sans", "DejaVu Sans Mono")]
@@ -342,12 +391,21 @@ def inside(directory, reports, updates=False):
     raw_fonts = [fonts[0], gpu_fonts[1], build.output(["fc-match", "-f", "%{file}", "URW Bookman:style=Light"])]
     results = dict(schema=1, passed=False, raw_profile=False, bundle_sha256=build.sha(directory / "bundle.json"),
                    deployment_sha256=build.sha(directory / "deployment.json"), corresponding_sources=source_checks,
+                   test_sources={name: build.sha(ROOT / "tests" / name) for name in (
+                       "system_package_test.py", "selected_package_test.py", "v2_freetype_reference.h",
+                       "v2_package_reference.py", "v2_package_probes.cmake", "v2_freetype_test.py",
+                       "v2_coverage_test.py", "pixel_references_test.py", "arial_coherence_test.py",
+                       "freetype_reference.h", "freetype_selected_link_probe.c")},
+                   independent_providers={name: build.sha(Path(os.environ[name])) for name in (
+                       "FONTREAL_TEST_NEAREST_FREETYPE", "FONTREAL_TEST_STOCK_FREETYPE")},
                    native={}, raster=[], quick=[], gpu=[])
     with tempfile.TemporaryDirectory(prefix="fontreal-render-") as temporary:
         state = Path(temporary)
         env = kde.private_environment(state)
         results["native"]["official"] = native(native_probe, env, fonts, state, "stock")
         raw_native = dict(stock=native(native_probe, env, raw_fonts, state, "raw-stock"))
+        official_v2_widget = json.loads(capture([native_probe, "raw-stock", "none", "10", "1", *raw_fonts, reports],
+            dict(treatment(env, "stock"), QT_QPA_PLATFORM="offscreen", QT_SCALE_FACTOR="1", QT_FONT_DPI="96")).stdout)
         raster_baseline = {(entry, order): raster_profile(quick_probe, env, gpu_fonts,
                            reports / f"official-raster-{entry}-{order}", "stock", entry, order)
                            for entry in ("ordinary", "static") for order in ("tt-first", "cff-first")}
@@ -385,18 +443,35 @@ def inside(directory, reports, updates=False):
             with tempfile.TemporaryDirectory(prefix="fontreal-original-ft-") as temporary:
                 original_ft = Path(temporary)
                 inventory_original = build.package_inventory(directory / "original")
-                archive = directory / "original" / inventory_original[("libfreetype6", "amd64")]["path"]
-                build.run(["dpkg-deb", "-x", archive, original_ft])
-                candidate_exports = build.output(["nm", "-D", "--defined-only", "/usr/lib/x86_64-linux-gnu/libfreetype.so.6"])
-                original_exports = build.output(["nm", "-D", "--defined-only", original_ft / "usr/lib/x86_64-linux-gnu/libfreetype.so.6"])
-                symbols = lambda text: {tuple(line.split()[1:]) for line in text.splitlines()}
-                assert symbols(candidate_exports) == symbols(original_exports)
-                results["freetype_exports"] = len(symbols(candidate_exports))
+                export_counts = {}
+                for arch, triplet in (("amd64", "x86_64-linux-gnu"), ("i386", "i386-linux-gnu")):
+                    if ("libfreetype6", arch) not in inventory_original:
+                        continue
+                    archive = directory / "original" / inventory_original[("libfreetype6", arch)]["path"]
+                    build.run(["dpkg-deb", "-x", archive, original_ft])
+                    provider = f"usr/lib/{triplet}/libfreetype.so.6"
+                    candidate_exports = build.output(["nm", "-D", "--defined-only", "/" + provider])
+                    original_exports = build.output(["nm", "-D", "--defined-only", original_ft / provider])
+                    symbols = lambda text: {tuple(line.split()[1:]) for line in text.splitlines()}
+                    assert symbols(candidate_exports) == symbols(original_exports), arch
+                    export_counts[arch] = len(symbols(candidate_exports))
+                results["freetype_exports"] = export_counts
             import selected_package_test
             results["selected_api"] = selected_package_test.run(
                 Path("/usr/lib/x86_64-linux-gnu/libfreetype.so.6").resolve(),
                 Path(os.environ["FONTREAL_TEST_STOCK_FREETYPE"]).resolve(), reports / "selected-api", raw_fonts,
                 foreign=any(p["arch"] == "i386" for p in plan["original"]))
+            saved_environment = dict(os.environ)
+            try:
+                results["v2_api"] = selected_package_test.run_v2(
+                    Path("/usr/lib/x86_64-linux-gnu/libfreetype.so.6").resolve(),
+                    Path(os.environ["FONTREAL_TEST_STOCK_FREETYPE"]).resolve(), reports / "v2-api", raw_fonts,
+                    foreign=any(p["arch"] == "i386" for p in plan["original"]))
+            finally:
+                os.environ.clear()
+                os.environ.update(saved_environment)
+            results["v2_qt"] = v2_qt_checks(Path("/tmp/fontreal-v2-probes/qt-native-probe"),
+                Path("/tmp/fontreal-v2-probes/qt-kde-probe"), env, graphics, raw_fonts, reports, official_v2_widget, raw_quick[False])
             sys.path.insert(0, str(ROOT / "tools"))
             import browser as browser_provider
             assert browser_provider.freetype_version() == plan["sources"]["freetype"]["version"]

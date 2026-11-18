@@ -313,3 +313,37 @@ The command needs Python, the existing Python study dependencies, a C++17 compil
 The proof calls ordinary and observed native builds for both profiles on all 1900 NORMAL rows and 784 native Qt rows. Duplicate light/dark identities remain separate calls. Independent scalar calculations check every D, O and K3 byte. A passive observer reads D from the same native call because final maxima can conceal an incorrect intermediate value. The ordinary build must return identical final bytes. Independent one-times and four-times outline rasters qualify the supplied provider and the original geometry, including Qt's actual 13-pixel size at 10pt.
 
 The proof also checks zero padding, empty spaces, independent signed strides, row guards, metadata, allocation balance, repeated calls and invalid arguments. It records terminal differences from incorrect component, phase, rounding and fringe alternatives. A labeled synthetic diagonal fixture exposes eight-connected versus four-connected selection. It supplements the genuine corpus and makes no font or provider claim. The result manifest retains every condition and glyph identity, source hashes and output hashes. Prior source receipts cover only unchanged historical owners. The new numerical path always runs through the native entry. No runtime Python hook, installed selector, application coverage or performance claim follows from this check.
+
+## Private FreeType V2 integration
+
+The private FreeType build includes both numerical cores. Set `FONTREAL_PROFILE=o` or `FONTREAL_PROFILE=k3` before the library starts. The library reads this preference once. Other values retain V1. A full application restart applies a changed preference.
+
+The preference requires the existing activation request. The typed `fontreal-selected-v1` Boolean or `FONTREAL_FT_RENDERING=1` activates eligible work. The environment request retains its exact executable scope through `FONTREAL_FT_EXECUTABLE`. A preference alone preserves stock rendering. The Boolean keeps its existing type and library lifetime. The private read-only `fontreal-profile-v2` property reports zero, one or two through an `FT_UInt` destination. These values mean no preference, O or K3. Removing the automatic hinter does not erase the preference or disable eligible environment activation.
+
+Eligible V2 loads use native NORMAL hints, grayscale and no bitmap strikes. CFF loading temporarily disables stem darkening at the face, then restores the caller's setting. The adapter preserves native errors, metadata, bearings and advances. It copies the current hinted and transformed outline before native rendering. After native rendering supplies the raw footprint, the adapter rasterizes that copy directly at four-times coordinates. It uses the kernel's registered frame and preserves outline flags. Empty native bitmaps bypass the kernel. A repeated render preserves the once-processed bitmap. A new load creates new support.
+
+Enabling activation after a load does not treat that earlier outline. The next eligible load receives the V2 source policy and enables V2 rendering.
+
+Build the ordinary private libraries, then supply the printed build record to the integration check:
+
+```sh
+python3 -B tools/build-freetype.py
+python3 -B tests/v2_freetype_test.py --record V2_BUILD_JSON
+```
+
+The check needs the retained numerical receipt, the existing Python study dependencies, a C++17 compiler and the build recipe's development packages. It uses installed Noto Sans, Noto Color Emoji, Ubuntu Sans Mono, Nimbus Sans and the standard X11 bitmap font. Keep the retained V1 private build for diagnostic comparisons. Build support stays in `build/v2-freetype`. Scientific results stay in `results/v2-freetype`. The ordinary builder retains its own artifact directory.
+
+The check calls the actual ordinary candidate through public FreeType load and render functions. A second build passively records raw pixels, high pixels and the selected mode from the same adapter call. Both candidates must return identical bytes. Independent stock calls provide native source and footprint expectations. Direct outline rasterization preserves flags for the high oracle. Frozen scalar calculations provide O and K3 expectations. The result records each scenario, source hashes and output hashes. The builder hashes both V2 files, links both numerical objects, preserves public exports and retains FreeType and MIT notices.
+
+This integration check makes no installed V2, application coverage or performance claim. System delivery still requires real Debian and Ubuntu workers, shared and static callers, i386 qualification and corresponding source checks before release.
+
+
+## Private Skia and Fontations V2 integration
+
+The selected Teams and Bitwarden engine recipes include both frozen numerical cores. Exact `FONTREAL_PROFILE=o` and `FONTREAL_PROFILE=k3` preferences select V2 at process startup. Missing or unsupported values retain V1. The selected engine remains the activation owner. The [shared O/K3 preference](../build-system.md#choose-o-or-k3) supplies enabled ordinary launches. Preference alone does not activate treatment or upgrade an older saved renderer.
+
+Both completion routes supply the actual path that produced the native raw mask. The direct route keeps the source glyph separate from temporary mask-filter storage. V2 uses Skia's existing rasterizer on that same hinted, aligned and effect-applied path at four-times coordinates. The high frame expands native bounds by three pixels before scaling. A true hairline retains one native pixel of physical width through the native stroke capability. V1 skips high generation. Empty masks bypass the kernel. Native metrics, source paths, image strides and filter order stay intact.
+
+Run the complete target checks in the [Chromium guide](chromium-flatpak.md#checks-when-fontreal-changes). They qualify actual normal and trace engines on both palettes, every existing eligibility control and the full ordered cache sequence. Independent pristine Fontations and Skia provide raw paths, high masks and metrics. Frozen scalar references provide exact O/K3 expectations. Operating-system pixels and native PNGs remain separate comparison domains. A native stroke-zero image request supplies the hairline proof because canvas ignores line width zero. Nonzero canvas strokes separately reach displayed direct-route pixels.
+
+The build records bind both source/header pairs and actual compile/link commands. The pristine provider excludes candidate processing. Exact unchanged reuse, complete notices and notice-only envelope changes retain their existing meanings. This renderer check makes no installed V2, daily application coverage or performance claim.

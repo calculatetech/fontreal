@@ -1,12 +1,16 @@
 # Fontreal
 
-Fontreal makes small text easier to read with clear strokes and gently softened edges. It is an experimental Linux rendering project. Font choice, size, display scale, and background still affect the result.
+Fontreal is an experimental Linux text-rendering project. It patches FreeType, Qt 6, and selected Skia/Electron engines to strengthen weak strokes and keep soft edges.
+
+Native KDE installation replaces matching system FreeType and Qt packages. Firefox and Floorp use private FreeType libraries, rendering preferences, and launch hooks. Teams and Bitwarden use private engines and launch hooks. Font files, chosen fonts and sizes, website styles, accounts, and working data stay in place. Building alone does not install packages or change running applications.
 
 ## Why this project exists
 
 A stroke split across neighboring pixels can look fuzzy. Curves can have pale gaps, while nearby straight strokes look solid. Fontreal strengthens those weak areas and gives thin stems a clear pixel center.
 
-The selected method uses the font’s native hints to preserve its shape. It then adjusts grayscale coverage, the amount of ink in each pixel. The same rules apply to every font and character. They preserve details at corners and intersections and use nearby strong strokes to set the final stem intensity.
+Font, size, display scale, and background affect the result.
+
+V2 starts with the font’s native NORMAL hints, which align its shape to pixels. It uses a reference drawn at four times the resolution to guide grayscale coverage, the amount of ink in each pixel. O NORMAL is the general V2 profile. K3 NORMAL is the alternative. The same pixel rules apply to eligible fonts and characters.
 
 ## Suggested fonts
 
@@ -16,7 +20,7 @@ For terminals, start with **Liberation Mono Regular at 11pt**, or **LiterationMo
 
 ## Compare stock Qt and Fontreal
 
-Stock Qt is on the left. Fontreal is on the right. These are real Qt captures at 96 DPI and 100% scale, using the supplied KDE defaults:
+Stock Qt is on the left. Fontreal V2 O NORMAL is on the right. These are real Qt captures at 96 DPI and 100% scale, using the supplied KDE defaults:
 
 | Role | Font | Size |
 | --- | --- | --- |
@@ -27,19 +31,23 @@ Stock Qt is on the left. Fontreal is on the right. These are real Qt captures at
 | Menu | Noto Sans | 10pt |
 | Window title | Noto Sans | 10pt |
 
-![Stock Qt and Fontreal at default KDE font sizes, light palette](docs/images/kde-selected/kde-defaults-light.png)
+![Stock Qt and Fontreal V2 O NORMAL at default KDE font sizes, light palette](docs/images/kde-v2/kde-defaults-light.png)
 
-![Stock Qt and Fontreal at default KDE font sizes, dark palette](docs/images/kde-selected/kde-defaults-dark.png)
+![Stock Qt and Fontreal V2 O NORMAL at default KDE font sizes, dark palette](docs/images/kde-v2/kde-defaults-dark.png)
 
 Open the original PNG at one image pixel per display pixel. Your font renderer does not redraw the text in these images. Browser zoom and image previews can resize it.
 
-The controls use Qt Widgets with Fusion styling. The window-title row is a font specimen, not a KWin decoration capture. The [capture record](docs/images/kde-selected/manifest.json) identifies the fonts, libraries, and image hashes. The sheets preserve the captured pixels without sharpening or resizing.
+The controls use Qt Widgets with Fusion styling. The window-title row is a font specimen, not a KWin decoration capture. The [V2 capture record](docs/images/kde-v2/manifest.json) identifies the fonts, libraries, profile evidence, and image hashes. The sheets preserve the captured pixels without sharpening or resizing.
 
-The [earlier KDE gallery](docs/images/comparison/manifest.json) records the older automatic-hint and linear-blend treatment. It does not represent this selected method. The [8–16pt font study](docs/images/browser-common-ground/weighted-size-captures.json) covers more families and regular/bold weights.
+O NORMAL was preferred in our dark-background comparisons. Stock remains competitive and was sometimes preferred on light backgrounds. These captures demonstrate O NORMAL.
+
+The [retained V1 captures](docs/images/kde-selected/manifest.json) record the previous selected method. The [earlier KDE gallery](docs/images/comparison/manifest.json) records the older automatic-hint and linear-blend treatment. It does not represent this selected method. The [8–16pt font study](docs/images/browser-common-ground/weighted-size-captures.json) covers more families and regular/bold weights.
 
 ## What the repository does
 
 Fontreal contains a comparison viewer, rendering patches, and tools that build matching libraries on demand. The selected renderer combines native normal hinting, grayscale coverage correction, whole-pixel placement, and encoded blending.
+
+Enabled integrations share the [persistent O/K3 preference](docs/build-system.md#choose-o-or-k3). O NORMAL is the default. Choose K3 with `sh packaging/session/fontreal-session profile k3`. Fully restart applications after a change. Native Qt/KDE uses the next login. The preference does not enable treatment or upgrade an older saved renderer.
 
 [Firefox and Floorp support](docs/experiments/browser-masks.md) applies this method to your existing working profile. Accounts, bookmarks, history, sessions, and unrelated preferences stay in place. Re-enabling upgrades an older Fontreal activation. Disable restores the original rendering preferences and removes the owned launch hooks.
 

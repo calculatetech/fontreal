@@ -23,7 +23,9 @@ SOURCES = ("freetype", "qt6-base", "qt6-declarative")
 FREETYPE = {("debian", "13"): "2.13.3+dfsg-1+deb13u1",
             ("ubuntu", "26.04"): "2.14.2+dfsg-1ubuntu0.2"}
 FIELDS = "${Package}\t${Architecture}\t${Version}\t${source:Package}\t${source:Version}\t${db:Status-Status}\n"
-SELECTED_PROFILE = "native-normal-weighted-stems-v1"
+SELECTED_PROFILE = "native-normal-o-k3-v2"
+SELECTED_KEYS = {"native-normal-weighted-stems-v1": {"profile", "render", "processor", "declaration", "license"},
+                 SELECTED_PROFILE: {"profile", "render", "processor", "declaration", "license", "v2_processor", "v2_declaration"}}
 
 
 def run(args, **kwargs):
@@ -68,12 +70,13 @@ def selected_inputs():
     return dict(profile=SELECTED_PROFILE, **{name: sha(ROOT / path) for name, path in (
         ("render", "patches/freetype-2.14.2-fontreal.patch"),
         ("processor", "src/fontreal_coverage.cpp"),
-        ("declaration", "src/fontreal_coverage.h"), ("license", "LICENSE"))})
+        ("declaration", "src/fontreal_coverage.h"), ("license", "LICENSE"),
+        ("v2_processor", "src/fontreal_v2_coverage.cpp"), ("v2_declaration", "src/fontreal_v2_coverage.h"))})
 
 
 def selected_plan(plan):
     entry = plan.get("sources", {}).get("freetype", {})
-    return bool(entry.get("capability_sha256")) and entry.get("selected", {}).get("profile") == SELECTED_PROFILE
+    return bool(entry.get("capability_sha256")) and entry.get("selected", {}).get("profile") in SELECTED_KEYS
 
 
 def newer(left, right):
@@ -144,7 +147,7 @@ def check_plan(plan, current_patches=True):
             raise ValueError("The package capability patch changed. Make a new plan before building.")
         if source == "freetype" and (current_patches or "selected" in entry):
             selected = entry.get("selected", {})
-            if (set(selected) != set(selected_inputs()) or selected.get("profile") != SELECTED_PROFILE
+            if (set(selected) != SELECTED_KEYS.get(selected.get("profile"))
                     or any(not re.fullmatch(r"[0-9a-f]{64}", selected[k]) for k in selected if k != "profile")):
                 raise ValueError("The selected FreeType processor inputs are incomplete.")
             if current_patches and selected != selected_inputs():
@@ -351,11 +354,11 @@ def worker(jobs):
         if source == "freetype":
             # The generated quilt patch keeps the unchanged core in corresponding source.
             additions = {"src/base/" + name: (ROOT / "src" / name).read_text()
-                         for name in ("fontreal_coverage.cpp", "fontreal_coverage.h")}
+                         for name in ("fontreal_coverage.cpp", "fontreal_coverage.h", "fontreal_v2_coverage.cpp", "fontreal_v2_coverage.h")}
             additions["docs/FONTREAL-MIT.TXT"] = (ROOT / "LICENSE").read_text()
             copyright_file = tree / "debian/copyright"
             copyright_text = copyright_file.read_text()
-            stanza = ("\nFiles: src/base/fontreal_coverage.cpp src/base/fontreal_coverage.h docs/FONTREAL-MIT.TXT\n"
+            stanza = ("\nFiles: " + " ".join(additions) + "\n"
                       "Copyright: 2026 Michael Beutler and Fontreal contributors\nLicense: Fontreal-MIT\n "
                       + "\n ".join(line if line else "." for line in (ROOT / "LICENSE").read_text().splitlines()) + "\n")
             patch_text = "".join("".join(difflib.unified_diff([], text.splitlines(keepends=True),

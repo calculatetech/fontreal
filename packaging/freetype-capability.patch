@@ -60,12 +60,12 @@
  # Default extensions objects
  #
  BASE_EXT_OBJ := $(BASE_EXT_SRC:$(BASE_DIR)/%.c=$(OBJ_DIR)/%.$O)
-+BASE_EXT_OBJ += $(OBJ_DIR)/fontreal_coverage.$O
++BASE_EXT_OBJ += $(OBJ_DIR)/fontreal_coverage.$O $(OBJ_DIR)/fontreal_v2_coverage.$O
 +
-+$(OBJ_DIR)/fontreal_coverage.$O: $(BASE_DIR)/fontreal_coverage.cpp $(BASE_DIR)/fontreal_coverage.h $(FREETYPE_H)
++$(OBJ_DIR)/fontreal%coverage.$O: $(BASE_DIR)/fontreal%coverage.cpp $(BASE_DIR)/fontreal%coverage.h $(FREETYPE_H)
 +	$(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(CXXFLAGS) $(CPPFLAGS) \
 +	  -std=c++17 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden \
-+	  $(INCLUDE_FLAGS) -c $(BASE_DIR)/fontreal_coverage.cpp -o $@
++	  $(INCLUDE_FLAGS) -c $< -o $@
  
  
  # Base layer object(s)

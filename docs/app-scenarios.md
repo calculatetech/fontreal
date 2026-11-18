@@ -19,6 +19,8 @@ The guides linked below own the full commands and prerequisites. Follow the [tes
 
 Follow each integration guide. Build source revisions remain pinned. Application releases do not trigger repeated Fontreal qualification. A different rendering engine still needs an integration. Do not apply a Teams override to another Electron application.
 
+The enabled integrations share one [O/K3 preference](build-system.md#choose-o-or-k3). O NORMAL is the default. Set `sh packaging/session/fontreal-session profile k3` for K3 NORMAL. Fully quit and reopen each application. Native Qt/KDE uses the next login. The preference does not enable an integration or replace a saved V1 renderer.
+
 ## Firefox and Floorp: original working profiles
 
 Follow [Requirements and build](experiments/browser-masks.md#requirements-and-build) before activation. Enable each browser separately:

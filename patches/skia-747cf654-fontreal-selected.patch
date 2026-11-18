@@ -4,7 +4,7 @@
          SkMaskBuilder& dst, const SkPath& path, const SkMaskGamma::PreBlend& maskPreBlend,
          bool doBGR, bool verticalLCD, bool a8FromLCD, bool hairline);
      void generateImageFromPath(const SkGlyph& glyph, void* imageBuffer);
-+    virtual void onPathImage(const SkGlyph&, void*, bool) {}
++    virtual void onPathImage(const SkGlyph&, void*, const SkPath&, const SkIRect&, bool, bool) {}
  
      /** Return the glyph's outline, or if the glyph cannot be converted to one, return {}.
       *  Does not apply subpixel positioning to the path.
@@ -14,7 +14,7 @@
      const bool a8LCD = SkToBool(fRec.fFlags & SkScalerContext::kGenA8FromLCD_Flag);
      const bool hairline = glyph.pathIsHairline();
      GenerateImageFromPath(mask, *devPath, fPreBlend, doBGR, doVert, a8LCD, hairline);
-+    this->onPathImage(glyph, imageBuffer, false);
++    this->onPathImage(glyph, imageBuffer, *devPath, mask.fBounds, hairline, false);
  }
  
  void SkScalerContext::GenerateImageFromPath(
@@ -22,7 +22,7 @@
              const bool a8LCD = SkToBool(fRec.fFlags & SkScalerContext::kGenA8FromLCD_Flag);
              const bool hairline = origGlyph.pathIsHairline();
              GenerateImageFromPath(mask, *devPath, fPreBlend, doBGR, doVert, a8LCD, hairline);
-+            this->onPathImage(*unfilteredGlyph, unfilteredGlyph->fImage, true);
++            this->onPathImage(*unfilteredGlyph, unfilteredGlyph->fImage, *devPath, mask.fBounds, hairline, true);
          }
      }
  
@@ -104,9 +104,9 @@
          static const constexpr value_type BITMAP = 4;
      };
 +
-+    void onPathImage(const SkGlyph& glyph, void* imageBuffer, bool direct) override {
++    void onPathImage(const SkGlyph& glyph, void* imageBuffer, const SkPath& devPath, const SkIRect& bounds, bool hairline, bool direct) override {
 +        if (fFontreal && glyph.extraBits()==ScalerContextBits::PATH && glyph.maskFormat()==SkMask::kA8_Format)
-+            fontreal_complete(glyph,imageBuffer,direct,this->getTypeface(),fRec,fScale.y(),fRemainingMatrix,fFontrealDescriptor,fPreBlend.isApplicable());
++            fontreal_complete(glyph,imageBuffer,devPath,bounds,hairline,&GenerateImageFromPath,direct,this->getTypeface(),fRec,fScale.y(),fRemainingMatrix,fFontrealDescriptor,fPreBlend.isApplicable());
 +    }
  
      GlyphMetrics generateMetrics(const SkGlyph& glyph, SkArenaAlloc*) override {

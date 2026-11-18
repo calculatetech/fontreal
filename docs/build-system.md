@@ -30,15 +30,15 @@ The plan records the running system. It selects exact source versions, not the n
 
 The container downloads authenticated distro source packages and original binary packages. It appends the Fontreal patch to each distro patch queue. It uses `dpkg-buildpackage` and the native `debian/rules`. FreeType builds first, followed by QtBase and Declarative. Matching development packages enter only the container between builds.
 
-The build preserves distro hardening. FreeType compiles the unchanged C++17 mask processor with the target compiler, including a separate i386 object. Its shared library, static library and demos retain the standard C++ runtime and math dependencies. The exact public export list hides private C++ symbols. The build records `noudeb` because installer packages are outside this desktop target. It sets `nocheck` because desktop rendering checks run separately. It omits debug packages and compiler debug information to reduce local storage. These options appear in the build record and corresponding source. A successful compile alone does not establish desktop readiness. Output ownership follows the mounted directory, so a rootless Docker build remains writable by its host user.
+The build preserves distro hardening. FreeType compiles both C++17 processors with the configured target compiler. Each declared i386 counterpart contains both objects. Its shared library, static library and demos retain the standard C++ runtime and math dependencies. The exact public export list hides private C++ symbols. The build records `noudeb` because installer packages are outside this desktop target. It sets `nocheck` because desktop rendering checks run separately. It omits debug packages and compiler debug information to reduce local storage. These options appear in the build record and corresponding source. A successful compile alone does not establish desktop readiness. Output ownership follows the mounted directory, so a rootless Docker build remains writable by its host user.
 
 ## Keep the bundle together
 
 `packages/` contains rebuilt native packages, including required FreeType architectures. `original/` contains the exact official packages selected for rollback. `source/` contains all three modified source packages, original archives, native patch queues and recipes, copyright notices, and build records.
 
-`system.json` records original and installed package identities, source versions, local versions, and patch hashes. `build.json` records dependencies and build inputs. `bundle.json` lists artifact hashes. Verification checks every package family and each source descriptor's archives. It checks a retained bundle against its own records. A later checkout change does not invalidate cached original packages. A new build still requires a plan with the current patches.
+`system.json` records original and installed package identities, source versions, local versions, and patch hashes. The `native-normal-o-k3-v2` identity also records both processor and header pairs, the render patch, and the MIT license. `build.json` records dependencies and build inputs. `bundle.json` lists artifact hashes. Verification checks every package family and each source descriptor's archives. It checks a retained bundle against its own records. A later checkout change does not invalidate cached original packages. A new build still requires a plan with the current patches and all six selected-input hashes. Verification keeps literal V1 records in their original four-hash shape.
 
-Older Qt-only bundles keep their recorded source families for verification, predecessor discovery, and rollback. Their rollback preserves unowned FreeType packages. Retained complete bundles with the older raw profile also keep verification, predecessor and rollback support. Build a new selected-profile bundle to prepare activation or install the selected method. Installation, new plans, and new activation packages require all three families.
+Older Qt-only bundles keep their recorded source families for verification, predecessor discovery, and rollback. Their rollback preserves unowned FreeType packages. Retained complete bundles with the older raw profile also keep verification, predecessor and rollback support. Retained selected V1 bundles keep preparation and installation support. Build a current bundle for V2 capability. Installation, new plans, and new activation packages require all three families.
 
 The local version appends `afontreal` and a numeric build identity. Debian's version comparator checks that it sorts above its official base and below normal update forms. Fontreal adds no package holds or APT priorities. An official Qt update can replace the local build. A new upstream Qt version needs a matching patch port before another Fontreal build.
 
@@ -53,8 +53,13 @@ python3 - <<'PY'
 import os, subprocess, sys
 sys.path.insert(0, "tests")
 import browser_live_recipe_test as checks
+checks.BUILD = checks.ROOT / "build/system-reference"
+checks.OUT = checks.ROOT / "results/system-reference"
+checks.masks.WORK = checks.BUILD / "mask-probe-build"
+checks.masks.OUT = checks.OUT / "mask-probe"
 record, _, nearest = checks.prepare()
 env = dict(os.environ,
+    FONTREAL_TEST_REFERENCE_RECORD=str((checks.BUILD / "reference.json").resolve()),
     FONTREAL_TEST_REFERENCE_FREETYPE=str(nearest.resolve()),
     FONTREAL_TEST_STOCK_FREETYPE=record["libraries"]["stock"]["library"])
 subprocess.run([sys.executable, "tests/system_package_test.py",
@@ -70,7 +75,7 @@ During configuration, the activation package sets its root-owned source-record d
 
 The complete font matrix needs the 28 faces declared by `tests/raw_coverage_test.py`: Noto Sans/Serif, Hack, Lato, Arial and the CFF controls. Install the required licensed fonts before running it. To keep test-only fonts outside the system, set `FONTREAL_TEST_FONT_ROOT` to a directory with the same relative structure as `/usr/share/fonts`. The checker records every font hash and binds that directory read-only inside the container. Font files are not distributed by this repository.
 
-Reference preparation builds separate stock and nearest-only FreeType libraries from the matching provider. The nearest reference changes only the Latin Y rounding threshold. It retains native CJK fitting. These references supply expected masks without selecting the candidate's native property. Selected-profile checks use pristine native-normal rasters with Qt's CFF stem-darkening and TrueType interpreter settings. A separate Python helper applies the unchanged coverage reference. The checks include a raw CFF case that distinguishes those settings from fresh FreeType defaults.
+Run reference preparation on the matching distro and FreeType provider. Do not use Ubuntu references to qualify Debian packages. Reference preparation builds separate stock and nearest-only FreeType libraries from that provider. The nearest reference changes only the Latin Y rounding threshold. It retains native CJK fitting. These references supply expected masks without selecting the candidate's native property. V1 checks use pristine native-normal rasters with Qt's CFF stem-darkening and TrueType interpreter settings. V2 checks use native NORMAL hints, interpreter 40, and CFF darkening off. They rasterize each current hinted outline at four-times coordinates through the independent stock provider. Separate Python helpers apply the frozen V1 or O/K3 arithmetic. The checks include a raw CFF case that distinguishes those settings from fresh FreeType defaults. They inspect every source family and FreeType notice, shared exports for each architecture, unconditional amd64 static linkage, and real i386 callers. Static callers use the packaged dependency metadata and cannot borrow a shared FreeType implementation.
 
 The package check uses another disposable container for the selected release. It unpacks every corresponding source package and installs the actual binaries through APT. Independent probes compare widget and OpenGL pixels, placement, disabled output, mixed fonts, and target transitions. Raw checks include CFF, current CFF2 weights, and actual CID/CJK glyphs. Ordinary and cached static text include repeated TrueType and CFF runs around color draws. Test results stay in `package-checks/` beside the bundle.
 
@@ -145,6 +150,28 @@ Keep `FONTREAL_TEST_REFERENCE_FREETYPE` exported as above. This check uses test-
 
 If the full-session check required `--previous PATH_TO_PREVIOUS_BUNDLE`, add the same argument and exact bundle to this browser command. The check validates that predecessor before browser/index changes. Before each guarded install, with the browser normally closed, it restores the verified captured package set and original activation package. Every rollback still ends at the complete official package set. A missing or mismatched predecessor is an error; the check does not substitute an official-only baseline for it.
 
+## Choose O or K3
+
+A current bundle contains O and K3. This capability does not activate either profile. The existing typed Boolean property and scoped environment request remain the activation authorities.
+
+Set the shared preference from the checkout:
+
+```sh
+sh packaging/session/fontreal-session profile
+sh packaging/session/fontreal-session profile k3
+sh packaging/session/fontreal-session profile o
+```
+
+The getter prints the choice. Missing configuration selects O NORMAL, the general V2 choice. K3 NORMAL is the alternative. The installed command is `fontreal-session profile k3` or `fontreal-session profile o`.
+
+The plain file is `fontreal/profile` below `XDG_CONFIG_HOME`, or `$HOME/.config` when that variable is unset. The command accepts only exact `o` and `k3`. Unsupported values and extra arguments leave state unchanged. A malformed external file uses the O default.
+
+One choice supplies enabled native Qt/KDE, Firefox, Floorp, Teams and Bitwarden launches. Fully quit and reopen applications after a change. Native desktop applications receive the choice at the next login. Fresh browser and selected Flatpak launches use the file instead of a stale inherited `FONTREAL_PROFILE`.
+
+The choice does not enable an integration or upgrade a saved library or engine. Keep the existing activation and exact-runtime requirements. Complete selected-V1 bundles retain their recorded compatibility. They do not become V2 through this file. Raw and Qt-only bundles remain ineligible for new activation.
+
+Direct library users can still set exact `FONTREAL_PROFILE=o` or `FONTREAL_PROFILE=k3` before startup. An absent or unsupported direct value retains V1 behind independent activation. Do not change the build plan or rebuild an engine to switch profiles.
+
 ## Apply, enable, and restore
 
 Check native APT access to the complete prepared bundle. If using a retained predecessor, add its path to the first command's arguments too:
@@ -173,7 +200,7 @@ fontreal-session enable
 
 Log out and back in. Installation starts disabled when the user has no existing activation preference. Rebuilding preserves an existing preference. The session hook requires matching FreeType, Gui, and Quick runtime versions. It selects native-normal hinting, the selected weighted-stem coverage correction, whole-pixel placement, and encoded blending. It overrides conflicting rendering preferences while preserving chosen fonts and sizes. It adds no loader override.
 
-Run `fontreal-session status` from a terminal in the new session. The preference line describes the next login. The current-process line describes that terminal's inherited values. An official Qt update can leave the preference enabled while the next login uses stock rendering. Rebuild for the updated system when its exact sources remain supported.
+Run `fontreal-session status` from a terminal in the new session. The preference and profile lines describe the next login. The current-process line includes that terminal's inherited profile and activation values. Neither line proves that a V2 renderer loaded. An official Qt update can leave the preference enabled while the next login uses stock rendering. Rebuild for the updated system when its exact sources remain supported.
 
 After rollback removes the activation hook, Plasma can restore environment values from an earlier login. Check the loaded official libraries and stock output to confirm rollback. Retained environment values alone cannot show that Fontreal rendering is active.
 

@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-021: Deliver accepted V2 rendering.** The user accepts O NORMAL as the general profile and K3 NORMAL as the per-user alternative. The prototype clearly improves dark-background text; stock remains competitive and sometimes preferred on light backgrounds. First port the frozen formulas to a native kernel with exact numerical proof. Then integrate the user choice into covered renderers and prepare the release. Keep further optical experiments separate and preserve the stock escape. A kernel checkpoint alone is not an installed V2. See the [V2 specification](plans/FR-021-supersampling.md).
+No task is active.
 
 ## Planned next
 
@@ -42,6 +42,7 @@ No task is declined. Non-native LCD resolution remains outside the project scope
 
 ## Completed
 
+- **FR-021: Deliver accepted V2 rendering.** Installable V2 delivers O NORMAL and the per-user K3 alternative through matching Debian 13 and Ubuntu 26.04 native packages, Firefox, Floorp, Teams and Bitwarden. Complete native builds, rendering and launch/data lifecycle checks pass. The README explains system impact and compares genuine stock Qt with V2 at KDE defaults. Stock remains competitive on light backgrounds. Further optical experiments remain separate. See the [V2 specification](plans/FR-021-supersampling.md).
 - **FR-020: Simplify browser launch activation.** Enabled Firefox and Floorp use the saved Fontreal build without browser or installed-library version gates. Artifact integrity, legacy treatments and original-profile restoration remain checked. Ordinary working profiles launch with treatment without re-enabling after an update. Tests validate Fontreal changes rather than requalifying browser releases. See the [browser guide](experiments/browser-masks.md) and [launch specification](plans/FR-020-browser-launch.md).
 - **FR-019: Carry the selected profile into native KDE packages.** Matching Debian 13 and Ubuntu 26.04 FreeType and Qt packages deliver the selected native-normal and weighted-stem method. Package, independent-update, full Plasma session, browser-helper and offline rollback checks pass. The installed host passes fresh-login environment, library and widget/Quick pixel checks. Chosen fonts and sizes stay intact. See the [native package specification](plans/FR-019-native-selected.md) and [build guide](build-system.md).
 - **FR-018: Deliver the selected native rendering profile.** The accepted native-normal and generic weighted-stem method works in ordinary Firefox and Floorp without copying working profiles. Actual raster, window, upgrade, restoration, desktop-action and fallback checks preserve the browser lifecycle and earlier diagnostics. The README compares genuine stock Qt and Fontreal at all six supplied KDE font roles and sizes, in both palettes. Native KDE package deployment remains FR-019. See the [browser guide](experiments/browser-masks.md), [handoff](research/handoff.md) and [integration specification](plans/FR-018-axis-study.md).

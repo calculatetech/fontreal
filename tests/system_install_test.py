@@ -68,6 +68,44 @@ def rejected_install(directory, env, reason):
     assert reason in result.stderr, (reason, result.stderr)
 
 
+def activation_payload(directory):
+    """Run the real extracted command and hook; replace only dpkg discovery."""
+    payload=directory/'payload';payload.mkdir()
+    build.run(['dpkg-deb','-x',directory/'activation/fontreal-session.deb',payload])
+    command=payload/'usr/bin/fontreal-session'
+    hook,=payload.rglob('fontreal.sh')
+    versions=payload/'usr/share/fontreal/runtime-versions'
+    rows=versions.read_text().splitlines(keepends=True);assert len(rows)==3
+    home=directory/'profile-home';home.mkdir()
+    provider=directory/'profile-provider';provider.mkdir()
+    observed=provider/'versions';observed.write_text(''.join(rows))
+    query=provider/'dpkg-query'
+    query.write_text('#!/bin/sh\ncat '+str(observed)+'\n');query.chmod(0o755)
+    env=dict(os.environ,HOME=str(home),XDG_CONFIG_HOME=str(home/'config'),
+             PATH=str(provider)+os.pathsep+os.environ['PATH'],FONTREAL_PROFILE='o',
+             FONTREAL_RENDERING='1',FONTREAL_BLEND='encoded',FONTREAL_CONTRAST='weighted',FONTREAL_FITTING='native')
+    namespace=['bwrap','--unshare-user','--ro-bind','/','/','--dev-bind','/dev','/dev','--bind',str(directory),str(directory),
+               '--ro-bind',str(command),'/usr/bin/fontreal-session',
+               '--ro-bind',str(payload/'usr/share/fontreal'),'/usr/share/fontreal']
+    def call(*args):return subprocess.check_output([*namespace,'/usr/bin/fontreal-session',*args],env=env,text=True)
+    call('profile','k3');assert call('profile')=='k3\n'
+    assert 'Next-login profile: k3' in call('status') and 'profile=o' in call('status')
+    marker=home/'config/fontreal/enabled'
+    for enabled,mismatch in ((False,None),(True,None),*((True,index) for index in range(3))):
+        if enabled:marker.touch()
+        else:marker.unlink(missing_ok=True)
+        current=list(rows)
+        if mismatch is not None:current[mismatch]=current[mismatch].rstrip('\n')+'-mismatch\n'
+        observed.write_text(''.join(current))
+        output=subprocess.check_output([*namespace,'sh','-c','. "$1"; env; /usr/bin/fontreal-session status','sh',str(hook)],env=env,text=True)
+        values=dict(line.split('=',1) for line in output.splitlines() if '=' in line and not line.startswith('Current process:'))
+        active=enabled and mismatch is None
+        assert values['FONTREAL_RENDERING']==('1' if active else '0')
+        assert values.get('FONTREAL_PROFILE')==('k3' if active else None)
+        assert 'Next-login profile: k3' in output and ('profile=k3' if active else 'profile=\n') in output
+    print('PASS actual extracted activation payload, O/K3 command, independent native gates and next-login/current status')
+
+
 def retained_native(directory):
     assert Path("/var/lib/fontreal-test-ready").is_file(), "Use the marked disposable VM."
     subprocess.run(["systemd-detect-virt", "--vm"], check=True, capture_output=True)
@@ -120,6 +158,7 @@ def main():
         root = Path(temporary)
         targets = []
         retained_targets = []
+        v1_targets = []
         raw_targets = []
         for name, release, upstream, base, declarative in (
                 ("debian", "13", "6.8.2", "6.8.2+dfsg-9+deb13u2", "6.8.2+dfsg-7"),
@@ -148,6 +187,7 @@ def main():
             assert build.sha(directory / "bundle.json") == native_hash
             assert all(build.sha(directory / a["path"]) == a["sha256"] for a in native["artifacts"])
             cli("verify", directory)
+            activation_payload(directory)
             cli("prepare", directory, success=False)
             path = directory / "deployment.json"
             deployment = json.loads(path.read_text())
@@ -162,6 +202,16 @@ def main():
             notice.write_bytes(original)
             cli("verify", directory)
             targets.append((directory, plan))
+
+            v1 = fixtures.retained_selected_plan(plan)
+            v1_directory = root / ("synthetic-selected-v1-" + name)
+            v1_directory.mkdir()
+            fixtures.bundle(v1_directory, v1)
+            immutable = build.sha(v1_directory / "bundle.json")
+            cli("prepare", v1_directory)
+            cli("verify", v1_directory)
+            assert build.sha(v1_directory / "bundle.json") == immutable
+            v1_targets.append((v1_directory, v1))
 
             raw = copy.deepcopy(plan)
             raw["sources"]["freetype"].pop("selected")
@@ -247,6 +297,13 @@ def main():
                     ("_" + p["arch"] if p["arch"] != "amd64" else "") + ".deb")) for p in plan["installed"]}
         expected.add(str(directory / "activation/fontreal-session.deb"))
         assert {p for p in arguments if p.endswith(".deb")} == expected
+        invoked.unlink()
+        v1_directory, v1 = next((d, p) for d, p in v1_targets if (p["os"], p["release"]) == (system["ID"], system["VERSION_ID"]))
+        cli("install", v1_directory, "--simulate", success=False, env=env)
+        arguments, = json.loads(invoked.read_text())
+        assert "--simulate" in arguments and "--no-remove" in arguments
+        assert {p for p in arguments if p.endswith(".deb")} == {str(v1_directory / "packages" / (p["name"] +
+            ("_" + p["arch"] if p["arch"] != "amd64" else "") + ".deb")) for p in v1["installed"]} | {str(v1_directory / "activation/fontreal-session.deb")}
         invoked.unlink()
         raw_directory, raw = next((d, p) for d, p in raw_targets if (p["os"], p["release"]) == (system["ID"], system["VERSION_ID"]))
         assert set(raw["sources"]) == set(build.SOURCES) and not build.selected_plan(raw)
