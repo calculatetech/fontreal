@@ -29,6 +29,7 @@ V3 builds own the matching Qt libraries. A Qt-only upgrade over V2 keeps the exi
 | B5. Plasma preferences | None, RGB, BGR, vertical RGB and vertical BGR with the same font and target. | V3-2 and V3-3 compare final channel values to an axis-sensitive oracle. |
 | B6. Final display eligibility | Aligned target, resampled offscreen layer, then aligned target with the same font. | V3-2 and V3-3 compare actual Widgets, Plasma and KWin pixels at 100% and 125%. |
 | B7. Existing routes | Disabled Fontreal, color glyph, no anti-aliasing, no subpixel rendering, and V2. | V3-2 through V3-4 compare unaffected pixels with their stock or V2 control beside a positive V3 result. |
+| B8. Repeated glyphs | Draw the same mask cold and warm. Vary phase, scale, ink and color eligibility on a live font engine. | Count actual outline samples on a repeated repaint. Compare each rendered variant with the same input from the uncached path. |
 
 ## Implementation
 
@@ -38,6 +39,10 @@ V3 builds own the matching Qt libraries. A Qt-only upgrade over V2 keeps the exi
 4. **V3-4 native delivery and comparisons.** Build and verify matching Qt packages through the native build and activation commands documented in the build guide. Prove stock FreeType provides the glyphs, the previous profile remains usable and turning off Fontreal restores stock pixels. Confirm the full face, style, size and polarity inventory in the approved regression set, including the original thin italic cases. Add matched images whose source metadata identifies the actual stock Qt, ClearType and V3 renders. Inspect the display crops at one image pixel per display pixel. Run both documentation checks in [CONTRIBUTING.md](../../CONTRIBUTING.md#when-to-run-tests).
 
 Validate and review each checkpoint before its local commit. Review the full candidate before release. Keep temporary test outputs in the ignored build and results directories.
+
+## Repaint cache
+
+Keep successful masks with their FreeType font engine. Use a 128 KiB limit for stored image bytes. The key includes the glyph, both fractional position offsets, device scale, ink polarity, the light-weight request and effective subpixel layout. The renderer reads the cache under the existing face lock and returns a copy so clipping and overlap changes stay local to the draw. A cache miss follows the original V3 path.
 
 ## Isolated Qt Widgets checkpoint
 

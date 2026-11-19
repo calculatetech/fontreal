@@ -13,13 +13,26 @@
 #include <QWidget>
 #include <QWindow>
 #include <array>
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include FT_GLYPH_H
 #include FT_MODULE_H
 #include FT_MULTIPLE_MASTERS_H
+#include FT_OUTLINE_H
 
 using namespace fontreal_v3;
+
+static std::atomic<unsigned> outlineSamples{0};
+
+extern "C" FT_Error FT_Outline_Get_Bitmap(FT_Library library, FT_Outline *outline,
+                                          const FT_Bitmap *bitmap)
+{
+    static const auto render = reinterpret_cast<decltype(&FT_Outline_Get_Bitmap)>(
+            dlsym(RTLD_NEXT, "FT_Outline_Get_Bitmap"));
+    outlineSamples.fetch_add(1, std::memory_order_relaxed);
+    return render(library, outline, bitmap);
+}
 
 constexpr int width = 96;
 constexpr int height = 72;
@@ -340,6 +353,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    const unsigned beforeShow = outlineSamples.load(std::memory_order_relaxed);
     ProbeWidget widget(font);
     widget.show();
     require(QTest::qWaitForWindowExposed(&widget), "no exposed window");
@@ -350,6 +364,7 @@ int main(int argc, char **argv)
     const auto window = capture();
     const QImage firstIntermediate = widget.intermediate;
     const int firstPaintCount = widget.paintCount;
+    const unsigned afterShow = outlineSamples.load(std::memory_order_relaxed);
     widget.repaint();
     QTest::qWait(25);
     require(widget.paintCount > firstPaintCount, "repaint did not run");
@@ -363,6 +378,13 @@ int main(int argc, char **argv)
     require(widget.paintCount > fullPaintCount, "partial repaint did not run");
     require(window == capture() && firstIntermediate == widget.intermediate,
             "partial and full repaint pixels differ");
+    if (mode == "v3") {
+        const unsigned afterRepaint = outlineSamples.load(std::memory_order_relaxed);
+        require(afterShow > beforeShow, "the first draw must sample outlines");
+        require(afterRepaint == afterShow, "repeat paints must reuse rendered masks");
+        std::printf("Outline samples: %u cold, %u on repeated paints\n",
+                    afterShow - beforeShow, afterRepaint - afterShow);
+    }
     const qreal scale = widget.devicePixelRatioF();
     std::printf("Qt %s, platform %s, DPR %g, font %s %s\n", qVersion(), qPrintable(app.platformName()),
                 scale, qPrintable(QFontInfo(font).family()), qPrintable(QFontInfo(font).styleName()));

@@ -233,16 +233,17 @@
  public:
 --- a/src/gui/text/freetype/qfontengine_ft.cpp
 +++ b/src/gui/text/freetype/qfontengine_ft.cpp
-@@ -22,6 +22,8 @@
+@@ -22,6 +22,9 @@
  #include "qfile.h"
  #include "qfileinfo.h"
  #include <qscopedvaluerollback.h>
 +#include <qscopeguard.h>
 +#include "fontreal_v3_outline.h"
++#include <qcache.h>
  #include "qthreadstorage.h"
  #include <qmath.h>
  #include <qendian.h>
-@@ -384,7 +386,9 @@
+@@ -384,7 +387,9 @@
 
          newFreetype->face = face;
          newFreetype->mm_var = nullptr;
@@ -253,7 +254,43 @@
              FT_Error ftresult;
              ftresult = FT_Get_MM_Var(face, &newFreetype->mm_var);
              if (ftresult != FT_Err_Ok)
-@@ -2813,6 +2817,167 @@
+@@ -896,6 +901,35 @@
+
+     return fe;
+ }
++
++struct QFontEngineFT::FontrealMaskCache
++{
++    struct Key
++    {
++        glyph_t glyph;
++        int phaseX;
++        int phaseY;
++        qreal scale;
++        bool lightInk;
++        bool lightRequest;
++        fontreal_v3::StripeLayout layout;
++
++        friend bool operator==(const Key &a, const Key &b)
++        {
++            return a.glyph == b.glyph && a.phaseX == b.phaseX && a.phaseY == b.phaseY
++                    && a.scale == b.scale && a.lightInk == b.lightInk
++                    && a.lightRequest == b.lightRequest && a.layout == b.layout;
++        }
++
++        friend size_t qHash(const Key &key, size_t seed)
++        {
++            return qHashMulti(seed, key.glyph, key.phaseX, key.phaseY, key.scale, key.lightInk,
++                              key.lightRequest, int(key.layout));
++        }
++    };
++
++    QCache<Key, FontrealGlyph> masks{128 * 1024};
++};
+
+ QFontEngineFT::QFontEngineFT(const QFontDef &fd)
+     : QFontEngine(Freetype)
+@@ -2813,6 +2847,180 @@
      return glyph;
  }
 
@@ -298,8 +335,29 @@
 +        || isBitmapFont() || fontDef.pixelSize * scale > QT_MAX_CACHED_GLYPH_SIZE)
 +        return {};
 +
++    StripeLayout layout = StripeLayout::None;
++    if (allowColor) {
++        switch (subpixelType) {
++        case Subpixel_None: break;
++        case Subpixel_RGB: layout = StripeLayout::Rgb; break;
++        case Subpixel_BGR: layout = StripeLayout::Bgr; break;
++        case Subpixel_VRGB: layout = StripeLayout::VerticalRgb; break;
++        case Subpixel_VBGR: layout = StripeLayout::VerticalBgr; break;
++        }
++    }
++
 +    FT_Face face = lockFace();
 +    const auto unlock = qScopeGuard([this] { unlockFace(); });
++    // Qt can reuse this engine for a fallback request with a different weight.
++    const bool lightRequest = fontDef.weight <= QFont::Light;
++    const FontrealMaskCache::Key key{glyph, phase.x.value(), phase.y.value(), scale,
++                                    lightInk, lightRequest, layout};
++    if (cacheEnabled) {
++        if (!fontrealMasks)
++            fontrealMasks = std::make_unique<FontrealMaskCache>();
++        if (const auto *cached = fontrealMasks->masks.object(key))
++            return *cached;
++    }
 +    FT_Matrix originalMatrix;
 +    FT_Vector originalPhase;
 +    FT_Get_Transform(face, &originalMatrix, &originalPhase);
@@ -360,7 +418,7 @@
 +        return {};
 +
 +    bool lightFace = !embolden
-+            && (fontDef.weight <= QFont::Light || calculateActualWeight(freetype, face, face_id) <= 350);
++            && (lightRequest || calculateActualWeight(freetype, face, face_id) <= 350);
 +    if (!embolden && freetype->mm_var && !face_id.variableAxes.isEmpty()) {
 +        const FT_MM_Var *axes = freetype->mm_var;
 +        for (FT_UInt i = 0; i < axes->num_axis; ++i) {
@@ -381,17 +439,6 @@
 +    const auto tone = toneCurve(pixels, ink);
 +    const bool italic = obliquen || calculateActualItalic(freetype, face, face_id);
 +    const auto gray = glyphCoverage(hinted, &unhinted, tone, pixels, ink, italic);
-+
-+    StripeLayout layout = StripeLayout::None;
-+    if (allowColor) {
-+        switch (subpixelType) {
-+        case Subpixel_None: break;
-+        case Subpixel_RGB: layout = StripeLayout::Rgb; break;
-+        case Subpixel_BGR: layout = StripeLayout::Bgr; break;
-+        case Subpixel_VRGB: layout = StripeLayout::VerticalRgb; break;
-+        case Subpixel_VBGR: layout = StripeLayout::VerticalBgr; break;
-+        }
-+    }
 +
 +    FontrealGlyph result;
 +    result.bearing = QPoint(frame.left, -frame.top);
@@ -415,6 +462,9 @@
 +            rgb[x] = qRgb(channels[0], channels[1], channels[2]);
 +        }
 +    }
++    if (cacheEnabled && (layout == StripeLayout::None || !result.stripes.isNull()))
++        fontrealMasks->masks.insert(key, new FontrealGlyph(result),
++                                   result.gray.sizeInBytes() + result.stripes.sizeInBytes());
 +    return result;
 +}
 +
@@ -423,15 +473,18 @@
      return alphaMapForGlyph(g, subPixelPosition, QTransform());
 --- a/src/gui/text/freetype/qfontengine_ft_p.h
 +++ b/src/gui/text/freetype/qfontengine_ft_p.h
-@@ -33,6 +33,7 @@
+@@ -33,7 +33,9 @@
 
  #include <string.h>
  #include <qpainterpath.h>
+-
 +#include <qimage.h>
-
++
++#include <memory>
  #include <utility> // for std::pair
 
-@@ -242,6 +243,16 @@
+ QT_BEGIN_NAMESPACE
+@@ -242,6 +244,16 @@
 
      FT_Face non_locked_face() const;
 
@@ -448,6 +501,16 @@
      inline bool drawAntialiased() const { return antialias; }
      inline bool invalid() const { return xsize == 0 && ysize == 0; }
      inline bool isBitmapFont() const { return defaultFormat == Format_Mono; }
+@@ -372,6 +384,9 @@
+     FT_Size_Metrics metrics;
+     mutable bool kerning_pairs_loaded;
+     QFixed scalableBitmapScaleFactor;
++
++    struct FontrealMaskCache;
++    mutable std::unique_ptr<FontrealMaskCache> fontrealMasks;
+ };
+
+
 --- a/src/gui/text/unix/qfontconfigdatabase.cpp
 +++ b/src/gui/text/unix/qfontconfigdatabase.cpp
 @@ -1021,7 +1021,8 @@
