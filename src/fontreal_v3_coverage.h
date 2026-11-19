@@ -12,6 +12,8 @@ using Channels = std::array<Coverage, 3>;
 enum class Ink { Dark, Light };
 
 CoverageTable toneCurve(double pixelSize, Ink ink);
+double linearInk(Coverage coverage, Ink ink);
+Coverage encodedInk(double coverage, Ink ink);
 
 // Pass samples in physical red, green, blue order. All values represent ink coverage.
 Channels projectChannels(Coverage neutral, Channels samples, Ink ink);

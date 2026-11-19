@@ -38,3 +38,12 @@ V3 builds own the matching Qt libraries. A Qt-only upgrade over V2 keeps the exi
 4. **V3-4 native delivery and comparisons.** Build and verify matching Qt packages through the native build and activation commands documented in the build guide. Prove stock FreeType provides the glyphs, the previous profile remains usable and turning off Fontreal restores stock pixels. Confirm the full face, style, size and polarity inventory in the approved regression set, including the original thin italic cases. Add matched images whose source metadata identifies the actual stock Qt, ClearType and V3 renders. Inspect the display crops at one image pixel per display pixel. Run both documentation checks in [CONTRIBUTING.md](../../CONTRIBUTING.md#when-to-run-tests).
 
 Validate and review each checkpoint before its local commit. Review the full candidate before release. Keep temporary test outputs in the ignored build and results directories.
+
+## Isolated Qt Widgets checkpoint
+
+Use Qt 6.10.2 development packages, Xvfb, DejaVu Sans, URW Base35, and Ubuntu Sans to run this checkpoint. Supply the directory with the system's official FreeType, QtCore, QtGui, and QtWidgets packages. A native bundle's `original/` directory supplies these packages.
+
+    python3 tools/build-qt.py --v3-widgets
+    bash tests/v3_widgets_test.sh OFFICIAL_PACKAGES_DIR
+
+The fixture compares native XCB window pixels on a controlled virtual output at 100% scale for each Fontconfig subpixel setting. It checks grayscale in the nested offscreen image and at 125% scale. It compares partial and full repaints of isolated and overlapping glyphs, checks a narrow antialiased clip and variable-weight selection, and makes sure that disabling the prototype restores stock Qt pixels. The production checkpoint above covers mixed glyph runs, glyph caching, output transforms, opacity transitions, color eligibility at 125%, and the Wayland, Qt Quick, and KWin paths.

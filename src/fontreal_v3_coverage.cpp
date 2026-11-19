@@ -84,6 +84,19 @@ CoverageTable toneCurve(double pixelSize, Ink ink)
     return base;
 }
 
+double linearInk(Coverage coverage, Ink ink)
+{
+    const auto &linear = linearSrgb();
+    return ink == Ink::Dark ? 1 - linear[255 - coverage] : linear[coverage];
+}
+
+Coverage encodedInk(double coverage, Ink ink)
+{
+    coverage = std::clamp(coverage, 0.0, 1.0);
+    const double encoded = ink == Ink::Dark ? 1 - encodeSrgb(1 - coverage) : encodeSrgb(coverage);
+    return roundCoverage(255 * encoded);
+}
+
 Channels projectChannels(Coverage neutral, Channels samples, Ink ink)
 {
     if (neutral == 0 || neutral == 255)
