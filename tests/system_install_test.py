@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check deployment metadata with real small .deb archives, not Qt payloads."""
 import copy
+import contextlib
 import argparse
 import importlib.util
 import io
@@ -13,6 +14,7 @@ import sys
 import tarfile
 import tempfile
 import types
+from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -68,19 +70,28 @@ def rejected_install(directory, env, reason):
     assert reason in result.stderr, (reason, result.stderr)
 
 
-def activation_payload(directory):
+def activation_payload(directory, plan):
     """Run the real extracted command and hook; replace only dpkg discovery."""
     payload=directory/'payload';payload.mkdir()
     build.run(['dpkg-deb','-x',directory/'activation/fontreal-session.deb',payload])
     command=payload/'usr/bin/fontreal-session'
     hook,=payload.rglob('fontreal.sh')
     versions=payload/'usr/share/fontreal/runtime-versions'
-    rows=versions.read_text().splitlines(keepends=True);assert len(rows)==3
+    qt_v3 = plan.get("profile") == build.QT_V3
+    expected = [("libqt6gui6", "qt6-base"), ("libqt6quick6", "qt6-declarative")]
+    if not qt_v3:
+        expected.insert(0, ("libfreetype6", "freetype"))
+    rows = [f"{package}\t{plan['sources'][source]['build_version']}\n" for package, source in expected]
+    assert versions.read_text() == "".join(rows)
     home=directory/'profile-home';home.mkdir()
     provider=directory/'profile-provider';provider.mkdir()
     observed=provider/'versions';observed.write_text(''.join(rows))
     query=provider/'dpkg-query'
-    query.write_text('#!/bin/sh\ncat '+str(observed)+'\n');query.chmod(0o755)
+    request = " ".join(package + ":amd64" for package, _ in expected)
+    fields = '-f=${Package}\\t${Version}\\n'
+    query.write_text(f"#!/bin/sh\n[ \"$1\" = -W ] && [ \"$2\" = '{fields}' ] || exit 2\n"
+                     f"shift 2\n[ \"$*\" = \"{request}\" ] || exit 2\ncat \"{observed}\"\n")
+    query.chmod(0o755)
     env=dict(os.environ,HOME=str(home),XDG_CONFIG_HOME=str(home/'config'),
              PATH=str(provider)+os.pathsep+os.environ['PATH'],FONTREAL_PROFILE='o',
              FONTREAL_RENDERING='1',FONTREAL_BLEND='encoded',FONTREAL_CONTRAST='weighted',FONTREAL_FITTING='native')
@@ -90,20 +101,144 @@ def activation_payload(directory):
     def call(*args):return subprocess.check_output([*namespace,'/usr/bin/fontreal-session',*args],env=env,text=True)
     call('profile','k3');assert call('profile')=='k3\n'
     assert 'Next-login profile: k3' in call('status') and 'profile=o' in call('status')
-    marker=home/'config/fontreal/enabled'
-    for enabled,mismatch in ((False,None),(True,None),*((True,index) for index in range(3))):
-        if enabled:marker.touch()
-        else:marker.unlink(missing_ok=True)
+    for enabled,mismatch in ((False,None),(True,None),*((True,index) for index in range(len(rows))),
+                            (True,None),(False,None)):
+        call('enable' if enabled else 'disable')
         current=list(rows)
         if mismatch is not None:current[mismatch]=current[mismatch].rstrip('\n')+'-mismatch\n'
         observed.write_text(''.join(current))
         output=subprocess.check_output([*namespace,'sh','-c','. "$1"; env; /usr/bin/fontreal-session status','sh',str(hook)],env=env,text=True)
         values=dict(line.split('=',1) for line in output.splitlines() if '=' in line and not line.startswith('Current process:'))
         active=enabled and mismatch is None
-        assert values['FONTREAL_RENDERING']==('1' if active else '0')
-        assert values.get('FONTREAL_PROFILE')==('k3' if active else None)
-        assert 'Next-login profile: k3' in output and ('profile=k3' if active else 'profile=\n') in output
+        assert values['FONTREAL_RENDERING']==(('3' if qt_v3 else '1') if active else '0')
+        profile = '' if qt_v3 else ('k3' if active else None)
+        assert values.get('FONTREAL_PROFILE') == profile
+        if qt_v3:
+            assert all(values[field] == '' for field in ('FONTREAL_BLEND', 'FONTREAL_CONTRAST', 'FONTREAL_FITTING'))
+        assert 'Next-login profile: k3' in output
+        assert ('profile=k3' if profile == 'k3' else 'profile=\n') in output
     print('PASS actual extracted activation payload, O/K3 command, independent native gates and next-login/current status')
+
+
+def qt_v3_transactions(root, previous, prior_plan):
+    spec = importlib.util.spec_from_file_location("native_install", ROOT / "tools/system_install.py")
+    installer = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(installer)
+    fresh, upgrade, updated = fixtures.qt_v3_plans(prior_plan)
+    os_release = {"ID": prior_plan["os"], "VERSION_ID": prior_plan["release"]}
+    original_output = build.output
+    calls = []
+    proposal = ""
+
+    def output(args, **kwargs):
+        if args[:2] == ["apt-get", "install"]:
+            assert "--simulate" in args
+            calls.append(args)
+            return proposal
+        return original_output(args, **kwargs)
+
+    def simulate(action, bundle, *options, error=None):
+        argv = ["system-build.py", action, str(bundle), "--simulate", *map(str, options)]
+        with (patch.object(sys, "argv", argv),
+              patch.dict(sys.modules, {build.__name__: build, "system_install": installer})):
+            if error is None:
+                build.main()
+                return
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                try:
+                    build.main()
+                except SystemExit as stopped:
+                    assert stopped.code == 1 and error in stderr.getvalue(), stderr.getvalue()
+                else:
+                    raise AssertionError(f"The command should have failed with {error}")
+
+    missing_qt = root / f"previous-without-core-{prior_plan['os']}"
+    missing_qt.mkdir()
+    without_core = copy.deepcopy(prior_plan)
+    for group in ("original", "installed"):
+        without_core[group] = [p for p in without_core[group] if p["name"] != "libqt6core6t64"]
+    fixtures.bundle(missing_qt, without_core)
+    cli("prepare", missing_qt)
+
+    qt_proposal = "Inst libqt6gui6 [old] (new [amd64])\nInst libqt6quick6 [old] (new [amd64])"
+    ft_update = "\nInst libfreetype6:i386 [old] (update [i386])"
+    for label, plan in (("fresh", fresh), ("upgrade", upgrade), ("updated", updated)):
+        bundle = root / f"v3-transaction-{prior_plan['os']}-{label}"
+        bundle.mkdir()
+        fixtures.bundle(bundle, plan)
+        cli("prepare", bundle)
+        ft = [p for p in prior_plan["original"] if p["source"] == "freetype"]
+        ft_version = plan.get("freetype_provider", {}).get("build_version")
+        if ft_version:
+            ft = [dict(p, version=ft_version, source_version=ft_version) for p in ft]
+        local_qt = [dict(p, version=plan["sources"][p["source"]]["build_version"],
+                         source_version=plan["sources"][p["source"]]["build_version"])
+                    for p in plan["original"]]
+        with (patch.object(installer.platform, "freedesktop_os_release", return_value=os_release),
+              patch.object(build, "output", side_effect=output),
+              patch.object(build, "trusted_system_record", return_value=prior_plan)):
+            with (patch.object(build, "installed", return_value=[*plan["installed"], *ft]),
+                  patch.object(build, "session_version", return_value=plan["previous_session"])):
+                proposal = qt_proposal
+                simulate("install", bundle)
+                expected = [str(bundle / "packages" / (p["name"] + ".deb")) for p in plan["installed"]]
+                assert calls[-1] == ["apt-get", "install", "--simulate", "--no-remove", *expected,
+                                     str(bundle / "activation/fontreal-session.deb")]
+                proposal += ft_update
+                simulate("install", bundle, error="changing FreeType")
+                proposal = ""
+            with (patch.object(build, "installed", return_value=[*plan["installed"], *ft]),
+                  patch.object(build, "session_version", return_value="0~local20991231000000")):
+                before = len(calls)
+                simulate("install", bundle, error="session package changed")
+                assert len(calls) == before
+            with (patch.object(build, "installed", return_value=[*local_qt, *ft]),
+                  patch.object(build, "session_version", return_value="0~local" + plan["identity"])):
+                predecessor = plan["previous_session"] is not None
+                options = ["--previous", previous] if predecessor else []
+                restore_proposal = qt_proposal if predecessor else qt_proposal + "\nRemv fontreal-session [old]"
+                proposal = restore_proposal
+                simulate("rollback", bundle, *options)
+                original_qt = {(p["name"], p["arch"]): p for p in plan["original"]}
+                restored = [str((bundle / "original" if p == original_qt[p["name"], p["arch"]]
+                                 else previous / "packages") / (p["name"] + ".deb"))
+                            for p in plan["installed"]]
+                flags = ["--no-remove"] if predecessor else []
+                session = str(previous / "activation/fontreal-session.deb") if predecessor else "fontreal-session-"
+                assert calls[-1] == ["apt-get", "install", "--simulate", "--allow-downgrades", *flags,
+                                     *restored, session]
+                proposal = restore_proposal + ft_update
+                simulate("rollback", bundle, *options, error="changing FreeType")
+                proposal = restore_proposal + "\nRemv libfreetype6:i386 [old]"
+                simulate("rollback", bundle, *options, error="removing another package")
+                proposal = ""
+                if predecessor:
+                    before = len(calls)
+                    simulate("rollback", bundle, "--previous", bundle, error="captured Fontreal session package")
+                    assert len(calls) == before
+                if label == "upgrade":
+                    before = len(calls)
+                    simulate("rollback", bundle, "--previous", missing_qt,
+                             error="captured Qt package libqt6core6t64")
+                    assert len(calls) == before
+                    without_i386 = [p for p in ft if p["arch"] != "i386"]
+                    with patch.object(build, "installed", return_value=[*local_qt, *without_i386]):
+                        proposal = restore_proposal
+                        simulate("rollback", bundle, *options)
+                        assert calls[before:] == [["apt-get", "install", "--simulate", "--allow-downgrades", *flags,
+                                                   *restored, session]]
+                    different_version = ft_version[:-14] + "20991231000000"
+                    different_record = copy.deepcopy(prior_plan)
+                    different_record["sources"]["freetype"]["build_version"] = different_version
+                    different_ft = [dict(p, version=different_version, source_version=different_version)
+                                    for p in without_i386]
+                    with (patch.object(build, "installed", return_value=[*local_qt, *different_ft]),
+                          patch.object(build, "trusted_system_record", return_value=different_record)):
+                        before = len(calls)
+                        simulate("rollback", bundle, *options, error="FreeType provider record changed")
+                        assert len(calls) == before
+    print('PASS V3 simulated APT transactions, retained session after Qt updates, and FreeType preservation')
 
 
 def retained_native(directory):
@@ -187,7 +322,15 @@ def main():
             assert build.sha(directory / "bundle.json") == native_hash
             assert all(build.sha(directory / a["path"]) == a["sha256"] for a in native["artifacts"])
             cli("verify", directory)
-            activation_payload(directory)
+            activation_payload(directory, plan)
+            v3_directory = root / f"v3-{name}"
+            v3_directory.mkdir()
+            _, upgrade, _ = fixtures.qt_v3_plans(plan)
+            fixtures.bundle(v3_directory, upgrade)
+            cli("prepare", v3_directory)
+            cli("verify", v3_directory)
+            activation_payload(v3_directory, upgrade)
+            qt_v3_transactions(root, directory, plan)
             cli("prepare", directory, success=False)
             path = directory / "deployment.json"
             deployment = json.loads(path.read_text())

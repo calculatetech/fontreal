@@ -1,5 +1,41 @@
 # Build for the running system
 
+## Fontreal V3 for Qt and Plasma
+
+V3 builds QtBase and Qt Declarative on demand. It works with the installed FreeType through its public API. The initial targets are Debian 13 amd64 with Qt 6.8.2 and Ubuntu 26.04 amd64 with Qt 6.10.2. Use Python, the distro package tools, and Docker. Keep the bundle on a disk with space for the Qt builds and in a location APT can read.
+
+Run the build as your normal user.
+
+```sh
+mkdir -p build
+python3 tools/system-build.py plan --qt-v3 > build/system-v3.json
+python3 tools/system-build.py build build/system-v3.json --output build/system-packages-v3
+python3 tools/system-build.py verify build/system-packages-v3
+python3 tools/system-build.py prepare build/system-packages-v3
+python3 tools/system-build.py install build/system-packages-v3 --simulate
+```
+
+Check the simulated list. It should contain matching Qt packages and the Fontreal session package. Apply the bundle when you are ready, then enable it as your normal user.
+
+```sh
+sudo python3 tools/system-build.py install build/system-packages-v3
+fontreal-session enable
+```
+
+Sign out and back in to Plasma. Open **Fonts** in System Settings and select the subpixel mode for your display. **None** uses Fontreal grayscale. A stock KWin single-output setup was checked at 100% and 125%. Fontreal also provides grayscale rendering for eligible offscreen text and the Qt Quick OpenGL text path. KWin applies effects such as Zoom after Qt submits a window.
+
+Use `fontreal-session disable` and sign in again to turn off the profile. To restore the original Qt packages, use the verified bundle with `sudo python3 tools/system-build.py rollback build/system-packages-v3`. If a Fontreal session package was already installed, keep its verified bundle and pass it with `--previous`. This applies to a V2 upgrade, a V3 rebuild, and a system where a distro update had already replaced Qt.
+
+```sh
+sudo python3 tools/system-build.py rollback build/system-packages-v3 --previous build/previous-fontreal-bundle
+```
+
+Keep both bundles for as long as you need that rollback. The `fontreal-session profile` command still records the V2 O or K3 preference.
+
+An official Qt update can replace the local Qt packages. Build a new bundle when your installed Qt version has a supported patch. The session checks the Qt packages once when Plasma starts.
+
+## Fontreal V2 packages and integrations
+
 Fontreal builds local FreeType and Qt packages on demand. It reads the installed distro, architecture, binary packages, and source revisions. It builds matching FreeType, QtBase, and Qt Declarative packages in a disposable Docker container. The build does not install packages on the host.
 
 Follow the [test policy](../CONTRIBUTING.md#when-to-run-tests). For routine deployment, build, verify and prepare the bundle, then continue to [Apply, enable, and restore](#apply-enable-and-restore). The package and VM checks below apply when Fontreal changes.

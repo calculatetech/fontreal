@@ -1,0 +1,15 @@
+{
+  "stock": "Ubuntu archive Qt 6.10.2 and archive FreeType, native XCB at 96 dpi",
+  "cleartype": "Archived Windows composited DirectWrite study, native 96 dpi",
+  "fontreal": "Qt 6.10.2 V3 Widgets RGB prototype and archive FreeType, native XCB at 96 dpi",
+  "font_sha256": {
+    "01_Noto-Sans_8pt": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+    "02_Noto-Sans_10pt": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+    "14_Hack_10pt": "71b382964eead81f84b5cb93e44f082a1dc76b86a6d6a9eb5471f4ca0e12c085"
+  },
+  "resized": false,
+  "images": {
+    "kde-fonts-light.png": "8d792041d839bc5964b464986606ddf2533e325e3ca9cba175aae5d2f86ab6ba",
+    "kde-fonts-dark.png": "a9e495fd89e2b083e8460c7d08a83ced96c3c0a25d8d9fd7ce5eedf01d509eee"
+  }
+}

@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Check discovery and bundle validation without changing host packages."""
 import argparse
+import contextlib
 import copy
 from email.parser import Parser
 import hashlib
 import importlib.util
+import io
 import json
+import os
 from pathlib import Path
 import shlex
 import subprocess
 import sys
 import tempfile
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
@@ -111,6 +115,56 @@ def verify(root, success, message=""):
         assert message in result.stderr, result.stderr
 
 
+def qt_v3_plans(previous):
+    native = previous["original"]
+    expected_qt = [p for p in native if p["source"] in build.QT_SOURCES]
+    local = [dict(p, version=previous["sources"][p["source"]]["build_version"],
+                  source_version=previous["sources"][p["source"]]["build_version"]) for p in native]
+    os_release = {"ID": previous["os"], "VERSION_ID": previous["release"]}
+    with (tempfile.TemporaryDirectory(prefix="fontreal-predecessor-") as directory,
+          patch.object(build.platform, "freedesktop_os_release", return_value=os_release)):
+        root = Path(directory)
+        record = root / "system.json"
+        build.write_json(record, previous)
+        query = root / "dpkg-query"
+        inventory_fields = "-f=${Package}\t${Architecture}\t${Version}\t${source:Package}\t${source:Version}\t${db:Status-Status}\n"
+        session_fields = "-f=${db:Status-Status}\t${Version}\n"
+        query.write_text("#!/bin/sh\n[ \"$1\" = -W ] || exit 2\n"
+                         f"case \"$2\" in\n'{inventory_fields}') cat \"{root}/packages\" ;;\n"
+                         f"'{session_fields}') test \"$3\" = fontreal-session && test -s \"{root}/session\" && cat \"{root}/session\" ;;\n"
+                         "*) exit 2 ;;\nesac\n")
+        query.chmod(0o755)
+
+        def plan(records, session):
+            (root / "packages").write_text("".join("\t".join(p[field] for field in
+                ("name", "arch", "version", "source", "source_version")) + "\tinstalled\n" for p in records))
+            (root / "session").write_text(f"installed\t{session}\n" if session else "")
+            output = io.StringIO()
+            with (patch.object(sys, "argv", ["system-build.py", "plan", "--qt-v3"]),
+                  contextlib.redirect_stdout(output)):
+                build.main()
+            return json.loads(output.getvalue())
+
+        with (patch.dict(os.environ, {"PATH": str(root) + os.pathsep + os.environ["PATH"]}),
+              patch.object(build, "SYSTEM_RECORD", record),
+              patch.object(build, "trusted_system_record", return_value=previous)):
+            session = "0~local" + previous["identity"]
+            fresh = plan(native, None)
+            upgrade = plan(local, session)
+            updated = plan(native, session)
+    for plan in (fresh, upgrade, updated):
+        assert plan["profile"] == build.QT_V3 and plan["original"] == expected_qt
+        assert set(plan["sources"]) == set(build.QT_SOURCES)
+        assert all(p["source"] in build.QT_SOURCES for p in plan["installed"])
+        assert all(source["capability_sha256"] is None for source in plan["sources"].values())
+    assert "freetype_provider" not in fresh
+    assert upgrade["freetype_provider"]["original"] == [p for p in native if p["source"] == "freetype"]
+    assert fresh["previous_session"] is None
+    assert updated["installed"] == updated["original"] and "freetype_provider" not in updated
+    assert updated["previous_session"] == upgrade["previous_session"] == "0~local" + previous["identity"]
+    return fresh, upgrade, updated
+
+
 def discovery(originals):
     result = subprocess.run([sys.executable, ROOT / "tools/system-build.py", "plan"],
                             check=True, capture_output=True, text=True)
@@ -196,6 +250,16 @@ def main():
             plan = copy.deepcopy(cases[0])
             change(plan)
             rejected(plan, root, label)
+        for previous in cases:
+            for name, plan in zip(("fresh", "upgrade", "updated"), qt_v3_plans(previous)):
+                label = f"v3-{previous['os']}-{name}"
+                target = root / label
+                target.mkdir()
+                bundle(target, plan)
+                verify(target, True)
+                stale = copy.deepcopy(plan)
+                stale["sources"]["qt6-base"]["selected"][build.V3_FILES[0]] = "0" * 64
+                rejected(stale, root, label + "-stale")
         target = root / "bundle"
         target.mkdir()
         manifest = bundle(target, cases[0])

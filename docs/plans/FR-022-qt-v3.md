@@ -18,7 +18,7 @@ The exact color oracle models black text on white and white text on black. Gener
 
 Test the visible positive path in an ordinary native-resolution Konsole or Qt Widgets window on a configured output. Compare it with a same-font offscreen layer that the display scales after rendering. An opaque intermediate surface does not prove a direct mapping. Test horizontal and vertical order with directional geometry on every renderer that uses color.
 
-V3 builds own the matching Qt libraries. A Qt-only upgrade over V2 keeps the existing FreeType package and uses its public API, with the V2 private rendering selector inactive in the V3 path. Also exercise a clean stock FreeType install. Rolling back Qt-only work restores the earlier Qt libraries without changing the installed FreeType.
+V3 builds own the matching Qt libraries. An upgrade over V2 keeps the existing FreeType package and uses its public API with V3 rendering. Exercise a clean stock FreeType install too. Rolling back restores the captured Qt packages and the exact earlier Fontreal session package. Capture the session package version at planning time, including when distro updates have replaced the earlier Qt libraries. The session keeps its saved on or off preference and the V2 profile choice.
 
 ## Verification boundaries
 
@@ -41,6 +41,8 @@ V3 builds own the matching Qt libraries. A Qt-only upgrade over V2 keeps the exi
 4. **V3-4 native delivery and comparisons.** Build and verify matching Qt packages through the native build and activation commands documented in the build guide. Prove stock FreeType provides the glyphs, the previous profile remains usable and turning off Fontreal restores stock pixels. Confirm the full face, style, size and polarity inventory in the approved regression set, including the original thin italic cases. Add matched images whose source metadata identifies the actual stock Qt, ClearType and V3 renders. Inspect the display crops at one image pixel per display pixel. Run both documentation checks in [CONTRIBUTING.md](../../CONTRIBUTING.md#when-to-run-tests).
 
 Validate and review each checkpoint before its local commit. Review the full candidate before release. Keep temporary test outputs in the ignored build and results directories.
+
+For the native recipe, run `tests/system_build_test.py` and `tests/system_install_test.py` with Python. Check fresh Qt, an installed V2 package set, and stock Qt with the earlier session package still installed. Verify the captured predecessor version, the selected APT arguments, and the packaged login hook with independent version inputs. Also use the built Qt packages in the native application and rollback checks before release.
 
 ## Repaint cache
 
