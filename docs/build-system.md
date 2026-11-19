@@ -2,7 +2,7 @@
 
 ## Fontreal V3 for Qt and Plasma
 
-V3 builds QtBase and Qt Declarative on demand. It works with the installed FreeType through its public API. The initial targets are Debian 13 amd64 with Qt 6.8.2 and Ubuntu 26.04 amd64 with Qt 6.10.2. Use Python, the distro package tools, and Docker. Keep the bundle on a disk with space for the Qt builds and in a location APT can read.
+This experimental recipe patches and compiles QtBase and Qt Declarative from source to reproduce the V3 visual reference. The bundle supplies replacements for the installed packages from these two modules. The current V3 deployment work targets stock Qt packages. The reference uses the installed FreeType through its public API. Its build targets are Debian 13 amd64 with Qt 6.8.2 and Ubuntu 26.04 amd64 with Qt 6.10.2. Use Python, the distro package tools, and Docker. Keep the bundle on a disk with space for the Qt builds and in a location APT can read.
 
 Run the build as your normal user.
 

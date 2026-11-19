@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-022: Deliver Fontreal V3 for Qt and KDE.** Port the approved light and dark rendering and follow Plasma’s subpixel setting. Use stock FreeType through Qt. Verify Qt Widgets, Qt Quick, Plasma and KWin on the native package targets. Publish matched stock Qt, ClearType and V3 comparisons. See the [V3 specification](plans/FR-022-qt-v3.md).
+- **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Keep the tested Qt patch as the visual reference. Evaluate a small opt-in renderer that works across Qt updates without maintaining Qt packages. Keep stock FreeType and KWin. Compare the result with the approved V3 rendering before choosing a release path. See the [V3 specification](plans/FR-022-qt-v3.md).
 
 ## Planned next
 

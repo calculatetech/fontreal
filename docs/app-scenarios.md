@@ -11,7 +11,7 @@ The guides linked below own the full commands and prerequisites. Follow the [tes
 | Firefox | [Working-profile browser recipe](experiments/browser-masks.md#enable-the-working-profile) | Selected native-normal coverage and weighted stems in supported native installations |
 | Floorp | [Working-profile browser recipe](experiments/browser-masks.md#enable-the-working-profile) | Same selected method, separately enabled and checked |
 | Teams for Linux Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#enable-teams-or-bitwarden-for-daily-use) | Current Teams resources with the saved selected Electron engine. Application updates do not disable treatment |
-| System Qt 6 and KDE Plasma | [V3 native package and session recipe](build-system.md#fontreal-v3-for-qt-and-plasma) | Fontreal V3 in matching Debian 13 and Ubuntu 26.04 Qt packages with stock KWin |
+| System Qt 6 and KDE Plasma | [V3 comparison build](build-system.md#fontreal-v3-for-qt-and-plasma) | Experimental Qt packages for reproducing the V3 reference with stock KWin |
 | Chrome, Edge, Brave, Vivaldi and other Chromium browsers | [Why these browsers are unsupported](experiments/chromium-flatpak.md#chromium-based-browsers-are-not-supported) | Unsupported. Fontreal has no supported way to apply its stroke adjustments inside their page text engine |
 | Bitwarden Flatpak | [Application qualification and activation](experiments/chromium-flatpak.md#build-and-qualify-bitwarden) | Separate selected engine with current native resources, disabled RunAsNode fuse, original process isolation and working data |
 | Telegram Flatpak | [Owner inventory](experiments/chromium-flatpak.md#applications-without-activation) | Not qualified. Its bundled Qt and runtime FreeType require separate checks |
@@ -19,7 +19,7 @@ The guides linked below own the full commands and prerequisites. Follow the [tes
 
 Follow each integration guide. Build source revisions remain pinned. Application releases do not trigger repeated Fontreal qualification. A different rendering engine still needs an integration. Do not apply a Teams override to another Electron application.
 
-The V2 integrations share one [O/K3 preference](build-system.md#choose-o-or-k3). O NORMAL is the default. Set `sh packaging/session/fontreal-session profile k3` for K3 NORMAL. Fully quit and reopen each application. V2 native Qt uses the next login. For V3 subpixel rendering, use **Fonts** in Plasma System Settings.
+The V2 integrations share one [O/K3 preference](build-system.md#choose-o-or-k3). O NORMAL is the default. Set `sh packaging/session/fontreal-session profile k3` for K3 NORMAL. Fully quit and reopen each application. V2 native Qt uses the next login. For subpixel rendering in the V3 reference build, use **Fonts** in Plasma System Settings.
 
 ## Firefox and Floorp: original working profiles
 

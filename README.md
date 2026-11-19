@@ -1,6 +1,6 @@
 # Fontreal
 
-Fontreal V3 improves text rendering in Qt 6 applications and Plasma on Debian 13 and Ubuntu 26.04. It builds matching QtBase and Qt Declarative packages for the running system. V3 uses your installed FreeType, font files, and application settings. Plasma uses stock KWin.
+The Fontreal V3 prototype improves text rendering in Qt 6 applications and Plasma. The comparison build patches and rebuilds QtBase and Qt Declarative. Current V3 work targets deployment with stock Qt, FreeType, and KWin. This build is a visual reference for that work.
 
 ## Why this project exists
 
@@ -16,7 +16,7 @@ These captures use Noto Sans at KDE’s 8pt and 10pt defaults and Hack at 10pt. 
 
 See the [capture record](docs/images/kde-v3/capture-sources.json) for renderer and font details. The [V2 images](docs/images/kde-v2/manifest.json) are also available.
 
-## Try V3
+## Reproduce the V3 reference
 
 Follow the [Qt and Plasma build guide](docs/build-system.md#fontreal-v3-for-qt-and-plasma) to build for your system, check the bundle, and install it. Use `fontreal-session enable` and sign in to Plasma again.
 

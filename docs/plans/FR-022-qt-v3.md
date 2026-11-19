@@ -2,7 +2,21 @@
 
 Apply the approved grayscale and subpixel rendering in Qt Widgets and Plasma. Users open the existing Plasma Fonts panel to choose the subpixel layout. With subpixel rendering set to None, Fontreal uses its grayscale result. Verify the window pixels at 100% and 125% scale, then provide comparisons with stock Qt and Windows ClearType.
 
-Work on `feature/fontreal-v3-qt` from `main` at `54b130354287`. Keep the native package targets and on-demand builds defined in [Build for the running system](../build-system.md). The new rendering runs in Qt against stock FreeType. The existing Fontreal V2 profile and private FreeType readers retain their documented behavior. V3 applies to Qt and KDE only.
+Work on `feature/fontreal-v3-qt` from `main` at `54b130354287`. V3 applies to Qt and KDE only. The existing Fontreal V2 profile and private FreeType readers retain their documented behavior.
+
+The deployment target uses the distro's Qt and FreeType packages and stock KWin. This supersedes the on-demand Qt package release recorded below. Keep the patched Qt build as the visual reference. Use stock Qt to check whether a small process-local renderer covers Qt Widgets and Qt Quick without per-version Qt maintenance. Compare light and dark text before selecting a release path.
+
+Test a filter at the public FreeType glyph rasterization call. That call provides outline and coverage data. The later paint stage owns the ink color and destination pixels. Use one grayscale mask as the initial test. For Qt Quick, opt into native text through `QQuickWindow::setTextRenderType()`. Compare the same scene with native text and the filter off and on. Keep the default text renderer as a separate baseline.
+
+## Stock Qt feasibility and release checks
+
+For the grayscale feasibility test, verify final window pixels and loaded distro libraries in Konsole and a Plasma window on stock KWin. Hold the text renderer, text, palette, and output scale fixed while toggling the filter. Check the default Qt Quick renderer separately. Use the same compiled filter against more than one supported Qt version. Compare both text polarities with the approved V3 reference.
+
+Before release, verify final window pixels at 100% and 125% with the candidate active and the process loading distro Qt and FreeType. Check Plasma’s None, RGB, BGR, vertical RGB, and vertical BGR choices. Check grayscale for antialiased draws that cannot use subpixel color. Compare explicit system and application anti-aliasing opt-outs with unmodified stock Qt. The grayscale feasibility test covers a subset of this behavior.
+
+## Patched Qt reference
+
+The remaining checkpoints describe the existing reference renderer. Its package and display checks reproduce the reference. Use the stock Qt checks above for release acceptance.
 
 ## Decision log
 
@@ -40,9 +54,9 @@ V3 builds own the matching Qt libraries. An upgrade over V2 keeps the existing F
 3. **V3-3 Qt Quick and KWin.** Use the same coverage in the existing native OpenGL glyph path. For text in an unsafe target, keep the approved grayscale output. Run `python3 -B tests/kde_paths_test.py --only quick` for repeated, recolored and transformed inputs at both scales. Run `python3 -B tests/kde_paths_test.py --only nested` to verify actual Plasma text and Breeze captions in composited pixels. Compare channel direction, neutral pixels and geometry. The Qt settings and a trace alone do not prove visible output.
 4. **V3-4 native delivery and comparisons.** Build and verify matching Qt packages through the native build and activation commands documented in the build guide. Prove stock FreeType provides the glyphs, the previous profile remains usable and turning off Fontreal restores stock pixels. Confirm the full face, style, size and polarity inventory in the approved regression set, including the original thin italic cases. Add matched images whose source metadata identifies the actual stock Qt, ClearType and V3 renders. Inspect the display crops at one image pixel per display pixel. Run both documentation checks in [CONTRIBUTING.md](../../CONTRIBUTING.md#when-to-run-tests).
 
-Validate and review each checkpoint before its local commit. Review the full candidate before release. Keep temporary test outputs in the ignored build and results directories.
+Validate and review each reference checkpoint before its local commit. Keep temporary test outputs in the ignored build and results directories.
 
-For the native recipe, run `tests/system_build_test.py` and `tests/system_install_test.py` with Python. Check fresh Qt, an installed V2 package set, and stock Qt with the earlier session package still installed. Verify the captured predecessor version, the selected APT arguments, and the packaged login hook with independent version inputs. Also use the built Qt packages in the native application and rollback checks before release.
+For the reference package recipe, run `tests/system_build_test.py` and `tests/system_install_test.py` with Python. Check fresh Qt, an installed V2 package set, and stock Qt with the earlier session package still installed. Verify the captured predecessor version, the selected APT arguments, and the packaged login hook with independent version inputs. Use the built reference packages in the native application and rollback checks.
 
 ## Repaint cache
 
