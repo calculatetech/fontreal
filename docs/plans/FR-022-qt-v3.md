@@ -4,7 +4,7 @@ Apply the approved grayscale and subpixel rendering in Qt Widgets and Plasma. Us
 
 Work on `feature/fontreal-v3-qt` from `main` at `54b130354287`. V3 applies to Qt and KDE only. The existing Fontreal V2 profile and private FreeType readers retain their documented behavior.
 
-The deployment target uses the distro's Qt and FreeType packages and stock KWin. This supersedes the on-demand Qt package release recorded below. Keep the patched Qt build as the visual reference. Use stock Qt to check whether a small process-local renderer covers Qt Widgets and Qt Quick without per-version Qt maintenance. Compare light and dark text before selecting a release path.
+The deployment target uses the distro's Qt and stock KWin. Prefer the distro's FreeType. If a later checkpoint requires a FreeType patch, deliver it through the distro package manager. Keep the patched Qt build as the visual reference. Compare light and dark text before selecting a release path.
 
 Test a filter at the public FreeType glyph rasterization call. That call provides outline and coverage data. The later paint stage owns the ink color and destination pixels. Use one grayscale mask as the initial test. For Qt Quick, opt into native text through `QQuickWindow::setTextRenderType()`. Compare the same scene with native text and the filter off and on. Keep the default text renderer as a separate baseline.
 
@@ -13,6 +13,23 @@ Test a filter at the public FreeType glyph rasterization call. That call provide
 For the grayscale feasibility test, verify final window pixels and loaded distro libraries in Konsole and a Plasma window on stock KWin. Hold the text renderer, text, palette, and output scale fixed while toggling the filter. Check the default Qt Quick renderer separately. Use the same compiled filter against more than one supported Qt version. Compare both text polarities with the approved V3 reference.
 
 Before release, verify final window pixels at 100% and 125% with the candidate active and the process loading distro Qt and FreeType. Check Plasma’s None, RGB, BGR, vertical RGB, and vertical BGR choices. Check grayscale for antialiased draws that cannot use subpixel color. Compare explicit system and application anti-aliasing opt-outs with unmodified stock Qt. The grayscale feasibility test covers a subset of this behavior.
+
+### V3-5 stock Konsole pilot
+
+Offer an explicit Konsole launch with the user's working profile. Select the light or dark treatment from each terminal draw. Keep both masks in separate Qt cache entries. Test pure black on white and white on black at 100% scale with horizontal RGB on one Plasma Wayland output. Use the same native NORMAL hinting and non-light faces as the reference. Let light faces and other hinting modes use stock rendering. Check positioned glyph bounds, including LCD filter padding, before handing off the ink choice. Confirm that child programs start without the Fontreal library.
+
+Use the stock Qt and FreeType interfaces for this pilot. The stock Qt Quick native renderer can request LCD masks, but it does not pass ordinary text ink to FreeType. Distance field and curve text use other paths. Automatic Qt Quick treatment remains a separate release check.
+
+If a later path requires a FreeType patch, use a native package for each supported distro. Build from the distro source, preserve its package names and dependencies, and let the package manager own the files. Simulate replacement and rollback, including matching library packages for multiple architectures. Limit package selection rules to the specific build and make sure that a newer official security update can replace it.
+
+| Boundary | Distinguishing case | Required evidence |
+| --- | --- | --- |
+| B9. Ink and cache | Alternate pure black and white terminal rows. Compare other hinting modes, a light request, and a regular request that resolves to a light face. | V3-5 compares both ink colors with the patched Qt reference. Unsupported face and hinting conditions match stock. |
+| B10. Target and glyph | Compare a fallback glyph, a colored background, combining marks, and the LCD fringe at a background boundary. | V3-5 checks stock pixels in unsupported regions and changed pixels in neighboring terminal text. |
+| B11. Effective layout | Keep the face and draw while changing RGB to BGR or None. Include a request with a font foundry name that sets BGR. | V3-5 compares each unsupported mode with stock. |
+| B12. Launch scope | Live Konsole with a pre-existing preload and a normal shell child. | V3-5 checks app and compositor library identities, then checks the shell's preload and mappings. |
+
+Run the pilot check with Ubuntu 26.04, Xvfb, Pillow with XCB, FontTools, Konsole, KWin, and Hack. Install DejaVu Sans, DejaVu Sans Mono, and DejaVu Sans ExtraLight. Ubuntu supplies ExtraLight in `fonts-dejavu-extra`. Extract the official Qt and FreeType packages into a staging directory. Pass the directory that contains the extracted shared libraries, the V3 Widgets Qt build, the pilot library, and an output directory to `tests/v3_konsole_rgb_test.py` in that order.
 
 ## Patched Qt reference
 

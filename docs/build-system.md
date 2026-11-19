@@ -2,6 +2,24 @@
 
 ## Fontreal V3 for Qt and Plasma
 
+### Konsole pilot with distro libraries
+
+The pilot uses the distro versions of Qt, FreeType, and KWin. Launch it from a Plasma Wayland session with one unrotated display at 100% scale. In **Fonts**, enable anti-aliasing and select RGB subpixel rendering. Select **Full** hinting and a regular face such as Hack Regular.
+
+The pilot treats pure black on white and white on black in the terminal. It uses the coverage of a single static outline font in each draw. Menus, light faces, and other colors use stock rendering. A draw also uses stock rendering when its glyphs can touch pixels outside the expected solid background.
+
+Install the Qt Widgets, FreeType, and Fontconfig development packages. Build and launch as your normal user.
+
+```sh
+cmake -S . -B build/konsole-rgb -DFONTREAL_KONSOLE_RGB=ON
+cmake --build build/konsole-rgb --target fontreal-qt-rgb
+tools/run-konsole-rgb build/konsole-rgb/libfontreal-qt-rgb.so
+```
+
+The launcher opens a separate Konsole process with your usual profiles. Restart the pilot after changing the subpixel mode. A normal launch uses the stock path. The pilot uses one Konsole paint call, so wider Qt Widgets and Qt Quick coverage still needs a release path.
+
+### Patched Qt visual reference
+
 This experimental recipe patches and compiles QtBase and Qt Declarative from source to reproduce the V3 visual reference. The bundle supplies replacements for the installed packages from these two modules. The current V3 deployment work targets stock Qt packages. The reference uses the installed FreeType through its public API. Its build targets are Debian 13 amd64 with Qt 6.8.2 and Ubuntu 26.04 amd64 with Qt 6.10.2. Use Python, the distro package tools, and Docker. Keep the bundle on a disk with space for the Qt builds and in a location APT can read.
 
 Run the build as your normal user.

@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -lt 1 ] || [ ! -f "$1" ]; then
+    echo 'Usage: run-konsole-rgb LIBFONTREAL_QT_RGB [KONSOLE_ARGS...]' >&2
+    exit 2
+fi
+library=$(realpath -- "$1")
+shift
+case "$library" in
+    *[[:space:]:]*)
+        echo 'The Fontreal library path must have no spaces or colons.' >&2
+        exit 2
+        ;;
+esac
+export FONTREAL_KONSOLE_PILOT_PRELOAD="${LD_PRELOAD-}"
+export LD_PRELOAD="$library${LD_PRELOAD:+:$LD_PRELOAD}"
+exec konsole --separate "$@"
