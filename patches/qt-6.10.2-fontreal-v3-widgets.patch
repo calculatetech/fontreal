@@ -22,19 +22,19 @@
  #include <private/qpixmap_raster_p.h>
  //   #include <private/qrasterizer_p.h>
  #include <private/qimage_p.h>
-@@ -48,6 +51,12 @@
+@@ -47,6 +50,12 @@
+ #endif
 
  QT_BEGIN_NAMESPACE
-
++
 +QPaintDevice *&qt_fontrealV3BackingDevice()
 +{
 +    static thread_local QPaintDevice *device = nullptr;
 +    return device;
 +}
-+
+
  class QRectVectorPath : public QVectorPath {
  public:
-     inline void set(const QRect &r) {
 @@ -2573,7 +2582,14 @@
      ProcessSpans blend = unclipped ? s->penData.unclipped_blend : s->penData.blend;
      const uchar * scanline = static_cast<const uchar *>(src);
@@ -161,7 +161,7 @@
 +        const QRgb background = lightInk ? qRgb(0, 0, 0) : qRgb(255, 255, 255);
 +        const auto rasterFormat = d->rasterBuffer->format;
 +        const bool tryStripes = tryFontreal && d->device == qt_fontrealV3BackingDevice()
-+                && s->matrix.type() <= QTransform::TxTranslate
++                && qFuzzyCompare(s->matrix.m22(), d->device->devicePixelRatioF())
 +                && s->flags.fast_text && s->penData.alphaRGBBlit
 +                && s->composition_mode == QPainter::CompositionMode_SourceOver
 +                && ink.rgba64() == QRgba64::fromArgb32(foreground)
@@ -525,27 +525,28 @@
      bool preferXftConf = false;
 --- a/src/widgets/kernel/qwidgetrepaintmanager.cpp
 +++ b/src/widgets/kernel/qwidgetrepaintmanager.cpp
-@@ -9,6 +9,8 @@
+@@ -9,6 +9,9 @@
  #include <QtCore/qglobal.h>
  #include <QtCore/qdebug.h>
  #include <QtCore/qvarlengtharray.h>
 +#include <QtCore/qscopedvaluerollback.h>
 +#include <QtGui/qscreen.h>
++#include <qpa/qplatformwindow.h>
  #include <QtGui/qevent.h>
  #include <QtWidgets/qapplication.h>
  #include <QtGui/qpaintengine.h>
-@@ -29,6 +31,10 @@
+@@ -28,6 +31,10 @@
+ #include <qpa/qplatformbackingstore.h>
 
  QT_BEGIN_NAMESPACE
-
++
 +#if defined(__ELF__)
 +extern QPaintDevice *&qt_fontrealV3BackingDevice() __attribute__((weak, visibility("default")));
 +#endif
-+
+
  Q_GLOBAL_STATIC(QPlatformTextureList, qt_dummy_platformTextureList)
 
- // Watches one or more QPlatformTextureLists for changes in the lock state and
-@@ -880,6 +886,26 @@
+@@ -880,6 +887,35 @@
      dirty = QRegion();
      updateRequestSent = false;
 
@@ -558,21 +559,30 @@
 +#endif
 +    QPaintDevice *const device = store->paintDevice();
 +    QWindow *const window = store->window();
-+    // shortcut: XCB at 100% on one screen, extend after validating the platform's final pixel mapping.
++    const QString platform = QGuiApplication::platformName();
++    const bool xcb = platform == QLatin1StringView("xcb");
++    const bool wayland = platform == QLatin1StringView("wayland")
++            || platform == QLatin1StringView("wayland-egl");
 +    const bool aligned = device && window && window->screen()
-+            && QGuiApplication::platformName() == QLatin1StringView("xcb")
 +            && QGuiApplication::screens().size() == 1
-+            && qFuzzyCompare(window->devicePixelRatio(), qreal(1))
-+            && qFuzzyCompare(device->devicePixelRatioF(), qreal(1))
 +            && qFuzzyCompare(window->opacity(), qreal(1))
-+            && window->screen()->geometry().contains(window->geometry())
++            && !tlw->testAttribute(Qt::WA_DontShowOnScreen)
 +            && !tlw->testAttribute(Qt::WA_TranslucentBackground)
-+            && tlwExtra->widgetTextures.empty() && !tlw->d_func()->usesRhiFlush;
++            && tlwExtra->widgetTextures.empty() && !tlw->d_func()->usesRhiFlush
++            && (xcb ? qFuzzyCompare(window->devicePixelRatio(), qreal(1))
++                      && qFuzzyCompare(device->devicePixelRatioF(), qreal(1))
++                      && window->screen()->geometry().contains(window->geometry())
++                    : wayland && window->handle()
++                      && QGuiApplication::highDpiScaleFactorRoundingPolicy()
++                             == Qt::HighDpiScaleFactorRoundingPolicy::PassThrough
++                      && window->contentOrientation() == Qt::PrimaryOrientation
++                      && qFuzzyCompare(window->devicePixelRatio(), window->handle()->devicePixelRatio())
++                      && qFuzzyCompare(device->devicePixelRatioF(), window->devicePixelRatio()));
 +
      // Paint opaque non overlapped widgets.
      for (int i = 0; i < opaqueNonOverlappedWidgets.size(); ++i) {
          QWidget *w = opaqueNonOverlappedWidgets[i];
-@@ -898,14 +924,18 @@
+@@ -898,14 +934,18 @@
          QPoint offset;
          if (w != tlw)
              offset += w->mapTo(tlw, QPoint());

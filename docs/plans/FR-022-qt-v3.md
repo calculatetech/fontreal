@@ -6,7 +6,9 @@ Work on `feature/fontreal-v3-qt` from `main` at `54b130354287`. Keep the native 
 
 ## Decision log
 
-Plasma writes the selected subpixel order to Fontconfig. Qt's resolved setting is the input. The subpixel choice applies to eligible draws and is independent of the native outline hints. Explicit application and system anti-aliasing vetoes still apply. Use grayscale whenever a draw cannot map its samples to the physical channels of the final display. This includes the current KWin decoration path, which composites a texture with transparency.
+Plasma writes the selected subpixel order to Fontconfig. Qt uses that value for eligible draws and keeps the native outline hints. Explicit application and system anti-aliasing vetoes still apply. Use grayscale when Qt paints through a texture or another intermediate target. This includes Qt Quick scenes and the current KWin decoration path.
+
+Keep stock KWin and its display effects. Ordinary Wayland Widgets paint can use subpixel color when the window, backing store, painter and Wayland platform window agree on the output scale. Check a single unrotated output at 100% and 125%. Application scale overrides, scale rounding, and additional painter scaling use grayscale. Effects such as Zoom keep their usual filtering after Qt submits the window.
 
 Keep the exact approved dark and light tone curves. Dark text uses the core-biased curve with contrast. Light text uses the tapered lift and brightness curve. The RGB projection redistributes those samples at 90% strength while preserving grayscale luminance and the black and white endpoints. Apply physical channel order before luminance projection. Use vertical samples for vertical layouts.
 
@@ -51,7 +53,7 @@ Use Qt 6.10.2 development packages, Xvfb, DejaVu Sans, URW Base35, and Ubuntu Sa
     python3 tools/build-qt.py --v3-widgets
     bash tests/v3_widgets_test.sh OFFICIAL_PACKAGES_DIR
 
-The fixture compares native XCB window pixels on a controlled virtual output at 100% scale for each Fontconfig subpixel setting. It checks grayscale in the nested offscreen image and at 125% scale. It compares partial and full repaints of isolated and overlapping glyphs, checks a narrow antialiased clip and variable-weight selection, and makes sure that disabling the prototype restores stock Qt pixels. The production checkpoint above covers mixed glyph runs, glyph caching, output transforms, opacity transitions, color eligibility at 125%, and the Wayland, Qt Quick, and KWin paths.
+The XCB fixture compares native window pixels for each Fontconfig subpixel setting at 100% scale. It checks grayscale in the nested offscreen image and at 125% XCB scale. It compares partial and full repaints of isolated and overlapping glyphs, checks a narrow antialiased clip and variable-weight selection, and verifies that disabling the prototype restores stock Qt pixels. The Wayland comparison uses the stock compositor's real output scale at 100% and 125% and exercises a live scale change on the same window.
 
 ## Isolated Qt Quick checkpoint
 
