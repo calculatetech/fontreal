@@ -253,10 +253,36 @@
              FT_Error ftresult;
              ftresult = FT_Get_MM_Var(face, &newFreetype->mm_var);
              if (ftresult != FT_Err_Ok)
-@@ -2813,6 +2817,141 @@
+@@ -2813,6 +2817,167 @@
      return glyph;
  }
 
++#if defined(__ELF__)
++extern "C" Q_GUI_EXPORT bool qt_fontrealV3CanRender(const QFontEngine *engine, qreal scale)
++{
++    if (!QFontEngineFT::fontrealV3Enabled() || !engine
++        || engine->type() != QFontEngine::Freetype || engine->isColorFont()
++        || engine->fontDef.pixelSize * scale > QT_MAX_CACHED_GLYPH_SIZE)
++        return false;
++
++    const auto *ft = static_cast<const QFontEngineFT *>(engine);
++    const auto face = ft->non_locked_face();
++    return face && FT_IS_SCALABLE(face) && !FT_HAS_COLOR(face)
++            && ft->drawAntialiased() && !ft->isBitmapFont();
++}
++
++extern "C" Q_GUI_EXPORT void qt_fontrealV3GrayGlyph(const QFontEngine *engine, glyph_t glyph,
++                                                   const QFixedPoint *phase, qreal scale,
++                                                   bool lightInk, QImage *coverage, QPoint *bearing)
++{
++    auto raster = static_cast<const QFontEngineFT *>(engine)->fontrealV3Glyph(
++            glyph, *phase, scale, lightInk, false);
++    *coverage = std::move(raster.gray);
++    if (bearing)
++        *bearing = raster.bearing;
++}
++#endif
++
 +bool QFontEngineFT::fontrealV3Enabled()
 +{
 +    static const bool enabled = qgetenv("FONTREAL_RENDERING") == "3";
@@ -445,10 +471,28 @@
  #include <QtGui/qevent.h>
  #include <QtWidgets/qapplication.h>
  #include <QtGui/qpaintengine.h>
-@@ -880,6 +882,19 @@
+@@ -29,6 +31,10 @@
+
+ QT_BEGIN_NAMESPACE
+
++#if defined(__ELF__)
++extern QPaintDevice *&qt_fontrealV3BackingDevice() __attribute__((weak, visibility("default")));
++#endif
++
+ Q_GLOBAL_STATIC(QPlatformTextureList, qt_dummy_platformTextureList)
+
+ // Watches one or more QPlatformTextureLists for changes in the lock state and
+@@ -880,6 +886,26 @@
      dirty = QRegion();
      updateRequestSent = false;
 
++#if defined(__ELF__)
++    QPaintDevice *inactiveFontrealDevice = nullptr;
++    QPaintDevice *&fontrealBackingDevice = qt_fontrealV3BackingDevice
++            ? qt_fontrealV3BackingDevice() : inactiveFontrealDevice;
++#else
++    QPaintDevice *&fontrealBackingDevice = qt_fontrealV3BackingDevice();
++#endif
 +    QPaintDevice *const device = store->paintDevice();
 +    QWindow *const window = store->window();
 +    // shortcut: XCB at 100% on one screen, extend after validating the platform's final pixel mapping.
@@ -465,12 +509,12 @@
      // Paint opaque non overlapped widgets.
      for (int i = 0; i < opaqueNonOverlappedWidgets.size(); ++i) {
          QWidget *w = opaqueNonOverlappedWidgets[i];
-@@ -898,14 +913,18 @@
+@@ -898,14 +924,18 @@
          QPoint offset;
          if (w != tlw)
              offset += w->mapTo(tlw, QPoint());
 -        wd->drawWidget(store->paintDevice(), toBePainted, offset, flags, nullptr, this);
-+        const QScopedValueRollback<QPaintDevice *> fontrealDevice(qt_fontrealV3BackingDevice(),
++        const QScopedValueRollback<QPaintDevice *> fontrealDevice(fontrealBackingDevice,
 +                                                                   aligned ? device : nullptr);
 +        wd->drawWidget(device, toBePainted, offset, flags, nullptr, this);
      }
@@ -480,7 +524,7 @@
          QWidgetPrivate::DrawWidgetFlags flags = QWidgetPrivate::DrawAsRoot | QWidgetPrivate::DrawRecursive
                  | QWidgetPrivate::UseEffectRegionBounds;
 -        tlw->d_func()->drawWidget(store->paintDevice(), dirtyCopy, QPoint(), flags, nullptr, this);
-+        const QScopedValueRollback<QPaintDevice *> fontrealDevice(qt_fontrealV3BackingDevice(),
++        const QScopedValueRollback<QPaintDevice *> fontrealDevice(fontrealBackingDevice,
 +                                                                   aligned ? device : nullptr);
 +        tlw->d_func()->drawWidget(device, dirtyCopy, QPoint(), flags, nullptr, this);
      }

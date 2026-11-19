@@ -1,0 +1,532 @@
+--- a/src/gui/CMakeLists.txt
++++ b/src/gui/CMakeLists.txt
+@@ -757,6 +757,9 @@
+ qt_internal_extend_target(Gui CONDITION QT_FEATURE_freetype
+     SOURCES
+         text/freetype/qfontengine_ft.cpp text/freetype/qfontengine_ft_p.h
++        text/freetype/fontreal_v3_coverage.cpp
++        text/freetype/fontreal_v3_outline.cpp
++        text/freetype/fontreal_v3_thin.cpp
+         text/freetype/qfreetypefontdatabase.cpp text/freetype/qfreetypefontdatabase_p.h
+     LIBRARIES
+         WrapFreetype::WrapFreetype
+--- a/src/gui/painting/qpaintengine_raster.cpp
++++ b/src/gui/painting/qpaintengine_raster.cpp
+@@ -20,6 +20,9 @@
+ //   #include <private/qpainter_p.h>
+ #include <private/qtextengine_p.h>
+ #include <private/qfontengine_p.h>
++#if QT_CONFIG(freetype)
++#include <private/qfontengine_ft_p.h>
++#endif
+ #include <private/qpixmap_raster_p.h>
+ //   #include <private/qrasterizer_p.h>
+ #include <private/qimage_p.h>
+@@ -48,6 +51,12 @@
+
+ QT_BEGIN_NAMESPACE
+
++QPaintDevice *&qt_fontrealV3BackingDevice()
++{
++    static thread_local QPaintDevice *device = nullptr;
++    return device;
++}
++
+ class QRectVectorPath : public QVectorPath {
+ public:
+     inline void set(const QRect &r) {
+@@ -2576,7 +2585,14 @@
+     ProcessSpans blend = unclipped ? s->penData.unclipped_blend : s->penData.blend;
+     const uchar * scanline = static_cast<const uchar *>(src);
+
+-    if (s->flags.fast_text) {
++    bool useFastBlit = s->flags.fast_text;
++#if QT_CONFIG(freetype)
++    // Float spans retain extended color. Keep the native fast path when it supplies gamma correction.
++    if (useFastBlit && depth == 8 && !useGammaCorrection && QFontEngineFT::fontrealV3Enabled()
++        && QImage::toPixelFormat(rb->format).typeInterpretation() == QPixelFormat::FloatingPoint)
++        useFastBlit = false;
++#endif
++    if (useFastBlit) {
+         if (unclipped) {
+             if (depth == 1) {
+                 if (s->penData.bitmapBlit) {
+@@ -2621,6 +2637,41 @@
+                 rx = nx;
+                 ry = ny;
+             }
++#if QT_CONFIG(freetype)
++            QByteArray clippedMask;
++            if (clip && !clip->hasRectClip && QFontEngineFT::fontrealV3Enabled()) {
++                // The fast blit clips span bounds. Apply fractional clip coverage to the mask.
++                const_cast<QClipData *>(clip)->initialize();
++                const int yFirst = qMax(0, qMax(ry, clip->ymin));
++                const int yLast = qMin(rb->height(), qMin(ry + h, clip->ymax));
++                for (int y = yFirst; y < yLast; ++y) {
++                    const auto &line = clip->m_clipLines[y];
++                    for (int i = 0; i < line.count; ++i) {
++                        const auto &span = line.spans[i];
++                        const int first = qMax(rx, int(span.x));
++                        const int last = qMin(rx + w, span.x + span.len);
++                        if (span.coverage == 255 || last <= first)
++                            continue;
++                        if (clippedMask.isNull()) {
++                            clippedMask.resizeForOverwrite(qsizetype(bpl) * h);
++                            memcpy(clippedMask.data(), scanline,
++                                   qsizetype(bpl) * (h - 1) + qsizetype(w) * (depth / 8));
++                        }
++                        auto *row = reinterpret_cast<uchar *>(clippedMask.data()) + (y - ry) * bpl;
++                        for (int x = first - rx; x < last - rx; ++x) {
++                            if (depth == 8)
++                                row[x] = qt_div_255(row[x] * span.coverage);
++                            else {
++                                auto *channels = reinterpret_cast<QRgb *>(row);
++                                channels[x] = BYTE_MUL(channels[x], span.coverage) | 0xff000000;
++                            }
++                        }
++                    }
++                }
++                if (!clippedMask.isNull())
++                    scanline = reinterpret_cast<const uchar *>(clippedMask.constData());
++            }
++#endif
+             if (depth == 8)
+                 s->penData.alphamapBlit(rb, rx, ry, s->penData.solidColor.rgba64(),
+                                         scanline, w, h, bpl, clip, useGammaCorrection);
+@@ -2754,6 +2805,47 @@
+         blend(current, spans, &s->penData);
+ }
+
++#if QT_CONFIG(freetype)
++static bool fontrealV3SplitMasks(QImage &gray, QImage &stripes, QPoint origin,
++                                   QRasterBuffer *buffer, const QClipData *clip, QRgb background)
++{
++    QRect visible = QRect(origin, gray.size()).intersected(QRect(0, 0, buffer->width(), buffer->height()));
++    if (clip) {
++        visible &= QRect(clip->xmin, clip->ymin, clip->xmax - clip->xmin, clip->ymax - clip->ymin);
++        const_cast<QClipData *>(clip)->initialize();
++    }
++
++    bool hasStripes = false;
++    for (int y = visible.top(); y <= visible.bottom(); ++y) {
++        auto *coverage = gray.scanLine(y - origin.y());
++        auto *channels = reinterpret_cast<QRgb *>(stripes.scanLine(y - origin.y()));
++        const auto *pixels = reinterpret_cast<const QRgb *>(buffer->scanLine(y));
++        const auto split = [&](int first, int last, int clipCoverage) {
++            for (int x = first; x < last; ++x) {
++                const int sample = x - origin.x();
++                if (clipCoverage == 255 && pixels[x] == background && coverage[sample]) {
++                    coverage[sample] = 0;
++                    hasStripes = true;
++                } else {
++                    channels[sample] = qRgb(0, 0, 0);
++                }
++            }
++        };
++        if (!clip) {
++            split(visible.left(), visible.right() + 1, 255);
++            continue;
++        }
++        const auto &line = clip->m_clipLines[y];
++        for (int i = 0; i < line.count; ++i) {
++            const auto &span = line.spans[i];
++            split(qMax(visible.left(), int(span.x)), qMin(visible.right() + 1, span.x + span.len),
++                  span.coverage);
++        }
++    }
++    return hasStripes;
++}
++#endif
++
+ /*!
+     \internal
+ */
+@@ -2775,11 +2867,57 @@
+         if (d_func()->mono_surface) // alphaPenBlt can handle mono, too
+             neededFormat = QFontEngine::Format_Mono;
+
++#if QT_CONFIG(freetype)
++        auto *ft = QFontEngineFT::fontrealV3Enabled() && fontEngine->type() == QFontEngine::Freetype
++                ? static_cast<QFontEngineFT *>(fontEngine) : nullptr;
++        if (ft && neededFormat != QFontEngine::Format_Mono)
++            neededFormat = ft->drawAntialiased() ? QFontEngine::Format_A8 : QFontEngine::Format_Mono;
++
++        const bool tryFontreal = ft && neededFormat != QFontEngine::Format_Mono
++                && (s->renderHints & QPainter::TextAntialiasing)
++                && s->matrix.type() <= QTransform::TxScale && s->matrix.m11() > 0
++                && qFuzzyCompare(s->matrix.m11(), s->matrix.m22());
++        const QColor ink = s->pen.color();
++        const bool lightInk = qGray(ink.rgb()) >= 128;
++        const QRgb foreground = lightInk ? qRgb(255, 255, 255) : qRgb(0, 0, 0);
++        const QRgb background = lightInk ? qRgb(0, 0, 0) : qRgb(255, 255, 255);
++        const auto rasterFormat = d->rasterBuffer->format;
++        const bool tryStripes = tryFontreal && d->device == qt_fontrealV3BackingDevice()
++                && s->matrix.type() <= QTransform::TxTranslate
++                && s->flags.fast_text && s->penData.alphaRGBBlit
++                && s->composition_mode == QPainter::CompositionMode_SourceOver
++                && ink.rgba64() == QRgba64::fromArgb32(foreground)
++                && (rasterFormat == QImage::Format_RGB32
++                    || rasterFormat == QImage::Format_ARGB32_Premultiplied)
++                && (!d->rasterBuffer->colorSpace.isValid()
++                    || d->rasterBuffer->colorSpace == QColorSpace(QColorSpace::SRgb));
++#endif
++
+         for (int i = 0; i < numGlyphs; i++) {
+             QFixedPoint spp = fontEngine->subPixelPositionFor(positions[i]);
+             if (!verticalSubPixelPositions)
+                 spp.y = 0;
+
++#if QT_CONFIG(freetype)
++            if (tryFontreal) {
++                auto glyph = ft->fontrealV3Glyph(glyphs[i], spp, s->matrix.m22(), lightInk, tryStripes);
++                if (!glyph.gray.isNull()) {
++                    const QPoint origin(qFloor(positions[i].x), verticalSubPixelPositions
++                                        ? qFloor(positions[i].y) : qRound(positions[i].y));
++                    const QPoint topLeft = origin + glyph.bearing;
++                    const auto draw = [&](const QImage &mask) {
++                        alphaPenBlt(mask.constBits(), mask.bytesPerLine(), mask.depth(), topLeft.x(),
++                                    topLeft.y(), mask.width(), mask.height(), false);
++                    };
++                    const QClipData *clip = d->clip();
++                    if (!glyph.stripes.isNull() && fontrealV3SplitMasks(glyph.gray, glyph.stripes,
++                            topLeft, d->rasterBuffer.data(), clip, background))
++                        draw(glyph.stripes);
++                    draw(glyph.gray);
++                    continue;
++                }
++            }
++#endif
+             const QFontEngine::Glyph *alphaMap = fontEngine->glyphData(glyphs[i], spp, neededFormat, s->matrix);
+             if (!alphaMap)
+                 continue;
+@@ -3915,6 +4053,9 @@
+     const int firstLeft = m_spans[0].x;
+     const int firstRight = m_spans[0].x + m_spans[0].len;
+     bool isRect = true;
++#if QT_CONFIG(freetype)
++    const bool preserveCoverage = QFontEngineFT::fontrealV3Enabled();
++#endif
+
+     for (int i = 0; i < count; ++i) {
+         QT_FT_Span_& span = m_spans[i];
+@@ -3939,6 +4080,10 @@
+
+         if (spanLeft != firstLeft || spanRight != firstRight)
+             isRect = false;
++#if QT_CONFIG(freetype)
++        if (preserveCoverage && span.coverage != 255)
++            isRect = false;
++#endif
+     }
+
+     if (isRect) {
+--- a/src/gui/painting/qpaintengine_raster_p.h
++++ b/src/gui/painting/qpaintengine_raster_p.h
+@@ -36,6 +36,8 @@
+ class QRasterBuffer;
+ class QClipData;
+
++Q_GUI_EXPORT QPaintDevice *&qt_fontrealV3BackingDevice();
++
+ class QRasterPaintEngineState : public QPainterState
+ {
+ public:
+--- a/src/gui/text/freetype/qfontengine_ft.cpp
++++ b/src/gui/text/freetype/qfontengine_ft.cpp
+@@ -20,6 +20,8 @@
+ #include "qfile.h"
+ #include "qfileinfo.h"
+ #include <qscopedvaluerollback.h>
++#include <qscopeguard.h>
++#include "fontreal_v3_outline.h"
+ #include "qthreadstorage.h"
+ #include <qmath.h>
+ #include <qendian.h>
+@@ -283,7 +285,9 @@
+ #endif
+         newFreetype->face = face;
+         newFreetype->mm_var = nullptr;
+-        if (FT_IS_NAMED_INSTANCE(newFreetype->face)) {
++        if (FT_IS_NAMED_INSTANCE(face)
++            || (QFontEngineFT::fontrealV3Enabled() && FT_HAS_MULTIPLE_MASTERS(face)
++                && !face_id.variableAxes.isEmpty())) {
+             FT_Error ftresult;
+             ftresult = FT_Get_MM_Var(face, &newFreetype->mm_var);
+             if (ftresult != FT_Err_Ok)
+@@ -2887,6 +2891,167 @@
+     return glyph;
+ }
+
++#if defined(__ELF__)
++extern "C" Q_GUI_EXPORT bool qt_fontrealV3CanRender(const QFontEngine *engine, qreal scale)
++{
++    if (!QFontEngineFT::fontrealV3Enabled() || !engine
++        || engine->type() != QFontEngine::Freetype || engine->isColorFont()
++        || engine->fontDef.pixelSize * scale > QT_MAX_CACHED_GLYPH_SIZE)
++        return false;
++
++    const auto *ft = static_cast<const QFontEngineFT *>(engine);
++    const auto face = ft->non_locked_face();
++    return face && FT_IS_SCALABLE(face) && !FT_HAS_COLOR(face)
++            && ft->drawAntialiased() && !ft->isBitmapFont();
++}
++
++extern "C" Q_GUI_EXPORT void qt_fontrealV3GrayGlyph(const QFontEngine *engine, glyph_t glyph,
++                                                   const QFixedPoint *phase, qreal scale,
++                                                   bool lightInk, QImage *coverage, QPoint *bearing)
++{
++    auto raster = static_cast<const QFontEngineFT *>(engine)->fontrealV3Glyph(
++            glyph, *phase, scale, lightInk, false);
++    *coverage = std::move(raster.gray);
++    if (bearing)
++        *bearing = raster.bearing;
++}
++#endif
++
++bool QFontEngineFT::fontrealV3Enabled()
++{
++    static const bool enabled = qgetenv("FONTREAL_RENDERING") == "3";
++    return enabled;
++}
++
++QFontEngineFT::FontrealGlyph QFontEngineFT::fontrealV3Glyph(glyph_t glyph, QFixedPoint phase,
++                                                            qreal scale, bool lightInk,
++                                                            bool allowColor) const
++{
++    using namespace fontreal_v3;
++    if (!drawAntialiased() || !FT_IS_SCALABLE(freetype->face) || FT_HAS_COLOR(freetype->face)
++        || isBitmapFont() || fontDef.pixelSize * scale > QT_MAX_CACHED_GLYPH_SIZE)
++        return {};
++
++    FT_Face face = lockFace();
++    const auto unlock = qScopeGuard([this] { unlockFace(); });
++    FT_Matrix originalMatrix;
++    FT_Vector originalPhase;
++    FT_Get_Transform(face, &originalMatrix, &originalPhase);
++    const auto restoreTransform = qScopeGuard([&] {
++        FT_Set_Transform(face, &originalMatrix, &originalPhase);
++    });
++    FT_Vector shift{phase.x.value(), -phase.y.value()};
++    FT_Set_Transform(face, &originalMatrix, &shift);
++
++    const bool scaled = !qFuzzyCompare(scale, qreal(1));
++    const auto restoreSize = qScopeGuard([&] {
++        if (scaled)
++            FT_Set_Char_Size(face, xsize, ysize, 0, 0);
++    });
++    if (scaled && FT_Set_Char_Size(face, qRound(xsize * scale), qRound(ysize * scale), 0, 0))
++        return {};
++
++    const FT_Library library = face->glyph->library;
++    FT_Bool previousNoDarkening = true;
++    const bool cff = qstrcmp(FT_Get_Font_Format(face), "CFF") == 0;
++    const FT_Bool noDarkening = true;
++    const bool changedDarkening = cff
++            && !FT_Property_Get(library, "cff", "no-stem-darkening", &previousNoDarkening)
++            && !previousNoDarkening
++            && !FT_Property_Set(library, "cff", "no-stem-darkening", &noDarkening);
++    const auto restoreDarkening = qScopeGuard([&] {
++        if (changedDarkening)
++            FT_Property_Set(library, "cff", "no-stem-darkening", &previousNoDarkening);
++    });
++
++    constexpr int flags = FT_LOAD_TARGET_NORMAL | FT_LOAD_NO_BITMAP | FT_LOAD_NO_AUTOHINT;
++    const auto loadOutline = [&](int extra) {
++        if (FT_Load_Glyph(face, glyph, flags | extra) || face->glyph->format != FT_GLYPH_FORMAT_OUTLINE)
++            return false;
++        if (embolden)
++            FT_GlyphSlot_Embolden(face->glyph);
++        if (obliquen)
++            FT_GlyphSlot_Oblique(face->glyph);
++        return true;
++    };
++    if (!loadOutline(0))
++        return {};
++
++    FT_Glyph outline = nullptr;
++    if (FT_Get_Glyph(face->glyph, &outline))
++        return {};
++    const auto releaseOutline = qScopeGuard([&] { FT_Done_Glyph(outline); });
++    const FT_GlyphSlot slot = face->glyph;
++    if (FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL) || slot->bitmap.pixel_mode != FT_PIXEL_MODE_GRAY
++        || slot->bitmap.width > 255 || slot->bitmap.rows > 255)
++        return {};
++
++    const GlyphFrame frame{slot->bitmap_left, slot->bitmap_top, int(slot->bitmap.width),
++                           int(slot->bitmap.rows)};
++    const auto hinted = sampleOutline(library, reinterpret_cast<FT_OutlineGlyph>(outline)->outline,
++                                      frame);
++    if (hinted.pixels.empty())
++        return {};
++
++    bool lightFace = !embolden
++            && (fontDef.weight <= QFont::Light || calculateActualWeight(freetype, face, face_id) <= 350);
++    if (!embolden && freetype->mm_var && !face_id.variableAxes.isEmpty()) {
++        const FT_MM_Var *axes = freetype->mm_var;
++        for (FT_UInt i = 0; i < axes->num_axis; ++i) {
++            if (axes->axis[i].tag == FT_MAKE_TAG('w', 'g', 'h', 't')) {
++                QVarLengthArray<FT_Fixed, 8> coordinates(axes->num_axis);
++                if (!FT_Get_Var_Design_Coordinates(face, axes->num_axis, coordinates.data()))
++                    lightFace = coordinates.at(i) <= 350L * 65536L;
++                break;
++            }
++        }
++    }
++    OutlineSamples unhinted;
++    if (lightFace && loadOutline(FT_LOAD_NO_HINTING))
++        unhinted = sampleOutline(library, slot->outline, frame);
++
++    const auto ink = lightInk ? Ink::Light : Ink::Dark;
++    const double pixels = fontDef.pixelSize * scale;
++    const auto tone = toneCurve(pixels, ink);
++    const bool italic = obliquen || calculateActualItalic(freetype, face, face_id);
++    const auto gray = glyphCoverage(hinted, &unhinted, tone, pixels, ink, italic);
++
++    StripeLayout layout = StripeLayout::None;
++    if (allowColor) {
++        switch (subpixelType) {
++        case Subpixel_None: break;
++        case Subpixel_RGB: layout = StripeLayout::Rgb; break;
++        case Subpixel_BGR: layout = StripeLayout::Bgr; break;
++        case Subpixel_VRGB: layout = StripeLayout::VerticalRgb; break;
++        case Subpixel_VBGR: layout = StripeLayout::VerticalBgr; break;
++        }
++    }
++
++    FontrealGlyph result;
++    result.bearing = QPoint(frame.left, -frame.top);
++    result.gray = QImage(frame.width, frame.height, QImage::Format_Alpha8);
++    if (result.gray.isNull())
++        return {};
++    if (layout != StripeLayout::None)
++        result.stripes = QImage(frame.width, frame.height, QImage::Format_RGB32);
++
++    for (int y = 0; y < frame.height; ++y) {
++        const auto *row = gray.data() + y * frame.width;
++        std::copy_n(row, frame.width, result.gray.scanLine(y));
++        if (result.stripes.isNull())
++            continue;
++        auto *rgb = reinterpret_cast<QRgb *>(result.stripes.scanLine(y));
++        for (int x = 0; x < frame.width; ++x) {
++            auto samples = hinted.stripes(x, y, layout);
++            for (Coverage &sample : samples)
++                sample = tone[sample];
++            const auto channels = projectChannels(row[x], samples, ink);
++            rgb[x] = qRgb(channels[0], channels[1], channels[2]);
++        }
++    }
++    return result;
++}
++
+ QImage QFontEngineFT::alphaMapForGlyph(glyph_t g, const QFixedPoint &subPixelPosition)
+ {
+     return alphaMapForGlyph(g, subPixelPosition, QTransform());
+--- a/src/gui/text/freetype/qfontengine_ft_p.h
++++ b/src/gui/text/freetype/qfontengine_ft_p.h
+@@ -33,6 +33,7 @@
+
+ #include <string.h>
+ #include <qpainterpath.h>
++#include <qimage.h>
+
+ QT_BEGIN_NAMESPACE
+
+@@ -231,6 +232,16 @@
+
+     FT_Face non_locked_face() const;
+
++    struct FontrealGlyph {
++        QImage gray;
++        QImage stripes;
++        QPoint bearing;
++    };
++
++    static bool fontrealV3Enabled();
++    FontrealGlyph fontrealV3Glyph(glyph_t glyph, QFixedPoint phase, qreal scale,
++                                 bool lightInk, bool allowColor) const;
++
+     inline bool drawAntialiased() const { return antialias; }
+     inline bool invalid() const { return xsize == 0 && ysize == 0; }
+     inline bool isBitmapFont() const { return defaultFormat == Format_Mono; }
+--- a/src/gui/text/unix/qfontconfigdatabase.cpp
++++ b/src/gui/text/unix/qfontconfigdatabase.cpp
+@@ -963,7 +963,8 @@
+ void QFontconfigDatabase::setupFontEngine(QFontEngineFT *engine, const QFontDef &fontDef) const
+ {
+     bool antialias = !(fontDef.styleStrategy & QFont::NoAntialias);
+-    bool forcedAntialiasSetting = !antialias || isDprScaling();
++    bool forcedAntialiasSetting = !antialias
++            || (isDprScaling() && !QFontEngineFT::fontrealV3Enabled());
+
+     const QPlatformServices *services = QGuiApplicationPrivate::platformIntegration()->services();
+     bool preferXftConf = false;
+--- a/src/widgets/kernel/qwidgetrepaintmanager.cpp
++++ b/src/widgets/kernel/qwidgetrepaintmanager.cpp
+@@ -8,6 +8,8 @@
+ #include <QtCore/qglobal.h>
+ #include <QtCore/qdebug.h>
+ #include <QtCore/qvarlengtharray.h>
++#include <QtCore/qscopedvaluerollback.h>
++#include <QtGui/qscreen.h>
+ #include <QtGui/qevent.h>
+ #include <QtWidgets/qapplication.h>
+ #include <QtGui/qpaintengine.h>
+@@ -28,6 +30,10 @@
+
+ QT_BEGIN_NAMESPACE
+
++#if defined(__ELF__)
++extern QPaintDevice *&qt_fontrealV3BackingDevice() __attribute__((weak, visibility("default")));
++#endif
++
+ Q_GLOBAL_STATIC(QPlatformTextureList, qt_dummy_platformTextureList)
+
+ // Watches one or more QPlatformTextureLists for changes in the lock state and
+@@ -879,6 +885,26 @@
+     dirty = QRegion();
+     updateRequestSent = false;
+
++#if defined(__ELF__)
++    QPaintDevice *inactiveFontrealDevice = nullptr;
++    QPaintDevice *&fontrealBackingDevice = qt_fontrealV3BackingDevice
++            ? qt_fontrealV3BackingDevice() : inactiveFontrealDevice;
++#else
++    QPaintDevice *&fontrealBackingDevice = qt_fontrealV3BackingDevice();
++#endif
++    QPaintDevice *const device = store->paintDevice();
++    QWindow *const window = store->window();
++    // shortcut: XCB at 100% on one screen, extend after validating the platform's final pixel mapping.
++    const bool aligned = device && window && window->screen()
++            && QGuiApplication::platformName() == QLatin1StringView("xcb")
++            && QGuiApplication::screens().size() == 1
++            && qFuzzyCompare(window->devicePixelRatio(), qreal(1))
++            && qFuzzyCompare(device->devicePixelRatioF(), qreal(1))
++            && qFuzzyCompare(window->opacity(), qreal(1))
++            && window->screen()->geometry().contains(window->geometry())
++            && !tlw->testAttribute(Qt::WA_TranslucentBackground)
++            && tlwExtra->widgetTextures.empty() && !tlw->d_func()->usesRhiFlush;
++
+     // Paint opaque non overlapped widgets.
+     for (int i = 0; i < opaqueNonOverlappedWidgets.size(); ++i) {
+         QWidget *w = opaqueNonOverlappedWidgets[i];
+@@ -897,14 +923,18 @@
+         QPoint offset;
+         if (w != tlw)
+             offset += w->mapTo(tlw, QPoint());
+-        wd->drawWidget(store->paintDevice(), toBePainted, offset, flags, nullptr, this);
++        const QScopedValueRollback<QPaintDevice *> fontrealDevice(fontrealBackingDevice,
++                                                                   aligned ? device : nullptr);
++        wd->drawWidget(device, toBePainted, offset, flags, nullptr, this);
+     }
+
+     // Paint the rest with composition.
+     if (repaintAllWidgets || !dirtyCopy.isEmpty()) {
+         QWidgetPrivate::DrawWidgetFlags flags = QWidgetPrivate::DrawAsRoot | QWidgetPrivate::DrawRecursive
+                 | QWidgetPrivate::UseEffectRegionBounds;
+-        tlw->d_func()->drawWidget(store->paintDevice(), dirtyCopy, QPoint(), flags, nullptr, this);
++        const QScopedValueRollback<QPaintDevice *> fontrealDevice(fontrealBackingDevice,
++                                                                   aligned ? device : nullptr);
++        tlw->d_func()->drawWidget(device, dirtyCopy, QPoint(), flags, nullptr, this);
+     }
+
+     store->endPaint();

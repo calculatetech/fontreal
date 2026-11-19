@@ -47,3 +47,14 @@ Use Qt 6.10.2 development packages, Xvfb, DejaVu Sans, URW Base35, and Ubuntu Sa
     bash tests/v3_widgets_test.sh OFFICIAL_PACKAGES_DIR
 
 The fixture compares native XCB window pixels on a controlled virtual output at 100% scale for each Fontconfig subpixel setting. It checks grayscale in the nested offscreen image and at 125% scale. It compares partial and full repaints of isolated and overlapping glyphs, checks a narrow antialiased clip and variable-weight selection, and makes sure that disabling the prototype restores stock Qt pixels. The production checkpoint above covers mixed glyph runs, glyph caching, output transforms, opacity transitions, color eligibility at 125%, and the Wayland, Qt Quick, and KWin paths.
+
+## Isolated Qt Quick checkpoint
+
+The Qt Quick prototype uses the same grayscale coverage as Widgets. It draws eligible plain text through Qt's existing OpenGL glyph cache. The shader keeps the original ink color and opacity. It uses two sets of coverage, one for dark ink and one for light ink.
+
+Use the same Ubuntu Qt development packages and official package directory as the Widgets checkpoint. Install Mesa software OpenGL for the isolated display.
+
+    python3 tools/build-qt.py --v3-quick
+    bash tests/v3_quick_test.sh OFFICIAL_PACKAGES_DIR
+
+The fixture checks pixels from a visible window and an OpenGL readback at 100% and 125% scale. It checks Fontconfig None and RGB, both OpenGL render loops, a change from dark ink to light ink and back, and colored ink. It also runs patched Qt Quick with official QtGui and compares the result with official Qt throughout. The QtGui hooks are optional, so Qt Quick can use its stock path after an independent QtGui update.

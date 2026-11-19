@@ -81,19 +81,23 @@ def shader_tools():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--v3-widgets", action="store_true",
+    prototype = parser.add_mutually_exclusive_group()
+    prototype.add_argument("--v3-widgets", action="store_true",
                         help="Build the isolated V3 Widgets prototype")
+    prototype.add_argument("--v3-quick", action="store_true",
+                           help="Build both isolated V3 Qt prototypes")
     args = parser.parse_args()
+    v3 = args.v3_widgets or args.v3_quick
     installed = subprocess.check_output(
         ["pkg-config", "--modversion", "Qt6Core"], text=True).strip()
     if installed != VERSION:
         raise SystemExit(f"This experiment needs installed Qt {VERSION}; found {installed}.")
     WORK.mkdir(parents=True, exist_ok=True)
     headers = platform_headers()
-    work = (ROOT / "build/v3-qt/widgets").resolve() if args.v3_widgets else WORK
-    patch_suffix = "-v3-widgets" if args.v3_widgets else ""
+    work = (ROOT / "build/v3-qt/widgets").resolve() if v3 else WORK
+    patch_suffix = "-v3-widgets" if v3 else ""
     source = sources(NAME, DIGEST, ROOT / f"patches/qt-{VERSION}-fontreal{patch_suffix}.patch", work)
-    if args.v3_widgets:
+    if v3:
         for name in ("coverage.cpp", "coverage.h", "outline.cpp", "outline.h", "thin.cpp"):
             filename = f"fontreal_v3_{name}"
             shutil.copyfile(ROOT / "src" / filename, source / "src/gui/text/freetype" / filename)
@@ -112,7 +116,7 @@ def main():
         "-DFEATURE_dbus=ON", "-DFEATURE_accessibility_atspi_bridge=ON",
         "-DQT_NO_FEATURE_AUTO_RESET=ON", f"-DCMAKE_PREFIX_PATH={headers}",
     ]
-    if args.v3_widgets:
+    if v3:
         configure.append("-DFEATURE_fontconfig=ON")
     subprocess.run(configure, env=env, check=True)
     if args.v3_widgets:
@@ -121,13 +125,18 @@ def main():
                        check=True)
         print(f"Private V3 Widgets ready at {output}")
         return
-    subprocess.run(["cmake", "--build", str(output), "--target", "Gui", "Network", "OpenGL",
-                    "Widgets_sync_headers", "Test_sync_headers", "qlalr", "qtpaths",
+    targets = ["Gui", "Network", "OpenGL", "Widgets_sync_headers", "Test_sync_headers", "qlalr", "qtpaths"]
+    if v3:
+        targets.extend(["Widgets", "QXcbIntegrationPlugin"])
+    subprocess.run(["cmake", "--build", str(output), "--target", *targets,
                     "--parallel", str(min(12, os.cpu_count() or 1))], check=True)
     shaders = shader_tools()
+    declarative_work = (ROOT / "build/v3-qt/quick").resolve() if v3 else WORK
+    declarative_work.mkdir(parents=True, exist_ok=True)
+    declarative_patch = "qtdeclarative-fontreal-v3.patch" if v3 else f"qtdeclarative-{VERSION}-fontreal.patch"
     source = sources(f"qtdeclarative-everywhere-src-{VERSION}", DECLARATIVE_DIGEST,
-                     ROOT / f"patches/qtdeclarative-{VERSION}-fontreal.patch")
-    declarative = WORK / "declarative-build"
+                     ROOT / "patches" / declarative_patch, declarative_work)
+    declarative = declarative_work / ("qt-build" if v3 else "declarative-build")
     env["LD_LIBRARY_PATH"] = str(shaders / "lib/x86_64-linux-gnu") + ":" + env.get("LD_LIBRARY_PATH", "")
     freetype = subprocess.check_output(["pkg-config", "--cflags", "freetype2"], text=True).strip()
     subprocess.run([
