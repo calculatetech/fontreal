@@ -14,6 +14,12 @@ For the grayscale feasibility test, verify final window pixels and loaded distro
 
 Before release, verify final window pixels at 100% and 125% with the candidate active and the process loading distro Qt and FreeType. Check Plasma’s None, RGB, BGR, vertical RGB, and vertical BGR choices. Check grayscale for antialiased draws that cannot use subpixel color. Compare explicit system and application anti-aliasing opt-outs with unmodified stock Qt. The grayscale feasibility test covers a subset of this behavior.
 
+### Install and reboot acceptance
+
+Provide one install script or distro package. After reboot, a normal Plasma login must activate Fontreal in ordinary Qt Widgets and Qt Quick launches. Run this check in a disposable VM. Compare both text polarities with the approved V3 reference and record the libraries in use. Remove the installation and reboot again. The same stock comparison must match after removal.
+
+The Qt Quick helper experiment uses the native text shader to select the V3 curve from the actual text color. It uses a separate font engine for the Quick glyph cache so Widgets can keep its own masks. A test package reached this path after a Plasma login on stock Qt. The 16px grayscale comparison matched V3 at 100% scale. The 125% comparison still differs from V3. The test uses Qt private cache interfaces and a shader table for one size. The release must support normal distro updates and use stock rendering when the helper is incompatible.
+
 ### V3-5 stock Konsole pilot
 
 Offer an explicit Konsole launch with the user's working profile. Select the light or dark treatment from each terminal draw. Keep both masks in separate Qt cache entries. Test pure black on white and white on black at 100% scale with horizontal RGB on one Plasma Wayland output. Use the same native NORMAL hinting and non-light faces as the reference. Let light faces and other hinting modes use stock rendering. Check positioned glyph bounds, including LCD filter padding, before handing off the ink choice. Confirm that child programs start without the Fontreal library.

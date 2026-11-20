@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Use the tested Qt patch as the visual reference. Start with an opt-in Konsole pilot on stock Qt, FreeType, and KWin. Check automatic ink selection in Qt Quick before choosing a release path. If FreeType needs a patch, deliver it through the distro package manager. See the [V3 specification](plans/FR-022-qt-v3.md).
+- **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Provide an install script or package that activates V3 in ordinary Plasma application launches after reboot. Use the tested Qt patch as the visual reference. Verify the Qt Widgets and Qt Quick paths, then verify removal and reboot. If FreeType needs a patch, deliver it through the distro package manager. See the [V3 specification](plans/FR-022-qt-v3.md).
 
 ## Planned next
 
