@@ -1,6 +1,6 @@
 # Fontreal
 
-The Fontreal V3 prototype improves text rendering in Qt 6 applications and Plasma. The comparison build patches and rebuilds QtBase and Qt Declarative. Current V3 work targets deployment with stock Qt, FreeType, and KWin. This build is a visual reference for that work.
+Fontreal V3 improves text rendering in Qt 6 applications and Plasma. The Ubuntu helper adds Fontreal to ordinary app launches and uses the distro Qt, FreeType, and KWin packages. The comparison images come from a separate Qt build that reproduces the V3 reference.
 
 ## Why this project exists
 
@@ -16,11 +16,13 @@ These captures use Noto Sans at KDE’s 8pt and 10pt defaults and Hack at 10pt. 
 
 See the [capture record](docs/images/kde-v3/capture-sources.json) for renderer and font details. The [V2 images](docs/images/kde-v2/manifest.json) are also available.
 
-## Reproduce the V3 reference
+## Install V3 with stock Qt
 
-Follow the [Qt and Plasma build guide](docs/build-system.md#fontreal-v3-for-qt-and-plasma) to build for your system, check the bundle, and install it. Use `fontreal-session enable` and sign in to Plasma again.
+On a supported Ubuntu 26.04 system, follow the [stock Qt helper guide](docs/build-system.md#install-the-stock-qt-helper-on-ubuntu-2604) to build and install one package. Sign out and back in to Plasma.
 
-Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. Subpixel rendering applies to eligible native Qt Widgets text. Fontreal also provides grayscale rendering for eligible offscreen text and the Qt Quick OpenGL text path.
+Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. The selected layout applies to eligible Widgets and Qt Quick text. Offscreen or transformed text uses grayscale coverage.
+
+To recreate the comparison build, follow the [patched Qt reference guide](docs/build-system.md#patched-qt-visual-reference).
 
 ## Suggested fonts
 

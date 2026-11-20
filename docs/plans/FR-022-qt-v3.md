@@ -16,9 +16,11 @@ Before release, verify final window pixels at 100% and 125% with the candidate a
 
 ### Install and reboot acceptance
 
-Provide one install script or distro package. After reboot, a normal Plasma login must activate Fontreal in ordinary Qt Widgets and Qt Quick launches. Run this check in a disposable VM. Compare both text polarities with the approved V3 reference and record the libraries in use. Remove the installation and reboot again. The same stock comparison must match after removal.
+Provide one install script or distro package. After reboot, a normal Plasma login must activate Fontreal in ordinary Qt Widgets and Qt Quick launches. Run this check in a disposable VM. Compare both text polarities with the approved V3 reference and record the libraries in use. Include a BC1-compressed KTX texture that renders on stock Qt and compare its pixels with the installed result. Remove the installation and reboot again. The same stock comparison must match after removal.
 
-The Qt Quick helper experiment uses the native text shader to select the V3 curve from the actual text color. It uses a separate font engine for the Quick glyph cache so Widgets can keep its own masks. A test package reached this path after a Plasma login on stock Qt. At 100% and 125% scale, the 16px logical grayscale comparison matched V3 when the helper rasterized at the physical pixel size. The test uses Qt private cache interfaces and shader tables for this one logical font size. The release must support normal distro updates and use stock rendering when the helper is incompatible.
+One test package loaded separate Widgets and Quick plug-ins after a Plasma reboot on Ubuntu 26.04. The test used distro QtGui `6.10.2+dfsg-7`, QtQuick `6.10.2+dfsg-3`, FreeType `2.14.2+dfsg-1ubuntu0.2`, KWin `4:6.6.6-0ubuntu0.1` and Plasma's RGB layout. In the two test windows, the application captures and the corresponding text regions in KWin screenshots matched the patched V3 reference at 100% and 125%. The scenes included black and white text. The Quick plug-in selected native rendering for the tested text with the default application settings. It matched at 12, 16 and 20 logical pixels, including a Nimbus Sans CFF fallback. Native package removal and reboot restored the stock application captures. Quick varied by at most one RGB level, the same variation seen in repeated stock captures.
+
+The Quick plug-in preserves the default scene graph and selects V3 at the glyph node, where the text color is available. It uses one Qt atlas for the grayscale and RGB coverage. The draw uses grayscale for a texture or transformed text and uses the selected layout for an aligned draw to the display. Qt populates the atlas during scene graph synchronization and refreshes it when the output scale changes. The Widgets plug-in reaches the shared cached text draw in Qt's raster engine. Both plug-ins build with distro development headers and use Qt private interfaces. Verify the actual running library before enabling each plug-in. A mismatch uses stock Qt.
 
 ### V3-5 stock Konsole pilot
 
@@ -43,7 +45,7 @@ The remaining checkpoints describe the existing reference renderer. Its package 
 
 ## Decision log
 
-Plasma writes the selected subpixel order to Fontconfig. Qt uses that value for eligible draws and keeps the native outline hints. Explicit application and system anti-aliasing vetoes still apply. Use grayscale when Qt paints through a texture or another intermediate target. This includes Qt Quick scenes and the current KWin decoration path.
+Plasma writes the selected subpixel order to Fontconfig. Qt uses that value for eligible Widgets and Qt Quick draws and keeps the native outline hints. Explicit application and system anti-aliasing vetoes still apply. Use grayscale when Qt paints through a texture or another intermediate target. This includes the current KWin decoration path.
 
 Keep stock KWin and its display effects. Ordinary Wayland Widgets paint can use subpixel color when the window, backing store, painter and Wayland platform window agree on the output scale. Check a single unrotated output at 100% and 125%. Application scale overrides, scale rounding, and additional painter scaling use grayscale. Effects such as Zoom keep their usual filtering after Qt submits the window.
 
@@ -51,7 +53,7 @@ Keep the exact approved dark and light tone curves. Dark text uses the core-bias
 
 Keep the approved raster geometry from the native NORMAL hinted outline at the target size. Rasterize that outline at four times the output resolution and reduce aligned samples to the native glyph bounds. For thin strokes, use a second, unhinted outline as a reference for the accepted bridge and centerline treatment. Use face style and local geometry to select eligible work. The renderer accepts no font name or character exceptions.
 
-The exact color oracle models black text on white and white text on black. General colors and nonopaque draws must keep native source color and alpha. Use the approved grayscale coverage for general cases until the final color check proves the RGB blend. Do not average projected RGB coverage to obtain that grayscale result.
+Use the native source color and alpha for both the black and white controls and ordinary Plasma theme colors. Retain the independent grayscale coverage so the same glyph can use it in a Quick effect while its aligned draw uses RGB on the window. Check that the effect stops requesting frames after the window settles. Check the visible tail of a run longer than Qt's 16-bit glyph index limit.
 
 Test the visible positive path in an ordinary native-resolution Konsole or Qt Widgets window on a configured output. Compare it with a same-font offscreen layer that the display scales after rendering. An opaque intermediate surface does not prove a direct mapping. Test horizontal and vertical order with directional geometry on every renderer that uses color.
 

@@ -2,6 +2,22 @@
 
 ## Fontreal V3 for Qt and Plasma
 
+### Install the stock Qt helper on Ubuntu 26.04
+
+The helper adds V3 to ordinary Qt Widgets and Qt Quick apps in Plasma Wayland. It keeps the distro Qt, FreeType, and KWin packages. The current helper builds for Ubuntu 26.04 amd64 with QtGui `6.10.2+dfsg-7` and QtQuick `6.10.2+dfsg-3`. If an older Fontreal bundle replaced Qt, use that bundle to restore the distro Qt packages first.
+
+Install the matching development files and build the package as your normal user.
+
+```sh
+sudo apt install build-essential binutils pkg-config xxd libfontconfig-dev libfreetype-dev qt6-base-private-dev qt6-declarative-private-dev qt6-shader-baker
+tools/build-qt-stock-helper.sh
+sudo apt install ./build/qt-stock-helper/fontreal-qt-helper-study-0.10.deb
+```
+
+Sign out and back in to Plasma. In System Settings, open **Fonts** to choose the layout for your display. **None** uses Fontreal grayscale. The helper treats text from 8 to 32 screen pixels. Qt uses color coverage on aligned native Wayland draws and grayscale on intermediate textures and transformed text. An incompatible Qt update restores stock rendering until a matching helper is available.
+
+To restore stock rendering, run `sudo apt remove fontreal-qt-helper-study` and sign out and back in.
+
 ### Konsole pilot with distro libraries
 
 The pilot uses the distro versions of Qt, FreeType, and KWin. Launch it from a Plasma Wayland session with one unrotated display at 100% scale. In **Fonts**, enable anti-aliasing and select RGB subpixel rendering. Select **Full** hinting and a regular face such as Hack Regular.
