@@ -18,7 +18,7 @@ Before release, verify final window pixels at 100% and 125% with the candidate a
 
 Provide one install script or distro package. After reboot, a normal Plasma login must activate Fontreal in ordinary Qt Widgets and Qt Quick launches. Run this check in a disposable VM. Compare both text polarities with the approved V3 reference and record the libraries in use. Remove the installation and reboot again. The same stock comparison must match after removal.
 
-The Qt Quick helper experiment uses the native text shader to select the V3 curve from the actual text color. It uses a separate font engine for the Quick glyph cache so Widgets can keep its own masks. A test package reached this path after a Plasma login on stock Qt. The 16px grayscale comparison matched V3 at 100% scale. The 125% comparison still differs from V3. The test uses Qt private cache interfaces and a shader table for one size. The release must support normal distro updates and use stock rendering when the helper is incompatible.
+The Qt Quick helper experiment uses the native text shader to select the V3 curve from the actual text color. It uses a separate font engine for the Quick glyph cache so Widgets can keep its own masks. A test package reached this path after a Plasma login on stock Qt. At 100% and 125% scale, the 16px logical grayscale comparison matched V3 when the helper rasterized at the physical pixel size. The test uses Qt private cache interfaces and shader tables for this one logical font size. The release must support normal distro updates and use stock rendering when the helper is incompatible.
 
 ### V3-5 stock Konsole pilot
 
