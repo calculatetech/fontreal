@@ -89,11 +89,11 @@ mkdir -p "$pack/usr/share/doc/fontreal-qt-helper-study"
 install -m 644 "$root/LICENSE" "$pack/usr/share/doc/fontreal-qt-helper-study/copyright"
 cat > "$pack/DEBIAN/control" <<'CONTROL'
 Package: fontreal-qt-helper-study
-Version: 0.10
+Version: 0.11
 Architecture: amd64
 Depends: libfontconfig1, libfreetype6, libqt6gui6, libqt6quick6
 Maintainer: Fontreal Project <fontreal@localhost>
 Description: Fontreal V3 Plasma helper with RGB text
 CONTROL
 
-dpkg-deb --build --root-owner-group "$pack" "$output/fontreal-qt-helper-study-0.10.deb"
+dpkg-deb --build --root-owner-group "$pack" "$output/fontreal-qt-helper-study-0.11.deb"

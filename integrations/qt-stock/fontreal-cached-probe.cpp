@@ -25,6 +25,7 @@
 #include <QtGui/private/qfontengine_ft_p.h>
 #include "font-engine.h"
 #include "fontreal_v3_outline.h"
+#include "white-text.h"
 
 extern decltype(&FT_Render_Glyph) probeStockRender;
 FT_Error probeRenderGlyph(FT_GlyphSlot, FT_Render_Mode);
@@ -49,12 +50,12 @@ namespace {
 using DrawCached = bool (*)(QRasterPaintEngine *, int, const glyph_t *, const QFixedPoint *, QFontEngine *);
 DrawCached stockDrawCached = nullptr;
 
-using Frame = fontreal_v3::GlyphFrame;
 struct OutlineSample
 {
     Frame frame{};
     QImage mask;
     QImage stripes;
+    bool directWhite = false;
 };
 
 OutlineSample sampleForDraw(QFontEngine *source, glyph_t glyph, QFixedPoint phase, qreal scale, QColor color, fontreal_v3::StripeLayout layout)
@@ -128,7 +129,12 @@ OutlineSample sampleForDraw(QFontEngine *source, glyph_t glyph, QFixedPoint phas
     result.mask = QImage(result.frame.width, result.frame.height, QImage::Format_Alpha8);
     for (int y = 0; y < result.frame.height; ++y)
         std::copy_n(values.data() + y * result.frame.width, result.frame.width, result.mask.scanLine(y));
-    if (layout != StripeLayout::None) {
+    if (layout != StripeLayout::None && ink == Ink::Light) {
+        auto &contour = reinterpret_cast<FT_OutlineGlyph>(outline)->outline;
+        result.stripes = whiteTextStripes(engine, face, contour, result.frame, pixels, layout, load);
+        result.directWhite = !result.stripes.isNull();
+    }
+    if (layout != StripeLayout::None && result.stripes.isNull()) {
         const auto tone = toneCurve(pixels, ink);
         result.stripes = QImage(result.frame.width, result.frame.height, QImage::Format_RGB32);
         for (int y = 0; y < result.frame.height; ++y) {
@@ -321,7 +327,7 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
                 const auto *colors = reinterpret_cast<const QRgb *>(buffer->scanLine(y));
                 for (int x = visible.left(); x <= visible.right(); ++x) {
                     const int pos = x-topLeft.x();
-                    if (gray[pos] && qAlpha(colors[x]) == 255 && (!clip || (clip->hasRectClip && clip->clipRect.contains(x,y)))) {
+                    if ((gray[pos] || masks.directWhite) && qAlpha(colors[x]) == 255 && (!clip || (clip->hasRectClip && clip->clipRect.contains(x,y)))) {
                         gray[pos] = 0;
                         stripes = true;
                     } else {

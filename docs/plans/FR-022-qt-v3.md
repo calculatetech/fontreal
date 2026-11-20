@@ -10,6 +10,33 @@ Test a filter at the public FreeType glyph rasterization call. That call provide
 
 ## Stock Qt feasibility and release checks
 
+### V3-6 Approved white text
+
+On the qualified Ubuntu amd64 Qt build, apply the approved direct RGB white
+text from the bowl fit and cleaner ends comparison. Use one coverage function
+from the Widgets and Quick providers. Keep the installed 0.10 coverage for
+black text and for draws that use grayscale. The Widgets paint target still
+selects coverage per pixel. Quick still uses its existing atlas and shader
+to select RGB or grayscale at draw time.
+
+Use `feature/fontreal-approved-white` from `ff0e82fa4564` in an isolated
+worktree. The package recipe owns the upgrade and the existing Plasma login
+hook owns activation. The current host, its Qt revisions, and its single
+unrotated display define the test environment. Browser integration and
+distribution to other systems remain separate.
+
+Build the 0.11 helper with `tools/build-qt-stock-helper.sh`. For this local
+rollout, use the retained comparison captures at 10, 11, and 12 pt as
+the white RGB reference and version 0.10 as the black and grayscale
+reference. These captures are local development evidence. A fresh checkout
+can build and verify activation using the stock helper procedure in
+[Build for the running system](../build-system.md).
+
+Use final Wayland window pixels to verify both the direct and fallback
+paths. Check mapped providers and stock libraries in fresh app launches
+after the simulated and real APT upgrade. Keep the 0.10 archive for
+rollback. Review the complete candidate before installing it.
+
 For the grayscale feasibility test, verify final window pixels and loaded distro libraries in Konsole and a Plasma window on stock KWin. Hold the text renderer, text, palette, and output scale fixed while toggling the filter. Check the default Qt Quick renderer separately. Use the same compiled filter against more than one supported Qt version. Compare both text polarities with the approved V3 reference.
 
 Before release, verify final window pixels at 100% and 125% with the candidate active and the process loading distro Qt and FreeType. Check Plasma’s None, RGB, BGR, vertical RGB, and vertical BGR choices. Check grayscale for antialiased draws that cannot use subpixel color. Compare explicit system and application anti-aliasing opt-outs with unmodified stock Qt. The grayscale feasibility test covers a subset of this behavior.

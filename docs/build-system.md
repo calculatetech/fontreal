@@ -11,10 +11,16 @@ Install the matching development files and build the package as your normal user
 ```sh
 sudo apt install build-essential binutils pkg-config xxd libfontconfig-dev libfreetype-dev qt6-base-private-dev qt6-declarative-private-dev qt6-shader-baker
 tools/build-qt-stock-helper.sh
-sudo apt install ./build/qt-stock-helper/fontreal-qt-helper-study-0.10.deb
+sudo apt install ./build/qt-stock-helper/fontreal-qt-helper-study-0.11.deb
 ```
 
 Sign out and back in to Plasma. In System Settings, open **Fonts** to choose the layout for your display. **None** uses Fontreal grayscale. The helper treats text from 8 to 32 screen pixels. Qt uses color coverage on aligned native Wayland draws and grayscale on intermediate textures and transformed text. An incompatible Qt update restores stock rendering until a matching helper is available.
+
+Version 0.11 uses the same white-text renderer in Qt Widgets and Qt Quick.
+It strengthens weak stroke ends and keeps the openings inside letters clear.
+It uses the existing coverage for black text and grayscale draws.
+If you already use 0.10, install the new package and restart open Qt apps
+to load it. Keep the 0.10 package if you want to restore that version.
 
 To restore stock rendering, run `sudo apt remove fontreal-qt-helper-study` and sign out and back in.
 

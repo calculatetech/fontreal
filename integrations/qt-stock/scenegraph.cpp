@@ -32,10 +32,10 @@
 #include <atomic>
 #include "font-engine.h"
 #include "fontreal_v3_outline.h"
+#include "white-text.h"
 
 
 
-using Frame = fontreal_v3::GlyphFrame;
 struct Sample
 {
     Frame frame{};
@@ -116,10 +116,18 @@ Sample outlineMask(QFontEngine *source, glyph_t glyph, QFixedPoint phase, qreal 
             std::copy_n(values.data() + y * result.frame.width, result.frame.width, result.mask.scanLine(y));
     } else {
         const auto tone = toneCurve(pixels, ink);
+        auto &contour = reinterpret_cast<FT_OutlineGlyph>(outline)->outline;
+        const auto white = ink == Ink::Light
+            ? whiteTextStripes(engine, face, contour, result.frame, pixels, layout, load) : QImage{};
         result.mask = QImage(result.frame.width, result.frame.height, QImage::Format_ARGB32_Premultiplied);
         for (int y = 0; y < result.frame.height; ++y) {
             auto *row = reinterpret_cast<QRgb *>(result.mask.scanLine(y));
             for (int x = 0; x < result.frame.width; ++x) {
+                if (!white.isNull()) {
+                    const auto rgb = reinterpret_cast<const QRgb *>(white.constScanLine(y))[x];
+                    row[x] = (rgb & RGB_MASK) | (QRgb(values[y * result.frame.width + x]) << 24);
+                    continue;
+                }
                 auto channels = hinted.stripes(x, y, layout);
                 for (auto &channel : channels)
                     channel = tone[channel];
@@ -160,7 +168,8 @@ public:
     glyph_metrics_t alphaMapBoundingBox(glyph_t glyph, const QFixedPoint &phase,
                                         const QTransform &transform, GlyphFormat) override
     {
-        const auto sample = outlineMask(engine.data(), glyph, phase, transform.m22(), ink, layout);
+        const auto sample = outlineMask(engine.data(), glyph, phase, transform.m22(), ink,
+                                        fontreal_v3::StripeLayout::None);
         if (sample.mask.isNull())
             return engine->alphaMapBoundingBox(glyph, phase, transform, Format_A8);
         glyph_metrics_t result;
