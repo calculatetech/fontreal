@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the opt-in Qt 6.10.2 experiment without installing it."""
+"""Build the private Fontreal V3 Qt 6.10.2 reference."""
 import argparse
 import hashlib
 import os
@@ -83,24 +83,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     prototype = parser.add_mutually_exclusive_group()
     prototype.add_argument("--v3-widgets", action="store_true",
-                        help="Build the isolated V3 Widgets prototype")
+                        help="Build only the V3 Widgets reference (default)")
     prototype.add_argument("--v3-quick", action="store_true",
-                           help="Build both isolated V3 Qt prototypes")
+                           help="Build the V3 Widgets and Quick references")
     args = parser.parse_args()
-    v3 = args.v3_widgets or args.v3_quick
     installed = subprocess.check_output(
         ["pkg-config", "--modversion", "Qt6Core"], text=True).strip()
     if installed != VERSION:
-        raise SystemExit(f"This experiment needs installed Qt {VERSION}; found {installed}.")
+        raise SystemExit(f"This reference needs installed Qt {VERSION}; found {installed}.")
     WORK.mkdir(parents=True, exist_ok=True)
     headers = platform_headers()
-    work = (ROOT / "build/v3-qt/widgets").resolve() if v3 else WORK
-    patch_suffix = "-v3-widgets" if v3 else ""
-    source = sources(NAME, DIGEST, ROOT / f"patches/qt-{VERSION}-fontreal{patch_suffix}.patch", work)
-    if v3:
-        for name in ("coverage.cpp", "coverage.h", "outline.cpp", "outline.h", "thin.cpp"):
-            filename = f"fontreal_v3_{name}"
-            shutil.copyfile(ROOT / "src" / filename, source / "src/gui/text/freetype" / filename)
+    work = (ROOT / "build/v3-qt/widgets").resolve()
+    source = sources(NAME, DIGEST, ROOT / f"patches/qt-{VERSION}-fontreal-v3-widgets.patch", work)
+    for name in ("coverage.cpp", "coverage.h", "outline.cpp", "outline.h", "thin.cpp"):
+        filename = f"fontreal_v3_{name}"
+        shutil.copyfile(ROOT / "src" / filename, source / "src/gui/text/freetype" / filename)
     output = work / "qt-build"
     env = os.environ.copy()
     pkgconfig = headers / "lib/x86_64-linux-gnu/pkgconfig"
@@ -111,32 +108,28 @@ def main():
         # Existing binaries use copy relocations for Qt's public application pointer.
         "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--dynamic-list-data",
         "-DQT_BUILD_TESTS=OFF", "-DQT_BUILD_EXAMPLES=OFF",
-        "-DFEATURE_system_freetype=ON", "-DFEATURE_system_harfbuzz=OFF",
+        "-DFEATURE_system_freetype=ON", "-DFEATURE_system_harfbuzz=OFF", "-DFEATURE_fontconfig=ON",
         "-DFEATURE_xcb=ON", "-DFEATURE_xcb_xlib=ON", "-DFEATURE_xkbcommon_x11=ON",
         "-DFEATURE_dbus=ON", "-DFEATURE_accessibility_atspi_bridge=ON",
         "-DQT_NO_FEATURE_AUTO_RESET=ON", f"-DCMAKE_PREFIX_PATH={headers}",
     ]
-    if v3:
-        configure.append("-DFEATURE_fontconfig=ON")
     subprocess.run(configure, env=env, check=True)
-    if args.v3_widgets:
+    if not args.v3_quick:
         subprocess.run(["cmake", "--build", str(output), "--target", "Gui", "Widgets",
                         "QXcbIntegrationPlugin", "--parallel", str(min(12, os.cpu_count() or 1))],
                        check=True)
         print(f"Private V3 Widgets ready at {output}")
         return
-    targets = ["Gui", "Network", "OpenGL", "Widgets_sync_headers", "Test_sync_headers", "qlalr", "qtpaths"]
-    if v3:
-        targets.extend(["Widgets", "QXcbIntegrationPlugin"])
+    targets = ["Gui", "Network", "OpenGL", "Widgets_sync_headers", "Test_sync_headers", "qlalr", "qtpaths",
+               "Widgets", "QXcbIntegrationPlugin"]
     subprocess.run(["cmake", "--build", str(output), "--target", *targets,
                     "--parallel", str(min(12, os.cpu_count() or 1))], check=True)
     shaders = shader_tools()
-    declarative_work = (ROOT / "build/v3-qt/quick").resolve() if v3 else WORK
+    declarative_work = (ROOT / "build/v3-qt/quick").resolve()
     declarative_work.mkdir(parents=True, exist_ok=True)
-    declarative_patch = "qtdeclarative-fontreal-v3.patch" if v3 else f"qtdeclarative-{VERSION}-fontreal.patch"
     source = sources(f"qtdeclarative-everywhere-src-{VERSION}", DECLARATIVE_DIGEST,
-                     ROOT / "patches" / declarative_patch, declarative_work)
-    declarative = declarative_work / ("qt-build" if v3 else "declarative-build")
+                     ROOT / "patches/qtdeclarative-fontreal-v3.patch", declarative_work)
+    declarative = declarative_work / "qt-build"
     env["LD_LIBRARY_PATH"] = str(shaders / "lib/x86_64-linux-gnu") + ":" + env.get("LD_LIBRARY_PATH", "")
     freetype = subprocess.check_output(["pkg-config", "--cflags", "freetype2"], text=True).strip()
     subprocess.run([
