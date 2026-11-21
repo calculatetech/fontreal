@@ -2,7 +2,7 @@
 
 ## Question
 
-Why does Noto Sans Display Regular look especially clean at 10pt with the selected Fontreal profile?
+Why does Noto Sans Display Regular look especially clean at 10pt with the profile shipped before V3?
 
 The strongest measured explanation is favorable stroke placement on the pixel grid, combined with compact letter proportions and the existing coverage correction. It is a useful UI recommendation for this configuration. It is not evidence of a mathematically perfect font or a universal best size.
 
@@ -38,7 +38,7 @@ Both files record the same hint-generator options, including `-x 14` and `-a qsq
 
 Measurements use pristine FreeType 2.13.3, TrueType interpreter 40, normal grayscale rendering, 96 DPI and 100% scale. Each condition covers ASCII U+0020 through U+007E without text-frequency weighting. The renderer uses each font's own hints. The unhinted control disables hinting without changing the font.
 
-The existing `selected_profile_probe.cpp` supplies outlines, metrics and masks. The existing `selected_mask_probe.cpp` adapter applies `src/fontreal_coverage.cpp` directly to those masks. No font-specific processing is added. The study uses the selected core identified by SHA-256 `125c39efdc3e1003b533add69af082b3318323d71f1e15713322deae33d7cc59`.
+The [archived V2 source](https://github.com/calculatetech/fontreal/tree/v2.0.0) supplies the probes and coverage processor. The measurement record names each input and preserves its hash. No font-specific processing is added. The study uses the selected core identified by SHA-256 `125c39efdc3e1003b533add69af082b3318323d71f1e15713322deae33d7cc59`.
 
 The specimens show isolated glyphs at fixed origins. They exclude shaping, kerning and application layout. They are not Qt UI screenshots.
 

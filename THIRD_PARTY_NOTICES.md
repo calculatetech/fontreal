@@ -1,25 +1,23 @@
 # Licensing and third-party notices
 
-Fontreal's original application, tests, scripts, and documentation use the [MIT License](LICENSE). The Qt-derived, FreeType-derived, Skia-derived and Chromium-derived patches are exceptions. Dependency licenses also remain in effect.
+Fontreal's original code, tests, tools, and documentation use the [MIT License](LICENSE). Qt-derived patches retain their upstream licenses.
 
 ## Qt patches
 
 These files contain modifications to Qt and retained Qt source context:
 
-- `patches/qt-6.8.2-fontreal.patch`
-- `patches/qt-6.10.2-fontreal.patch`
-- `patches/qtdeclarative-6.8.2-fontreal.patch`
-- `patches/qtdeclarative-6.10.2-fontreal.patch`
-- `packaging/qt6-base-capability.patch`
-- `packaging/qt6-declarative-capability.patch`
+- `patches/qt-6.10.2-fontreal-v3-widgets.patch`
+- `patches/qtdeclarative-fontreal-v3.patch`
 
-The affected upstream files in Qt Base and Qt Declarative 6.8.2 and 6.10.2 carry this license expression:
+The affected C++ files in Qt Base and Qt Declarative 6.10.2 carry this license expression:
 
     LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-The retained source context and Fontreal modifications in these patch files are available under the same open-source alternatives: [LGPL 3.0](LICENSES/LGPL-3.0-only.txt), [GPL 2.0](LICENSES/GPL-2.0-only.txt), or [GPL 3.0](LICENSES/GPL-3.0-only.txt). Fontreal does not grant a Qt commercial license. The root MIT license does not replace these terms.
+The C++ changes and their context retain the upstream open-source alternatives of [LGPL 3.0](LICENSES/LGPL-3.0-only.txt), [GPL 2.0](LICENSES/GPL-2.0-only.txt), or [GPL 3.0](LICENSES/GPL-3.0-only.txt). Fontreal does not grant a Qt commercial license. The root MIT license does not replace these terms.
 
-The affected files retain these upstream notices:
+The Widgets patch also changes Qt Base's `src/gui/CMakeLists.txt`. That build file carries `Copyright (C) 2022 The Qt Company Ltd.` and uses the [BSD 3-Clause license](LICENSES/Qt-BSD-3-Clause.txt).
+
+The affected C++ files retain these upstream notices:
 
     Copyright (C) 2016 Intel Corporation.
     Copyright (C) 2016 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
@@ -30,36 +28,14 @@ The affected files retain these upstream notices:
     Copyright (C) 2021 The Qt Company Ltd.
     Copyright (C) 2023 The Qt Company Ltd.
 
-Fontreal modifications are Copyright (c) 2026 Michael Beutler and Fontreal contributors. Full per-file notices remain in the corresponding Qt source packages. The license texts above are copied unchanged from the retained Qt source archive.
+Fontreal modifications are Copyright (c) 2026 Michael Beutler and Fontreal contributors. Full per-file notices remain in the corresponding Qt source packages.
 
-## FreeType patch
+## Build dependencies
 
-The `patches/freetype-*.patch` files and `packaging/freetype-capability.patch` contain changes and source context from FreeType, including its base and automatic hinting modules. The same applies to `tests/freetype_curve_trace.patch` and `tests/freetype_tt_only_v1.patch`. Original upstream copyright notices remain in the source files. Their upstream license permits use under the FreeType Project License or GPL 2.0. Fontreal distributes these patches under the [FreeType Project License](LICENSES/FTL.TXT). The root MIT license does not replace these terms.
-
-Fontreal modifications are Copyright (c) 2026 Michael Beutler and Fontreal contributors. They add opt-in automatic monochrome fitting, nearest Latin Y rounding, raw grayscale output, the selected native-normal coverage entry, retained contrast diagnostics, and test-only mask observation. The changes preserve original source headers. Private builders retain distro source patches and create separate stock, modified, and reference source trees.
-
-This software is based in part on the work of the FreeType Team. Portions are copyright 1996-2025 The FreeType Project (https://freetype.org). Retain the unchanged `FTL.TXT`, source notices, modification description, and binary acknowledgement with a distribution. Each private build includes `FTL.TXT` and `NOTICE` beside its source trees and libraries.
-
-The original mask processor in `src/fontreal_coverage.cpp` and its declaration use MIT. The private and native FreeType candidates link the system standard C++ runtime. That runtime retains its own license and runtime exception.
-
-## Built packages and dependencies
-
-The passive observation patch, `patches/skia-747cf654-fontreal-trace.patch`, and selected integration patch, `patches/skia-747cf654-fontreal-selected.patch`, contain source context and modifications under [Skia's BSD license](LICENSES/Skia-BSD-3-Clause.txt). The source revision is `747cf654ed6f864f4402e7d6eb54a6ede60141e5`. Original copyright notices remain in the source checkout. The root MIT license does not replace these terms. The private C1 baseline retains its Electron license, but its `LICENSES.chromium.html` is an upstream sample page. It is not a redistributable binary bundle. Selected artifacts must retain complete credits from the pinned official Chromium generator and bind their license inputs. The Chromium GN patch, `patches/chromium-152-fontreal-selected-gn.patch`, retains [Chromium's BSD license](LICENSES/Chromium-BSD-3-Clause.txt). Original provider-probe, bridge and build code use MIT. The selected build also compiles the unchanged pinned libc++ memory-resource source needed by the existing processor. Retain its unchanged LLVM license and exception explicitly with the selected artifact, alongside the generated complete credits.
-
-The application-view patch `patches/zypak-693a71c5-app-fd.patch` modifies Zypak revision `693a71c5ffa80ec9c9ce2ae03b1ccc493c698e53` under its original BSD 3-Clause license. Private application views retain the unchanged Zypak and Nickle license texts. Original Teams code, resources and their GPL notices remain unchanged. The original Fontreal assembler, launch tool and test observer use MIT.
-
-The selected builder prepares complete upstream Electron tag `v44.9.1`, commit `e02265be96c5e13ae43644ef482b718e1e800499`, in private source views. Its Chromium and Node.js patches retain their upstream BSD and [Node.js license](LICENSES/Node.txt). Each selected distribution retains the full Node.js license as `LICENSE.node.txt`, alongside the complete generated credits and original Electron license.
-
-Patched Qt libraries remain Qt libraries under their upstream licenses. The MIT license for Fontreal's original code does not remove Qt's requirements for corresponding source, notices, or library replacement. Keep the native build bundle's `source/` directory, recipes, copyright files, and original packages with a distribution. The [build guide](docs/build-system.md) explains the bundle.
-
-Qt includes components under other licenses, including GPL-only components and third-party software. The three texts in `LICENSES/` describe the alternatives for the files patched here, not every dependency in a complete Qt build. Retain and inspect each distributed package's own `debian/copyright` and source notices. See [Qt licensing](https://doc.qt.io/qt-6.10/licensing.html) and [Qt's LGPL obligations](https://www.qt.io/development/open-source-lgpl-obligations).
-
-FreeType, Fontconfig, KDE applications, and themes retain their own licenses. They are not relicensed by this repository. Qt's existing source headers are not removed or replaced by Fontreal's patches.
+The release helper uses the system libraries for Qt, FreeType, and Fontconfig. Each library keeps its own license. The optional reference build compiles Qt with the patches above. Keep the original per-file notices and corresponding source if you distribute those Qt binaries. See [Qt licensing](https://doc.qt.io/qt-6.10/licensing.html) and [Qt's LGPL obligations](https://www.qt.io/development/open-source-lgpl-obligations).
 
 ## Comparison images and fonts
 
-The comparison images contain rendered text and interface captures. No font files are distributed in this repository. Font files used for capture retain their own licenses. The gallery's [capture metadata](docs/images/comparison/manifest.json) identifies the exact fonts and source versions.
+The repository distributes rendered captures. The font files remain under their own licenses and stay with their respective distributors. See the [V3 capture record](docs/images/kde-v3/capture-sources.json) and [font measurement record](docs/images/noto-sans-display/measurements.json) for provenance.
 
-Adwaita Sans and Adwaita Mono come from [GNOME's Adwaita Fonts project](https://gitlab.gnome.org/GNOME/adwaita-fonts), version 51.0, under OFL 1.1. Noto Sans, Hack, and DejaVu fonts come from the installed distro packages. Use of an OFL font in an image does not impose the OFL on that image. See the [OFL FAQ, sections 1.1 and 1.1.1](https://openfontlicense.org/ofl-faq/).
-
-The screenshots depict Qt/KDE software and themes. Their inclusion does not claim ownership of those projects' names, artwork, or software.
+The captures show Qt, KDE, and Windows software. The names, artwork, and software belong to their respective projects and owners.

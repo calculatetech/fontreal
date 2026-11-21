@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Compare native Konsole pixels on a nested stock KWin output."""
+import contextlib
+import os
 from pathlib import Path
+import select
 import shlex
 import shutil
 import subprocess
@@ -11,7 +14,57 @@ from xml.sax.saxutils import escape
 
 from fontTools.ttLib import TTFont
 from PIL import Image, ImageGrab
-from kde_paths_test import ROOT, display, private_environment, stop
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def call(command, env, timeout=45, **kwargs):
+    result = subprocess.run([str(x) for x in command], env=env,
+                            capture_output=True, text=True, timeout=timeout, **kwargs)
+    if result.returncode:
+        sys.stderr.write(result.stderr)
+        result.check_returncode()
+    return result
+
+
+def stop(child):
+    if child.poll() is None:
+        child.terminate()
+    child.wait(timeout=10)
+
+
+def private_environment(directory):
+    env = os.environ.copy()
+    for name in ("WAYLAND_DISPLAY", "WAYLAND_SOCKET", "QT_SCALE_FACTOR", "QT_SCREEN_SCALE_FACTORS", "LD_LIBRARY_PATH",
+                 "LD_PRELOAD", "QT_QPA_GENERIC_PLUGINS", "FONTREAL_QUAL_TONE", "FONTREAL_RENDERING",
+                 "QT_QUICK_DEFAULT_TEXT_RENDER_TYPE"):
+        env.pop(name, None)
+    for role in ("CONFIG", "CACHE", "DATA", "STATE", "RUNTIME"):
+        path = directory/role.lower()
+        path.mkdir(mode=0o700)
+        env[f"XDG_{role}_HOME" if role != "RUNTIME" else "XDG_RUNTIME_DIR"] = str(path)
+    env.update(QT_QPA_PLATFORM="xcb", QT_QPA_PLATFORMTHEME="kde", LIBGL_ALWAYS_SOFTWARE="1",
+               QSG_INFO="1", QSG_RENDER_LOOP="basic", QSG_RHI_BACKEND="opengl", QT_NO_XDG_DESKTOP_PORTAL="1", FONTREAL_TRACE_QUICK="1")
+    env["QML_IMPORT_PATH"] = call(["qtpaths6", "--query", "QT_INSTALL_QML"], env).stdout.strip()
+    env["QT_PLUGIN_PATH"] = call(["qtpaths6", "--query", "QT_INSTALL_PLUGINS"], env).stdout.strip()
+    return env
+
+
+@contextlib.contextmanager
+def display(env, directory):
+    read, write = os.pipe()
+    with (directory/"xvfb.log").open("w") as log:
+        server = subprocess.Popen(["Xvfb", "-displayfd", str(write), "-screen", "0", "1100x740x24", "-nolisten", "tcp"],
+                                  env=env, pass_fds=(write,), stdout=log, stderr=log)
+        os.close(write)
+        try:
+            assert select.select([read], [], [], 10)[0], "Xvfb did not provide a display"
+            number = os.read(read, 80).decode().strip()
+            assert number.isdecimal(), (directory/"xvfb.log").read_text()
+            yield dict(env, DISPLAY=f":{number}")
+        finally:
+            os.close(read)
+            stop(server)
 
 
 def wait_for(path, process):

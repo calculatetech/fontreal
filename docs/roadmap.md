@@ -1,6 +1,6 @@
 # Fontreal Roadmap
 
-This is the source of truth for project work. Task identifiers are permanent. An `FR-NNN` number is never reused or changed. Move tasks between sections when their status changes. Never mark more than one task active.
+Task identifiers are permanent. Keep at most one task active. Git preserves the details of completed experiments.
 
 Status legend:
 
@@ -11,48 +11,47 @@ Status legend:
 - ❌ **Declined** — considered and intentionally not supported
 - ✅ **Completed** — implemented and validated
 
-Preserve the accepted Qt baseline for Noto Sans and Inconsolata Nerd Font. New comparisons use requested integer point sizes from 8pt through 16pt. Font, point size, style, blend, and polarity form one comparison condition. Resolved device units belong in diagnostic metadata, not comparison size labels. Human judgment at native display resolution remains the acceptance criterion.
-
-The user closes optical tuning and selects native-normal hinting, the 170 guarded bridge and gain, B's profile/join and native corner-fringe treatment, and weighted stems only. Deliver that exact generic method to ordinary Firefox and Floorp, preserving their working accounts and settings. Replace current README comparisons with genuine stock Qt versus selected Fontreal at Noto Sans 10pt, Hack 10pt and small Noto Sans 8pt across the six supplied KDE font roles. Review and merge the finished experiment. Chromium-based browsers are unsupported because Fontreal has no supported access to their page text renderer. Separate Flatpak work covers Teams, Bitwarden and Telegram. The optional curve extension is not selected. No font, character or coordinate exceptions are allowed in the renderer. Earlier explicit diagnostic modes and source records remain available.
+Compare new rendering at whole point sizes from 8pt through 16pt. Keep the font, size, style, background, and display scale fixed in each comparison. Judge the result at native display resolution. Keep the renderer generic across fonts and characters.
 
 ## Active
 
-- **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Validate ordinary Plasma launches on Debian, Fedora, openSUSE, Arch and Ubuntu. Publish one DEB, one RPM and an Arch package for the tested systems. Use KDE Linux to check the new stack when practical. Verify Widgets, Qt Quick with GPU and software rendering, Breeze captions, and removal after reboot. Carry the tested profile and documented display limits forward. Remove the obsolete V1 and V2 source paths after publication. See the [V3 specification](plans/FR-022-qt-v3.md).
+No active task.
 
 ## Planned next
 
-- **FR-016: Support Chromium-based browsers and Electron applications.** Deliver the selected method through ordinary application launches. Keep treatment enabled across application updates without recurring release qualification. Teams and Bitwarden use separate Fontreal engines with current installed resources and original working data. Keep Bitwarden's Electron 39.8.5 port and native process isolation. Edge has no established vendor-supported mask hook. Telegram also needs its own reached rendering owners. Preserve accounts, application data, native launch and security chains, official updates and stock escape. A host FreeType mapping does not establish coverage. See the [engine and Flatpak specification](plans/FR-016-chromium-flatpak.md) and [deployment test scope](plans/FR-016-deployment-tests.md).
-- **FR-017: Deliver treatment inside Flatpak sandboxes.** Prioritize Teams, Bitwarden and Telegram. Build against each application's actual runtime or bundled engine, with exact version records and a separate opt-in comparison. Check both Qt/GTK runtime libraries and embedded browser engines. Preserve accounts, application data, normal updates, sandboxes and a stock launch. A host library replacement alone is not coverage.
-- **FR-005: GNOME application support.** Identify the actual GTK 3 and GTK 4 text paths, including Pango, Cairo, and GPU composition. Build isolated tests in existing applications. Match the reference before proposing desktop configuration or library changes. [PangoCairo documentation](https://docs.gtk.org/PangoCairo/) identifies one relevant path, without establishing coverage of every GTK renderer.
-- **FR-003: Calibrate native application text.** Focus on Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales, and light/dark colors. Retain other fonts as comparison controls. Use the user's visual feedback to choose a blend policy. Preserve explicit controls until the transition is supported by evidence.
-- **FR-012: Make the KDE packages distributable.** Prepare portable public documentation and maintain a check against machine-specific references. Supply matching source and binary packages, build provenance, required licenses and notices, signed APT metadata, supported versions, and recovery instructions. Establish the Qt security-update rebuild process. Fontreal's original code uses MIT, with upstream license exceptions for Qt-derived and FreeType-derived patches. See the [public documentation specification](plans/FR-012-public-docs.md).
+- **FR-016: Support Chromium-based browsers and Electron applications.** Deliver rendering through ordinary app launches. Keep it enabled across app updates without repeating qualification for each update. Preserve accounts, application data, native launch and security paths, official updates and a stock launch. Verify rendering inside each app.
+- **FR-017: Deliver treatment inside Flatpak sandboxes.** Prioritize Teams, Bitwarden and Telegram. Build for each app's runtime or bundled engine, record the tested versions and run separate opt-in comparisons. Check Qt, GTK and embedded browser paths. Preserve accounts, application data, sandboxes, ordinary updates and a stock launch.
+- **FR-005: GNOME application support.** Identify the GTK 3 and GTK 4 text paths, including Pango, Cairo and GPU composition. Compare isolated tests in existing apps against the V3 reference before changing the desktop.
+- **FR-003: Calibrate native application text.** Compare Noto Sans menus and Inconsolata Nerd Font terminal text across sizes, display scales and light and dark colors. Keep other fonts as controls. Use visual feedback to choose the blend and retain the controls until comparisons support changing it.
+- **FR-012: Make the KDE packages distributable.** Maintain portable docs, matching source and binaries, build provenance, licenses, supported versions and recovery instructions. Supply signed APT metadata and establish the rebuild process for Qt security updates.
 
 ## Planned later
 
-- **FR-006: Wine application support.** Trace GDI and DirectWrite separately. Test a private Wine prefix and existing Windows applications without changing the user's prefixes. Compare glyph masks, placement, and composition. Wine's [FreeType integration](https://github.com/wine-mirror/wine/blob/master/dlls/win32u/freetype.c) is a starting point for investigation.
-- **FR-007: Windows 11 feasibility.** Determine which GDI, DirectWrite, and application-owned paths expose enough control. First test a normal application using documented APIs. Evaluate crisp hinting, grayscale edges, pixel placement, and blending separately. Microsoft's [custom DirectWrite rendering parameters](https://learn.microsoft.com/en-us/windows/win32/api/dwrite/nf-dwrite-idwritefactory-createcustomrenderingparams) expose some controls, but do not prove system-wide feasibility. Proceed to a Windows 11 prototype only if the required behavior is achievable and a Windows test environment is available.
+- **FR-006: Wine application support.** Trace GDI and DirectWrite separately. Test existing Windows apps in an isolated Wine prefix. Compare glyph coverage, placement and blending.
+- **FR-007: Windows 11 feasibility.** Check GDI, DirectWrite and application-owned renderers. Begin with an ordinary app and documented Windows APIs. Evaluate hinting, grayscale edges, placement and blending separately. Prototype when the required behavior is possible and a Windows test system is available.
 
 ## Accepted residual risk
 
-No residual risk is accepted.
+None recorded.
 
 ## Declined
 
-No task is declined. Non-native LCD resolution remains outside the project scope.
+Non-native LCD resolution remains outside the project scope.
 
 ## Completed
 
-- **FR-021: Deliver accepted V2 rendering.** Installable V2 delivers O NORMAL and the per-user K3 alternative through matching Debian 13 and Ubuntu 26.04 native packages, Firefox, Floorp, Teams and Bitwarden. Complete native builds, rendering and launch/data lifecycle checks pass. The README explains system impact and compares genuine stock Qt with V2 at KDE defaults. Stock remains competitive on light backgrounds. Further optical experiments remain separate. See the [V2 specification](plans/FR-021-supersampling.md).
-- **FR-020: Simplify browser launch activation.** Enabled Firefox and Floorp use the saved Fontreal build without browser or installed-library version gates. Artifact integrity, legacy treatments and original-profile restoration remain checked. Ordinary working profiles launch with treatment without re-enabling after an update. Tests validate Fontreal changes rather than requalifying browser releases. See the [browser guide](experiments/browser-masks.md) and [launch specification](plans/FR-020-browser-launch.md).
-- **FR-019: Carry the selected profile into native KDE packages.** Matching Debian 13 and Ubuntu 26.04 FreeType and Qt packages deliver the selected native-normal and weighted-stem method. Package, independent-update, full Plasma session, browser-helper and offline rollback checks pass. The installed host passes fresh-login environment, library and widget/Quick pixel checks. Chosen fonts and sizes stay intact. See the [native package specification](plans/FR-019-native-selected.md) and [build guide](build-system.md).
-- **FR-018: Deliver the selected native rendering profile.** The accepted native-normal and generic weighted-stem method works in ordinary Firefox and Floorp without copying working profiles. Actual raster, window, upgrade, restoration, desktop-action and fallback checks preserve the browser lifecycle and earlier diagnostics. The README compares genuine stock Qt and Fontreal at all six supplied KDE font roles and sizes, in both palettes. Native KDE package deployment remains FR-019. See the [browser guide](experiments/browser-masks.md), [handoff](research/handoff.md) and [integration specification](plans/FR-018-axis-study.md).
-- **FR-015: Support Firefox-based browsers.** The approved automatic monochrome hints, grayscale masks, mild contrast, and Mozilla sRGB preblend work in existing Firefox and Floorp profiles. Reversible per-user activation preserves account data, unrelated preferences, native launches, and accepted Qt output. Normal browser startup and the disposable comparison are verified. Mozilla's background approximation and unverified toolbar-font equality remain stated limits. See the [browser specification](plans/FR-015-browser-masks.md) and [rendering investigation](research/non-qt-rendering.md).
-- **FR-011: Package a KDE desktop pilot.** On-demand builds support Debian 13/Qt 6.8.2 and Ubuntu 26.04/Qt 6.10.2 amd64 using exact distro sources and rules. Separate per-user activation starts disabled. Native package and complete-session checks cover enabling, disabling, independent Qt updates, font preservation, guarded installation, and offline official-package rollback. The host-matching bundle passes installation simulation. See the [build and deployment guide](build-system.md) and [package specification](plans/FR-011-system-builds.md).
-- **FR-013: Match Qt Quick composition and placement.** Eligible OpenGL text now uses the selected blend and stable fractional placement. Independent checks pass for real Qt Quick and Plasma output at 100% and 125%, including Intel GPU controls. Ordinary colors, noneligible fonts, and accepted native/KWin output remain correct. See the [GPU specification](plans/FR-013-quick-linear.md).
-- **FR-014: Confine the A8 text transfer profile.** The selected profile now follows the current eligible TrueType raster draw. Ordinary and static mixed-font checks preserve stock CFF/color pixels, including grayscale CFF after TrueType. Existing independent widget, Konsole, and 100%/125% KWin title checks pass. See the [profile-scope specification](plans/FR-014-a8-profile-scope.md).
-- **FR-004: Measure KDE rendering paths.** Isolated KWin title glyphs match mild/linear at 100% and 125%. Initial Plasma applet and Qt Quick checks exposed GPU blending and fractional renderer gaps. Grayscale CFF controls reproduced shared-profile spillover. Corrections are tracked under FR-013/FR-014, and full-session activation remains FR-011. See the [checks and comparison guide](experiments/kde-paths.md).
-- **FR-010: Test native mild contrast with the preferred fonts.** Carry the selected coverage treatment into the isolated Qt preview. Compare Noto Sans menus and Inconsolata Nerd Font terminal text, with explicit blending and unadjusted controls. Preserve normal application configuration.
-- **FR-009: Compare crisper diagonal edges.** Keep the preferred grayscale reference and compare two tighter gray transitions with automatic-hinted binary output in a separate native study. Preserve the ordinary experiment and leave desktop treatment selection to later visual calibration.
-- **FR-008: Correct the Konsole menu font control.** Apply the selected family and pixel size to KDE's separate menu font role. Check the private configuration and rendered menus. Keep the remaining visual calibration in FR-003.
-- **FR-001: Controlled FreeType comparison.** Native viewer and repeatable exports compare seven treatments. Independent checks cover glyph masks, blending, placement, and native-pixel presentation. The user selected automatic mono hints with gray edges and identified a size-dependent blend preference. See the [experiment](experiments/freetype-comparison.md) and [KDE investigation](research/kde-integration.md).
-- **FR-002: First KDE application test.** The isolated Qt build and stock/linear/encoded Konsole launches reproduce the selected treatment. Native widget and real-application checks pass. Visual calibration remains FR-003. See the [test guide](experiments/kde-preview.md) and [specification](plans/FR-002-qt-native.md).
+- **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Published a shared DEB, a shared RPM, an Arch package and a KDE Linux system extension. Validated rendering and removal on nine Plasma Wayland systems. Retired the V1 and V2 source paths and kept the archived rollback guides.
+- **FR-021: Deliver accepted V2 rendering.** Released the O and K3 profiles with native packages and selected application integrations.
+- **FR-020: Simplify browser launch activation.** Qualified ordinary Firefox and Floorp launches with the selected profile.
+- **FR-019: Carry the selected profile into native KDE packages.** Validated the earlier Debian and Ubuntu packages and rollback.
+- **FR-018: Deliver the selected native rendering profile.** Qualified weighted stem rendering and compared stock Qt with the selected profile at KDE defaults.
+- **FR-015: Support Firefox-based browsers.** Qualified reversible activation in working Firefox and Floorp profiles.
+- **FR-014: Confine the A8 text transfer profile.** Qualified mixed-font raster draws without affecting stock fallback glyphs.
+- **FR-013: Match Qt Quick composition and placement.** Qualified the earlier Qt Quick OpenGL treatment at two display scales.
+- **FR-011: Package a KDE desktop pilot.** Qualified matching distro packages, session activation and rollback.
+- **FR-010: Test native mild contrast with the preferred fonts.** Compared menu and terminal text in an isolated Qt build.
+- **FR-009: Compare crisper diagonal edges.** Compared grayscale transition and binary treatments.
+- **FR-008: Correct the Konsole menu font control.** Qualified the independent KDE menu font role.
+- **FR-004: Measure KDE rendering paths.** Traced Widgets, Qt Quick, Plasma applets and KWin titles.
+- **FR-002: First KDE application test.** Compared matching Konsole launches with stock and two blend choices.
+- **FR-001: Controlled FreeType comparison.** Qualified the native pixel viewer and its rendering controls.

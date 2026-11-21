@@ -14,7 +14,7 @@ These captures use Noto Sans at KDE’s 8pt and 10pt defaults and Hack at 10pt. 
 
 ![Stock Qt, ClearType, and Fontreal V3 on dark backgrounds](docs/images/kde-v3/kde-fonts-dark.png)
 
-See the [capture record](docs/images/kde-v3/capture-sources.json) for renderer and font details. The [V2 images](docs/images/kde-v2/manifest.json) are also available.
+See the [capture record](docs/images/kde-v3/capture-sources.json) for renderer and font details.
 
 ## Install V3 with stock Qt
 
@@ -32,13 +32,15 @@ In the release tests, Breeze captions used grayscale on Debian 13 and openSUSE L
 
 ## Suggested fonts
 
-Start with **Noto Sans Display Regular at 10pt** for general UI text, menus and toolbars. This is the preferred starting point with the selected Fontreal profile at 96 DPI and 100% scale. The [font analysis](docs/research/noto-sans-display.md) explains the measured stroke alignment, compares whole-point sizes from 8pt through 16pt, and separates this recommendation from a universal claim about readability.
+Start with **Noto Sans Display Regular at 10pt** for general UI text, menus and toolbars. This is the preferred starting point with the selected Fontreal profile at 96 DPI and 100% scale. The [font analysis](docs/research/noto-sans-display.md) measures stroke alignment from 8pt through 16pt using the earlier profile.
 
 For terminals, start with **Liberation Mono Regular at 11pt**, or **LiterationMono Nerd Font Regular at 11pt** for the Nerd Font version. These are preferred terminal choices based on their crisp, clean appearance with Fontreal. The terminal recommendation reflects visual use. The linked measurements cover the UI font, not these terminal faces.
 
 ## Other applications
 
-The [V2 release](https://github.com/calculatetech/fontreal/tree/v2.0.0) covers Firefox, Floorp, Teams and Bitwarden. The [app-specific guide](docs/app-scenarios.md) lists each integration and its recovery steps. See the [Chromium-based browser status](docs/experiments/chromium-flatpak.md#chromium-based-browsers-are-not-supported) and the [roadmap](docs/roadmap.md) for wider application coverage.
+If you enabled Fontreal for Firefox, Floorp, Teams or Bitwarden, quit the app and disable its launch hooks before updating the old checkout. Run the disable commands from a `v2.0.0` checkout. You can use a separate worktree if you already updated. The archived tool handles both Teams launch-record formats. [Archived app guide](https://github.com/calculatetech/fontreal/blob/v2.0.0/docs/app-scenarios.md)
+
+The [roadmap](docs/roadmap.md) describes future work for browsers, Flatpaks, and GNOME apps.
 
 ## Feedback welcome
 
@@ -48,4 +50,4 @@ See the [contribution guide](CONTRIBUTING.md) for development and capture requir
 
 ## License
 
-Fontreal’s original code and documentation use [MIT](LICENSE). Qt-derived patches retain their upstream LGPL/GPL alternatives. FreeType-derived patches use the FreeType Project License. The Skia and Chromium patches retain their upstream BSD licenses. See the [third-party notices](THIRD_PARTY_NOTICES.md).
+Fontreal’s original code and documentation use [MIT](LICENSE). Qt-derived patches retain their upstream licenses. See the [third-party notices](THIRD_PARTY_NOTICES.md).
