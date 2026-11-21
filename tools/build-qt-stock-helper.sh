@@ -46,6 +46,20 @@ if [[ ! $paint_device =~ ^[0-9a-f]+$ ]]; then
     exit 1
 fi
 
+# The runtime restores the relocation page to read-only after writing the hook.
+if ! read -r relro_start relro_size < <(LC_ALL=C readelf -Wl "$quick" |
+        awk '$1 == "GNU_RELRO" {print $3, $6}'); then
+    echo 'Qt Quick has no GNU_RELRO segment for the QBackingStore hook.' >&2
+    exit 1
+fi
+page_size=$(getconf PAGESIZE)
+slot_page=$((16#$paint_device / page_size * page_size))
+if (( slot_page < relro_start / page_size * page_size
+        || slot_page + page_size > relro_start + relro_size )); then
+    echo 'The QBackingStore::paintDevice relocation must be on a read-only Qt Quick page.' >&2
+    exit 1
+fi
+
 printf '#define FONTREAL_QT_PAINT_DEVICE 0x%s\n' "$paint_device" > "$work/runtime-abi.h"
 printf '#define FONTREAL_QT_QUICK_ID %s\n' "$(sed -E 's/(..)/0x\1,/g' <<< "$quick_id")" >> "$work/runtime-abi.h"
 for name in GUI QUICK WIDGETS WAYLAND; do

@@ -31,7 +31,7 @@ tools/build-qt-stock-helper.sh build/providers
 tools/package-qt-stock-helper.sh deb build/packages build/providers/*
 ```
 
-On Fedora or openSUSE, install `rpm-build` and use the `rpm` format. On Arch, use the `arch` format with `makepkg` and `fakeroot`. On KDE Linux Testing, use the `kde-linux` format with GNU Tar and Zstandard. To build one package for multiple Qt builds, compile each provider on its own distro and combine the provider directories in the packaging command. Run packaging on the oldest supported system for that format.
+On Fedora or openSUSE, install `rpm-build` and use the `rpm` format. On Arch, use the `arch` format with `makepkg` and `fakeroot`. On KDE Linux Testing, use the `kde-linux` format with GNU Tar and Zstandard. To build one package for multiple Qt builds, compile each provider on its own distro and combine the provider directories in the packaging command. Run packaging on the oldest supported system for that format. The builder requires Qt Quick's `QBackingStore::paintDevice` relocation to be on a linker-protected read-only page.
 
 ### Konsole pilot with distro libraries
 
