@@ -4,7 +4,7 @@
 
 ### Install the stock Qt helper on Ubuntu 26.04
 
-The helper adds V3 to ordinary Qt Widgets and Qt Quick apps in Plasma Wayland. It keeps the distro Qt, FreeType, and KWin packages. The current helper builds for Ubuntu 26.04 amd64 with QtGui `6.10.2+dfsg-7` and QtQuick `6.10.2+dfsg-3`. If an older Fontreal bundle replaced Qt, use that bundle to restore the distro Qt packages first.
+The helper adds V3 to ordinary Qt Widgets and Qt Quick apps in Plasma Wayland. One package covers both Qt Quick renderers, GPU and software. It keeps the distro Qt, FreeType, and KWin packages. The current helper builds for Ubuntu 26.04 amd64 with QtGui `6.10.2+dfsg-7` and QtQuick `6.10.2+dfsg-3`. If an older Fontreal bundle replaced Qt, use that bundle to restore the distro Qt packages first.
 
 Install the matching development files and build the package as your normal user.
 

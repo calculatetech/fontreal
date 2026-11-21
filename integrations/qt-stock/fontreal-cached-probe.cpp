@@ -4,6 +4,7 @@
 #include <QFileInfo>
 #include <QCryptographicHash>
 #include <QScopeGuard>
+#include <QScopedValueRollback>
 #include <QGenericPlugin>
 #include <QDebug>
 #include <sys/mman.h>
@@ -16,10 +17,13 @@
 #include FT_FONT_FORMATS_H
 #include FT_MODULE_H
 #include <QBackingStore>
+#include <QPlatformSurfaceEvent>
+#include <QQuickWindow>
 #include <QCache>
 #include <QtGui/private/qfontengineglyphcache_p.h>
 #include <QWidget>
 #include <QtWidgets/private/qwidget_p.h>
+#include <QtQuick/private/qsgsoftwarerenderer_p.h>
 #include <QGuiApplication>
 #include <QScreen>
 #include <QWindow>
@@ -28,6 +32,7 @@
 #include <QtGui/private/qfontengine_ft_p.h>
 #include "font-engine.h"
 #include "wayland-output.h"
+#include "runtime-build-id.h"
 #include "fontreal_v3_outline.h"
 #include "white-text.h"
 
@@ -159,6 +164,13 @@ using StockStore = QBackingStore *(*)(const QWidget *);
 using StockTopLevel = QWidget *(*)(const QWidget *);
 using StockAttribute = bool (*)(const QWidget *, Qt::WidgetAttribute);
 
+bool alignedWaylandWindow(const QWindow *window, bool checkOrientation)
+{
+    return window->handle() && window->contentOrientation() == Qt::PrimaryOrientation
+        && (!checkOrientation || fontreal_qt::unrotatedWaylandScreen(window->screen()))
+        && qFuzzyCompare(window->devicePixelRatio(), window->handle()->devicePixelRatio());
+}
+
 bool alignedWindow(QRasterPaintEngine *raster, const QWidget *widget, bool partialInk, bool fastText)
 {
     static const auto backingStore = reinterpret_cast<StockStore>(dlsym(RTLD_DEFAULT, "_ZNK7QWidget12backingStoreEv"));
@@ -199,11 +211,75 @@ bool alignedWindow(QRasterPaintEngine *raster, const QWidget *widget, bool parti
             && window->screen()->geometry().contains(window->geometry());
     }
     return (platform == QStringLiteral("wayland") || platform == QStringLiteral("wayland-egl"))
-        && window->handle() && window->contentOrientation() == Qt::PrimaryOrientation
-        && (!partialInk || fontreal_qt::unrotatedWaylandScreen(window->screen()))
+        && alignedWaylandWindow(window, partialInk)
         && QGuiApplication::highDpiScaleFactorRoundingPolicy() == Qt::HighDpiScaleFactorRoundingPolicy::PassThrough
-        && qFuzzyCompare(window->devicePixelRatio(), window->handle()->devicePixelRatio())
         && qFuzzyCompare(window->devicePixelRatio(), device->devicePixelRatioF());
+}
+
+struct SoftwareFrame {
+    QBackingStore *store = nullptr;
+    QPaintDevice *device = nullptr;
+    qreal dpr = 0;
+};
+
+thread_local SoftwareFrame softwareFrame;
+std::mutex softwareWindowsMutex;
+QHash<QWindow *, qreal> softwareWindows;
+
+using SoftwareRender = void (*)(QSGSoftwareRenderer *);
+using SoftwareMarkDirty = void (*)(QSGAbstractSoftwareRenderer *);
+using StorePaintDevice = QPaintDevice *(*)(QBackingStore *);
+using QuickInterface = QSGRendererInterface *(*)(const QQuickWindow *);
+using QuickUpdate = void (*)(QQuickWindow *);
+SoftwareRender stockSoftwareRender = nullptr;
+SoftwareMarkDirty markSoftwareDirty = nullptr;
+StorePaintDevice stockPaintDevice = nullptr;
+QuickInterface quickInterface = nullptr;
+QuickUpdate quickUpdate = nullptr;
+
+QPaintDevice *softwarePaintDevice(QBackingStore *store)
+{
+    auto *device = stockPaintDevice(store);
+    if (softwareFrame.store == store)
+        softwareFrame.device = device;
+    return device;
+}
+
+struct SoftwareStoreMember {
+    using Member = QBackingStore *QSGSoftwareRenderer::*;
+    friend Member softwareBackingStore(SoftwareStoreMember);
+};
+
+template<SoftwareStoreMember::Member member>
+struct SoftwareStoreAccess {
+    friend SoftwareStoreMember::Member softwareBackingStore(SoftwareStoreMember) { return member; }
+};
+
+template struct SoftwareStoreAccess<&QSGSoftwareRenderer::m_backingStore>;
+
+void renderSoftware(QSGSoftwareRenderer *renderer)
+{
+    auto *store = renderer->*softwareBackingStore(SoftwareStoreMember{});
+    auto *window = store ? store->window() : nullptr;
+    const bool redirected = renderer->renderTarget().paintDevice != nullptr;
+    qreal dpr = 0;
+    if (window && !redirected) {
+        const std::scoped_lock lock(softwareWindowsMutex);
+        dpr = softwareWindows.value(window);
+    }
+    const bool present = dpr > 0;
+
+    // A redirect can consume scene updates without painting the window backing store.
+    enum PaintMode { Gray, Subpixel, Redirected };
+    constexpr auto mode = "_fontrealDirectSoftware";
+    const auto next = redirected ? Redirected : (present ? Subpixel : Gray);
+    if (window && renderer->property(mode).toInt() != next) {
+        renderer->setProperty(mode, int(next));
+        if (!redirected)
+            markSoftwareDirty(renderer);
+    }
+    const QScopedValueRollback<SoftwareFrame> frame(softwareFrame, {present ? store : nullptr, nullptr, dpr});
+    stockSoftwareRender(renderer);
 }
 
 // A QImage does not tell Qt where it will be shown. Check who owns this paint.
@@ -363,6 +439,9 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
     const bool regularWidget = device->devType() == QInternal::Widget
         && engine->glyphFormat == QFontEngine::Format_A32;
     const bool nativeScale = qFuzzyCompare(state->matrix.m22(), device->devicePixelRatioF());
+    const bool finalSoftware = softwareFrame.device && nativeScale && engine->glyphFormat == QFontEngine::Format_A32
+        && raster->paintDevice() == softwareFrame.device
+        && qFuzzyCompare(softwareFrame.dpr, device->devicePixelRatioF());
     const auto caption = nativeScale && device->devType() == QInternal::Image
         ? breezeDecorationTarget() : BreezeTarget::None;
     bool alignedCaption = false;
@@ -375,16 +454,16 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
     auto layout = StripeLayout::None;
     const QClipData *clip = raster->clipData();
     const bool partialInk = painter->opacity() < 1 || ink.alphaF() < 1;
-    const bool partialWidgetClip = regularWidget && partialInk && clip;
-    const bool regionClip = partialWidgetClip && clip->hasRegionClip;
+    const bool screenClip = clip && (finalSoftware || (regularWidget && partialInk));
+    const bool regionClip = screenClip && clip->hasRegionClip;
     // Qt can mark a clip rectangular based on span bounds alone.
-    const bool spanClip = partialWidgetClip && !regionClip && clip->m_spans && clip->m_clipLines;
+    const bool spanClip = screenClip && !regionClip && clip->m_spans && clip->m_clipLines;
     const bool rectangularSpans = spanClip && clip->hasRectClip;
     if (nativeScale && state->penData.alphaRGBBlit && state->penData.type == QSpanData::Solid) {
         const bool fastText = painter->opacity() == 1 && state->flags.fast_text;
         const bool alignedWidget = regularWidget
             && alignedWindow(raster, static_cast<const QWidget *>(device), partialInk, fastText);
-        if ((alignedCaption && fastText) || alignedWidget)
+        if ((alignedCaption && fastText) || alignedWidget || finalSoftware)
             layout = fontreal_qt::effectiveLayout(*static_cast<const QFontEngineFT *>(engine));
     }
     QFixedPoint atlasShift;
@@ -482,9 +561,167 @@ bool swapExperimentPointer(void **slot, void *replacement)
     const auto page = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(slot) & ~(pageSize-1));
     if (mprotect(page, pageSize, PROT_READ | PROT_WRITE))
         return false;
-    __atomic_store_n(slot, replacement, __ATOMIC_RELEASE);
-    return !mprotect(page, pageSize, PROT_READ);
+    auto *previous = __atomic_exchange_n(slot, replacement, __ATOMIC_RELEASE);
+    if (!mprotect(page, pageSize, PROT_READ))
+        return true;
+    __atomic_store_n(slot, previous, __ATOMIC_RELEASE);
+    return false;
 }
+
+bool enableSoftwareQuick(void *module)
+{
+    auto **table = static_cast<void **>(dlsym(module, "_ZTV19QSGSoftwareRenderer"));
+    auto *render = dlsym(module, "_ZN19QSGSoftwareRenderer6renderEv");
+    const auto dirty = dlsym(module, "_ZN27QSGAbstractSoftwareRenderer9markDirtyEv");
+    const auto paintDevice = dlsym(module, "_ZN13QBackingStore11paintDeviceEv");
+    const auto interface = dlsym(module, "_ZNK12QQuickWindow17rendererInterfaceEv");
+    const auto update = dlsym(module, "_ZN12QQuickWindow6updateEv");
+    Dl_info info{};
+    void *symbol = nullptr;
+    static void *shadow[25];
+    if (!table || !render || !dirty || !paintDevice || !interface || !update
+            || !dladdr1(table, &info, &symbol, RTLD_DL_SYMENT)
+            || static_cast<const ElfW(Sym) *>(symbol)->st_size != sizeof(shadow))
+        return false;
+
+    static const unsigned char archivedQuick[] = { QUICK_ID };
+    if (!runtimeBuildIdMatches(nullptr, info.dli_fbase, archivedQuick, sizeof(archivedQuick)))
+        return false;
+
+    QFile file(QString::fromLocal8Bit(info.dli_fname));
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    if (!file.open(QIODevice::ReadOnly) || !hash.addData(&file)
+            || hash.result().toHex() != "36d8d5518e6479ab710c0ce4e378fcebb59b7bf7b0c277124aabcc8f7bd9c7d4")
+        return false;
+
+    const auto base = reinterpret_cast<uintptr_t>(info.dli_fbase);
+    auto **slot = reinterpret_cast<void **>(base + 0x784408);
+    auto **deviceSlot = reinterpret_cast<void **>(base + 0x781018);
+    if (*slot != table || *deviceSlot != paintDevice || std::count(table, table + std::size(shadow), render) != 1)
+        return false;
+    std::copy_n(table, std::size(shadow), shadow);
+    *std::find(std::begin(shadow), std::end(shadow), render) = reinterpret_cast<void *>(renderSoftware);
+    stockSoftwareRender = reinterpret_cast<SoftwareRender>(render);
+    markSoftwareDirty = reinterpret_cast<SoftwareMarkDirty>(dirty);
+    stockPaintDevice = reinterpret_cast<StorePaintDevice>(paintDevice);
+    // Retain the exact device Qt passes to its painter without re-reading platform window state.
+    if (!swapExperimentPointer(deviceSlot, reinterpret_cast<void *>(softwarePaintDevice)))
+        return false;
+    if (!swapExperimentPointer(slot, shadow)) {
+        swapExperimentPointer(deviceSlot, paintDevice);
+        return false;
+    }
+    quickInterface = reinterpret_cast<QuickInterface>(interface);
+    quickUpdate = reinterpret_cast<QuickUpdate>(update);
+    return true;
+}
+
+bool detectSoftwareQuick()
+{
+    auto *module = dlopen("libQt6Quick.so.6", RTLD_NOLOAD | RTLD_NOW);
+    if (!module)
+        return false;
+
+    const bool active = enableSoftwareQuick(module);
+    qInfo() << "Fontreal software Quick probe active:" << active;
+    // The installed table calls back into this Qt library for the life of the process.
+    if (!active)
+        dlclose(module);
+    return true;
+}
+
+class SoftwareQuickActivation final : public QObject
+{
+public:
+    SoftwareQuickActivation()
+    {
+        if (!observed || quickInterface)
+            qGuiApp->installEventFilter(this);
+    }
+
+private:
+    bool observed = detectSoftwareQuick();
+    bool watchingScreens = false;
+
+    static bool publish(QWindow *window, qreal dpr)
+    {
+        const std::scoped_lock lock(softwareWindowsMutex);
+        const auto entry = softwareWindows.find(window);
+        return entry != softwareWindows.end() && std::exchange(entry.value(), dpr) != dpr;
+    }
+
+    static void refresh(QQuickWindow *window)
+    {
+        const auto screens = QGuiApplication::screens();
+        const bool exposed = window->isVisible() && window->isExposed();
+        const bool aligned = exposed && screens.size() == 1 && window->screen() == screens.first()
+            && qFuzzyCompare(window->opacity(), 1.0) && alignedWaylandWindow(window, true);
+        if (publish(window, aligned ? window->devicePixelRatio() : 0) && exposed && window->handle())
+            quickUpdate(window);
+    }
+
+    void watch(QQuickWindow *window)
+    {
+        {
+            const std::scoped_lock lock(softwareWindowsMutex);
+            if (softwareWindows.contains(window))
+                return;
+            softwareWindows.insert(window, 0);
+        }
+        const auto refreshWindow = [window] { refresh(window); };
+        connect(window, &QWindow::screenChanged, this, refreshWindow);
+        connect(window, &QWindow::visibleChanged, this, refreshWindow);
+        connect(window, &QWindow::opacityChanged, this, refreshWindow);
+        connect(window, &QWindow::contentOrientationChanged, this, refreshWindow);
+        connect(window, &QObject::destroyed, this, [window] {
+            const std::scoped_lock lock(softwareWindowsMutex);
+            softwareWindows.remove(window);
+        });
+        if (!watchingScreens) {
+            watchingScreens = true;
+            fontreal_qt::watchScreens(this, [] {
+                QList<QWindow *> windows;
+                {
+                    const std::scoped_lock lock(softwareWindowsMutex);
+                    windows = softwareWindows.keys();
+                }
+                for (auto *window : windows)
+                    refresh(static_cast<QQuickWindow *>(window));
+            });
+        }
+    }
+
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        const auto type = event->type();
+        if ((type != QEvent::PlatformSurface && type != QEvent::Expose && type != QEvent::DevicePixelRatioChange)
+                || !watched->inherits("QQuickWindow"))
+            return false;
+
+        auto *window = static_cast<QQuickWindow *>(watched);
+        if (type == QEvent::PlatformSurface) {
+            const auto surface = static_cast<QPlatformSurfaceEvent *>(event)->surfaceEventType();
+            if (surface == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
+                publish(window, 0);
+                return false;
+            }
+            // The stock loops create the surface before starting a new renderer.
+            if (!observed)
+                observed = detectSoftwareQuick();
+            if (!quickInterface) {
+                if (observed)
+                    qGuiApp->removeEventFilter(this);
+                return false;
+            }
+            const auto *renderer = quickInterface(window);
+            if (renderer && renderer->graphicsApi() == QSGRendererInterface::Software)
+                watch(window);
+        }
+        if (quickInterface)
+            refresh(window);
+        return false;
+    }
+};
 
 bool enableForArchivedQt()
 {
@@ -534,7 +771,10 @@ public:
     {
         if (key.compare(QStringLiteral("fontreal-cached-probe"), Qt::CaseInsensitive))
             return nullptr;
-        qInfo() << "Fontreal painter probe active:" << enableForArchivedQt();
+        const bool active = enableForArchivedQt();
+        qInfo() << "Fontreal painter probe active:" << active;
+        if (active && fontreal_qt::nativeWaylandScale())
+            return new SoftwareQuickActivation;
         return new QObject;
     }
 };

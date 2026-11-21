@@ -30,6 +30,14 @@ For native Qt Quick text on the existing RGB-capable window path, snap a fractio
 
 At 100% and 125%, compare final Quick window pixels with a whole-pixel placement of the same text. Use offsets on each side of the halfway point and at the halfway point on both axes. Include the rotated and layered grayscale controls in the same window. Move direct text back to its original position after the fractional draw. Draw after left, right, and inverted output turns and after returning to normal. Start a new window on an already turned screen. Enable a turned second output and make it the sole output before returning it to normal.
 
+### V3-11 Software Qt Quick
+
+In the existing stock Qt helper, use the raster provider for direct software Qt Quick text in both the basic and threaded render loops. The loaded Quick library must match the package's archived runtime. Activate before the first native draw, including when an application loads Quick after it starts. Keep one package and the same login setup.
+
+Track the active software renderer's window backing store only during a frame. Require an exposed native window on one unrotated Wayland output. Confirm that the painter uses the same backing store at its native scale. Use the existing raster rules for the font setting, opacity, clips, and destination alpha. Layers, redirected images and hidden grabs keep the existing fallback. Read the native scale and output eligibility on the GUI thread and share the result with the renderer. When eligibility changes, ask Qt to repaint the cached scene once.
+
+Compare native window pixels at 100% and 125%, including layouts, opacity, clips, both software render loops, and GPU. Test a delayed Quick load, a hidden grab, and a live window redirected to an image before normal painting resumes. Check that a changed Quick library leaves the software hook inactive. Repaint after an output turn and after return to the original orientation.
+
 ### V3-6 Approved white text
 
 On the qualified Ubuntu amd64 Qt build, apply the approved direct RGB white

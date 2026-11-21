@@ -2,12 +2,42 @@
 
 #include <QCryptographicHash>
 #include <QFile>
+#include <QGuiApplication>
 #include <QScopeGuard>
 #include <QScreen>
 #include <dlfcn.h>
 #include <qpa/qplatformscreen.h>
 
 namespace fontreal_qt {
+
+inline bool nativeWaylandScale()
+{
+    const auto platform = QGuiApplication::platformName();
+    const auto scale = qEnvironmentVariable("QT_SCALE_FACTOR");
+    return (platform == QStringLiteral("wayland") || platform == QStringLiteral("wayland-egl"))
+        && (scale.isEmpty() || scale.toDouble() == 1.0)
+        && !qEnvironmentVariableIsSet("QT_SCREEN_SCALE_FACTORS")
+        && !qEnvironmentVariableIsSet("QT_DEVICE_PIXEL_RATIO")
+        && qEnvironmentVariable("QT_ENABLE_HIGHDPI_SCALING") != QStringLiteral("0")
+        && QGuiApplication::highDpiScaleFactorRoundingPolicy() == Qt::HighDpiScaleFactorRoundingPolicy::PassThrough;
+}
+
+template<typename Refresh>
+void watchScreens(QObject *owner, Refresh refresh)
+{
+    const auto watch = [owner, refresh](QScreen *screen) {
+        QObject::connect(screen, &QScreen::orientationChanged, owner, refresh);
+        QObject::connect(screen, &QScreen::geometryChanged, owner, refresh);
+    };
+    for (auto *screen : QGuiApplication::screens())
+        watch(screen);
+    QObject::connect(qGuiApp, &QGuiApplication::screenAdded, owner, [watch, refresh](QScreen *screen) {
+        watch(screen);
+        refresh();
+    });
+    QObject::connect(qGuiApp, &QGuiApplication::screenRemoved, owner, refresh);
+    refresh();
+}
 
 inline bool unrotatedWaylandScreen(const QScreen *screen)
 {

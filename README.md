@@ -20,7 +20,7 @@ See the [capture record](docs/images/kde-v3/capture-sources.json) for renderer a
 
 On a supported Ubuntu 26.04 system, follow the [stock Qt helper guide](docs/build-system.md#install-the-stock-qt-helper-on-ubuntu-2604) to build and install one package. Sign out and back in to Plasma.
 
-Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. The selected layout also covers partially opaque Widgets text on opaque backgrounds and Qt Quick text placed between pixels. These extra paths require a direct draw on one unrotated Wayland display. Offscreen images, Qt Quick layers, and scaled or rotated text can still use grayscale.
+Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. The same helper covers direct Qt Quick text with GPU and software rendering. The selected layout also covers partially opaque Widgets text on opaque backgrounds and direct Qt Quick text placed between pixels. These extra paths require a direct draw on one unrotated Wayland display. Offscreen images, Qt Quick layers, and scaled or rotated text can still use grayscale.
 
 To recreate the comparison build, follow the [patched Qt reference guide](docs/build-system.md#patched-qt-visual-reference).
 

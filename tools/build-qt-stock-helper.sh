@@ -79,7 +79,7 @@ build_loader() {
         "$@" "$source/loader.c" "$source/metadata.S" -ldl -o "$plugins/$name"
 }
 
-build_provider fontreal-cached-probe libfontreal-cached-probe.so
+build_provider fontreal-cached-probe libfontreal-cached-probe.so "-DQUICK_ID=$(build_id "$quick")"
 build_provider scenegraph libfontreal_quick_default_probe.so "$quick"
 build_loader libfontreal-cached-probe.so "$gui" libQt6Gui.so.
 build_loader libfontreal_quick_default_probe.so "$quick" libQt6Quick.so. "-DGUI_ID=$(build_id "$gui")"

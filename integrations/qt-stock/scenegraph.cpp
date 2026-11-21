@@ -645,15 +645,7 @@ public:
     QObject *create(const QString &, const QString &) override
     {
         auto *state = new QObject;
-        const auto platform = QGuiApplication::platformName();
-        const auto scale = qEnvironmentVariable("QT_SCALE_FACTOR");
-        const bool nativeScale = (scale.isEmpty() || scale.toDouble() == 1.0)
-                && !qEnvironmentVariableIsSet("QT_SCREEN_SCALE_FACTORS")
-                && !qEnvironmentVariableIsSet("QT_DEVICE_PIXEL_RATIO")
-                && qEnvironmentVariable("QT_ENABLE_HIGHDPI_SCALING") != QStringLiteral("0")
-                && QGuiApplication::highDpiScaleFactorRoundingPolicy() == Qt::HighDpiScaleFactorRoundingPolicy::PassThrough;
-        nativeWayland.store(nativeScale && (platform == QStringLiteral("wayland")
-                || platform == QStringLiteral("wayland-egl")), std::memory_order_relaxed);
+        nativeWayland.store(fontreal_qt::nativeWaylandScale(), std::memory_order_relaxed);
         coverageShader = QShader::fromSerialized(QByteArray::fromRawData(
             reinterpret_cast<const char *>(coverage_qsb), coverage_qsb_len));
         const auto refresh = [] {
@@ -665,18 +657,7 @@ public:
             }
             outputGrid.store(grid, std::memory_order_relaxed);
         };
-        const auto watchScreen = [state, refresh](QScreen *screen) {
-            connect(screen, &QScreen::orientationChanged, state, refresh);
-            connect(screen, &QScreen::geometryChanged, state, refresh);
-        };
-        for (auto *screen : QGuiApplication::screens())
-            watchScreen(screen);
-        refresh();
-        connect(qGuiApp, &QGuiApplication::screenAdded, state, [watchScreen, refresh](QScreen *screen) {
-            watchScreen(screen);
-            refresh();
-        });
-        connect(qGuiApp, &QGuiApplication::screenRemoved, state, refresh);
+        fontreal_qt::watchScreens(state, refresh);
         qInfo() << "Fontreal Quick default probe active:" << (coverageShader.isValid() && enableDefaultQuick());
         return state;
     }
