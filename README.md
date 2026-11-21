@@ -30,12 +30,6 @@ Opaque Breeze captions can use the selected subpixel layout on one unrotated dis
 
 The updated Debian package supports RGB Breeze captions on Debian 13. The published openSUSE Leap 16.0 package uses grayscale for captions and the selected layout for eligible app text.
 
-## Suggested fonts
-
-Start with **Noto Sans Display Regular at 10pt** for general UI text, menus and toolbars. This is the preferred starting point with the selected Fontreal profile at 96 DPI and 100% scale. The [font analysis](docs/research/noto-sans-display.md) measures stroke alignment from 8pt through 16pt using the earlier profile.
-
-For terminals, start with **Liberation Mono Regular at 11pt**, or **LiterationMono Nerd Font Regular at 11pt** for the Nerd Font version. These are preferred terminal choices based on their crisp, clean appearance with Fontreal. The terminal recommendation reflects visual use. The linked measurements cover the UI font, not these terminal faces.
-
 ## Other applications
 
 If you enabled Fontreal for Firefox, Floorp, Teams or Bitwarden, quit the app and disable its launch hooks before updating the old checkout. Run the disable commands from a `v2.0.0` checkout. You can use a separate worktree if you already updated. The archived tool handles both Teams launch-record formats. [Archived app guide](https://github.com/calculatetech/fontreal/blob/v2.0.0/docs/app-scenarios.md)
