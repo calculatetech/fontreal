@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-No task is active.
+- **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Validate ordinary Plasma launches on Debian, Fedora, openSUSE, Arch and Ubuntu. Publish one DEB, one RPM and an Arch package for the tested systems. Use KDE Linux to check the new stack when practical. Verify Widgets, Qt Quick with GPU and software rendering, Breeze captions, and removal after reboot. Carry the tested profile and documented display limits forward. Remove the obsolete V1 and V2 source paths after publication. See the [V3 specification](plans/FR-022-qt-v3.md).
 
 ## Planned next
 

@@ -10,6 +10,7 @@ from pathlib import Path
 import platform
 import re
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -20,6 +21,11 @@ PROFILES = {
     ("ubuntu", "26.04"): ("ubuntu:26.04", "6.10.2"),
 }
 SOURCES = ("freetype", "qt6-base", "qt6-declarative")
+QT_SOURCES = SOURCES[1:]
+QT_V3 = "qt-v3"
+V3_FILES = ("fontreal_v3_coverage.cpp", "fontreal_v3_coverage.h", "fontreal_v3_outline.cpp",
+            "fontreal_v3_outline.h", "fontreal_v3_thin.cpp")
+SYSTEM_RECORD = Path("/usr/share/fontreal/system.json")
 FREETYPE = {("debian", "13"): "2.13.3+dfsg-1+deb13u1",
             ("ubuntu", "26.04"): "2.14.2+dfsg-1ubuntu0.2"}
 FIELDS = "${Package}\t${Architecture}\t${Version}\t${source:Package}\t${source:Version}\t${db:Status-Status}\n"
@@ -55,14 +61,30 @@ def installed():
     return sorted(records, key=lambda p: (p["name"], p["arch"]))
 
 
-def patch_file(source, upstream):
+def session_version():
+    query = subprocess.run(["dpkg-query", "-W", "-f=${db:Status-Status}\t${Version}\n", "fontreal-session"],
+                           capture_output=True, text=True)
+    if query.returncode == 1 and not query.stdout:
+        return None
+    query.check_returncode()
+    status, _, version = query.stdout.rstrip("\n").partition("\t")
+    return version if status == "installed" else None
+
+
+def patch_file(source, upstream, qt_v3=False):
+    if qt_v3:
+        name = (f"qt-{upstream}-fontreal-v3-widgets.patch" if source == "qt6-base"
+                else "qtdeclarative-fontreal-v3.patch")
+        return ROOT / "patches" / name
     if source == "freetype":
         return ROOT / "patches/freetype-nearest-property.patch"
     name = "qt" if source == "qt6-base" else "qtdeclarative"
     return ROOT / "patches" / f"{name}-{upstream}-fontreal.patch"
 
 
-def capability_patch(source):
+def capability_patch(source, qt_v3=False):
+    if qt_v3:
+        return None
     return ROOT / "packaging" / f"{source}-capability.patch"
 
 
@@ -77,6 +99,60 @@ def selected_inputs():
 def selected_plan(plan):
     entry = plan.get("sources", {}).get("freetype", {})
     return bool(entry.get("capability_sha256")) and entry.get("selected", {}).get("profile") in SELECTED_KEYS
+
+
+def v3_plan(plan):
+    return plan.get("profile") == QT_V3
+
+
+def v3_inputs():
+    return {name: sha(ROOT / "src" / name) for name in V3_FILES} | {"LICENSE": sha(ROOT / "LICENSE")}
+
+
+def check_retained_freetype(provider, os_release):
+    if (not isinstance(provider, dict) or set(provider) != {"version", "build_version", "original"}
+            or provider["version"] != FREETYPE[os_release]):
+        raise ValueError("The retained FreeType provider has no supported official source revision.")
+    version = provider["version"]
+    if not re.fullmatch(re.escape(version) + r"(?:\+b[0-9]+)?afontreal[0-9]{14}", provider["build_version"]):
+        raise ValueError("The retained FreeType provider has an invalid local version.")
+    records = provider["original"]
+    if not records or len({(p["name"], p["arch"]) for p in records}) != len(records):
+        raise ValueError("The retained FreeType provider needs unique official package records.")
+    for p in records:
+        if (set(p) != {"name", "arch", "version", "source", "source_version"} or p["source"] != "freetype"
+                or p["arch"] not in ("amd64", "i386") or p["source_version"] != version
+                or not re.fullmatch(r"[a-z0-9][a-z0-9+.-]+", p["name"])
+                or not re.fullmatch(re.escape(version) + r"(?:\+b[0-9]+)?", p["version"])):
+            raise ValueError("The retained FreeType record does not identify an official counterpart.")
+        if (p["name"], p["arch"]) == ("libfreetype6", "amd64") and p["version"] != version:
+            raise ValueError("The retained amd64 FreeType provider requires its exact official counterpart.")
+
+
+def trusted_system_record():
+    for path in (SYSTEM_RECORD, SYSTEM_RECORD.parent, SYSTEM_RECORD.parent.parent):
+        metadata = path.lstat()
+        if metadata.st_uid != 0 or metadata.st_mode & 0o022 or stat.S_ISLNK(metadata.st_mode):
+            raise ValueError("The installed Fontreal source record is not trusted.")
+    return json.loads(SYSTEM_RECORD.read_text())
+
+
+def retained_freetype(records, previous, os_release):
+    local = [p for p in records if p["source"] == "freetype" and "afontreal" in p["source_version"]]
+    if not local:
+        return None
+    old = previous["sources"]["freetype"]
+    original = []
+    for p in local:
+        if p["version"] != old["build_version"] or p["source_version"] != old["build_version"]:
+            raise ValueError("The installed FreeType differs from its Fontreal source record.")
+        matches = [r for r in previous["original"] if (r["name"], r["arch"]) == (p["name"], p["arch"])]
+        if len(matches) != 1:
+            raise ValueError("The installed FreeType package has no saved official identity.")
+        original.append(matches[0])
+    provider = dict(version=old["version"], build_version=old["build_version"], original=original)
+    check_retained_freetype(provider, os_release)
+    return provider
 
 
 def newer(left, right):
@@ -95,13 +171,27 @@ def local_version(base, identity):
 
 
 def check_plan(plan, current_patches=True):
-    profile = PROFILES.get((plan["os"], plan["release"]))
+    os_release = (plan["os"], plan["release"])
+    profile = PROFILES.get(os_release)
     if plan["schema"] != 1 or not profile or plan["arch"] != "amd64":
         raise ValueError("Supported systems: Debian 13 and Ubuntu 26.04, native amd64.")
     sources = set(plan["sources"])
-    if ((sources != set(SOURCES) and (current_patches or sources != {"qt6-base", "qt6-declarative"}))
-            or not plan["installed"] or not plan["original"]):
-        raise ValueError("The plan needs FreeType and both Qt source families with their installed package sets.")
+    qt_v3 = v3_plan(plan)
+    if not qt_v3 and {"profile", "freetype_provider", "previous_session"} & plan.keys():
+        raise ValueError("The plan has an unsupported rendering profile.")
+    if qt_v3:
+        valid_sources = sources == set(QT_SOURCES)
+        previous_session = plan["previous_session"]
+        if previous_session is not None and not re.fullmatch(r"0~local[0-9]{14}", previous_session):
+            raise ValueError("Invalid previous Fontreal session package version.")
+        if previous_session is None and (plan["installed"] != plan["original"] or "freetype_provider" in plan):
+            raise ValueError("The previous Fontreal session package is missing. Restore the recorded installation first.")
+        if "freetype_provider" in plan:
+            check_retained_freetype(plan["freetype_provider"], os_release)
+    else:
+        valid_sources = sources == set(SOURCES) or (not current_patches and sources == set(QT_SOURCES))
+    if not valid_sources or not plan["installed"] or not plan["original"]:
+        raise ValueError("The plan needs the complete package set for each selected source family.")
     if not re.fullmatch(r"[0-9]{14}", plan["identity"]):
         raise ValueError("Invalid numeric build identity.")
     for key in ("installed", "original"):
@@ -110,7 +200,7 @@ def check_plan(plan, current_patches=True):
         if len(set(identities)) != len(identities):
             raise ValueError("Duplicate package identity in the system plan.")
         if {p["source"] for p in records} != sources:
-            raise ValueError("The package set must include FreeType and both Qt source families.")
+            raise ValueError("The package set must match the plan's source families.")
         for p in records:
             if (p["arch"] != plan["arch"] and not (p["source"] == "freetype" and p["arch"] == "i386")) or not re.fullmatch(r"[a-z0-9][a-z0-9+.-]+", p["name"]):
                 raise ValueError("Foreign-architecture or invalid native package in the plan.")
@@ -136,12 +226,15 @@ def check_plan(plan, current_patches=True):
                 base = p["version"]
         if entry["build_version"] != local_version(base, plan["identity"]):
             raise ValueError("The build version does not match the installed source/binary revisions.")
-        capability = capability_patch(source)
-        valid_capability = (source == "freetype" and not current_patches and entry["capability_sha256"] is None) or re.fullmatch(
-            r"[0-9a-f]{64}", entry["capability_sha256"] or "")
+        capability = capability_patch(source, qt_v3)
+        if qt_v3:
+            valid_capability = entry["capability_sha256"] is None
+        else:
+            valid_capability = (source == "freetype" and not current_patches and entry["capability_sha256"] is None) or re.fullmatch(
+                r"[0-9a-f]{64}", entry["capability_sha256"] or "")
         if not re.fullmatch(r"[0-9a-f]{64}", entry["patch_sha256"]) or not valid_capability:
             raise ValueError("Invalid patch checksum in the system plan.")
-        if current_patches and entry["patch_sha256"] != sha(patch_file(source, profile[1])):
+        if current_patches and entry["patch_sha256"] != sha(patch_file(source, profile[1], qt_v3)):
             raise ValueError("The plan patch changed. Make a new plan before building.")
         if current_patches and entry["capability_sha256"] != (sha(capability) if capability else None):
             raise ValueError("The package capability patch changed. Make a new plan before building.")
@@ -152,21 +245,32 @@ def check_plan(plan, current_patches=True):
                 raise ValueError("The selected FreeType processor inputs are incomplete.")
             if current_patches and selected != selected_inputs():
                 raise ValueError("The selected FreeType inputs changed. Make a new plan before building.")
+        if qt_v3 and source == "qt6-base":
+            selected = entry.get("selected", {})
+            if set(selected) != {*V3_FILES, "LICENSE"} or any(
+                    not re.fullmatch(r"[0-9a-f]{64}", value) for value in selected.values()):
+                raise ValueError("The V3 Qt processor inputs are incomplete.")
+            if current_patches and selected != v3_inputs():
+                raise ValueError("The V3 Qt processor inputs changed. Make a new plan before building.")
     return profile
 
 
-def system_plan():
+def system_plan(qt_v3=False):
     system = platform.freedesktop_os_release()
     key = (system["ID"], system["VERSION_ID"])
     if key not in PROFILES:
         raise ValueError("Supported systems: Debian 13 and Ubuntu 26.04.")
     records = installed()
-    original = [dict(p) for p in records]
-    previous = Path("/usr/share/fontreal/system.json")
+    sources = QT_SOURCES if qt_v3 else SOURCES
+    selected_records = [p for p in records if p["source"] in sources]
+    original = [dict(p) for p in selected_records]
+    provider = None
     if any("afontreal" in p["source_version"] for p in records):
-        if not previous.is_file():
+        if not SYSTEM_RECORD.is_file():
             raise ValueError("The installed Fontreal source record is missing. Restore official Qt before rebuilding.")
-        old = json.loads(previous.read_text())
+        old = trusted_system_record() if qt_v3 else json.loads(SYSTEM_RECORD.read_text())
+        if qt_v3:
+            provider = retained_freetype(records, old, key)
         for p in original:
             if "afontreal" in p["source_version"]:
                 if p["source_version"] != old["sources"][p["source"]]["build_version"]:
@@ -177,8 +281,13 @@ def system_plan():
                 p.update(matches[0])
     identity = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     plan = dict(schema=1, os=key[0], release=key[1], arch=output(["dpkg", "--print-architecture"]),
-                identity=identity, installed=records, original=original, sources={})
-    for source in SOURCES:
+                identity=identity, installed=selected_records, original=original, sources={})
+    if qt_v3:
+        plan["profile"] = QT_V3
+        plan["previous_session"] = session_version()
+        if provider is not None:
+            plan["freetype_provider"] = provider
+    for source in sources:
         versions = {p["source_version"] for p in original if p["source"] == source}
         if len(versions) != 1:
             raise ValueError(f"Install a coherent official {source} package set before building.")
@@ -187,11 +296,14 @@ def system_plan():
         for p in original:
             if p["source"] == source and newer(p["version"], base):
                 base = p["version"]
+        capability = capability_patch(source, qt_v3)
         plan["sources"][source] = dict(version=version, build_version=local_version(base, identity),
-                                          patch_sha256=sha(patch_file(source, PROFILES[key][1])),
-                                          capability_sha256=sha(capability_patch(source)) if capability_patch(source) else None)
+                                      patch_sha256=sha(patch_file(source, PROFILES[key][1], qt_v3)),
+                                      capability_sha256=sha(capability) if capability else None)
         if source == "freetype":
             plan["sources"][source]["selected"] = selected_inputs()
+        if qt_v3 and source == "qt6-base":
+            plan["sources"][source]["selected"] = v3_inputs()
     check_plan(plan)
     return plan
 
@@ -240,6 +352,8 @@ def verify_artifacts(directory, manifest):
     plan = json.loads((directory / "system.json").read_text())
     check_plan(plan, current_patches=False)
     built = package_inventory(directory / "packages")
+    if v3_plan(plan) and any(p["source"].split()[0] not in QT_SOURCES for p in built.values()):
+        raise ValueError("A V3 bundle contains a package outside its Qt source families.")
     original = package_inventory(directory / "original")
     expected_original = {(p["name"], p["arch"]): p["version"] for p in plan["original"]}
     if {k: v["version"] for k, v in original.items()} != expected_original:
@@ -314,6 +428,7 @@ def worker(jobs):
     target = Path("/output")
     plan = json.loads((target / "system.json").read_text())
     _, upstream = check_plan(plan)
+    qt_v3 = v3_plan(plan)
     for path in Path("/etc/apt/sources.list.d").glob("*.sources"):
         path.write_text(re.sub(r"^Types: deb$", "Types: deb deb-src", path.read_text(), flags=re.M))
     foreign_freetype = any(p["source"] == "freetype" and p["arch"] == "i386" for p in plan["original"])
@@ -327,9 +442,10 @@ def worker(jobs):
     run(["apt-get", "download", *[f"{p['name']}:{p['arch']}={p['version']}" for p in plan["original"]]],
         cwd=target / "original")
     metadata = dict(build_options=f"parallel={jobs} nocheck noddebs", build_profiles="noudeb",
-                    cxxflags="-g0", selected=selected_inputs(), dependencies={})
+                    cxxflags="-g0", dependencies={})
+    metadata["selected"] = (plan["sources"]["qt6-base"]["selected"] if qt_v3 else selected_inputs())
     build_environment = dict(os.environ, DEB_BUILD_PROFILES=metadata["build_profiles"])
-    for source in SOURCES:
+    for source in QT_SOURCES if qt_v3 else SOURCES:
         parent = Path("/tmp/fontreal") / source
         parent.mkdir(parents=True)
         entry = plan["sources"][source]
@@ -339,10 +455,10 @@ def worker(jobs):
             raise ValueError(f"Expected one unpacked {source} source tree.")
         tree = candidates[0]
         (tree / "debian/patches").mkdir(exist_ok=True)
-        patches = [("fontreal.patch", patch_file(source, upstream))]
+        patches = [("fontreal.patch", patch_file(source, upstream, qt_v3))]
         if source == "freetype":
             patches.append(("fontreal-render.patch", ROOT / "patches/freetype-2.14.2-fontreal.patch"))
-        patches.append(("fontreal-capability.patch", capability_patch(source)))
+        patches.append(("fontreal-capability.patch", capability_patch(source, qt_v3)))
         for patch_name, patch in patches:
             if patch is None:
                 continue
@@ -351,16 +467,25 @@ def worker(jobs):
             with (tree / "debian/patches/series").open("a") as queue:
                 queue.write("\n" + patch_name + "\n")
             run(["dpkg-source", "--before-build", tree])
-        if source == "freetype":
+        if source == "freetype" or (qt_v3 and source == "qt6-base"):
             # The generated quilt patch keeps the unchanged core in corresponding source.
-            additions = {"src/base/" + name: (ROOT / "src" / name).read_text()
-                         for name in ("fontreal_coverage.cpp", "fontreal_coverage.h", "fontreal_v2_coverage.cpp", "fontreal_v2_coverage.h")}
-            additions["docs/FONTREAL-MIT.TXT"] = (ROOT / "LICENSE").read_text()
+            if qt_v3:
+                processor_path = "src/gui/text/freetype/"
+                files = V3_FILES
+                license_path = "LICENSES/Fontreal-MIT.txt"
+            else:
+                processor_path = "src/base/"
+                files = ("fontreal_coverage.cpp", "fontreal_coverage.h", "fontreal_v2_coverage.cpp",
+                         "fontreal_v2_coverage.h")
+                license_path = "docs/FONTREAL-MIT.TXT"
+            additions = {processor_path + name: (ROOT / "src" / name).read_text() for name in files}
+            license_text = (ROOT / "LICENSE").read_text()
+            additions[license_path] = license_text
             copyright_file = tree / "debian/copyright"
             copyright_text = copyright_file.read_text()
             stanza = ("\nFiles: " + " ".join(additions) + "\n"
                       "Copyright: 2026 Michael Beutler and Fontreal contributors\nLicense: Fontreal-MIT\n "
-                      + "\n ".join(line if line else "." for line in (ROOT / "LICENSE").read_text().splitlines()) + "\n")
+                      + "\n ".join(line if line else "." for line in license_text.splitlines()) + "\n")
             patch_text = "".join("".join(difflib.unified_diff([], text.splitlines(keepends=True),
                 fromfile="/dev/null", tofile="b/" + name)) for name, text in additions.items())
             copyright_file.write_text(copyright_text + stanza)
@@ -412,7 +537,8 @@ def worker(jobs):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("plan", help="Print a build plan for the running supported system.")
+    plan_parser = sub.add_parser("plan", help="Print a build plan for the running supported system.")
+    plan_parser.add_argument("--qt-v3", action="store_true", help="Build V3 Qt packages with stock FreeType APIs.")
     build_parser = sub.add_parser("build", help="Build an existing system plan in a disposable container.")
     build_parser.add_argument("plan", type=Path)
     build_parser.add_argument("--output", type=Path, required=True)
@@ -425,6 +551,8 @@ def main():
         transaction_parser = sub.add_parser(command, help="Apply the verified local packages." if command == "install" else "Restore the retained official packages.")
         transaction_parser.add_argument("bundle", type=Path)
         transaction_parser.add_argument("--simulate", action="store_true")
+        if command == "rollback":
+            transaction_parser.add_argument("--previous", type=Path, help="Verified predecessor bundle for Qt V3 rollback.")
     worker_parser = sub.add_parser("_worker", help=argparse.SUPPRESS)
     worker_parser.add_argument("jobs", type=int)
     worker_parser.add_argument("uid", type=int)
@@ -432,7 +560,7 @@ def main():
     args = parser.parse_args()
     try:
         if args.command == "plan":
-            print(json.dumps(system_plan(), indent=2, sort_keys=True))
+            print(json.dumps(system_plan(args.qt_v3), indent=2, sort_keys=True))
         elif args.command == "build":
             if not 1 <= args.jobs <= 64:
                 raise ValueError("Build parallelism must be between 1 and 64.")
@@ -448,7 +576,8 @@ def main():
             if args.command == "prepare":
                 system_install.prepare(sys.modules[__name__], args.bundle.resolve())
             else:
-                system_install.transaction(sys.modules[__name__], args.bundle.resolve(), rollback=args.command == "rollback", simulate=args.simulate)
+                system_install.transaction(sys.modules[__name__], args.bundle.resolve(), rollback=args.command == "rollback",
+                                           simulate=args.simulate, previous=getattr(args, "previous", None))
         else:
             owner = Path("/output").stat() if Path("/output").is_dir() else None
             try:

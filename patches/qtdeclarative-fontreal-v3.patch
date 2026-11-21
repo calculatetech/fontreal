@@ -1,0 +1,399 @@
+--- a/src/quick/items/qsginternaltextnode.cpp
++++ b/src/quick/items/qsginternaltextnode.cpp
+@@ -20,8 +20,9 @@
+ #include <private/qquicktext_p_p.h>
+ #include <private/qfont_p.h>
+ #include <private/qfontengine_p.h>
+
++#include <private/qsgdefaultglyphnode_p_p.h>
+ #include <private/qtextdocumentlayout_p.h>
+ #include <qhash.h>
+
+ QT_BEGIN_NAMESPACE
+@@ -63,8 +64,15 @@
+             if (fe->hasUnreliableGlyphOutline() || !fe->isSmoothlyScalable)
+                 preferredRenderType = QSGTextNode::NativeRendering;
+     }
+
++    if (preferredRenderType == QtRendering && style == QQuickText::Normal) {
++        if (QSGTextMaskMaterial::useFontrealV3(m_renderContext, font, color))
++            preferredRenderType = NativeRendering;
++        else if (QSGTextMaskMaterial::useFontrealV3(m_renderContext, font, color, false))
++            m_containsUnscalableGlyphs = true; // A new device scale can make this run eligible.
++    }
++
+     if (preferredRenderType == NativeRendering)
+         m_containsUnscalableGlyphs = true;
+
+     QSGGlyphNode *node = m_renderContext->sceneGraphContext()->createGlyphNode(m_renderContext,
+--- a/src/quick/scenegraph/qsgdefaultglyphnode.cpp
++++ b/src/quick/scenegraph/qsgdefaultglyphnode.cpp
+@@ -32,9 +32,21 @@
+ }
+
+ void QSGDefaultGlyphNode::setMaterialColor(const QColor &color)
+ {
+-    static_cast<QSGTextMaskMaterial *>(m_material)->setColor(color);
++    auto *material = static_cast<QSGTextMaskMaterial *>(m_material);
++    const bool useFontreal = m_style == QQuickText::Normal
++            && m_preferredAntialiasingMode != GrayAntialiasing
++            && QSGTextMaskMaterial::useFontrealV3(m_context, m_glyphs.rawFont(), color.toRgb());
++    if (material->isFontrealV3() != useFontreal
++        || (useFontreal && QSGTextMaskMaterial::fontrealLightInk(color)
++                          != material->isLightFontrealInk())) {
++        update();
++        delete material;
++        m_dirtyGeometry = true;
++    } else {
++        material->setColor(color);
++    }
+ }
+
+ void QSGDefaultGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
+ {
+@@ -71,9 +83,15 @@
+             }
+         }
+
+         const auto rgbColor = m_color.toRgb();
+-        m_material = new QSGTextMaskMaterial(m_context, QVector4D(rgbColor.redF(), rgbColor.greenF(), rgbColor.blueF(), rgbColor.alphaF()), font, glyphFormat);
++        const bool useFontreal = m_style == QQuickText::Normal
++                && m_preferredAntialiasingMode != GrayAntialiasing
++                && QSGTextMaskMaterial::useFontrealV3(m_context, font, rgbColor);
++        // Use two atlas entries for the coverage of light and dark ink.
++        if (useFontreal)
++            glyphFormat = QFontEngine::Format_ARGB;
++        m_material = new QSGTextMaskMaterial(m_context, QVector4D(rgbColor.redF(), rgbColor.greenF(), rgbColor.blueF(), rgbColor.alphaF()), font, glyphFormat, useFontreal);
+     } else if (m_style == QQuickText::Outline) {
+         QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(m_context, font);
+         material->setStyleColor(m_styleColor);
+         m_material = material;
+--- a/src/quick/scenegraph/qsgdefaultglyphnode_p.cpp
++++ b/src/quick/scenegraph/qsgdefaultglyphnode_p.cpp
+@@ -308,14 +308,39 @@
+
+
+ // ***** common material stuff
+
+-QSGTextMaskMaterial::QSGTextMaskMaterial(QSGRenderContext *rc, const QVector4D &color, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat)
++bool QSGTextMaskMaterial::fontrealLightInk(const QColor &color)
++{
++    return qGray(color.rgb()) >= 128;
++}
++
++bool QSGTextMaskMaterial::useFontrealV3(QSGRenderContext *context, const QRawFont &font,
++                                        const QColor &color, bool checkSize)
++{
++#if QT_CONFIG(freetype) && defined(__ELF__)
++    return qt_fontrealV3CanRender && qt_fontrealV3GrayGlyph
++            && color.isValid() && font.isValid() && context->rhi()
++            && context->rhi()->backend() == QRhi::OpenGLES2
++            && qt_fontrealV3CanRender(QRawFontPrivate::get(font)->fontEngine,
++                   checkSize ? static_cast<QSGDefaultRenderContext *>(context)->currentDevicePixelRatio()
++                             : qreal(0));
++#else
++    Q_UNUSED(context);
++    Q_UNUSED(font);
++    Q_UNUSED(color);
++    Q_UNUSED(checkSize);
++    return false;
++#endif
++}
++
++QSGTextMaskMaterial::QSGTextMaskMaterial(QSGRenderContext *rc, const QVector4D &color, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat, bool fontrealV3)
+     : m_rc(qobject_cast<QSGDefaultRenderContext *>(rc))
+     , m_texture(nullptr)
+     , m_glyphCache(nullptr)
+     , m_font(font)
+     , m_color(color)
++    , m_fontrealV3(fontrealV3)
+ {
+     init(glyphFormat);
+ }
+
+@@ -334,9 +359,9 @@
+     m_color = color;
+
+     // If it is an RGB cache, then the pen color is actually part of the cache key
+     // so it has to be updated
+-    if (m_glyphCache != nullptr && m_glyphCache->glyphFormat() == QFontEngine::Format_ARGB)
++    if (!m_fontrealV3 && m_glyphCache != nullptr && m_glyphCache->glyphFormat() == QFontEngine::Format_ARGB)
+         updateCache(QFontEngine::Format_ARGB);
+ }
+
+ void QSGTextMaskMaterial::init(QFontEngine::GlyphFormat glyphFormat)
+@@ -381,11 +406,14 @@
+         if (!fontEngine->supportsTransformation(glyphCacheTransform))
+             glyphCacheTransform = QTransform();
+
+         QColor color = glyphFormat == QFontEngine::Format_ARGB ? QColor::fromRgbF(m_color.x(), m_color.y(), m_color.z(), m_color.w()) : QColor();
++        if (m_fontrealV3)
++            color = fontrealLightInk(color) ? QColor(Qt::white) : QColor(Qt::black);
+         m_glyphCache = fontEngine->glyphCache(cacheKey, glyphFormat, glyphCacheTransform, color);
+         if (!m_glyphCache || int(m_glyphCache->glyphFormat()) != glyphFormat) {
+-            m_glyphCache = new QSGRhiTextureGlyphCache(m_rc, glyphFormat, glyphCacheTransform, color);
++            m_glyphCache = new QSGRhiTextureGlyphCache(m_rc, glyphFormat, glyphCacheTransform, color,
++                                                       m_fontrealV3 ? fontEngine : nullptr);
+             fontEngine->setGlyphCache(cacheKey, m_glyphCache.data());
+             if (m_retainedFontEngine != nullptr)
+                 m_rc->unregisterFontengineForCleanup(m_retainedFontEngine);
+
+@@ -414,18 +442,21 @@
+         fixedPointPositions.append(QFixedPoint::fromPointF(position + glyphPositions.at(i)));
+
+     QTextureGlyphCache *cache = glyphCache();
+
+-    QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
+-    cache->populate(fontD->fontEngine,
++    QFontEngine *rasterEngine = rhiGlyphCache()->fontrealEngine();
++    if (!rasterEngine)
++        rasterEngine = QRawFontPrivate::get(m_font)->fontEngine;
++    cache->populate(rasterEngine,
+                     glyphIndexes.size(),
+                     glyphIndexes.constData(),
+                     fixedPointPositions.data(),
+                     QPainter::RenderHints(),
+                     true);
+     cache->fillInPendingGlyphs();
++    rhiGlyphCache()->clearPendingFontrealMasks();
+
+-    int margin = fontD->fontEngine->glyphMargin(cache->glyphFormat());
++    int margin = rasterEngine->glyphMargin(cache->glyphFormat());
+
+     qreal glyphCacheScaleX = cache->transform().m11();
+     qreal glyphCacheScaleY = cache->transform().m22();
+     qreal glyphCacheInverseScaleX = 1.0 / glyphCacheScaleX;
+@@ -437,16 +468,16 @@
+     QVector4D *vp = (QVector4D *)geometry->vertexDataAsTexturedPoint2D();
+     Q_ASSERT(geometry->sizeOfVertex() == sizeof(QVector4D));
+     ushort *ip = geometry->indexDataAsUShort();
+
+-    bool supportsSubPixelPositions = fontD->fontEngine->supportsHorizontalSubPixelPositions();
++    bool supportsSubPixelPositions = rasterEngine->supportsHorizontalSubPixelPositions();
+     for (int i=0; i<glyphIndexes.size(); ++i) {
+          QPointF glyphPosition = glyphPositions.at(i) + position;
+          QFixedPoint fixedPointPosition = fixedPointPositions.at(i);
+
+          QFixed subPixelPosition;
+          if (supportsSubPixelPositions)
+-             subPixelPosition = fontD->fontEngine->subPixelPositionForX(QFixed::fromReal(fixedPointPosition.x.toReal() * glyphCacheScaleX));
++             subPixelPosition = rasterEngine->subPixelPositionForX(QFixed::fromReal(fixedPointPosition.x.toReal() * glyphCacheScaleX));
+
+          QTextureGlyphCache::GlyphAndSubPixelPosition glyph(glyphIndexes.at(i),
+                                                             QFixedPoint(subPixelPosition, 0));
+          const QTextureGlyphCache::Coord &c = cache->coords.value(glyph);
+@@ -496,9 +527,11 @@
+ }
+
+ QSGMaterialType *QSGTextMaskMaterial::type() const
+ {
+-    static QSGMaterialType argb, rgb, gray;
++    static QSGMaterialType argb, rgb, gray, fontreal;
++    if (m_fontrealV3)
++        return &fontreal;
+     switch (glyphCache()->glyphFormat()) {
+     case QFontEngine::Format_ARGB:
+         return &argb;
+     case QFontEngine::Format_A32:
+@@ -523,8 +556,10 @@
+ {
+     Q_UNUSED(renderMode);
+     QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
+     const QFontEngine::GlyphFormat glyphFormat = gc->glyphFormat();
++    if (m_fontrealV3)
++        return new QSG8BitTextMaskRhiShader(glyphFormat, viewCount(), true);
+     switch (glyphFormat) {
+     case QFontEngine::Format_ARGB:
+         return new QSG32BitColorTextRhiShader(glyphFormat, viewCount());
+     case QFontEngine::Format_A32:
+--- a/src/quick/scenegraph/qsgdefaultglyphnode_p_p.h
++++ b/src/quick/scenegraph/qsgdefaultglyphnode_p_p.h
+@@ -34,11 +34,17 @@
+
+ class QSGTextMaskMaterial: public QSGMaterial
+ {
+ public:
+-    QSGTextMaskMaterial(QSGRenderContext *rc, const QVector4D &color, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat = QFontEngine::Format_None);
++    QSGTextMaskMaterial(QSGRenderContext *rc, const QVector4D &color, const QRawFont &font, QFontEngine::GlyphFormat glyphFormat = QFontEngine::Format_None, bool fontrealV3 = false);
+     virtual ~QSGTextMaskMaterial();
+
++    static bool useFontrealV3(QSGRenderContext *context, const QRawFont &font,
++                              const QColor &color, bool checkSize = true);
++    static bool fontrealLightInk(const QColor &color);
++    bool isFontrealV3() const { return m_fontrealV3; }
++    bool isLightFontrealInk() const { return m_glyphCache->color() == Qt::white; }
++
+     QSGMaterialType *type() const override;
+     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
+     int compare(const QSGMaterial *other) const override;
+
+@@ -72,8 +78,9 @@
+     QFontEngine *m_retainedFontEngine = nullptr;
+     QRhi *m_rhi;
+     QVector4D m_color;
+     QSize m_size;
++    bool m_fontrealV3;
+ };
+
+ class QSGStyledTextMaterial : public QSGTextMaskMaterial
+ {
+--- a/src/quick/scenegraph/qsgrhitextureglyphcache.cpp
++++ b/src/quick/scenegraph/qsgrhitextureglyphcache.cpp
+@@ -7,19 +7,109 @@
+ #include <private/qdrawhelper_p.h>
+
+ QT_BEGIN_NAMESPACE
+
++#if QT_CONFIG(freetype) && defined(__ELF__)
++// The default atlas uses the same font engine for sizing and filling each slot.
++class QSGFontrealGlyphEngine final : public QFontEngine
++{
++public:
++    QSGFontrealGlyphEngine(QFontEngine *engine, const QColor &ink)
++        : QFontEngine(Freetype), m_engine(engine), m_lightInk(ink == Qt::white)
++    {}
++
++    glyph_t glyphIndex(uint ucs4) const override { return m_engine->glyphIndex(ucs4); }
++    int stringToCMap(const QChar *s, int n, QGlyphLayout *g, int *count, ShaperFlags f) const override
++    {
++        return m_engine->stringToCMap(s, n, g, count, f);
++    }
++    glyph_metrics_t boundingBox(glyph_t glyph) override { return m_engine->boundingBox(glyph); }
++    QFixed capHeight() const override { return m_engine->capHeight(); }
++    qreal maxCharWidth() const override { return m_engine->maxCharWidth(); }
++    bool supportsHorizontalSubPixelPositions() const override
++    {
++        return m_engine->supportsHorizontalSubPixelPositions();
++    }
++    void addGlyphsToPath(glyph_t *glyphs, QFixedPoint *positions, int count,
++                         QPainterPath *path, QTextItem::RenderFlags flags) override
++    {
++        m_engine->addGlyphsToPath(glyphs, positions, count, path, flags);
++    }
++
++    glyph_metrics_t alphaMapBoundingBox(glyph_t glyph, const QFixedPoint &phase,
++                                        const QTransform &transform, GlyphFormat) override
++    {
++        QImage coverage;
++        QPoint bearing;
++        qt_fontrealV3GrayGlyph(m_engine, glyph, &phase, transform.m22(), m_lightInk,
++                              &coverage, &bearing);
++        if (coverage.isNull())
++            return m_engine->alphaMapBoundingBox(glyph, phase, transform, Format_A8);
++
++        glyph_metrics_t metrics;
++        metrics.x = bearing.x();
++        metrics.y = bearing.y();
++        metrics.width = coverage.width();
++        metrics.height = coverage.height();
++        m_pending.insert(QTextureGlyphCache::GlyphAndSubPixelPosition(glyph, phase),
++                         std::move(coverage));
++        return metrics;
++    }
++
++    QImage bitmapForGlyph(glyph_t glyph, const QFixedPoint &phase,
++                          const QTransform &transform, const QColor &) override
++    {
++        auto coverage = m_pending.take(QTextureGlyphCache::GlyphAndSubPixelPosition(glyph, phase));
++        if (coverage.isNull())
++            qt_fontrealV3GrayGlyph(m_engine, glyph, &phase, transform.m22(), m_lightInk,
++                                  &coverage, nullptr);
++        if (coverage.isNull())
++            coverage = m_engine->alphaMapForGlyph(glyph, phase, transform).convertToFormat(QImage::Format_Alpha8);
++
++        QImage ink(coverage.size(), QImage::Format_ARGB32_Premultiplied);
++        for (int y = 0; y < ink.height(); ++y) {
++            const uchar *source = coverage.constScanLine(y);
++            auto *target = reinterpret_cast<QRgb *>(ink.scanLine(y));
++            for (int x = 0; x < ink.width(); ++x)
++                target[x] = qRgba(0, 0, 0, source[x]);
++        }
++        return ink;
++    }
++
++    void clearPending() { m_pending.clear(); }
++
++private:
++    QFontEngine *m_engine;
++    bool m_lightInk;
++    QHash<QTextureGlyphCache::GlyphAndSubPixelPosition, QImage> m_pending;
++};
++#endif
++
+ QSGRhiTextureGlyphCache::QSGRhiTextureGlyphCache(QSGDefaultRenderContext *rc,
+                                                  QFontEngine::GlyphFormat format, const QTransform &matrix,
+-                                                 const QColor &color)
++                                                 const QColor &color, QFontEngine *fontrealFont)
+     : QImageTextureGlyphCache(format, matrix, color),
+       m_rc(rc),
+       m_rhi(rc->rhi())
+ {
+     // Some OpenGL implementations, for instance macOS, have issues with
+     // GL_ALPHA render targets. Similarly, BGRA may be problematic on GLES 2.0.
+     // So stick with plain image uploads on GL.
+     m_resizeWithTextureCopy = m_rhi->backend() != QRhi::OpenGLES2;
++#if QT_CONFIG(freetype) && defined(__ELF__)
++    if (fontrealFont)
++        m_fontrealEngine = std::make_unique<QSGFontrealGlyphEngine>(fontrealFont, color);
++#else
++    Q_UNUSED(fontrealFont);
++#endif
++}
++
++void QSGRhiTextureGlyphCache::clearPendingFontrealMasks()
++{
++#if QT_CONFIG(freetype) && defined(__ELF__)
++    if (m_fontrealEngine)
++        static_cast<QSGFontrealGlyphEngine *>(m_fontrealEngine.get())->clearPending();
++#endif
+ }
+
+ QSGRhiTextureGlyphCache::~QSGRhiTextureGlyphCache()
+ {
+--- a/src/quick/scenegraph/qsgrhitextureglyphcache_p.h
++++ b/src/quick/scenegraph/qsgrhitextureglyphcache_p.h
+@@ -21,14 +21,22 @@
+ QT_BEGIN_NAMESPACE
+
+ class QSGDefaultRenderContext;
+
++#if QT_CONFIG(freetype) && defined(__ELF__)
++// Match QtGui when Fontreal is present. Official QtGui leaves these symbols null.
++extern "C" bool qt_fontrealV3CanRender(const QFontEngine *engine, qreal scale) __attribute__((weak));
++extern "C" void qt_fontrealV3GrayGlyph(const QFontEngine *engine, glyph_t glyph,
++                                       const QFixedPoint *phase, qreal scale, bool lightInk,
++                                       QImage *coverage, QPoint *bearing) __attribute__((weak));
++#endif
++
+ class QSGRhiTextureGlyphCache : public QImageTextureGlyphCache
+ {
+ public:
+     QSGRhiTextureGlyphCache(QSGDefaultRenderContext *rc,
+                             QFontEngine::GlyphFormat format, const QTransform &matrix,
+-                            const QColor &color = QColor());
++                            const QColor &color = QColor(), QFontEngine *fontrealFont = nullptr);
+     ~QSGRhiTextureGlyphCache();
+
+     void createTextureData(int width, int height) override;
+     void resizeTextureData(int width, int height) override;
+@@ -38,8 +46,10 @@
+     int glyphPadding() const override;
+     int maxTextureWidth() const override;
+     int maxTextureHeight() const override;
+
++    QFontEngine *fontrealEngine() const { return m_fontrealEngine.get(); }
++    void clearPendingFontrealMasks();
+     QRhiTexture *texture() const { return m_texture; }
+     void commitResourceUpdates(QRhiResourceUpdateBatch *mergeInto);
+
+     // Clamp the default -1 width and height to 0 for compatibility with
+@@ -58,8 +68,9 @@
+     bool m_resizeWithTextureCopy;
+     QRhiTexture *m_texture = nullptr;
+     QSize m_size;
+     bool m_bgra = false;
++    std::unique_ptr<QFontEngine> m_fontrealEngine;
+     QVarLengthArray<QRhiTextureUploadEntry, 16> m_uploads;
+ };
+
+ QT_END_NAMESPACE

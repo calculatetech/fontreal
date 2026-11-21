@@ -1,5 +1,90 @@
 # Build for the running system
 
+## Fontreal V3 for Qt and Plasma
+
+### Install the stock Qt helper
+
+Get one package from the [Fontreal V3 release](https://github.com/calculatetech/fontreal/releases/tag/v3.0.0). Use the package for your x86-64 Plasma Wayland system.
+
+| System | Install the downloaded file |
+| --- | --- |
+| Debian 13 or Ubuntu 26.04 | `sudo apt install ./fontreal_3.0.0_amd64.deb` |
+| Fedora 43, 44 or 45 | `sudo dnf install ./fontreal-3.0.0-1.x86_64.rpm` |
+| openSUSE Leap 16.0 or 16.1 | `sudo zypper install --allow-unsigned-rpm ./fontreal-3.0.0-1.x86_64.rpm` |
+| Arch Linux | `sudo pacman -U ./fontreal-3.0.0-1-x86_64.pkg.tar.zst` |
+
+For KDE Linux Testing, the release supplies a system extension for snapshot `202611210254`. Install the archive with `sudo tar --zstd --no-overwrite-dir -xf fontreal-3.0.0-kde-linux-x86_64.tar.zst -C /` and reboot. To remove it, remove `/var/lib/extensions/fontreal` and `/etc/xdg/plasma-workspace/env/fontreal.sh`, then reboot.
+
+Sign out and back in to Plasma. Open **Fonts** in System Settings and select the layout for your display. **None** uses Fontreal grayscale. Fontreal treats eligible text from 8 to 32 screen pixels. [The README](../README.md#install-v3-with-stock-qt) describes when Qt or Breeze uses color.
+
+The shared DEB and RPM use the loaded Qt libraries to select the right helper. Distro updates run as usual. When a library needs a different helper, Fontreal skips that library's integration. Other matching libraries can still use Fontreal. If an earlier bundle replaced your Qt libraries, use its [restore instructions](https://github.com/calculatetech/fontreal/blob/v2.0.0/docs/build-system.md) first.
+
+To restore stock rendering, remove `fontreal` with `apt remove`, `dnf remove`, `zypper remove` or `pacman -R` as appropriate. Sign out and back in.
+
+### Build for stock Qt
+
+Install the matching Qt 6 private headers for Qt Base and Qt Declarative, the Qt shader baker, and the FreeType and Fontconfig development files. The build also uses Bash, a C and C++ compiler, Binutils, `pkg-config` and `xxd`. On Debian 13 and Ubuntu 26.04:
+
+```sh
+sudo apt install build-essential binutils pkg-config xxd libfontconfig-dev libfreetype-dev qt6-base-private-dev qt6-declarative-private-dev qt6-shader-baker
+tools/build-qt-stock-helper.sh build/providers
+tools/package-qt-stock-helper.sh deb build/packages build/providers/*
+```
+
+On Fedora or openSUSE, install `rpm-build` and use the `rpm` format. On Arch, use the `arch` format with `makepkg` and `fakeroot`. On KDE Linux Testing, use the `kde-linux` format with GNU Tar and Zstandard. To build one package for multiple Qt builds, compile each provider on its own distro and combine the provider directories in the packaging command. Run packaging on the oldest supported system for that format. The builder requires Qt Quick's `QBackingStore::paintDevice` relocation to be on a linker-protected read-only page.
+
+### Konsole pilot with distro libraries
+
+The pilot uses the distro versions of Qt, FreeType, and KWin. Launch it from a Plasma Wayland session with one unrotated display at 100% scale. In **Fonts**, enable anti-aliasing and select RGB subpixel rendering. Select **Full** hinting and a regular face such as Hack Regular.
+
+The pilot treats pure black on white and white on black in the terminal. It uses the coverage of a single static outline font in each draw. Menus, light faces, and other colors use stock rendering. A draw also uses stock rendering when its glyphs can touch pixels outside the expected solid background.
+
+Install the Qt Widgets, FreeType, and Fontconfig development packages. Build and launch as your normal user.
+
+```sh
+cmake -S . -B build/konsole-rgb -DFONTREAL_KONSOLE_RGB=ON
+cmake --build build/konsole-rgb --target fontreal-qt-rgb
+tools/run-konsole-rgb build/konsole-rgb/libfontreal-qt-rgb.so
+```
+
+The launcher opens a separate Konsole process with your usual profiles. Restart the pilot after changing the subpixel mode. A normal launch uses the stock path. The pilot uses one Konsole paint call, so wider Qt Widgets and Qt Quick coverage still needs a release path.
+
+### Patched Qt visual reference
+
+This experimental recipe patches and compiles QtBase and Qt Declarative from source to reproduce the V3 visual reference. The bundle supplies replacements for the installed packages from these two modules. The current V3 deployment work targets stock Qt packages. The reference uses the installed FreeType through its public API. Its build targets are Debian 13 amd64 with Qt 6.8.2 and Ubuntu 26.04 amd64 with Qt 6.10.2. Use Python, the distro package tools, and Docker. Keep the bundle on a disk with space for the Qt builds and in a location APT can read.
+
+Remove the stock `fontreal` package before simulating or installing this reference bundle. Run the build as your normal user.
+
+```sh
+mkdir -p build
+python3 tools/system-build.py plan --qt-v3 > build/system-v3.json
+python3 tools/system-build.py build build/system-v3.json --output build/system-packages-v3
+python3 tools/system-build.py verify build/system-packages-v3
+python3 tools/system-build.py prepare build/system-packages-v3
+python3 tools/system-build.py install build/system-packages-v3 --simulate
+```
+
+Check the simulated list. It should contain matching Qt packages and the Fontreal session package. Apply the bundle when you are ready, then enable it as your normal user.
+
+```sh
+sudo python3 tools/system-build.py install build/system-packages-v3
+fontreal-session enable
+```
+
+Sign out and back in to Plasma. Open **Fonts** in System Settings and select the subpixel mode for your display. **None** uses Fontreal grayscale. A stock KWin single-output setup was checked at 100% and 125%. Fontreal also provides grayscale rendering for eligible offscreen text and the Qt Quick OpenGL text path. KWin applies effects such as Zoom after Qt submits a window.
+
+Use `fontreal-session disable` and sign in again to turn off the profile. To restore the original Qt packages, use the verified bundle with `sudo python3 tools/system-build.py rollback build/system-packages-v3`. If a Fontreal session package was already installed, keep its verified bundle and pass it with `--previous`. This applies to a V2 upgrade, a V3 rebuild, and a system where a distro update had already replaced Qt.
+
+```sh
+sudo python3 tools/system-build.py rollback build/system-packages-v3 --previous build/previous-fontreal-bundle
+```
+
+Keep both bundles for as long as you need that rollback. The `fontreal-session profile` command still records the V2 O or K3 preference.
+
+An official Qt update can replace the local Qt packages. Build a new bundle when your installed Qt version has a supported patch. The session checks the Qt packages once when Plasma starts.
+
+## Fontreal V2 packages and integrations
+
 Fontreal builds local FreeType and Qt packages on demand. It reads the installed distro, architecture, binary packages, and source revisions. It builds matching FreeType, QtBase, and Qt Declarative packages in a disposable Docker container. The build does not install packages on the host.
 
 Follow the [test policy](../CONTRIBUTING.md#when-to-run-tests). For routine deployment, build, verify and prepare the bundle, then continue to [Apply, enable, and restore](#apply-enable-and-restore). The package and VM checks below apply when Fontreal changes.
