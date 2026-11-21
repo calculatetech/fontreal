@@ -17,7 +17,7 @@ The user closes optical tuning and selects native-normal hinting, the 170 guarde
 
 ## Active
 
-- **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Provide an install script or package that activates V3 in ordinary Plasma application launches after reboot. Use the tested Qt patch as the visual reference. Verify the Qt Widgets and Qt Quick paths, then verify removal and reboot. If FreeType needs a patch, deliver it through the distro package manager. See the [V3 specification](plans/FR-022-qt-v3.md).
+- **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Provide an install script or package that activates V3 in ordinary Plasma application launches after reboot. Use the tested Qt patch as the visual reference. Include RGB on Breeze captions and close the remaining Widgets and Qt Quick drawing paths where users select a subpixel layout. The Breeze caption limits for live rotation and mirroring are accepted and documented in the [README](../README.md). Verify removal and reboot. If FreeType needs a patch, deliver it through the distro package manager. See the [V3 specification](plans/FR-022-qt-v3.md).
 
 ## Planned next
 

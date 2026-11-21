@@ -10,6 +10,14 @@ Test a filter at the public FreeType glyph rasterization call. That call provide
 
 ## Stock Qt feasibility and release checks
 
+### V3-8 RGB on additional drawing paths
+
+Use the isolated `feature/fontreal-rgb-paths` worktree from `4c4f141`. When Plasma selects a subpixel layout, the goal is to use it on Breeze captions and on the remaining Widgets and Qt Quick text paths. Keep the distro Qt, FreeType, and KWin packages as the integration target. The Fonts setting **None** and explicit anti-aliasing opt-outs still apply. KWin effects continue to process the submitted window as usual.
+
+Recognize the ordinary stock Breeze caption paint in KWin 6.6.6's OpenGL and software compositors. Use the existing raster provider and the selected layout if the painter, image, and single unrotated output scales agree. Apply the 32-level RGB coverage cap only to the caption pixels that have an opaque destination and a rectangular clip. Before sampling an OpenGL caption mask, account for KWin's rounding of the partial paint origin when it uploads the image. Apply this correction to RGB and grayscale masks. Use the existing paint behavior for other targets. Verify the final caption at 100% and 125% with OpenGL and at 100% with the software compositor. At 125%, compare a caption that KWin repaints at a half-pixel origin with a fresh paint in both RGB and **None**. Compare a caption spanning two outputs of different scales and a caption on a rotated output with their **None** controls. Reverse horizontal and vertical stripe orders on the same caption, and compare explicit anti-aliasing off and ordinary Widgets and image paint with their controls. Use actual Wayland screenshot pixels and verify that the tested process loads the intended provider.
+
+For ordinary transparent Qt Quick layers, keep the layer color and the three channel transmittances independent until the final draw. Transmittance is the share of the background that shows through. A test can capture the same layer against black and white and derive transmittance from the difference. Apply that result to the actual destination. Require agreement within one channel value with an equivalent direct draw, including a spatially changing background. A transformed glyph or layer needs coverage on the final pixel grid. A custom effect that consumes a single flattened texture owns its pixel changes, so its output cannot be inferred from the original text coverage.
+
 ### V3-6 Approved white text
 
 On the qualified Ubuntu amd64 Qt build, apply the approved direct RGB white
@@ -92,7 +100,7 @@ The remaining checkpoints describe the existing reference renderer. Its package 
 
 ## Decision log
 
-Plasma writes the selected subpixel order to Fontconfig. Qt uses that value for eligible Widgets and Qt Quick draws and keeps the native outline hints. Explicit application and system anti-aliasing vetoes still apply. Use grayscale when Qt paints through a texture or another intermediate target. This includes the current KWin decoration path.
+Plasma writes the selected subpixel order to Fontconfig. Qt uses that value for eligible Widgets and Qt Quick draws and keeps the native outline hints. Explicit application and system anti-aliasing vetoes still apply. Use grayscale for intermediate targets without a proven pixel mapping. V3-8 defines the separate Breeze caption path.
 
 Keep stock KWin and its display effects. Ordinary Wayland Widgets paint can use subpixel color when the window, backing store, painter and Wayland platform window agree on the output scale. Check a single unrotated output at 100% and 125%. Application scale overrides, scale rounding, and additional painter scaling use grayscale. Effects such as Zoom keep their usual filtering after Qt submits the window.
 

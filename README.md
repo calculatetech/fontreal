@@ -22,6 +22,10 @@ On a supported Ubuntu 26.04 system, follow the [stock Qt helper guide](docs/buil
 
 Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. The selected layout applies to eligible Widgets and Qt Quick text. Offscreen or transformed text uses grayscale coverage.
 
+### Breeze title bars
+
+With stock KWin 6.6.6, opaque Breeze captions can use the selected subpixel layout on one unrotated display. Rotating a display while Plasma is running can leave the previous color edges visible until KWin redraws the caption. Mirrored displays can also show color edges when the displays use different orientations, scales, or subpixel layouts.
+
 To recreate the comparison build, follow the [patched Qt reference guide](docs/build-system.md#patched-qt-visual-reference).
 
 ## Suggested fonts

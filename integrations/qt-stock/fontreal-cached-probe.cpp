@@ -1,5 +1,7 @@
 #include <QPointF>
+#include <execinfo.h>
 #include <QFile>
+#include <QFileInfo>
 #include <QCryptographicHash>
 #include <QScopeGuard>
 #include <QGenericPlugin>
@@ -21,6 +23,7 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QWindow>
+#include <qpa/qplatformscreen.h>
 #include <qpa/qplatformwindow.h>
 #include <QtGui/private/qfontengine_ft_p.h>
 #include "font-engine.h"
@@ -201,6 +204,69 @@ bool alignedWindow(QRasterPaintEngine *raster, const QWidget *widget)
         && qFuzzyCompare(window->devicePixelRatio(), device->devicePixelRatioF());
 }
 
+// A QImage does not tell Qt where it will be shown. Check who owns this paint.
+enum class BreezeTarget { None, Image, Atlas };
+
+BreezeTarget breezeDecorationTarget()
+{
+    static const bool isKWin = QCoreApplication::applicationFilePath().endsWith(QStringLiteral("/kwin_wayland"));
+    if (!isKWin)
+        return BreezeTarget::None;
+    static auto *const atlas = dlsym(RTLD_DEFAULT,
+        "_ZN4KWin18DecorationRenderer15renderToPainterEP8QPainterRKNS_5RectFE");
+    static auto *const image = dlsym(RTLD_DEFAULT,
+        "_ZNK4KWin20ItemRendererQPainter10renderItemEP8QPainterPNS_4ItemERKSt8functionIFbS4_EE");
+    void *frames[24];
+    const int count = backtrace(frames, std::size(frames));
+    bool breeze = false;
+    for (int i = 1; i < count; ++i) {
+        Dl_info address{};
+        if (!dladdr(frames[i], &address))
+            continue;
+        breeze |= address.dli_fname && QByteArrayView(address.dli_fname).endsWith("/org.kde.kdecoration3/org.kde.breeze.so");
+        if (breeze && address.dli_saddr) {
+            if (address.dli_saddr == atlas)
+                return BreezeTarget::Atlas;
+            if (address.dli_saddr == image)
+                return BreezeTarget::Image;
+        }
+    }
+    return BreezeTarget::None;
+}
+
+bool untransformedKWinOutput()
+{
+    using ActiveOutput = const void *(*)(const void *);
+    // KWin 6.6.6 returns OutputTransform as one enum on this build's ABI.
+    struct OutputTransform { unsigned kind; };
+    using Transform = OutputTransform (*)(const void *);
+    static auto *const workspace = static_cast<void *const *>(dlsym(RTLD_DEFAULT, "_ZN4KWin9Workspace5_selfE"));
+    static const auto activeOutput = reinterpret_cast<ActiveOutput>(dlsym(RTLD_DEFAULT, "_ZNK4KWin9Workspace12activeOutputEv"));
+    static const auto transform = reinterpret_cast<Transform>(dlsym(RTLD_DEFAULT, "_ZNK4KWin13LogicalOutput9transformEv"));
+    static const bool knownAbi = [] {
+        Dl_info info{};
+        return transform && dladdr(reinterpret_cast<void *>(transform), &info)
+            && info.dli_fname
+            && QFileInfo(QString::fromLocal8Bit(info.dli_fname)).canonicalFilePath().endsWith(QStringLiteral("/libkwin.so.6.6.6"));
+    }();
+    const auto *output = knownAbi && workspace && *workspace && activeOutput ? activeOutput(*workspace) : nullptr;
+    return output && transform(output).kind == 0;
+}
+
+QRgb capFringe(QRgb rgb)
+{
+    constexpr int limit = 32;
+    const int red = qRed(rgb), green = qGreen(rgb), blue = qBlue(rgb);
+    const int spread = std::max({red, green, blue}) - std::min({red, green, blue});
+    if (spread <= limit)
+        return rgb;
+    const double neutral = .2126 * red + .7152 * green + .0722 * blue;
+    const double ratio = double(limit) / spread;
+    return qRgb(std::lround(neutral + ratio * (red - neutral)),
+                std::lround(neutral + ratio * (green - neutral)),
+                std::lround(neutral + ratio * (blue - neutral)));
+}
+
 OutlineSample sampleForDraw(QFontEngine *, glyph_t, QFixedPoint, qreal, QColor, fontreal_v3::StripeLayout);
 
 struct MaskKey
@@ -291,19 +357,36 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
     if (!(cache ? cache->antialias : fontreal_qt::fontconfigAllowsAntialiasing(*engine)))
         return stockDrawCached(raster, count, glyphs, positions, engine);
 
+    const auto device = painter->device();
+    const bool regularWidget = device->devType() == QInternal::Widget
+        && engine->glyphFormat == QFontEngine::Format_A32;
+    const bool nativeScale = qFuzzyCompare(state->matrix.m22(), device->devicePixelRatioF());
+    const auto caption = nativeScale && device->devType() == QInternal::Image
+        ? breezeDecorationTarget() : BreezeTarget::None;
+    bool alignedCaption = false;
+    if (caption != BreezeTarget::None && QGuiApplication::screens().size() == 1) {
+        const auto *screen = QGuiApplication::primaryScreen();
+        alignedCaption = screen && screen->handle()
+            && qFuzzyCompare(screen->handle()->devicePixelRatio(), device->devicePixelRatioF())
+            && untransformedKWinOutput();
+    }
     auto layout = StripeLayout::None;
-    if (engine->glyphFormat == QFontEngine::Format_A32
-            && painter->device()->devType() == QInternal::Widget && painter->opacity() == 1
-            && state->flags.fast_text && state->penData.alphaRGBBlit
-            && qFuzzyCompare(state->matrix.m22(), painter->device()->devicePixelRatioF())
-            && alignedWindow(raster, static_cast<const QWidget *>(painter->device()))) {
-        layout = fontreal_qt::effectiveLayout(*static_cast<const QFontEngineFT *>(engine));
+    if (nativeScale && painter->opacity() == 1 && state->flags.fast_text && state->penData.alphaRGBBlit) {
+        if (alignedCaption || (regularWidget && alignedWindow(raster, static_cast<const QWidget *>(device))))
+            layout = fontreal_qt::effectiveLayout(*static_cast<const QFontEngineFT *>(engine));
+    }
+    QFixedPoint atlasShift;
+    if (caption == BreezeTarget::Atlas) {
+        // KWin paints at the exact damage origin and uploads at the rounded origin.
+        const QPointF origin(-state->matrix.dx(), -state->matrix.dy());
+        atlasShift = QFixedPoint::fromPointF(origin - origin.toPoint());
     }
     const bool ySub = engine->supportsVerticalSubPixelPositions()
             && (state->renderHints & QPainter::VerticalSubpixelPositioning);
     const QClipData *clip = raster->clipData();
     for (int i = 0; i < count; ++i) {
-        auto phase = engine->subPixelPositionFor(positions[i]);
+        const auto position = positions[i] + atlasShift;
+        auto phase = engine->subPixelPositionFor(position);
         if (!ySub)
             phase.y = 0;
         auto masks = cachedSample(cache, engine, glyphs[i], phase, state->matrix.m22(), ink, layout);
@@ -312,8 +395,8 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
                 return false;
             continue;
         }
-        const QPoint topLeft(qFloor(positions[i].x)+masks.frame.left,
-                             (ySub ? qFloor(positions[i].y) : qRound(positions[i].y))-masks.frame.top);
+        const QPoint topLeft(qFloor(position.x)+masks.frame.left,
+                             (ySub ? qFloor(position.y) : qRound(position.y))-masks.frame.top);
         const auto draw = [&](const QImage &mask) {
             raster->alphaPenBlt(mask.constBits(), mask.bytesPerLine(), mask.depth(),
                 topLeft.x(), topLeft.y(), mask.width(), mask.height(), false);
@@ -328,6 +411,8 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
                 for (int x = visible.left(); x <= visible.right(); ++x) {
                     const int pos = x-topLeft.x();
                     if ((gray[pos] || masks.directWhite) && qAlpha(colors[x]) == 255 && (!clip || (clip->hasRectClip && clip->clipRect.contains(x,y)))) {
+                        if (caption != BreezeTarget::None)
+                            channels[pos] = capFringe(channels[pos]);
                         gray[pos] = 0;
                         stripes = true;
                     } else {

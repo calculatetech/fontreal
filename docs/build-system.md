@@ -11,10 +11,10 @@ Install the matching development files and build the package as your normal user
 ```sh
 sudo apt install build-essential binutils pkg-config xxd libfontconfig-dev libfreetype-dev qt6-base-private-dev qt6-declarative-private-dev qt6-shader-baker
 tools/build-qt-stock-helper.sh
-sudo apt install ./build/qt-stock-helper/fontreal-qt-helper-study-0.11.deb
+sudo apt install --reinstall ./build/qt-stock-helper/fontreal-qt-helper-study-0.11.deb
 ```
 
-Sign out and back in to Plasma. In System Settings, open **Fonts** to choose the layout for your display. **None** uses Fontreal grayscale. The helper treats text from 8 to 32 screen pixels. Qt uses color coverage on aligned native Wayland draws and grayscale on intermediate textures and transformed text. An incompatible Qt update restores stock rendering until a matching helper is available.
+Sign out and back in to Plasma. In System Settings, open **Fonts** to choose the layout for your display. **None** uses Fontreal grayscale. The helper treats text from 8 to 32 screen pixels. Qt uses color coverage on aligned native Wayland draws. With KWin 6.6.6, the helper also uses the selected subpixel layout for opaque Breeze captions on one unrotated output at the decoration's scale. The caption limits the difference between color channels. Other intermediate textures and transformed text still use grayscale. An incompatible Qt update restores stock rendering until a matching helper is available.
 
 Version 0.11 uses the same white-text renderer in Qt Widgets and Qt Quick.
 It strengthens weak stroke ends and keeps the openings inside letters clear.
