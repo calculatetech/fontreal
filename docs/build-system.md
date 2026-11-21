@@ -4,11 +4,11 @@
 
 ### Install the stock Qt helper
 
-Get one package from the [Fontreal V3 release](https://github.com/calculatetech/fontreal/releases/tag/v3.0.0). Use the package for your x86-64 Plasma Wayland system.
+Download the package for your x86-64 Plasma Wayland system. Use the [3.0.1 update](https://github.com/calculatetech/fontreal/releases/tag/v3.0.1) for Debian and Ubuntu. Get the other packages from [3.0.0](https://github.com/calculatetech/fontreal/releases/tag/v3.0.0).
 
 | System | Install the downloaded file |
 | --- | --- |
-| Debian 13 or Ubuntu 26.04 | `sudo apt install ./fontreal_3.0.0_amd64.deb` |
+| Debian 13 or Ubuntu 26.04 | `sudo apt install ./fontreal_3.0.1_amd64.deb` |
 | Fedora 43, 44 or 45 | `sudo dnf install ./fontreal-3.0.0-1.x86_64.rpm` |
 | openSUSE Leap 16.0 or 16.1 | `sudo zypper install --allow-unsigned-rpm ./fontreal-3.0.0-1.x86_64.rpm` |
 | Arch Linux | `sudo pacman -U ./fontreal-3.0.0-1-x86_64.pkg.tar.zst` |

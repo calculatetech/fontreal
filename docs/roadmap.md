@@ -40,6 +40,7 @@ Non-native LCD resolution remains outside the project scope.
 
 ## Completed
 
+- **FR-023: Enable RGB Breeze captions on Debian 13.** Qualified the stock OpenGL and software paths. Verified the shared 3.0.1 DEB on Debian 13 and Ubuntu 26.04.
 - **FR-022: Deliver Fontreal V3 for Qt and KDE with stock Qt packages.** Published a shared DEB, a shared RPM, an Arch package and a KDE Linux system extension. Validated rendering and removal on nine Plasma Wayland systems. Retired the V1 and V2 source paths and kept the archived rollback guides.
 - **FR-021: Deliver accepted V2 rendering.** Released the O and K3 profiles with native packages and selected application integrations.
 - **FR-020: Simplify browser launch activation.** Qualified ordinary Firefox and Floorp launches with the selected profile.
