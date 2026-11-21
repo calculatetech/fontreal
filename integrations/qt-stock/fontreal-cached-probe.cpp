@@ -302,9 +302,14 @@ BreezeTarget breezeDecorationTarget()
         "_ZNK4KWin20ItemRendererQPainter10renderItemEP8QPainterPNS_4ItemERKSt8functionIFbS4_EE");
     static auto *const legacyImage = dlsym(RTLD_DEFAULT,
         "_ZNK4KWin20ItemRendererQPainter10renderItemEP8QPainterPNS_4ItemE");
+    static auto *const legacyPreprocess = legacyAtlas && !alignedAtlas ? dlsym(RTLD_DEFAULT,
+        "_ZN4KWin14DecorationItem10preprocessEv") : nullptr;
+    static auto *const legacyOpenGL = legacyPreprocess ? dlsym(RTLD_DEFAULT,
+        "_ZN4KWin18ItemRendererOpenGL10renderItemERKNS_12RenderTargetERKNS_14RenderViewportEPNS_4ItemEiRK7QRegionRKNS_15WindowPaintDataE") : nullptr;
     void *frames[24];
     const int count = backtrace(frames, std::size(frames));
     bool breeze = false;
+    bool preprocessed = false;
     for (int i = 1; i < count; ++i) {
         Dl_info address{};
         if (!dladdr(frames[i], &address))
@@ -316,6 +321,10 @@ BreezeTarget breezeDecorationTarget()
             // KWin's newer renderer snaps its decoration atlas before painting.
             if (address.dli_saddr == alignedAtlas || address.dli_saddr == image || address.dli_saddr == legacyImage)
                 return BreezeTarget::Image;
+            // The legacy renderToPainter can tail-call Breeze and leave no stack frame.
+            if (preprocessed && address.dli_saddr == legacyOpenGL)
+                return BreezeTarget::Atlas;
+            preprocessed |= address.dli_saddr == legacyPreprocess;
         }
     }
     return BreezeTarget::None;
