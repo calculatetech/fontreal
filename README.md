@@ -20,13 +20,13 @@ See the [capture record](docs/images/kde-v3/capture-sources.json) for renderer a
 
 On a supported Ubuntu 26.04 system, follow the [stock Qt helper guide](docs/build-system.md#install-the-stock-qt-helper-on-ubuntu-2604) to build and install one package. Sign out and back in to Plasma.
 
-Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. The selected layout applies to eligible Widgets and Qt Quick text. Offscreen or transformed text uses grayscale coverage.
+Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. The selected layout also covers partially opaque Widgets text on opaque backgrounds and Qt Quick text placed between pixels. These extra paths require a direct draw on one unrotated Wayland display. Offscreen images, Qt Quick layers, and scaled or rotated text can still use grayscale.
+
+To recreate the comparison build, follow the [patched Qt reference guide](docs/build-system.md#patched-qt-visual-reference).
 
 ### Breeze title bars
 
-With stock KWin 6.6.6, opaque Breeze captions can use the selected subpixel layout on one unrotated display. Rotating a display while Plasma is running can leave the previous color edges visible until KWin redraws the caption. Mirrored displays can also show color edges when the displays use different orientations, scales, or subpixel layouts.
-
-To recreate the comparison build, follow the [patched Qt reference guide](docs/build-system.md#patched-qt-visual-reference).
+With stock KWin 6.6.6, opaque Breeze captions can use the selected subpixel layout on one unrotated display. Rotating a display while Plasma is running can leave the previous color edges visible until KWin redraws the caption. Mirrored displays can show color edges when the displays use different orientations, scales, or subpixel layouts. Qt can report a flipped Wayland output as unrotated, which can also produce color edges.
 
 ## Suggested fonts
 

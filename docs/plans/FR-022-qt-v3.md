@@ -18,6 +18,18 @@ Recognize the ordinary stock Breeze caption paint in KWin 6.6.6's OpenGL and sof
 
 For ordinary transparent Qt Quick layers, keep the layer color and the three channel transmittances independent until the final draw. Transmittance is the share of the background that shows through. A test can capture the same layer against black and white and derive transmittance from the difference. Apply that result to the actual destination. Require agreement within one channel value with an equivalent direct draw, including a spatially changing background. A transformed glyph or layer needs coverage on the final pixel grid. A custom effect that consumes a single flattened texture owns its pixel changes, so its output cannot be inferred from the original text coverage.
 
+### V3-9 Qt Widgets text with opacity
+
+On the stock Ubuntu Qt Wayland path, use the selected layout for partially opaque solid text on an aligned QWidget backing store. Respect the combined opacity that Qt supplies, including both painter opacity and pen alpha. Use RGB only where the destination pixel is opaque and the clip has full coverage. Read clip coverage even when Qt describes the clip as a rectangle. On the RGB path, apply that coverage to gray edge pixels when Qt treats the clip as a rectangle. Use the Qt span compositor at clip edges or on a transparent backdrop. Keep the existing caption path and the grayscale fallback for images. Compare the native mode with the orientation that Qt reports. A newly painted glyph uses grayscale after a reported turn. Qt can keep the previous orientation for a flipped output.
+
+Compare final pixels at 100% and 125%. For each channel, compare the partial draw with the same opaque draw scaled by its opacity over the same backdrop. Include zero opacity, both sources of opacity, both ink polarities, a clip boundary, and a translucent backing pixel in the same draw as opaque pixels. Check the ordinary text and static text entry points. Compare blue-first and red-first edges against **None**. Check explicit anti-aliasing opt-outs and compare the Breeze and offscreen controls with the previous provider.
+
+### V3-10 Qt Quick text placed between pixels
+
+For native Qt Quick text on the existing RGB-capable window path, snap a fractional parent translation to the nearest output pixel before the stock glyph shader runs. Require one Wayland output with a reported orientation that matches its native mode. Refresh this check when the screen geometry, orientation, or output list changes. Keep the original matrix and RGB eligibility for previously aligned draws. Keep the stock matrix for a rotated, scaled, layered, or otherwise ineligible draw.
+
+At 100% and 125%, compare final Quick window pixels with a whole-pixel placement of the same text. Use offsets on each side of the halfway point and at the halfway point on both axes. Include the rotated and layered grayscale controls in the same window. Move direct text back to its original position after the fractional draw. Draw after left, right, and inverted output turns and after returning to normal. Start a new window on an already turned screen. Enable a turned second output and make it the sole output before returning it to normal.
+
 ### V3-6 Approved white text
 
 On the qualified Ubuntu amd64 Qt build, apply the approved direct RGB white

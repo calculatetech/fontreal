@@ -27,6 +27,7 @@
 #include <qpa/qplatformwindow.h>
 #include <QtGui/private/qfontengine_ft_p.h>
 #include "font-engine.h"
+#include "wayland-output.h"
 #include "fontreal_v3_outline.h"
 #include "white-text.h"
 
@@ -158,7 +159,7 @@ using StockStore = QBackingStore *(*)(const QWidget *);
 using StockTopLevel = QWidget *(*)(const QWidget *);
 using StockAttribute = bool (*)(const QWidget *, Qt::WidgetAttribute);
 
-bool alignedWindow(QRasterPaintEngine *raster, const QWidget *widget)
+bool alignedWindow(QRasterPaintEngine *raster, const QWidget *widget, bool partialInk, bool fastText)
 {
     static const auto backingStore = reinterpret_cast<StockStore>(dlsym(RTLD_DEFAULT, "_ZNK7QWidget12backingStoreEv"));
     static const auto topLevel = reinterpret_cast<StockTopLevel>(dlsym(RTLD_DEFAULT, "_ZNK7QWidget6windowEv"));
@@ -191,7 +192,7 @@ bool alignedWindow(QRasterPaintEngine *raster, const QWidget *widget)
         return false;
     const auto platform = QGuiApplication::platformName();
     if (platform == QStringLiteral("xcb")) {
-        return qgetenv("XDG_SESSION_TYPE") == "x11"
+        return fastText && qgetenv("XDG_SESSION_TYPE") == "x11"
             && !qEnvironmentVariableIsSet("WAYLAND_DISPLAY")
             && qFuzzyCompare(window->devicePixelRatio(), 1.0)
             && qFuzzyCompare(device->devicePixelRatioF(), 1.0)
@@ -199,6 +200,7 @@ bool alignedWindow(QRasterPaintEngine *raster, const QWidget *widget)
     }
     return (platform == QStringLiteral("wayland") || platform == QStringLiteral("wayland-egl"))
         && window->handle() && window->contentOrientation() == Qt::PrimaryOrientation
+        && (!partialInk || fontreal_qt::unrotatedWaylandScreen(window->screen()))
         && QGuiApplication::highDpiScaleFactorRoundingPolicy() == Qt::HighDpiScaleFactorRoundingPolicy::PassThrough
         && qFuzzyCompare(window->devicePixelRatio(), window->handle()->devicePixelRatio())
         && qFuzzyCompare(window->devicePixelRatio(), device->devicePixelRatioF());
@@ -371,8 +373,18 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
             && untransformedKWinOutput();
     }
     auto layout = StripeLayout::None;
-    if (nativeScale && painter->opacity() == 1 && state->flags.fast_text && state->penData.alphaRGBBlit) {
-        if (alignedCaption || (regularWidget && alignedWindow(raster, static_cast<const QWidget *>(device))))
+    const QClipData *clip = raster->clipData();
+    const bool partialInk = painter->opacity() < 1 || ink.alphaF() < 1;
+    const bool partialWidgetClip = regularWidget && partialInk && clip;
+    const bool regionClip = partialWidgetClip && clip->hasRegionClip;
+    // Qt can mark a clip rectangular based on span bounds alone.
+    const bool spanClip = partialWidgetClip && !regionClip && clip->m_spans && clip->m_clipLines;
+    const bool rectangularSpans = spanClip && clip->hasRectClip;
+    if (nativeScale && state->penData.alphaRGBBlit && state->penData.type == QSpanData::Solid) {
+        const bool fastText = painter->opacity() == 1 && state->flags.fast_text;
+        const bool alignedWidget = regularWidget
+            && alignedWindow(raster, static_cast<const QWidget *>(device), partialInk, fastText);
+        if ((alignedCaption && fastText) || alignedWidget)
             layout = fontreal_qt::effectiveLayout(*static_cast<const QFontEngineFT *>(engine));
     }
     QFixedPoint atlasShift;
@@ -383,7 +395,6 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
     }
     const bool ySub = engine->supportsVerticalSubPixelPositions()
             && (state->renderHints & QPainter::VerticalSubpixelPositioning);
-    const QClipData *clip = raster->clipData();
     for (int i = 0; i < count; ++i) {
         const auto position = positions[i] + atlasShift;
         auto phase = engine->subPixelPositionFor(position);
@@ -403,14 +414,40 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
         };
         if (!masks.stripes.isNull()) {
             const auto visible = QRect(topLeft, masks.mask.size()).intersected(QRect(0,0,buffer->width(),buffer->height()));
+            const QRegion region = regionClip ? clip->clipRegion.intersected(visible) : QRegion{};
+            auto band = region.cbegin();
+            const auto end = region.cend();
             bool stripes = false;
             for (int y = visible.top(); y <= visible.bottom(); ++y) {
                 auto *gray = masks.mask.scanLine(y-topLeft.y());
                 auto *channels = reinterpret_cast<QRgb *>(masks.stripes.scanLine(y-topLeft.y()));
                 const auto *colors = reinterpret_cast<const QRgb *>(buffer->scanLine(y));
+                const auto *line = spanClip && y < clip->clipSpanHeight
+                    ? &clip->m_clipLines[y] : nullptr;
+                // QRegion rectangles are ordered in horizontal bands.
+                while (band != end && band->bottom() < y)
+                    ++band;
+                auto interval = band;
+                int span = 0;
                 for (int x = visible.left(); x <= visible.right(); ++x) {
                     const int pos = x-topLeft.x();
-                    if ((gray[pos] || masks.directWhite) && qAlpha(colors[x]) == 255 && (!clip || (clip->hasRectClip && clip->clipRect.contains(x,y)))) {
+                    bool fullClipCoverage = !clip || (clip->hasRectClip && clip->clipRect.contains(x,y));
+                    if (regionClip) {
+                        while (interval != end && interval->top() <= y && interval->right() < x)
+                            ++interval;
+                        fullClipCoverage = interval != end && interval->top() <= y && x >= interval->left();
+                    }
+                    if (line) {
+                        while (span < line->count && x >= line->spans[span].x + line->spans[span].len)
+                            ++span;
+                        const int coverage = span < line->count && x >= line->spans[span].x
+                            ? line->spans[span].coverage : 0;
+                        fullClipCoverage = coverage == 255;
+                        // Qt skips the span alpha when it classifies this clip as rectangular.
+                        if (rectangularSpans && !fullClipCoverage)
+                            gray[pos] = qt_div_255(gray[pos] * coverage);
+                    }
+                    if ((gray[pos] || masks.directWhite) && qAlpha(colors[x]) == 255 && fullClipCoverage) {
                         if (caption != BreezeTarget::None)
                             channels[pos] = capFringe(channels[pos]);
                         gray[pos] = 0;
@@ -420,11 +457,16 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
                     }
                 }
             }
-            if (stripes)
+            if (stripes) {
+                // Qt's A32 compositor already receives the opacity in the premultiplied pen.
+                const bool fastText = state->flags.fast_text;
+                state->flags.fast_text = true;
+                const auto restore = qScopeGuard([state, fastText] { state->flags.fast_text = fastText; });
                 draw(masks.stripes);
+            }
         }
-        if (clip && !clip->hasRectClip && state->flags.fast_text) {
-            // The span compositor applies the clip's fractional alpha.
+        if (clip && (!clip->hasRectClip || spanClip) && state->flags.fast_text) {
+            // Keep Qt's grayscale span fallback at the clip edge.
             state->flags.fast_text = false;
             const auto restore = qScopeGuard([state] { state->flags.fast_text = true; });
             draw(masks.mask);

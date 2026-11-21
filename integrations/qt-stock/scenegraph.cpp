@@ -31,6 +31,7 @@
 #include "coverage_qsb.h"
 #include <atomic>
 #include "font-engine.h"
+#include "wayland-output.h"
 #include "fontreal_v3_outline.h"
 #include "white-text.h"
 
@@ -211,7 +212,8 @@ private:
 
 namespace {
 thread_local QSGRenderer *currentRenderer = nullptr;
-std::atomic_bool singleScreen = false;
+enum class OutputGrid { MultipleOrMissing, Single, SingleUnrotated };
+std::atomic<OutputGrid> outputGrid = OutputGrid::MultipleOrMissing;
 
 std::atomic_bool nativeWayland = false;
 QShader coverageShader;
@@ -262,10 +264,11 @@ private:
     QCache<EngineKey, QRawFont> fonts{128};
 };
 
-bool isAlignedOutput(const QSGMaterialShader::RenderState &state, qreal atlasDpr)
+bool snapOutputMatrix(const QSGMaterialShader::RenderState &state, qreal atlasDpr, QMatrix4x4 &matrix)
 {
     const auto *renderer = currentRenderer;
-    if (!renderer || !singleScreen.load(std::memory_order_relaxed)
+    const auto grid = outputGrid.load(std::memory_order_relaxed);
+    if (!renderer || grid == OutputGrid::MultipleOrMissing
             || !nativeWayland.load(std::memory_order_relaxed)
             || !qFuzzyCompare(state.devicePixelRatio(), float(atlasDpr))
             || renderer->clearColor().alpha() != 255)
@@ -275,15 +278,28 @@ bool isAlignedOutput(const QSGMaterialShader::RenderState &state, qreal atlasDpr
     if (!target || target->resourceType() != QRhiResource::SwapChainRenderTarget
             || state.viewportRect() != QRect(QPoint(), target->pixelSize()))
         return false;
-    auto matrix = state.modelViewMatrix();
-    const auto aligned = [scale = state.devicePixelRatio()](qreal logical) {
-        const qreal physical = logical * scale;
-        return qIsFinite(physical) && qAbs(physical - std::round(physical)) < 0.0001;
-    };
-    if (!aligned(matrix(0, 3)) || !aligned(matrix(1, 3)))
-        return false;
+    matrix = state.modelViewMatrix();
+    const float logicalX = matrix(0, 3);
+    const float logicalY = matrix(1, 3);
     matrix(0, 3) = matrix(1, 3) = 0;
-    return matrix.isIdentity();
+    if (!matrix.isIdentity() || !qIsFinite(logicalX) || !qIsFinite(logicalY))
+        return false;
+    const float dpr = state.devicePixelRatio();
+    const auto aligned = [dpr](double logical) {
+        const double physical = logical * dpr;
+        return qAbs(physical - std::round(physical)) < 0.0001;
+    };
+    if (aligned(logicalX) && aligned(logicalY)) {
+        matrix = state.modelViewMatrix();
+        return true;
+    }
+    if (grid != OutputGrid::SingleUnrotated)
+        return false;
+
+    // Use shader precision for the product, then compare to halfway without rounding again.
+    matrix(0, 3) = std::floor(double(logicalX * dpr) + 0.5) / dpr;
+    matrix(1, 3) = std::floor(double(logicalY * dpr) + 0.5) / dpr;
+    return true;
 }
 
 class CoverageMaterial;
@@ -350,11 +366,16 @@ bool CoverageShader::updateUniformData(RenderState &state, QSGMaterial *material
     // The stock color glyph shader leaves color.x unused in its uniform block.
     constexpr qsizetype selectorOffset = 144;
     const auto *coverage = static_cast<CoverageMaterial *>(material);
+    QMatrix4x4 matrix;
+    const bool rgb = snapOutputMatrix(state, coverage->atlasDpr, matrix);
+    if (!rgb)
+        matrix = state.modelViewMatrix();
     const float colorData[4] = {
-        isAlignedOutput(state, coverage->atlasDpr) ? 1.0f : 0.0f, 0, 0,
+        rgb ? 1.0f : 0.0f, 0, 0,
         float(coverage->ink.alphaF() * state.opacity())
     };
     Q_ASSERT(state.uniformData()->size() >= selectorOffset + sizeof(colorData));
+    memcpy(state.uniformData()->data(), matrix.constData(), 16 * sizeof(float));
     memcpy(state.uniformData()->data() + selectorOffset, colorData, sizeof(colorData));
     return true;
 }
@@ -636,10 +657,25 @@ public:
         coverageShader = QShader::fromSerialized(QByteArray::fromRawData(
             reinterpret_cast<const char *>(coverage_qsb), coverage_qsb_len));
         const auto refresh = [] {
-            singleScreen.store(QGuiApplication::screens().size() == 1, std::memory_order_relaxed);
+            const auto screens = QGuiApplication::screens();
+            auto grid = OutputGrid::MultipleOrMissing;
+            if (screens.size() == 1) {
+                grid = fontreal_qt::unrotatedWaylandScreen(screens.first())
+                    ? OutputGrid::SingleUnrotated : OutputGrid::Single;
+            }
+            outputGrid.store(grid, std::memory_order_relaxed);
         };
+        const auto watchScreen = [state, refresh](QScreen *screen) {
+            connect(screen, &QScreen::orientationChanged, state, refresh);
+            connect(screen, &QScreen::geometryChanged, state, refresh);
+        };
+        for (auto *screen : QGuiApplication::screens())
+            watchScreen(screen);
         refresh();
-        connect(qGuiApp, &QGuiApplication::screenAdded, state, refresh);
+        connect(qGuiApp, &QGuiApplication::screenAdded, state, [watchScreen, refresh](QScreen *screen) {
+            watchScreen(screen);
+            refresh();
+        });
         connect(qGuiApp, &QGuiApplication::screenRemoved, state, refresh);
         qInfo() << "Fontreal Quick default probe active:" << (coverageShader.isValid() && enableDefaultQuick());
         return state;
