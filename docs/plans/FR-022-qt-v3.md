@@ -37,6 +37,26 @@ paths. Check mapped providers and stock libraries in fresh app launches
 after the simulated and real APT upgrade. Keep the 0.10 archive for
 rollback. Review the complete candidate before installing it.
 
+### V3-7 Small light italic reference
+
+Use the approved Less fringe + stronger tips treatment for light italic
+faces with light RGB ink below 13.5 device pixels. Blend the existing
+RGB result with the earlier coverage from the same hinted glyph.
+Reduce the channel spread and lift connected stroke tips by the same
+amount in all three channels. Widgets and Quick share this calculation.
+Their grayscale coverage and draw selection stay the same.
+
+Save the reference on `feature/fontreal-approved-white`, based on
+`95ef337` in the existing isolated worktree. The separate experiment
+on gray uses this reference as its first column.
+
+Compare the staged Widgets build with the retained 774 reference captures
+at 8 through 16 pt. An additional 14-device-pixel capture checks the first
+whole pixel size above the cutoff. Use compositor captures to compare
+Widgets and Quick for the same light italic text, both aligned and with
+the existing grayscale fallbacks. Verify the loaded providers and compare
+black text, regular faces, and layout None with the earlier build.
+
 For the grayscale feasibility test, verify final window pixels and loaded distro libraries in Konsole and a Plasma window on stock KWin. Hold the text renderer, text, palette, and output scale fixed while toggling the filter. Check the default Qt Quick renderer separately. Use the same compiled filter against more than one supported Qt version. Compare both text polarities with the approved V3 reference.
 
 Before release, verify final window pixels at 100% and 125% with the candidate active and the process loading distro Qt and FreeType. Check Plasma’s None, RGB, BGR, vertical RGB, and vertical BGR choices. Check grayscale for antialiased draws that cannot use subpixel color. Compare explicit system and application anti-aliasing opt-outs with unmodified stock Qt. The grayscale feasibility test covers a subset of this behavior.

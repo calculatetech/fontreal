@@ -131,7 +131,7 @@ OutlineSample sampleForDraw(QFontEngine *source, glyph_t glyph, QFixedPoint phas
         std::copy_n(values.data() + y * result.frame.width, result.frame.width, result.mask.scanLine(y));
     if (layout != StripeLayout::None && ink == Ink::Light) {
         auto &contour = reinterpret_cast<FT_OutlineGlyph>(outline)->outline;
-        result.stripes = whiteTextStripes(engine, face, contour, result.frame, pixels, layout, load);
+        result.stripes = whiteTextStripes(engine, face, contour, hinted, values, pixels, layout, load);
         result.directWhite = !result.stripes.isNull();
     }
     if (layout != StripeLayout::None && result.stripes.isNull()) {

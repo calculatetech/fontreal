@@ -118,7 +118,7 @@ Sample outlineMask(QFontEngine *source, glyph_t glyph, QFixedPoint phase, qreal 
         const auto tone = toneCurve(pixels, ink);
         auto &contour = reinterpret_cast<FT_OutlineGlyph>(outline)->outline;
         const auto white = ink == Ink::Light
-            ? whiteTextStripes(engine, face, contour, result.frame, pixels, layout, load) : QImage{};
+            ? whiteTextStripes(engine, face, contour, hinted, values, pixels, layout, load) : QImage{};
         result.mask = QImage(result.frame.width, result.frame.height, QImage::Format_ARGB32_Premultiplied);
         for (int y = 0; y < result.frame.height; ++y) {
             auto *row = reinterpret_cast<QRgb *>(result.mask.scanLine(y));

@@ -19,9 +19,12 @@ using Frame = fontreal_v3::GlyphFrame;
 // Only aligned light ink uses this mask. The providers keep neutral coverage separate.
 template <typename Load>
 QImage whiteTextStripes(QFontEngineFT *engine, FT_Face face, FT_Outline &contour,
-                        Frame frame, qreal pixels, fontreal_v3::StripeLayout layout, const Load &load)
+                        const fontreal_v3::OutlineSamples &originalHinted,
+                        const std::vector<fontreal_v3::Coverage> &neutralCoverage,
+                        qreal pixels, fontreal_v3::StripeLayout layout, const Load &load)
 {
     using namespace fontreal_v3;
+    const auto frame = originalHinted.frame;
     const auto slot = face->glyph;
     const bool lightFace = fontreal_qt::lightFace(*engine, face);
     const bool naturalFace = !(engine->synthesized() & (QFontEngine::SynthesizedItalic | QFontEngine::SynthesizedBold));
@@ -182,6 +185,29 @@ QImage whiteTextStripes(QFontEngineFT *engine, FT_Face face, FT_Outline &contour
                                          repair, repairWhiteItalic ? .38 : .21,
                                          smallItalic || tip > 0. ? .49 : 0.);
             row[x] = qRgb(rgb[0], rgb[1], rgb[2]);
+        }
+    }
+    if (lightItalic && pixels < 13.5) {
+        const auto originalTone = toneCurve(pixels, Ink::Light);
+        for (int y = 0; y < frame.height; ++y) {
+            auto *row = reinterpret_cast<QRgb *>(stripes.scanLine(y));
+            for (int x = 0; x < frame.width; ++x) {
+                auto samples = originalHinted.stripes(x, y, layout);
+                for (auto &sample : samples)
+                    sample = originalTone[sample];
+                const auto prior = projectChannels(neutralCoverage[y * frame.width + x], samples, Ink::Light);
+                const auto rgb = row[x];
+                const double red = .65 * qRed(rgb) + .35 * prior[0];
+                const double green = .65 * qGreen(rgb) + .35 * prior[1];
+                const double blue = .65 * qBlue(rgb) + .35 * prior[2];
+                const double neutral = .2126 * red + .7152 * green + .0722 * blue;
+                const double tip = neutral >= 24. && neutral < 180. ? terminalSupport(originalHinted, x, y) : 0.;
+                // Add equal coverage to preserve the reduced channel spread.
+                const double lift = std::min(255. - std::max({red, green, blue}), 34 * tip);
+                row[x] = qRgb(std::lround(.80 * red + .20 * neutral + lift),
+                              std::lround(.80 * green + .20 * neutral + lift),
+                              std::lround(.80 * blue + .20 * neutral + lift));
+            }
         }
     }
     return stripes;
