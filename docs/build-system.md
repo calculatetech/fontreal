@@ -2,27 +2,36 @@
 
 ## Fontreal V3 for Qt and Plasma
 
-### Install the stock Qt helper on Ubuntu 26.04
+### Install the stock Qt helper
 
-The helper adds V3 to ordinary Qt Widgets and Qt Quick apps in Plasma Wayland. One package covers both Qt Quick renderers, GPU and software. It keeps the distro Qt, FreeType, and KWin packages. The current helper builds for Ubuntu 26.04 amd64 with QtGui `6.10.2+dfsg-7` and QtQuick `6.10.2+dfsg-3`. If an older Fontreal bundle replaced Qt, use that bundle to restore the distro Qt packages first.
+Get one package from the [Fontreal V3 release](https://github.com/calculatetech/fontreal/releases/tag/v3.0.0). Use the package for your x86-64 Plasma Wayland system.
 
-Install the matching development files and build the package as your normal user.
+| System | Install the downloaded file |
+| --- | --- |
+| Debian 13 or Ubuntu 26.04 | `sudo apt install ./fontreal_3.0.0_amd64.deb` |
+| Fedora 43, 44 or 45 | `sudo dnf install ./fontreal-3.0.0-1.x86_64.rpm` |
+| openSUSE Leap 16.0 or 16.1 | `sudo zypper install --allow-unsigned-rpm ./fontreal-3.0.0-1.x86_64.rpm` |
+| Arch Linux | `sudo pacman -U ./fontreal-3.0.0-1-x86_64.pkg.tar.zst` |
+
+For KDE Linux Testing, the release supplies a system extension for snapshot `202611210254`. Install the archive with `sudo tar --zstd --no-overwrite-dir -xf fontreal-3.0.0-kde-linux-x86_64.tar.zst -C /` and reboot. To remove it, remove `/var/lib/extensions/fontreal` and `/etc/xdg/plasma-workspace/env/fontreal.sh`, then reboot.
+
+Sign out and back in to Plasma. Open **Fonts** in System Settings and select the layout for your display. **None** uses Fontreal grayscale. Fontreal treats eligible text from 8 to 32 screen pixels. [The README](../README.md#install-v3-with-stock-qt) describes when Qt or Breeze uses color.
+
+The shared DEB and RPM use the loaded Qt libraries to select the right helper. Distro updates run as usual. When a library needs a different helper, Fontreal skips that library's integration. Other matching libraries can still use Fontreal. If an earlier bundle replaced your Qt libraries, use its [restore instructions](https://github.com/calculatetech/fontreal/blob/v2.0.0/docs/build-system.md) first.
+
+To restore stock rendering, remove `fontreal` with `apt remove`, `dnf remove`, `zypper remove` or `pacman -R` as appropriate. Sign out and back in.
+
+### Build for stock Qt
+
+Install the matching Qt 6 private headers for Qt Base and Qt Declarative, the Qt shader baker, and the FreeType and Fontconfig development files. The build also uses Bash, a C and C++ compiler, Binutils, `pkg-config` and `xxd`. On Debian 13 and Ubuntu 26.04:
 
 ```sh
 sudo apt install build-essential binutils pkg-config xxd libfontconfig-dev libfreetype-dev qt6-base-private-dev qt6-declarative-private-dev qt6-shader-baker
-tools/build-qt-stock-helper.sh
-sudo apt install --reinstall ./build/qt-stock-helper/fontreal-qt-helper-study-0.11.deb
+tools/build-qt-stock-helper.sh build/providers
+tools/package-qt-stock-helper.sh deb build/packages build/providers/*
 ```
 
-Sign out and back in to Plasma. In System Settings, open **Fonts** to choose the layout for your display. **None** uses Fontreal grayscale. The helper treats text from 8 to 32 screen pixels. Qt uses color coverage on eligible native Wayland draws. On one unrotated display, this includes partially opaque Widgets text on an opaque background and direct Qt Quick text placed between pixels. The helper also uses the selected subpixel layout for opaque Breeze captions on one unrotated output when KWin's output interface is compatible. It checks that interface before using color. If the check fails, captions use grayscale. The caption limits the difference between color channels. Offscreen images, Qt Quick layers, and scaled or rotated text can use grayscale. An incompatible Qt update restores stock rendering until a matching helper is available.
-
-Version 0.11 uses the same white-text renderer in Qt Widgets and Qt Quick.
-It strengthens weak stroke ends and keeps the openings inside letters clear.
-It uses the existing coverage for black text and grayscale draws.
-If you already use 0.10, install the new package and restart open Qt apps
-to load it. Keep the 0.10 package if you want to restore that version.
-
-To restore stock rendering, run `sudo apt remove fontreal-qt-helper-study` and sign out and back in.
+On Fedora or openSUSE, install `rpm-build` and use the `rpm` format. On Arch, use the `arch` format with `makepkg` and `fakeroot`. On KDE Linux Testing, use the `kde-linux` format with GNU Tar and Zstandard. To build one package for multiple Qt builds, compile each provider on its own distro and combine the provider directories in the packaging command. Run packaging on the oldest supported system for that format.
 
 ### Konsole pilot with distro libraries
 
@@ -44,7 +53,7 @@ The launcher opens a separate Konsole process with your usual profiles. Restart 
 
 This experimental recipe patches and compiles QtBase and Qt Declarative from source to reproduce the V3 visual reference. The bundle supplies replacements for the installed packages from these two modules. The current V3 deployment work targets stock Qt packages. The reference uses the installed FreeType through its public API. Its build targets are Debian 13 amd64 with Qt 6.8.2 and Ubuntu 26.04 amd64 with Qt 6.10.2. Use Python, the distro package tools, and Docker. Keep the bundle on a disk with space for the Qt builds and in a location APT can read.
 
-Run the build as your normal user.
+Remove the stock `fontreal` package before simulating or installing this reference bundle. Run the build as your normal user.
 
 ```sh
 mkdir -p build

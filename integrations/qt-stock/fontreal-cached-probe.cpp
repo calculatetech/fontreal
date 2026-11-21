@@ -6,6 +6,7 @@
 #include <QScopeGuard>
 #include <QScopedValueRollback>
 #include <QGenericPlugin>
+#include <QGenericPluginFactory>
 #include <QDebug>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -33,6 +34,8 @@
 #include "font-engine.h"
 #include "wayland-output.h"
 #include "runtime-build-id.h"
+#include "qt-method-table.h"
+#include "runtime-abi.h"
 #include "fontreal_v3_outline.h"
 #include "white-text.h"
 
@@ -54,7 +57,6 @@ thread_local int fontrealDrawInk = -1;
 #include <dlfcn.h>
 #include <link.h>
 
-static void *fontrealRasterVtable[59] = {};
 namespace {
 using DrawCached = bool (*)(QRasterPaintEngine *, int, const glyph_t *, const QFixedPoint *, QFontEngine *);
 DrawCached stockDrawCached = nullptr;
@@ -186,7 +188,7 @@ bool alignedWindow(QRasterPaintEngine *raster, const QWidget *widget, bool parti
         QFile file(QString::fromLocal8Bit(info.dli_fname));
         QCryptographicHash sha(QCryptographicHash::Sha256);
         return file.open(QIODevice::ReadOnly) && sha.addData(&file)
-            && sha.result().toHex() == "655542813ae4a1a51f42d20930b70e8dda31a3b7873234cce4cf24879ae9a3a2";
+            && sha.result().toHex() == FONTREAL_QT_WIDGETS_SHA;
     }();
     if (!verifiedWidgets)
         return false;
@@ -292,8 +294,14 @@ BreezeTarget breezeDecorationTarget()
         return BreezeTarget::None;
     static auto *const atlas = dlsym(RTLD_DEFAULT,
         "_ZN4KWin18DecorationRenderer15renderToPainterEP8QPainterRKNS_5RectFE");
+    static auto *const legacyAtlas = dlsym(RTLD_DEFAULT,
+        "_ZN4KWin18DecorationRenderer15renderToPainterEP8QPainterRK6QRectF");
+    static auto *const alignedAtlas = dlsym(RTLD_DEFAULT,
+        "_ZN4KWin18DecorationRenderer6renderEPNS_12ItemRendererERKNS_7RegionFE");
     static auto *const image = dlsym(RTLD_DEFAULT,
         "_ZNK4KWin20ItemRendererQPainter10renderItemEP8QPainterPNS_4ItemERKSt8functionIFbS4_EE");
+    static auto *const legacyImage = dlsym(RTLD_DEFAULT,
+        "_ZNK4KWin20ItemRendererQPainter10renderItemEP8QPainterPNS_4ItemE");
     void *frames[24];
     const int count = backtrace(frames, std::size(frames));
     bool breeze = false;
@@ -303,9 +311,10 @@ BreezeTarget breezeDecorationTarget()
             continue;
         breeze |= address.dli_fname && QByteArrayView(address.dli_fname).endsWith("/org.kde.kdecoration3/org.kde.breeze.so");
         if (breeze && address.dli_saddr) {
-            if (address.dli_saddr == atlas)
+            if (address.dli_saddr == atlas || address.dli_saddr == legacyAtlas)
                 return BreezeTarget::Atlas;
-            if (address.dli_saddr == image)
+            // KWin's newer renderer snaps its decoration atlas before painting.
+            if (address.dli_saddr == alignedAtlas || address.dli_saddr == image || address.dli_saddr == legacyImage)
                 return BreezeTarget::Image;
         }
     }
@@ -332,34 +341,71 @@ bool untransformedKWinOutput()
     using Transform = OutputTransform (*)(const void *);
     static auto *const workspace = static_cast<void *const *>(dlsym(RTLD_DEFAULT, "_ZN4KWin9Workspace5_selfE"));
     static const auto *active = static_cast<const unsigned char *>(dlsym(RTLD_DEFAULT, "_ZNK4KWin9Workspace12activeOutputEv"));
-    static const auto *logical = static_cast<const unsigned char *>(dlsym(RTLD_DEFAULT, "_ZNK4KWin13LogicalOutput9transformEv"));
-    static const bool knownAbi = [] {
-        const auto *backend = static_cast<const unsigned char *>(dlsym(RTLD_DEFAULT, "_ZNK4KWin13BackendOutput9transformEv"));
-        const auto module = kwinSymbol(active, STT_FUNC, 9).dli_fbase;
+    static const auto transform = []() -> Transform {
+        const auto *logical = static_cast<const unsigned char *>(
+            dlsym(RTLD_DEFAULT, "_ZNK4KWin13LogicalOutput9transformEv"));
+        if (!logical)
+            logical = static_cast<const unsigned char *>(dlsym(RTLD_DEFAULT, "_ZNK4KWin6Output9transformEv"));
         const auto owner = kwinSymbol(workspace, STT_OBJECT, sizeof(*workspace));
-        if (!module || kwinSymbol(logical, STT_FUNC, 13).dli_fbase != module
-                || kwinSymbol(backend, STT_FUNC, 8).dli_fbase != module || !owner.dli_fbase)
-            return false;
+        auto module = kwinSymbol(active, STT_FUNC, 5).dli_fbase;
+        if (!module)
+            module = kwinSymbol(active, STT_FUNC, 9).dli_fbase;
+        if (!module || !owner.dli_fbase)
+            return nullptr;
         // The executable may own a copy relocation for Workspace::_self.
         if (owner.dli_fbase != module && (!owner.dli_fname
                 || QFileInfo(QString::fromLocal8Bit(owner.dli_fname)).canonicalFilePath()
                     != QCoreApplication::applicationFilePath()))
-            return false;
+            return nullptr;
 
-        // Check the amd64 pointer getter and the 32-bit transform getter before calling either.
-        constexpr unsigned char pointerRead[] = {0xf3, 0x0f, 0x1e, 0xfa, 0x48, 0x8b, 0x47};
-        constexpr unsigned char backendRead[] = {0xf3, 0x0f, 0x1e, 0xfa, 0x8b, 0x47};
-        constexpr unsigned char logicalRead[] = {0xf3, 0x0f, 0x1e, 0xfa, 0x48, 0x8b, 0x7f};
-        if (std::memcmp(active, pointerRead, sizeof(pointerRead)) || active[8] != 0xc3
-                || std::memcmp(backend, backendRead, sizeof(backendRead)) || backend[7] != 0xc3
-                || std::memcmp(logical, logicalRead, sizeof(logicalRead)) || logical[8] != 0xe9)
-            return false;
+        const auto code = [module](const unsigned char *address, size_t size) -> const unsigned char * {
+            if (kwinSymbol(address, STT_FUNC, size).dli_fbase == module)
+                return address;
+            constexpr unsigned char endbr[] = {0xf3, 0x0f, 0x1e, 0xfa};
+            if (kwinSymbol(address, STT_FUNC, size + sizeof(endbr)).dli_fbase == module
+                    && !std::memcmp(address, endbr, sizeof(endbr)))
+                return address + sizeof(endbr);
+            return nullptr;
+        };
+        const auto *pointer = code(active, 5);
+        if (!pointer || pointer[0] != 0x48 || pointer[1] != 0x8b || pointer[2] != 0x47 || pointer[4] != 0xc3)
+            return nullptr;
+        const auto readsTransform = [](const unsigned char *getter) {
+            return getter && getter[0] == 0x8b && getter[1] == 0x47 && getter[3] == 0xc3;
+        };
+        if (readsTransform(code(logical, 4)))
+            return reinterpret_cast<Transform>(logical);
+
+        const auto *backend = static_cast<const unsigned char *>(
+            dlsym(RTLD_DEFAULT, "_ZNK4KWin13BackendOutput9transformEv"));
+        const auto *forward = code(logical, 9);
+        if (!readsTransform(code(backend, 4)) || !forward
+                || forward[0] != 0x48 || forward[1] != 0x8b || forward[2] != 0x7f || forward[4] != 0xe9)
+            return nullptr;
         int32_t displacement;
-        std::memcpy(&displacement, logical + 9, sizeof(displacement));
-        return reinterpret_cast<intptr_t>(logical) + 13 + displacement == reinterpret_cast<intptr_t>(backend);
+        std::memcpy(&displacement, forward + 5, sizeof(displacement));
+        const auto *target = reinterpret_cast<const unsigned char *>(reinterpret_cast<intptr_t>(forward) + 9 + displacement);
+        if (target == backend)
+            return reinterpret_cast<Transform>(logical);
+        // Some builds forward through a resolved procedure linkage table entry.
+        const auto belongs = [module](const void *address, size_t size) {
+            Dl_info first{}, last{};
+            const auto *bytes = static_cast<const unsigned char *>(address);
+            return dladdr(bytes, &first) && dladdr(bytes + size - 1, &last)
+                && first.dli_fbase == module && last.dli_fbase == module;
+        };
+        if (!belongs(target, 6) || target[0] != 0xff || target[1] != 0x25)
+            return nullptr;
+        std::memcpy(&displacement, target + 2, sizeof(displacement));
+        const auto *slot = reinterpret_cast<const void *>(reinterpret_cast<intptr_t>(target) + 6 + displacement);
+        const void *resolved = nullptr;
+        if (!belongs(slot, sizeof(resolved)))
+            return nullptr;
+        std::memcpy(&resolved, slot, sizeof(resolved));
+        return resolved == backend ? reinterpret_cast<Transform>(logical) : nullptr;
     }();
-    const auto *output = knownAbi && *workspace ? reinterpret_cast<ActiveOutput>(active)(*workspace) : nullptr;
-    return output && reinterpret_cast<Transform>(logical)(output).kind == 0;
+    const auto *output = transform && *workspace ? reinterpret_cast<ActiveOutput>(active)(*workspace) : nullptr;
+    return output && transform(output).kind == 0;
 }
 
 QRgb capFringe(QRgb rgb)
@@ -586,19 +632,6 @@ bool drawCached(QRasterPaintEngine *raster, int count, const glyph_t *glyphs,
     }
     return true;
 }
-bool swapExperimentPointer(void **slot, void *replacement)
-{
-    const auto pageSize = static_cast<uintptr_t>(sysconf(_SC_PAGESIZE));
-    const auto page = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(slot) & ~(pageSize-1));
-    if (mprotect(page, pageSize, PROT_READ | PROT_WRITE))
-        return false;
-    auto *previous = __atomic_exchange_n(slot, replacement, __ATOMIC_RELEASE);
-    if (!mprotect(page, pageSize, PROT_READ))
-        return true;
-    __atomic_store_n(slot, previous, __ATOMIC_RELEASE);
-    return false;
-}
-
 bool enableSoftwareQuick(void *module)
 {
     auto **table = static_cast<void **>(dlsym(module, "_ZTV19QSGSoftwareRenderer"));
@@ -608,38 +641,33 @@ bool enableSoftwareQuick(void *module)
     const auto interface = dlsym(module, "_ZNK12QQuickWindow17rendererInterfaceEv");
     const auto update = dlsym(module, "_ZN12QQuickWindow6updateEv");
     Dl_info info{};
-    void *symbol = nullptr;
-    static void *shadow[25];
     if (!table || !render || !dirty || !paintDevice || !interface || !update
-            || !dladdr1(table, &info, &symbol, RTLD_DL_SYMENT)
-            || static_cast<const ElfW(Sym) *>(symbol)->st_size != sizeof(shadow))
+            || !dladdr(table, &info))
         return false;
 
-    static const unsigned char archivedQuick[] = { QUICK_ID };
+    static const unsigned char archivedQuick[] = { FONTREAL_QT_QUICK_ID };
     if (!runtimeBuildIdMatches(nullptr, info.dli_fbase, archivedQuick, sizeof(archivedQuick)))
         return false;
 
     QFile file(QString::fromLocal8Bit(info.dli_fname));
     QCryptographicHash hash(QCryptographicHash::Sha256);
     if (!file.open(QIODevice::ReadOnly) || !hash.addData(&file)
-            || hash.result().toHex() != "36d8d5518e6479ab710c0ce4e378fcebb59b7bf7b0c277124aabcc8f7bd9c7d4")
+            || hash.result().toHex() != FONTREAL_QT_QUICK_SHA)
         return false;
 
     const auto base = reinterpret_cast<uintptr_t>(info.dli_fbase);
-    auto **slot = reinterpret_cast<void **>(base + 0x784408);
-    auto **deviceSlot = reinterpret_cast<void **>(base + 0x781018);
-    if (*slot != table || *deviceSlot != paintDevice || std::count(table, table + std::size(shadow), render) != 1)
+    auto **slot = fontreal_qt::methodSlot(table, render);
+    auto **deviceSlot = reinterpret_cast<void **>(base + FONTREAL_QT_PAINT_DEVICE);
+    if (!slot || *deviceSlot != paintDevice)
         return false;
-    std::copy_n(table, std::size(shadow), shadow);
-    *std::find(std::begin(shadow), std::end(shadow), render) = reinterpret_cast<void *>(renderSoftware);
     stockSoftwareRender = reinterpret_cast<SoftwareRender>(render);
     markSoftwareDirty = reinterpret_cast<SoftwareMarkDirty>(dirty);
     stockPaintDevice = reinterpret_cast<StorePaintDevice>(paintDevice);
     // Retain the exact device Qt passes to its painter without re-reading platform window state.
-    if (!swapExperimentPointer(deviceSlot, reinterpret_cast<void *>(softwarePaintDevice)))
+    if (!fontreal_qt::replacePointer(deviceSlot, reinterpret_cast<void *>(softwarePaintDevice)))
         return false;
-    if (!swapExperimentPointer(slot, shadow)) {
-        swapExperimentPointer(deviceSlot, paintDevice);
+    if (!fontreal_qt::replacePointer(slot, reinterpret_cast<void *>(renderSoftware))) {
+        fontreal_qt::replacePointer(deviceSlot, paintDevice);
         return false;
     }
     quickInterface = reinterpret_cast<QuickInterface>(interface);
@@ -647,31 +675,33 @@ bool enableSoftwareQuick(void *module)
     return true;
 }
 
-bool detectSoftwareQuick()
+bool detectQuick(bool softwareRgb)
 {
     auto *module = dlopen("libQt6Quick.so.6", RTLD_NOLOAD | RTLD_NOW);
     if (!module)
         return false;
 
-    const bool active = enableSoftwareQuick(module);
-    qInfo() << "Fontreal software Quick probe active:" << active;
+    const bool active = softwareRgb && enableSoftwareQuick(module);
+    if (softwareRgb)
+        qInfo() << "Fontreal software Quick probe active:" << active;
     // The installed table calls back into this Qt library for the life of the process.
     if (!active)
         dlclose(module);
     return true;
 }
 
-class SoftwareQuickActivation final : public QObject
+class QuickActivation final : public QObject
 {
 public:
-    SoftwareQuickActivation()
+    QuickActivation()
     {
         if (!observed || quickInterface)
             qGuiApp->installEventFilter(this);
     }
 
 private:
-    bool observed = detectSoftwareQuick();
+    const bool softwareRgb = fontreal_qt::nativeWaylandScale();
+    bool observed = detectQuick(softwareRgb);
     bool watchingScreens = false;
 
     static bool publish(QWindow *window, qreal dpr)
@@ -737,8 +767,16 @@ private:
                 return false;
             }
             // The stock loops create the surface before starting a new renderer.
-            if (!observed)
-                observed = detectSoftwareQuick();
+            if (!observed) {
+                observed = detectQuick(softwareRgb);
+                if (observed) {
+                    // At startup the generic plug-in could not select an unmapped Quick library.
+                    auto *gpu = QGenericPluginFactory::create(
+                        QStringLiteral("fontreal-quick-default-probe"), {});
+                    if (gpu)
+                        gpu->setParent(this);
+                }
+            }
             if (!quickInterface) {
                 if (observed)
                     qGuiApp->removeEventFilter(this);
@@ -762,33 +800,22 @@ bool enableForArchivedQt()
     const auto release = qScopeGuard([=] { dlclose(gui); });
     auto **stock = reinterpret_cast<void **>(dlsym(gui, "_ZTV18QRasterPaintEngine"));
     const auto cached = dlsym(gui, "_ZN18QRasterPaintEngine16drawCachedGlyphsEiPKjPK11QFixedPointP11QFontEngine");
-    void *symbol = nullptr;
     Dl_info library{};
-    if (!stock || !cached || !dladdr1(stock, &library, &symbol, RTLD_DL_SYMENT)
-            || static_cast<ElfW(Sym) *>(symbol)->st_size != sizeof(fontrealRasterVtable))
+    if (!stock || !cached || !dladdr(stock, &library))
         return false;
 
     QFile loaded(QString::fromLocal8Bit(library.dli_fname));
     QCryptographicHash sha(QCryptographicHash::Sha256);
     if (qEnvironmentVariableIsSet("FONTREAL_QUAL_BAD_ABI") || !loaded.open(QIODevice::ReadOnly)
             || !sha.addData(&loaded)
-            || sha.result().toHex() != "1cccdc5c19b4d9706f67b928155dc6f46c44799e9fff8ea441de0c6b8a5176c1")
+            || sha.result().toHex() != FONTREAL_QT_GUI_SHA)
         return false;
 
-    const auto base = reinterpret_cast<uintptr_t>(library.dli_fbase);
-    auto **paintSlot = reinterpret_cast<void **>(base + 0x828250);
-    if (*paintSlot != stock)
+    auto **slot = fontreal_qt::methodSlot(stock, cached);
+    if (!slot)
         return false;
     stockDrawCached = reinterpret_cast<DrawCached>(cached);
-    std::memcpy(fontrealRasterVtable, stock, sizeof(fontrealRasterVtable));
-    unsigned count = 0;
-    for (auto &entry : fontrealRasterVtable) {
-        if (entry == cached) {
-            entry = reinterpret_cast<void *>(drawCached);
-            ++count;
-        }
-    }
-    return count == 1 && swapExperimentPointer(paintSlot, fontrealRasterVtable);
+    return fontreal_qt::replacePointer(slot, reinterpret_cast<void *>(drawCached));
 }
 }
 
@@ -804,8 +831,8 @@ public:
             return nullptr;
         const bool active = enableForArchivedQt();
         qInfo() << "Fontreal painter probe active:" << active;
-        if (active && fontreal_qt::nativeWaylandScale())
-            return new SoftwareQuickActivation;
+        if (active && fontreal_qt::waylandPlatform())
+            return new QuickActivation;
         return new QObject;
     }
 };

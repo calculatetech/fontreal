@@ -7,14 +7,20 @@
 #include <QScreen>
 #include <dlfcn.h>
 #include <qpa/qplatformscreen.h>
+#include "runtime-abi.h"
 
 namespace fontreal_qt {
 
-inline bool nativeWaylandScale()
+inline bool waylandPlatform()
 {
     const auto platform = QGuiApplication::platformName();
+    return platform == QStringLiteral("wayland") || platform == QStringLiteral("wayland-egl");
+}
+
+inline bool nativeWaylandScale()
+{
     const auto scale = qEnvironmentVariable("QT_SCALE_FACTOR");
-    return (platform == QStringLiteral("wayland") || platform == QStringLiteral("wayland-egl"))
+    return waylandPlatform()
         && (scale.isEmpty() || scale.toDouble() == 1.0)
         && !qEnvironmentVariableIsSet("QT_SCREEN_SCALE_FACTORS")
         && !qEnvironmentVariableIsSet("QT_DEVICE_PIXEL_RATIO")
@@ -55,7 +61,7 @@ inline bool unrotatedWaylandScreen(const QScreen *screen)
         QFile file(QString::fromLocal8Bit(info.dli_fname));
         QCryptographicHash hash(QCryptographicHash::Sha256);
         if (!file.open(QIODevice::ReadOnly) || !hash.addData(&file)
-                || hash.result().toHex() != "750d84878e449229d3a8973b5a5828ba7ddc37e485a7be01092db581ec2ea463")
+                || hash.result().toHex() != FONTREAL_QT_WAYLAND_SHA)
             return nullptr;
         return reinterpret_cast<NativeOrientation>(method);
     }();

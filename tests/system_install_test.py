@@ -218,6 +218,16 @@ def qt_v3_transactions(root, previous, prior_plan):
                     simulate("rollback", bundle, "--previous", bundle, error="captured Fontreal session package")
                     assert len(calls) == before
                 if label == "upgrade":
+                    with (patch.object(build, "session_version", return_value=None),
+                          patch.object(build, "trusted_system_record", side_effect=FileNotFoundError)):
+                        proposal = restore_proposal
+                        before = len(calls)
+                        simulate("rollback", bundle, *options)
+                        assert calls[before:] == [["apt-get", "install", "--simulate", "--allow-downgrades",
+                                                   *flags, *restored, session]]
+                        before = len(calls)
+                        simulate("rollback", bundle, "--previous", bundle, error="captured Fontreal session package")
+                        assert len(calls) == before
                     before = len(calls)
                     simulate("rollback", bundle, "--previous", missing_qt,
                              error="captured Qt package libqt6core6t64")

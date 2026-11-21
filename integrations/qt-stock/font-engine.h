@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QtCore/QScopeGuard>
 #include <QtCore/QVarLengthArray>
 #include <fontconfig/fontconfig.h>
 #include <memory>
@@ -14,6 +15,7 @@ namespace fontreal_qt {
 class FreeTypeFields : public QFontEngineFT {
 public:
     static constexpr auto layout() { return &FreeTypeFields::subpixelType; }
+    static constexpr auto faceData() { return &FreeTypeFields::freetype; }
 };
 
 inline fontreal_v3::StripeLayout effectiveLayout(const QFontEngineFT &engine)
@@ -75,14 +77,24 @@ inline bool lightFace(const QFontEngineFT &engine, FT_Face face)
 {
     if (engine.synthesized() & QFontEngine::SynthesizedBold)
         return false;
-    const auto axes = engine.variableAxes();
-    for (qsizetype i = 0; i < axes.size(); ++i) {
-        if (axes.at(i).tag() != QFont::Tag("wght"))
-            continue;
-        QVarLengthArray<FT_Fixed, 8> coordinates(axes.size());
-        if (!FT_Get_Var_Design_Coordinates(face, FT_UInt(axes.size()), coordinates.data()))
-            return coordinates.at(i) <= 350L * 65536;
-        break;
+    const auto *axes = (engine.*FreeTypeFields::faceData())->mm_var;
+    FT_MM_Var *ownedAxes = nullptr;
+    // Qt can apply variation coordinates without retaining the axis metadata.
+    if (!axes && FT_IS_VARIATION(face) && !FT_Get_MM_Var(face, &ownedAxes))
+        axes = ownedAxes;
+    const auto releaseAxes = qScopeGuard([&] {
+        if (ownedAxes)
+            FT_Done_MM_Var(face->glyph->library, ownedAxes);
+    });
+    if (axes) {
+        for (FT_UInt i = 0; i < axes->num_axis; ++i) {
+            if (axes->axis[i].tag != FT_MAKE_TAG('w', 'g', 'h', 't'))
+                continue;
+            QVarLengthArray<FT_Fixed, 8> coordinates(axes->num_axis);
+            if (!FT_Get_Var_Design_Coordinates(face, axes->num_axis, coordinates.data()))
+                return coordinates.at(i) <= 350L * 65536;
+            break;
+        }
     }
     const auto *os2 = static_cast<const TT_OS2 *>(FT_Get_Sfnt_Table(face, ft_sfnt_os2));
     return engine.fontDef.weight <= QFont::Light || (os2 && os2->usWeightClass <= 350);

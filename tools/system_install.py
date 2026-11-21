@@ -197,8 +197,12 @@ def transaction(builder, directory, rollback=False, simulate=False, previous=Non
                 print("The captured Qt and session packages are already installed.")
                 return
             raise ValueError("Another Fontreal session package is installed. Use its own rollback bundle.")
-        previous_record = (builder.trusted_system_record() if any(
-            "afontreal" in p["source_version"] for p in freetype) else None)
+        previous_record = None
+        if any("afontreal" in p["source_version"] for p in freetype):
+            if rollback and session is None and plan.get("freetype_provider") is not None:
+                previous_record = installed_record(plan)
+            else:
+                previous_record = builder.trusted_system_record()
         provider = builder.retained_freetype(freetype, previous_record, (plan["os"], plan["release"]))
         captured_provider = plan.get("freetype_provider")
         if rollback and captured_provider is not None and provider is not None:

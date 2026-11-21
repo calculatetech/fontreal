@@ -32,6 +32,8 @@
 #include <atomic>
 #include "font-engine.h"
 #include "wayland-output.h"
+#include "qt-method-table.h"
+#include "runtime-abi.h"
 #include "fontreal_v3_outline.h"
 #include "white-text.h"
 
@@ -323,8 +325,9 @@ private:
 
 class CoverageMaterial final : public QSGMaterial {
 public:
-    CoverageMaterial(QSGMaterial *material, QColor color, qreal devicePixelRatio)
-        : stock(material), ink(color.toRgb()), atlasDpr(devicePixelRatio)
+    CoverageMaterial(QSGMaterial *material, QColor color, qreal devicePixelRatio, bool ownsMaterial)
+        : stock(material), ink(color.toRgb()), atlasDpr(devicePixelRatio),
+          ownedStock(ownsMaterial ? material : nullptr)
     {
         setFlag(Blending | RequiresFullMatrix);
     }
@@ -353,6 +356,8 @@ public:
     QSGMaterial *const stock;
     const QColor ink;
     const qreal atlasDpr;
+private:
+    const std::unique_ptr<QSGMaterial> ownedStock;
 };
 
 QSGMaterial *stockMaterial(QSGMaterial *material)
@@ -362,7 +367,7 @@ QSGMaterial *stockMaterial(QSGMaterial *material)
 
 bool CoverageShader::updateUniformData(RenderState &state, QSGMaterial *material, QSGMaterial *old)
 {
-    stock->updateUniformData(state, stockMaterial(material), stockMaterial(old));
+    const bool stockChanged = stock->updateUniformData(state, stockMaterial(material), stockMaterial(old));
     // The stock color glyph shader leaves color.x unused in its uniform block.
     constexpr qsizetype selectorOffset = 144;
     const auto *coverage = static_cast<CoverageMaterial *>(material);
@@ -374,9 +379,11 @@ bool CoverageShader::updateUniformData(RenderState &state, QSGMaterial *material
         rgb ? 1.0f : 0.0f, 0, 0,
         float(coverage->ink.alphaF() * state.opacity())
     };
-    Q_ASSERT(state.uniformData()->size() >= selectorOffset + sizeof(colorData));
-    memcpy(state.uniformData()->data(), matrix.constData(), 16 * sizeof(float));
-    memcpy(state.uniformData()->data() + selectorOffset, colorData, sizeof(colorData));
+    auto *uniforms = state.uniformData();
+    if (!uniforms || uniforms->size() < selectorOffset + qsizetype(sizeof(colorData)))
+        return stockChanged;
+    memcpy(uniforms->data(), matrix.constData(), 16 * sizeof(float));
+    memcpy(uniforms->data() + selectorOffset, colorData, sizeof(colorData));
     return true;
 }
 
@@ -404,7 +411,11 @@ bool CoverageShader::updateGraphicsPipelineState(RenderState &, GraphicsPipeline
 class ProbeGlyphNode final : public QSGGlyphNode {
 public:
     ProbeGlyphNode(QSGDefaultContext *context, QSGRenderContext *renderContext, QSGTextNode::RenderType type, int quality)
-        : context(context), renderContext(renderContext), type(type), quality(quality),
+        :
+#if QT_VERSION >= QT_VERSION_CHECK(6, 12, 0)
+          QSGGlyphNode(type),
+#endif
+          context(context), renderContext(renderContext), type(type), quality(quality),
           stubGeometry(QSGGeometry::defaultAttributes_Point2D(), 0)
     {
         setGeometry(&stubGeometry);
@@ -475,8 +486,12 @@ void ProbeGlyphNode::update()
         }
     }
     const auto add = [&](const QGlyphRun &run) {
-        auto *node = context->QSGDefaultContext::createGlyphNode(renderContext,
-            treat ? QSGTextNode::NativeRendering : type, quality);
+        const auto renderType = treat ? QSGTextNode::NativeRendering : type;
+#if QT_VERSION < QT_VERSION_CHECK(6, 12, 0)
+        auto *node = context->QSGDefaultContext::createGlyphNode(renderContext, renderType, quality);
+#else
+        auto *node = context->QSGDefaultContext::createGlyphNode(renderContext, renderType);
+#endif
         node->setGlyphs(position, run);
         node->setStyle(style);
         node->setStyleColor(styleColor);
@@ -488,7 +503,11 @@ void ProbeGlyphNode::update()
         node->setColor(layout == fontreal_v3::StripeLayout::None ? color : QColor(Qt::white));
         node->update();
         if (layout != fontreal_v3::StripeLayout::None) {
-            node->setMaterial(new CoverageMaterial(node->material(), color, dpr));
+            const bool ownsMaterial = node->flags().testFlag(OwnsMaterial);
+            auto *material = new CoverageMaterial(node->material(), color, dpr, ownsMaterial);
+            // Qt deletes an owned material when it is replaced.
+            node->setFlag(OwnsMaterial, false);
+            node->setMaterial(material);
             node->setFlag(OwnsMaterial);
         }
         appendChildNode(node);
@@ -514,8 +533,6 @@ void ProbeGlyphNode::update()
 }
 
 namespace {
-void *shadow[51]{};
-void *renderShadow[33]{};
 using RenderFrame = void (*)(QSGDefaultRenderContext *, QSGRenderer *);
 RenderFrame stockRenderFrame = nullptr;
 
@@ -549,15 +566,31 @@ QSGInternalTextNode *createTextNode(QSGDefaultContext *context, QSGRenderContext
     return node;
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 12, 0)
 using CreateNode = QSGGlyphNode *(*)(QSGDefaultContext *, QSGRenderContext *, QSGTextNode::RenderType, int);
+constexpr auto createGlyphSymbol = "_ZN17QSGDefaultContext15createGlyphNodeEP16QSGRenderContextN11QSGTextNode10RenderTypeEi";
+#else
+using CreateNode = QSGGlyphNode *(*)(QSGDefaultContext *, QSGRenderContext *, QSGTextNode::RenderType);
+constexpr auto createGlyphSymbol = "_ZN17QSGDefaultContext15createGlyphNodeEP16QSGRenderContextN11QSGTextNode10RenderTypeE";
+#endif
 CreateNode stockNode;
 
 QSGGlyphNode *createNode(QSGDefaultContext *context, QSGRenderContext *render,
-                        QSGTextNode::RenderType type, int quality)
+                        QSGTextNode::RenderType type
+#if QT_VERSION < QT_VERSION_CHECK(6, 12, 0)
+                        , int quality
+#endif
+                        )
 {
+#if QT_VERSION < QT_VERSION_CHECK(6, 12, 0)
     if (type == QSGTextNode::CurveRendering)
         return stockNode(context, render, type, quality);
     return new ProbeGlyphNode(context, render, type, quality);
+#else
+    if (type == QSGTextNode::CurveRendering)
+        return stockNode(context, render, type);
+    return new ProbeGlyphNode(context, render, type, 0);
+#endif
 }
 
 bool enableDefaultQuick()
@@ -567,71 +600,36 @@ bool enableDefaultQuick()
         return false;
     const auto close = qScopeGuard([&] { dlclose(quick); });
     auto **table = static_cast<void **>(dlsym(quick, "_ZTV17QSGDefaultContext"));
-    auto *method = dlsym(quick, "_ZN17QSGDefaultContext15createGlyphNodeEP16QSGRenderContextN11QSGTextNode10RenderTypeEi");
+    auto *method = dlsym(quick, createGlyphSymbol);
     auto *textMethod = dlsym(quick, "_ZN17QSGDefaultContext22createInternalTextNodeEP16QSGRenderContext");
     Dl_info runtime{};
-    void *symbol = nullptr;
-    if (!table || !method || !textMethod || !dladdr1(table, &runtime, &symbol, RTLD_DL_SYMENT)
-            || static_cast<const ElfW(Sym) *>(symbol)->st_size != sizeof(shadow))
+    if (!table || !dladdr(table, &runtime))
         return false;
     QFile library(QString::fromLocal8Bit(runtime.dli_fname));
     QCryptographicHash sha(QCryptographicHash::Sha256);
     if (!library.open(QIODevice::ReadOnly) || !sha.addData(&library)
-        || sha.result().toHex() != "36d8d5518e6479ab710c0ce4e378fcebb59b7bf7b0c277124aabcc8f7bd9c7d4")
+        || sha.result().toHex() != FONTREAL_QT_QUICK_SHA)
         return false;
-    auto **slot = reinterpret_cast<void **>(reinterpret_cast<uintptr_t>(runtime.dli_fbase) + 0x781400);
-    if (*slot != table)
-        return false;
-    std::copy_n(table, std::size(shadow), shadow);
-    unsigned hits = 0;
-    unsigned textHits = 0;
-    for (auto &entry : shadow) {
-        if (entry == method) {
-            entry = reinterpret_cast<void *>(createNode);
-            ++hits;
-        } else if (entry == textMethod) {
-            entry = reinterpret_cast<void *>(createTextNode);
-            ++textHits;
-        }
-    }
-    if (hits != 1 || textHits != 1)
+
+    auto **renderTable = static_cast<void **>(dlsym(quick, "_ZTV23QSGDefaultRenderContext"));
+    auto *render = dlsym(quick, "_ZN23QSGDefaultRenderContext15renderNextFrameEP11QSGRenderer");
+    auto **glyphSlot = fontreal_qt::methodSlot(table, method);
+    auto **textSlot = fontreal_qt::methodSlot(table, textMethod);
+    auto **renderSlot = fontreal_qt::methodSlot(renderTable, render);
+    if (!glyphSlot || !textSlot || !renderSlot)
         return false;
     stockNode = reinterpret_cast<CreateNode>(method);
     stockTextNode = reinterpret_cast<CreateTextNode>(textMethod);
-    auto **renderTable = static_cast<void **>(dlsym(quick, "_ZTV23QSGDefaultRenderContext"));
-    auto *render = dlsym(quick, "_ZN23QSGDefaultRenderContext15renderNextFrameEP11QSGRenderer");
-    Dl_info renderInfo{};
-    void *renderSymbol = nullptr;
-    auto **renderSlot = reinterpret_cast<void **>(reinterpret_cast<uintptr_t>(runtime.dli_fbase) + 0x784cf8);
-    if (!renderTable || !render || *renderSlot != renderTable
-            || !dladdr1(renderTable, &renderInfo, &renderSymbol, RTLD_DL_SYMENT)
-            || static_cast<const ElfW(Sym) *>(renderSymbol)->st_size != sizeof(renderShadow))
-        return false;
-    std::copy_n(renderTable, std::size(renderShadow), renderShadow);
-    unsigned renderHits = 0;
-    for (auto &entry : renderShadow) {
-        if (entry == render) {
-            entry = reinterpret_cast<void *>(renderFrame);
-            ++renderHits;
-        }
-    }
-    if (renderHits != 1)
-        return false;
     stockRenderFrame = reinterpret_cast<RenderFrame>(render);
-    const auto pageSize = sysconf(_SC_PAGESIZE);
-    if (pageSize <= 0)
+    if (!fontreal_qt::replacePointer(renderSlot, reinterpret_cast<void *>(renderFrame)))
         return false;
-    const auto replace = [&](void **pointer, void *value) {
-        auto *page = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(pointer) & ~(static_cast<size_t>(pageSize) - 1));
-        if (mprotect(page, pageSize, PROT_READ | PROT_WRITE))
-            return false;
-        __atomic_store_n(pointer, value, __ATOMIC_RELEASE);
-        return mprotect(page, pageSize, PROT_READ) == 0;
-    };
-    if (!replace(renderSlot, renderShadow))
+    if (!fontreal_qt::replacePointer(textSlot, reinterpret_cast<void *>(createTextNode))) {
+        fontreal_qt::replacePointer(renderSlot, render);
         return false;
-    if (!replace(slot, shadow)) {
-        replace(renderSlot, renderTable);
+    }
+    if (!fontreal_qt::replacePointer(glyphSlot, reinterpret_cast<void *>(createNode))) {
+        fontreal_qt::replacePointer(textSlot, textMethod);
+        fontreal_qt::replacePointer(renderSlot, render);
         return false;
     }
     return true;

@@ -10,6 +10,16 @@ Test a filter at the public FreeType glyph rasterization call. That call provide
 
 ## Stock Qt feasibility and release checks
 
+### Distribution packages
+
+Build each provider with the stock Qt SDK from the system that will use it. Bundle the tested providers in one package per format. The same DEB must install on Debian 13 and the tested newer Debian-based systems. The same RPM must install on Fedora and openSUSE, including their oldest tested Plasma 6 releases. Use an Arch package for rolling Arch. Use KDE Linux Testing to check the new stack when practical.
+
+Use the oldest Qt plugin metadata in each package so its dispatcher can reach the correct provider on every supported build. Check the actual loaded Qt libraries before changing their private method tables. Let normal distro updates proceed. Skip any integration the provider cannot safely serve. Matching libraries can still use their own Fontreal integration. Select the native render hook from the matched SDK including the Qt 6.12 glyph-node signature. Keep Qt, FreeType and KWin under distro package ownership.
+
+Compare artifact hashes and native package transactions on each guest. After a normal Plasma login, capture Widgets, GPU Quick, both software Quick loops, and Breeze against stock at 100% and 125%. Include both text polarities, the layout and antialiasing controls, partial opacity, fractional placement, and a stocked Quick texture control. Verify a delayed first Qt Quick mapping. Check Breeze RGB by channel order where the output interface allows it. Remove the package, reboot and compare against the original captures.
+
+Verify the published files against the tested hashes. Remove obsolete source and documentation from the active tree after publication, keeping the V3 visual reference and relevant provenance. The existing release tag retains its rollback instructions.
+
 ### V3-8 RGB on additional drawing paths
 
 Use the isolated `feature/fontreal-rgb-paths` worktree from `4c4f141`. When Plasma selects a subpixel layout, the goal is to use it on Breeze captions and on the remaining Widgets and Qt Quick text paths. Keep the distro Qt, FreeType, and KWin packages as the integration target. The Fonts setting **None** and explicit anti-aliasing opt-outs still apply. KWin effects continue to process the submitted window as usual.

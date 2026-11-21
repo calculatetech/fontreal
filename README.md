@@ -1,6 +1,6 @@
 # Fontreal
 
-Fontreal V3 improves text rendering in Qt 6 applications and Plasma. The Ubuntu helper adds Fontreal to ordinary app launches and uses the distro Qt, FreeType, and KWin packages. The comparison images come from a separate Qt build that reproduces the V3 reference.
+Fontreal V3 improves text rendering in Qt 6 applications and Plasma. It installs a Qt helper and a Plasma session script. Qt, FreeType, and KWin stay under your distro's package manager. Browsers and Flatpaks keep their original rendering. The comparison images come from a separate Qt build of the V3 reference.
 
 ## Why this project exists
 
@@ -18,15 +18,17 @@ See the [capture record](docs/images/kde-v3/capture-sources.json) for renderer a
 
 ## Install V3 with stock Qt
 
-On a supported Ubuntu 26.04 system, follow the [stock Qt helper guide](docs/build-system.md#install-the-stock-qt-helper-on-ubuntu-2604) to build and install one package. Sign out and back in to Plasma.
+Download the package for your x86-64 distro and follow the [installation guide](docs/build-system.md#install-the-stock-qt-helper). Sign out and back in to Plasma.
 
-Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. The same helper covers direct Qt Quick text with GPU and software rendering. The selected layout also covers partially opaque Widgets text on opaque backgrounds and direct Qt Quick text placed between pixels. These extra paths require a direct draw on one unrotated Wayland display. Offscreen images, Qt Quick layers, and scaled or rotated text can still use grayscale.
+Open **Fonts** in Plasma System Settings to choose the subpixel layout for your display. Choose **None** for grayscale. The same helper covers direct Qt Quick text with OpenGL and software rendering. The selected layout also covers partially opaque Widgets text on opaque backgrounds and direct Qt Quick text placed between pixels. These extra paths require a direct draw on one unrotated Wayland display. Offscreen images, Qt Quick layers, and scaled or rotated text can still use grayscale. An app that first loads Qt Quick into an offscreen widget can keep stock rendering for that panel.
 
 To recreate the comparison build, follow the [patched Qt reference guide](docs/build-system.md#patched-qt-visual-reference).
 
 ### Breeze title bars
 
 Opaque Breeze captions can use the selected subpixel layout on one unrotated display when KWin's output interface is compatible. The helper checks the interface before using color and uses grayscale for captions if the check fails. Rotating a display while Plasma is running can leave the previous color edges visible until KWin redraws the caption. Mirrored displays can show color edges when the displays use different orientations, scales, or subpixel layouts. Qt can report a flipped Wayland output as unrotated, which can also produce color edges.
+
+In the release tests, Breeze captions used grayscale on Debian 13 and openSUSE Leap 16.0. Eligible app text used the selected layout on both systems.
 
 ## Suggested fonts
 
