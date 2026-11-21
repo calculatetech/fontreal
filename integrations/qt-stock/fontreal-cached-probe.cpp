@@ -312,23 +312,54 @@ BreezeTarget breezeDecorationTarget()
     return BreezeTarget::None;
 }
 
+Dl_info kwinSymbol(const void *address, unsigned type, size_t size)
+{
+    Dl_info info{};
+    void *metadata = nullptr;
+    if (!address || !dladdr1(address, &info, &metadata, RTLD_DL_SYMENT)
+            || info.dli_saddr != address || !metadata)
+        return {};
+    const auto *symbol = static_cast<const ElfW(Sym) *>(metadata);
+    if (ELF64_ST_TYPE(symbol->st_info) != type || symbol->st_size != size)
+        return {};
+    return info;
+}
+
 bool untransformedKWinOutput()
 {
     using ActiveOutput = const void *(*)(const void *);
-    // KWin 6.6.6 returns OutputTransform as one enum on this build's ABI.
     struct OutputTransform { unsigned kind; };
     using Transform = OutputTransform (*)(const void *);
     static auto *const workspace = static_cast<void *const *>(dlsym(RTLD_DEFAULT, "_ZN4KWin9Workspace5_selfE"));
-    static const auto activeOutput = reinterpret_cast<ActiveOutput>(dlsym(RTLD_DEFAULT, "_ZNK4KWin9Workspace12activeOutputEv"));
-    static const auto transform = reinterpret_cast<Transform>(dlsym(RTLD_DEFAULT, "_ZNK4KWin13LogicalOutput9transformEv"));
+    static const auto *active = static_cast<const unsigned char *>(dlsym(RTLD_DEFAULT, "_ZNK4KWin9Workspace12activeOutputEv"));
+    static const auto *logical = static_cast<const unsigned char *>(dlsym(RTLD_DEFAULT, "_ZNK4KWin13LogicalOutput9transformEv"));
     static const bool knownAbi = [] {
-        Dl_info info{};
-        return transform && dladdr(reinterpret_cast<void *>(transform), &info)
-            && info.dli_fname
-            && QFileInfo(QString::fromLocal8Bit(info.dli_fname)).canonicalFilePath().endsWith(QStringLiteral("/libkwin.so.6.6.6"));
+        const auto *backend = static_cast<const unsigned char *>(dlsym(RTLD_DEFAULT, "_ZNK4KWin13BackendOutput9transformEv"));
+        const auto module = kwinSymbol(active, STT_FUNC, 9).dli_fbase;
+        const auto owner = kwinSymbol(workspace, STT_OBJECT, sizeof(*workspace));
+        if (!module || kwinSymbol(logical, STT_FUNC, 13).dli_fbase != module
+                || kwinSymbol(backend, STT_FUNC, 8).dli_fbase != module || !owner.dli_fbase)
+            return false;
+        // The executable may own a copy relocation for Workspace::_self.
+        if (owner.dli_fbase != module && (!owner.dli_fname
+                || QFileInfo(QString::fromLocal8Bit(owner.dli_fname)).canonicalFilePath()
+                    != QCoreApplication::applicationFilePath()))
+            return false;
+
+        // Check the amd64 pointer getter and the 32-bit transform getter before calling either.
+        constexpr unsigned char pointerRead[] = {0xf3, 0x0f, 0x1e, 0xfa, 0x48, 0x8b, 0x47};
+        constexpr unsigned char backendRead[] = {0xf3, 0x0f, 0x1e, 0xfa, 0x8b, 0x47};
+        constexpr unsigned char logicalRead[] = {0xf3, 0x0f, 0x1e, 0xfa, 0x48, 0x8b, 0x7f};
+        if (std::memcmp(active, pointerRead, sizeof(pointerRead)) || active[8] != 0xc3
+                || std::memcmp(backend, backendRead, sizeof(backendRead)) || backend[7] != 0xc3
+                || std::memcmp(logical, logicalRead, sizeof(logicalRead)) || logical[8] != 0xe9)
+            return false;
+        int32_t displacement;
+        std::memcpy(&displacement, logical + 9, sizeof(displacement));
+        return reinterpret_cast<intptr_t>(logical) + 13 + displacement == reinterpret_cast<intptr_t>(backend);
     }();
-    const auto *output = knownAbi && workspace && *workspace && activeOutput ? activeOutput(*workspace) : nullptr;
-    return output && transform(output).kind == 0;
+    const auto *output = knownAbi && *workspace ? reinterpret_cast<ActiveOutput>(active)(*workspace) : nullptr;
+    return output && reinterpret_cast<Transform>(logical)(output).kind == 0;
 }
 
 QRgb capFringe(QRgb rgb)

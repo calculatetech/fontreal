@@ -26,7 +26,7 @@ To recreate the comparison build, follow the [patched Qt reference guide](docs/b
 
 ### Breeze title bars
 
-With stock KWin 6.6.6, opaque Breeze captions can use the selected subpixel layout on one unrotated display. Rotating a display while Plasma is running can leave the previous color edges visible until KWin redraws the caption. Mirrored displays can show color edges when the displays use different orientations, scales, or subpixel layouts. Qt can report a flipped Wayland output as unrotated, which can also produce color edges.
+Opaque Breeze captions can use the selected subpixel layout on one unrotated display when KWin's output interface is compatible. The helper checks the interface before using color and uses grayscale for captions if the check fails. Rotating a display while Plasma is running can leave the previous color edges visible until KWin redraws the caption. Mirrored displays can show color edges when the displays use different orientations, scales, or subpixel layouts. Qt can report a flipped Wayland output as unrotated, which can also produce color edges.
 
 ## Suggested fonts
 
